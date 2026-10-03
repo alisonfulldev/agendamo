@@ -10,6 +10,8 @@ import { Input } from "@/components/ui/input";
 import { formatBRL } from "@/lib/money";
 import { subscriptionPrice, yearlySavings, type Cycle } from "@/lib/plans";
 
+import type { PixCharge } from "@/lib/billing/service";
+
 import {
   addonAction,
   cancelAddonAction,
@@ -17,6 +19,15 @@ import {
   checkoutAction,
   previewPlatformCouponAction,
 } from "./actions";
+import {
+  CardFields,
+  CardProcessing,
+  EMPTY_CARD,
+  MethodSwitch,
+  PixPanel,
+  type CardFormValue,
+  type PaymentMethod,
+} from "./payment";
 
 const FEATURES = [
   "Chat de agendamento: a cliente escolhe o horário e já fica agendada",
@@ -88,6 +99,10 @@ export function PlanCheckout({
   const [pending, startTransition] = useTransition();
   const [addon, setAddon] = useState<"featured" | "custom_domain" | null>(null);
   const [city, setCity] = useState("");
+  const [method, setMethod] = useState<PaymentMethod>("pix");
+  const [card, setCard] = useState<CardFormValue>(EMPTY_CARD);
+  const [pix, setPix] = useState<{ charge: PixCharge; plan: boolean } | null>(null);
+  const [cardProcessing, setCardProcessing] = useState(false);
 
   const extras = professionals - 1;
   const total = subscriptionPrice(cycle, extras, discount ?? 0);
@@ -96,11 +111,35 @@ export function PlanCheckout({
   const unit = cycle === "monthly" ? "mês" : "ano";
   const unchanged = hasActiveSubscription && cycle === initialCycle && extras === initialExtras;
 
-  const finish = (result: { ok: boolean; message: string; invoiceUrl?: string | null }) => {
+  const finish = (
+    result:
+      { ok: true; kind: string; message: string; pix?: PixCharge } | { ok: false; message: string },
+    plan = true,
+  ) => {
     setMessage({ ok: result.ok, text: result.message });
-    if (result.ok && result.invoiceUrl) window.location.href = result.invoiceUrl;
+    if (!result.ok) return;
+    if ("pix" in result && result.pix) setPix({ charge: result.pix, plan });
+    else if (result.kind === "card") setCardProcessing(true);
     else router.refresh();
   };
+
+  // While paying (Pix shown or card being confirmed) the checkout gives way to that panel.
+  if (pix) {
+    return (
+      <div className="flex flex-col gap-3">
+        <PixPanel pix={pix.charge} waitForPlan={pix.plan} />
+        {!pix.plan ? (
+          <p className="text-center text-sm text-muted-foreground">
+            O adicional ativa assim que o pagamento cair.
+          </p>
+        ) : null}
+        <Button type="button" variant="ghost" className="self-center" onClick={() => setPix(null)}>
+          Voltar
+        </Button>
+      </div>
+    );
+  }
+  if (cardProcessing) return <CardProcessing />;
 
   return (
     <div className="flex flex-col gap-6">
@@ -222,9 +261,12 @@ export function PlanCheckout({
                 Aplicar
               </Button>
             </div>
+            <MethodSwitch value={method} onChange={setMethod} />
+            {method === "credit_card" ? <CardFields value={card} onChange={setCard} /> : null}
             <p className="text-sm text-muted-foreground">
-              Você vai para a página segura do Asaas para pagar com cartão ou Pix. A assinatura
-              ativa assim que o pagamento é confirmado.
+              {method === "pix"
+                ? "Você paga pelo QR code aqui mesmo. A assinatura ativa assim que o pagamento cair."
+                : "Cobramos agora e a cada renovação no cartão. Cancele quando quiser."}
             </p>
           </>
         ) : (
@@ -244,6 +286,8 @@ export function PlanCheckout({
                   extraProfessionals: extras,
                   name,
                   cpfCnpj: document,
+                  paymentMethod: method,
+                  card: method === "credit_card" ? card : undefined,
                   coupon: discount !== null ? coupon : undefined,
                 }),
               );
@@ -254,7 +298,9 @@ export function PlanCheckout({
             ? "Processando…"
             : hasActiveSubscription
               ? "Salvar alteração"
-              : `Assinar por ${formatBRL(total)}/${unit}`}
+              : method === "pix"
+                ? `Gerar Pix de ${formatBRL(total)}`
+                : `Pagar ${formatBRL(total)} no cartão`}
         </Button>
       </div>
 
@@ -307,7 +353,7 @@ export function PlanCheckout({
                 disabled={pending}
                 onClick={() =>
                   startTransition(async () =>
-                    finish(await addonAction({ addon, city, name, cpfCnpj: document })),
+                    finish(await addonAction({ addon, city, name, cpfCnpj: document }), false),
                   )
                 }
               >

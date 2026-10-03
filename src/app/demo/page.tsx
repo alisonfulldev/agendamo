@@ -17,6 +17,7 @@ import { getPlanFeatures } from "@/lib/plans";
 
 import {
   demoClearEmailsAction,
+  demoConfirmPaymentAction,
   demoResetAction,
   demoRunCronAction,
   demoSetPlanAction,
@@ -77,6 +78,19 @@ export default async function DemoPage({ searchParams }: PageProps<"/demo">) {
     )
   ).rows;
   const user = await getSessionUser();
+  const subscriptions = (
+    await db.query<{
+      name: string;
+      status: string;
+      billing_type: string;
+      provider_subscription_id: string;
+    }>(
+      `select b.name, s.status, s.billing_type, s.provider_subscription_id
+         from public.subscriptions s join public.businesses b on b.id = s.business_id
+        where s.provider_subscription_id like 'sub_demo_%'
+        order by s.updated_at desc`,
+    )
+  ).rows;
   const emails = listDemoEmails().slice(0, 40);
   const cron = typeof params.cron === "string" ? params.cron : null;
   const cronResult = typeof params.resultado === "string" ? params.resultado : null;
@@ -237,6 +251,44 @@ export default async function DemoPage({ searchParams }: PageProps<"/demo">) {
               </form>
             );
           })}
+        </CardContent>
+      </Card>
+
+      <Card id="assinaturas">
+        <CardHeader>
+          <CardTitle>Pagamentos da assinatura (Asaas simulado)</CardTitle>
+          <CardDescription>
+            Assinaturas feitas pelo checkout do painel. “Confirmar pagamento” faz o que o Asaas
+            faria em produção ao receber o Pix ou aprovar o cartão. Cartão terminado em 0000 é
+            recusado.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-2 text-sm">
+          {params.ok === "pagamento" ? (
+            <p className="font-medium">Pagamento confirmado: a assinatura foi ativada.</p>
+          ) : null}
+          {subscriptions.length === 0 ? (
+            <p className="text-muted-foreground">
+              Nenhuma ainda. Assine pelo painel (Assinatura) com Pix ou cartão.
+            </p>
+          ) : (
+            subscriptions.map((sub) => (
+              <form
+                key={sub.provider_subscription_id}
+                action={demoConfirmPaymentAction}
+                className="flex flex-wrap items-center gap-2"
+              >
+                <input type="hidden" name="subscriptionId" value={sub.provider_subscription_id} />
+                <span className="min-w-44 font-medium">{sub.name}</span>
+                <Badge variant="outline">
+                  {sub.billing_type === "pix" ? "Pix" : "Cartão"} · {sub.status}
+                </Badge>
+                <Button size="sm" variant="outline">
+                  Confirmar pagamento
+                </Button>
+              </form>
+            ))
+          )}
         </CardContent>
       </Card>
 

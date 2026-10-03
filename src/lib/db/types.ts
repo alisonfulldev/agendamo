@@ -282,6 +282,9 @@ export interface Subscription {
   billing_cycle: "monthly" | "yearly";
   /** Professionals paid beyond the one included. */
   extra_professionals: number;
+  billing_type: "pix" | "credit_card";
+  card_last4: string | null;
+  card_brand: string | null;
   /** Each add-on is its own Asaas subscription. */
   addons: {
     featured?: {

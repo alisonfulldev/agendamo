@@ -14,6 +14,7 @@ import { getPlanFeatures, PLAN_PRICES, PLAN_STATUS_LABELS } from "@/lib/plans";
 import { createClient } from "@/lib/supabase/server";
 
 import { CancelAddonButton, CancelPlanButton, PlanCheckout } from "./checkout";
+import { PaymentMethodSection, PendingPixButton } from "./payment";
 
 export const metadata: Metadata = { title: "Assinatura" };
 
@@ -110,16 +111,36 @@ export default async function PlanPage() {
               </>
             ) : null}
           </dl>
-          {pendingInvoice ? (
-            <a
-              href={pendingInvoice.invoiceUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-3 inline-block text-sm font-medium text-primary underline"
-            >
-              Pagar cobrança de {formatBRL(Math.round(pendingInvoice.value * 100))} (vence{" "}
-              {date(pendingInvoice.dueDate)})
-            </a>
+          {pendingInvoice && subscription.billing_type === "pix" ? (
+            <div className="mt-3 flex flex-col gap-1">
+              <p className="text-sm">
+                Mensalidade em aberto: {formatBRL(Math.round(pendingInvoice.value * 100))} (vence{" "}
+                {date(pendingInvoice.dueDate)})
+              </p>
+              <PendingPixButton label="Pagar com Pix" />
+            </div>
+          ) : null}
+          {pendingInvoice &&
+          subscription.billing_type === "credit_card" &&
+          pendingInvoice.status === "OVERDUE" ? (
+            <p className="mt-3 text-sm text-destructive">
+              A cobrança no cartão não foi aprovada. Troque o cartão ou mude para Pix abaixo.
+            </p>
+          ) : null}
+          {active || subscription.status === "pending" ? (
+            <div className="mt-4">
+              <PaymentMethodSection
+                method={subscription.billing_type}
+                cardLabel={
+                  subscription.card_last4
+                    ? `Cartão ${subscription.card_brand ?? ""} final ${subscription.card_last4}`.replace(
+                        "  ",
+                        " ",
+                      )
+                    : "Cartão de crédito"
+                }
+              />
+            </div>
           ) : null}
           {payments.length > 0 ? (
             <div className="mt-4">
@@ -132,14 +153,9 @@ export default async function PlanPage() {
                     <span className="text-muted-foreground">
                       {PAYMENT_STATUS[p.status] ?? p.status}
                     </span>
-                    <a
-                      href={p.invoiceUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-primary underline"
-                    >
-                      Fatura
-                    </a>
+                    <span className="text-muted-foreground">
+                      {p.billingType === "CREDIT_CARD" ? "Cartão" : "Pix"}
+                    </span>
                   </li>
                 ))}
               </ul>

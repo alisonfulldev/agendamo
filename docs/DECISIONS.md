@@ -201,3 +201,15 @@ Revise antes de aplicar no Supabase de produção.
 - E-mail da cliente opcional no chat: pergunta diz "(é opcional)", botão "Prefiro não informar"; a frase "enviamos por e-mail" (`chatMessages.emailNote`) só aparece quando há e-mail.
 - Resumo do chat: mostra a resposta da cliente ("Confirmar agendamento"), não cita profissional quando não houve escolha e omite "valor R$ 0,00" em serviço sem preço (perfil mostra "Sob consulta").
 - "Salvar na minha agenda": botões Google Agenda (link pré-preenchido) e Calendário do iPhone (.ics).
+
+## Checkout próprio da mensalidade e preparação para produção (2026-10-03)
+
+- A dona paga dentro do painel; o Asaas só processa por trás (endpoints conferidos em docs.asaas.com):
+  - Pix: assinatura `billingType: PIX`, QR code da cobrança (`GET /payments/{id}/pixQrCode`) mostrado no painel; a tela atualiza sozinha quando o webhook confirma.
+  - Cartão: tokenização (`POST /creditCard/tokenizeCreditCard`, com o IP da dona) e assinatura `CREDIT_CARD` com o token. Os dados do cartão passam pelo servidor uma vez, nunca são gravados nem registrados; ficam só os 4 últimos dígitos e a bandeira (migration `20261004000001`).
+  - Trocar forma de pagamento: `PUT /subscriptions/{id}` (billingType) e `PUT /subscriptions/{id}/creditCard` (cartão novo, sem cobrar).
+  - Clientes criados com `notificationDisabled: true`; a renovação por Pix gera o nosso e-mail com o link para o painel (evento `PAYMENT_CREATED`). Adicionais são pagos por Pix.
+- Migration `20261004000002_explicit_api_grants.sql`: permissões explícitas das tabelas para os papéis da API (projetos novos do Supabase podem não expor tabelas novas). Seguro porque todas as tabelas públicas têm RLS (teste `supabase/tests/security.test.ts`).
+- Marcas com domínio provisório (`*.example.com`) usam o endereço do app com `?brand=` nos links, também em produção, até o domínio real entrar no arquivo da marca.
+- `docs/SETUP.md` (guia curto para Supabase, Resend, Vercel e Asaas) e `npm run check:setup` (confere chaves e conexões sem exibi-las).
+- Modo demo: Asaas simulado (cartão terminado em 0000 é recusado; `/demo` confirma pagamentos); nunca liga em produção.

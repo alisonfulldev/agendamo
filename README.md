@@ -81,20 +81,21 @@ As páginas são dinâmicas e saem com `Cache-Control: no-store`. Os dados da p�
 
 ## Scripts
 
-| Comando                 | O que faz                                       |
-| ----------------------- | ----------------------------------------------- |
-| `npm run dev`           | Servidor de desenvolvimento                     |
-| `npm run dev:demo`      | Modo demonstração local (sem serviços externos) |
-| `npm run build`         | Build de produção                               |
-| `npm run lint`          | ESLint                                          |
-| `npm run typecheck`     | Gera tipos de rotas do Next e roda `tsc`        |
-| `npm run format`        | Prettier (escreve)                              |
-| `npm run format:check`  | Prettier (só verifica)                          |
-| `npm test`              | Vitest: unitários + testes do banco (PGlite)    |
-| `npm run test:e2e`      | Playwright (sobe o `next dev`)                  |
-| `npm run test:e2e:demo` | Playwright: todas as telas no modo demonstração |
-| `npm run db:new <nome>` | Cria uma migration vazia                        |
-| `npm run db:push`       | Aplica migrations pendentes no projeto linkado  |
+| Comando                 | O que faz                                                                          |
+| ----------------------- | ---------------------------------------------------------------------------------- |
+| `npm run dev`           | Servidor de desenvolvimento                                                        |
+| `npm run dev:demo`      | Modo demonstração local (sem serviços externos)                                    |
+| `npm run check:setup`   | Confere as chaves de `.env.local` e a conexão com Supabase, Resend, Asaas e Vercel |
+| `npm run build`         | Build de produção                                                                  |
+| `npm run lint`          | ESLint                                                                             |
+| `npm run typecheck`     | Gera tipos de rotas do Next e roda `tsc`                                           |
+| `npm run format`        | Prettier (escreve)                                                                 |
+| `npm run format:check`  | Prettier (só verifica)                                                             |
+| `npm test`              | Vitest: unitários + testes do banco (PGlite)                                       |
+| `npm run test:e2e`      | Playwright (sobe o `next dev`)                                                     |
+| `npm run test:e2e:demo` | Playwright: todas as telas no modo demonstração                                    |
+| `npm run db:new <nome>` | Cria uma migration vazia                                                           |
+| `npm run db:push`       | Aplica migrations pendentes no projeto linkado                                     |
 
 ## Testes
 
@@ -120,6 +121,8 @@ npx supabase db push --include-seed             # opcional: dados de exemplo (su
 Nunca edite uma migration já aplicada: crie outra com `npm run db:new`.
 
 ## Checklist de produção
+
+**Para colocar no ar o essencial (Supabase, Resend, Vercel e Asaas), siga o guia curto [docs/SETUP.md](docs/SETUP.md)** e confira com `npm run check:setup`. A lista abaixo é a versão completa, com os opcionais.
 
 Faça nesta ordem. Cada item tem como conferir.
 
@@ -168,6 +171,7 @@ Faça nesta ordem. Cada item tem como conferir.
 
 - [ ] Conta de produção aprovada; chave da API → `ASAAS_API_KEY`; `ASAAS_ENV=production`.
 - [ ] Webhook: URL `https://<dominio-principal>/api/webhooks/asaas`, token de autenticação → `ASAAS_WEBHOOK_TOKEN`, eventos de **cobranças** e **assinaturas**.
+- [ ] Checkout próprio (Pix e cartão dentro do painel): pedir ao Asaas a **habilitação da tokenização de cartão** na conta de produção. Os dados do cartão passam pelo servidor uma vez e não são guardados (só os 4 últimos dígitos).
 - [ ] Testar antes no sandbox (`ASAAS_ENV=sandbox`): assinar, pagar, falhar, trocar e cancelar.
 
 ### 6. Google Agenda

@@ -8,6 +8,8 @@ import { notFound, redirect } from "next/navigation";
 import { z } from "zod";
 
 import { getRequestOrigin } from "@/brands/server";
+import { confirmDemoPayment } from "@/lib/billing/asaas";
+import { handleAsaasEvent } from "@/lib/billing/service";
 import { invalidatePublicPage } from "@/lib/cache";
 import { resetDemoDb, getDemoDb } from "@/lib/demo/db";
 import { clearDemoEmails } from "@/lib/demo/mailbox";
@@ -81,6 +83,11 @@ export async function demoSetPlanAction(formData: FormData): Promise<void> {
       [businessId, plan],
     )
   ).rows[0];
+  // Without a subscription (trial / expired) the simulated Asaas subscription goes away too, so
+  // the checkout starts fresh.
+  if (plan !== "subscribed") {
+    await db.query("delete from public.subscriptions where business_id = $1", [businessId]);
+  }
   if (row) invalidatePublicPage(row.slug);
   redirect("/demo?ok=plano#planos");
 }
@@ -113,4 +120,19 @@ export async function demoResetAction(): Promise<void> {
   rmSync(path.join(process.cwd(), DEMO_DATA_DIR, "files"), { recursive: true, force: true });
   (await cookies()).delete(DEMO_SESSION_COOKIE);
   redirect("/demo?ok=reset");
+}
+
+/** Simulates the Asaas webhook confirming the open charge of a subscription (own checkout). */
+export async function demoConfirmPaymentAction(formData: FormData): Promise<void> {
+  guard();
+  const subscriptionId = z.string().min(1).max(100).parse(formData.get("subscriptionId"));
+  const payment = confirmDemoPayment(subscriptionId);
+  if (payment) {
+    await handleAsaasEvent({
+      id: `evt_demo_${payment.id}`,
+      event: "PAYMENT_CONFIRMED",
+      payment,
+    });
+  }
+  redirect(`/demo?ok=${payment ? "pagamento" : "sem-cobranca"}#assinaturas`);
 }

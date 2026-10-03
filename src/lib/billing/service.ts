@@ -12,10 +12,15 @@ import {
   createCustomer,
   createSubscription,
   deleteSubscription,
+  getPixQrCode,
   listSubscriptionPayments,
+  tokenizeCreditCard,
   updateSubscription,
+  updateSubscriptionCard,
   type AsaasCycle,
   type AsaasPayment,
+  type CardHolderInput,
+  type CardInput,
 } from "./asaas";
 
 export type { Cycle };
@@ -57,18 +62,43 @@ async function ensureCustomer(
   return customer.id;
 }
 
-async function firstInvoiceUrl(subscriptionId: string): Promise<string | null> {
+export type PaymentMethod = "pix" | "credit_card";
+
+export interface PixCharge {
+  /** data:image/png;base64,… */
+  image: string;
+  payload: string;
+  expiresAt: string;
+  valueCents: number;
+}
+
+export type SubscribeResult =
+  | { kind: "changed" }
+  | { kind: "pix"; pix: PixCharge }
+  | { kind: "card"; last4: string; brand: string };
+
+interface CardPayment {
+  card: CardInput;
+  holder: Omit<CardHolderInput, "name" | "email" | "cpfCnpj">;
+}
+
+async function pixOfPendingPayment(subscriptionId: string): Promise<PixCharge | null> {
   const payments = await listSubscriptionPayments(subscriptionId);
-  return (
-    payments.find((p) => p.status === "PENDING" || p.status === "OVERDUE")?.invoiceUrl ??
-    payments[0]?.invoiceUrl ??
-    null
-  );
+  const pending = payments.find((p) => p.status === "PENDING" || p.status === "OVERDUE");
+  if (!pending) return null;
+  const qr = await getPixQrCode(pending.id);
+  return {
+    image: `data:image/png;base64,${qr.encodedImage}`,
+    payload: qr.payload,
+    expiresAt: qr.expirationDate,
+    valueCents: Math.round(pending.value * 100),
+  };
 }
 
 /**
- * Subscribes (single plan) or changes cycle / extra professionals of an existing subscription.
- * Returns the Asaas invoice URL for the first payment (card or Pix), when there is one.
+ * Own checkout (Asaas behind the scenes). Subscribes (single plan) paying by Pix (returns the QR
+ * code of the first charge) or card (tokenized at Asaas, charged right away), or changes cycle /
+ * extra professionals of an active subscription. The webhook activates the plan on payment.
  */
 export async function subscribePlan(input: {
   business: Business;
@@ -77,8 +107,11 @@ export async function subscribePlan(input: {
   cycle: Cycle;
   extraProfessionals: number;
   payer: { name: string; cpfCnpj: string; email: string };
+  paymentMethod: PaymentMethod;
+  cardPayment?: CardPayment;
+  remoteIp: string;
   couponCode?: string | null;
-}): Promise<{ invoiceUrl: string | null; changed: boolean }> {
+}): Promise<SubscribeResult> {
   const admin = createAdminClient();
   const existing = await loadSubscription(input.business.id);
   const extras = Math.max(0, Math.min(49, Math.floor(input.extraProfessionals)));
@@ -128,10 +161,31 @@ export async function subscribePlan(input: {
       action: "plan.changed",
       details: { cycle: input.cycle, seats, value_cents: value },
     });
-    return { invoiceUrl: null, changed: true };
+    return { kind: "changed" };
+  }
+
+  // A pending (unpaid) attempt is replaced, so a new choice never leaves two subscriptions.
+  if (existing?.provider_subscription_id && existing.status === "pending") {
+    await deleteSubscription(existing.provider_subscription_id).catch(() => undefined);
   }
 
   const customerId = await ensureCustomer(input.business, existing, input.payer);
+  let card: { creditCardToken: string; creditCardNumber: string; creditCardBrand: string } | null =
+    null;
+  if (input.paymentMethod === "credit_card") {
+    if (!input.cardPayment) throw new Error("card_missing");
+    card = await tokenizeCreditCard({
+      customer: customerId,
+      card: input.cardPayment.card,
+      holder: {
+        ...input.cardPayment.holder,
+        name: input.payer.name,
+        email: input.payer.email,
+        cpfCnpj: input.payer.cpfCnpj,
+      },
+      remoteIp: input.remoteIp,
+    });
+  }
   const subscription = await createSubscription({
     customer: customerId,
     valueCents: value,
@@ -139,6 +193,9 @@ export async function subscribePlan(input: {
     nextDueDate: today(),
     description,
     externalReference: `${input.business.id}:plan`,
+    billingType: card ? "CREDIT_CARD" : "PIX",
+    creditCardToken: card?.creditCardToken,
+    remoteIp: input.remoteIp,
   });
   const { error } = await admin.from("subscriptions").upsert(
     {
@@ -149,6 +206,9 @@ export async function subscribePlan(input: {
       plan: "pro",
       billing_cycle: input.cycle,
       extra_professionals: extras,
+      billing_type: card ? "credit_card" : "pix",
+      card_last4: card?.creditCardNumber ?? null,
+      card_brand: card?.creditCardBrand ?? null,
       addons: existing?.addons ?? {},
       status: "pending",
       updated_at: new Date().toISOString(),
@@ -160,9 +220,75 @@ export async function subscribePlan(input: {
     businessId: input.business.id,
     userId: input.userId,
     action: "subscription.created",
-    details: { cycle: input.cycle, seats, value_cents: value, coupon: input.couponCode ?? null },
+    details: {
+      cycle: input.cycle,
+      seats,
+      value_cents: value,
+      method: input.paymentMethod,
+      coupon: input.couponCode ?? null,
+    },
   });
-  return { invoiceUrl: await firstInvoiceUrl(subscription.id), changed: false };
+
+  if (card) return { kind: "card", last4: card.creditCardNumber, brand: card.creditCardBrand };
+  const pix = await pixOfPendingPayment(subscription.id);
+  if (!pix) throw new Error("pix_unavailable");
+  return { kind: "pix", pix };
+}
+
+/** Pix of the open charge (first payment, renewal or overdue), shown inside the panel. */
+export async function pendingPix(businessId: string): Promise<PixCharge | null> {
+  const existing = await loadSubscription(businessId);
+  if (!existing?.provider_subscription_id || existing.status === "cancelled") return null;
+  return pixOfPendingPayment(existing.provider_subscription_id);
+}
+
+/** Switches how an active subscription is paid: Pix, or a (new) card. No charge right now. */
+export async function changePaymentMethod(input: {
+  business: Business;
+  userId: string;
+  payer: { name: string; email: string; cpfCnpj: string };
+  paymentMethod: PaymentMethod;
+  cardPayment?: CardPayment;
+  remoteIp: string;
+}): Promise<void> {
+  const existing = await loadSubscription(input.business.id);
+  if (!existing?.provider_subscription_id || !existing.provider_customer_id)
+    throw new Error("no_plan");
+  const admin = createAdminClient();
+  if (input.paymentMethod === "pix") {
+    await updateSubscription(existing.provider_subscription_id, { billingType: "PIX" });
+    await admin
+      .from("subscriptions")
+      .update({ billing_type: "pix", card_last4: null, card_brand: null })
+      .eq("id", existing.id);
+  } else {
+    if (!input.cardPayment) throw new Error("card_missing");
+    const card = await tokenizeCreditCard({
+      customer: existing.provider_customer_id,
+      card: input.cardPayment.card,
+      holder: { ...input.cardPayment.holder, ...input.payer },
+      remoteIp: input.remoteIp,
+    });
+    await updateSubscription(existing.provider_subscription_id, { billingType: "CREDIT_CARD" });
+    await updateSubscriptionCard(existing.provider_subscription_id, {
+      creditCardToken: card.creditCardToken,
+      remoteIp: input.remoteIp,
+    });
+    await admin
+      .from("subscriptions")
+      .update({
+        billing_type: "credit_card",
+        card_last4: card.creditCardNumber,
+        card_brand: card.creditCardBrand,
+      })
+      .eq("id", existing.id);
+  }
+  await audit({
+    businessId: input.business.id,
+    userId: input.userId,
+    action: "plan.changed",
+    details: { payment_method: input.paymentMethod },
+  });
 }
 
 /** Stops future charges. The plan stays until the paid period ends (the billing cron downgrades). */
@@ -207,7 +333,7 @@ export async function subscribeAddon(input: {
   addon: "featured" | "custom_domain";
   city?: string;
   payer: { name: string; cpfCnpj: string; email: string };
-}): Promise<string | null> {
+}): Promise<PixCharge | null> {
   const admin = createAdminClient();
   const existing = await loadSubscription(input.business.id);
   if (!existing) throw new Error("no_plan");
@@ -232,6 +358,8 @@ export async function subscribeAddon(input: {
     nextDueDate: today(),
     description: `${input.brand.name} · ${isFeatured ? `Destaque no portal (${city})` : "Domínio próprio"}`,
     externalReference: `${input.business.id}:${isFeatured ? `featured:${city}` : "domain"}`,
+    // Add-ons are paid by Pix inside the panel (no card token is kept on our side).
+    billingType: "PIX",
   });
 
   const next: Addons = isFeatured
@@ -257,7 +385,7 @@ export async function subscribeAddon(input: {
     action: "plan.changed",
     details: { addon: input.addon, city },
   });
-  return firstInvoiceUrl(subscription.id);
+  return pixOfPendingPayment(subscription.id);
 }
 
 export async function cancelAddon(
@@ -412,6 +540,35 @@ export async function handleAsaasEvent(event: AsaasEvent): Promise<string> {
     return "plan active";
   }
 
+  // Renewal by Pix: our own e-mail with the link to pay inside the panel (Asaas e-mails are off).
+  if (event.event === "PAYMENT_CREATED") {
+    if (kind === "plan" && row.status === "active" && row.billing_type === "pix" && event.payment) {
+      if (await claimNotification(row.business_id, "billing_renewal", event.payment.id)) {
+        const due = event.payment.dueDate.split("-").reverse().join("/");
+        const value = Math.round(event.payment.value * 100);
+        await notifyTeam({
+          businessId: row.business_id,
+          type: "account",
+          subject: `Sua mensalidade vence em ${due}`,
+          content: {
+            heading: "Sua mensalidade está disponível",
+            paragraphs: [
+              `A mensalidade de R$ ${(value / 100).toFixed(2).replace(".", ",")} vence em ${due}.`,
+              "Pague pelo Pix no seu painel, em Assinatura. Leva menos de um minuto.",
+            ],
+            cta: { label: "Pagar com Pix", url: "/painel/plano" },
+          },
+          push: {
+            title: "Mensalidade disponível",
+            body: `Vence em ${due}. Pague pelo Pix no painel.`,
+            url: "/painel/plano",
+          },
+        });
+      }
+    }
+    return "payment created";
+  }
+
   if (event.event === "PAYMENT_OVERDUE") {
     if (kind === "plan") {
       await admin
@@ -428,7 +585,7 @@ export async function handleAsaasEvent(event: AsaasEvent): Promise<string> {
             paragraphs: [
               "Não identificamos o pagamento da sua assinatura. Pague em até 5 dias para não pausar sua agenda.",
             ],
-            cta: { label: "Pagar agora", url: event.payment!.invoiceUrl },
+            cta: { label: "Pagar agora", url: "/painel/plano" },
           },
           push: {
             title: "Assinatura em atraso",

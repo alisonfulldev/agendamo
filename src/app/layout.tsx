@@ -5,6 +5,7 @@ import { getBrandBaseUrl } from "@/brands";
 import { fontVariables } from "@/brands/fonts";
 import { getCurrentBrand } from "@/brands/server";
 import { brandThemeStyle } from "@/brands/theme";
+import { hasRealDomain } from "@/brands/urls";
 import { BrandProvider } from "@/components/brand-provider";
 import { isDemoMode } from "@/lib/demo/mode";
 
@@ -13,7 +14,9 @@ import "./globals.css";
 export async function generateMetadata(): Promise<Metadata> {
   const brand = await getCurrentBrand();
   return {
-    metadataBase: getBrandBaseUrl(brand),
+    metadataBase: hasRealDomain(brand)
+      ? getBrandBaseUrl(brand)
+      : new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
     title: { default: brand.name, template: `%s · ${brand.name}` },
     description: brand.sales.subtitle,
     applicationName: brand.name,
