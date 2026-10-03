@@ -1,0 +1,499 @@
+import "server-only";
+
+import type { BrandConfig } from "@/brands";
+import { audit } from "@/lib/audit";
+import { invalidatePublicPage } from "@/lib/cache";
+import type { Business, Subscription } from "@/lib/db/types";
+import { claimNotification, notifyTeam } from "@/lib/notifications/owner";
+import { PLAN_PRICES, subscriptionPrice, type Cycle } from "@/lib/plans";
+import { createAdminClient } from "@/lib/supabase/admin";
+
+import {
+  createCustomer,
+  createSubscription,
+  deleteSubscription,
+  listSubscriptionPayments,
+  updateSubscription,
+  type AsaasCycle,
+  type AsaasPayment,
+} from "./asaas";
+
+export type { Cycle };
+
+const CYCLES: Record<Cycle, AsaasCycle> = { monthly: "MONTHLY", yearly: "YEARLY" };
+
+function today(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function addPeriod(date: string, cycle: Cycle): string {
+  const d = new Date(`${date}T12:00:00Z`);
+  if (cycle === "yearly") d.setUTCFullYear(d.getUTCFullYear() + 1);
+  else d.setUTCMonth(d.getUTCMonth() + 1);
+  return d.toISOString();
+}
+
+async function loadSubscription(businessId: string): Promise<Subscription | null> {
+  const { data } = await createAdminClient()
+    .from("subscriptions")
+    .select("*")
+    .eq("business_id", businessId)
+    .maybeSingle();
+  return (data as Subscription | null) ?? null;
+}
+
+async function ensureCustomer(
+  business: Business,
+  existing: Subscription | null,
+  payer: { name: string; cpfCnpj: string; email: string },
+): Promise<string> {
+  if (existing?.provider_customer_id) return existing.provider_customer_id;
+  const customer = await createCustomer({
+    name: payer.name,
+    cpfCnpj: payer.cpfCnpj,
+    email: payer.email,
+    externalReference: business.id,
+  });
+  return customer.id;
+}
+
+async function firstInvoiceUrl(subscriptionId: string): Promise<string | null> {
+  const payments = await listSubscriptionPayments(subscriptionId);
+  return (
+    payments.find((p) => p.status === "PENDING" || p.status === "OVERDUE")?.invoiceUrl ??
+    payments[0]?.invoiceUrl ??
+    null
+  );
+}
+
+/**
+ * Subscribes (single plan) or changes cycle / extra professionals of an existing subscription.
+ * Returns the Asaas invoice URL for the first payment (card or Pix), when there is one.
+ */
+export async function subscribePlan(input: {
+  business: Business;
+  brand: BrandConfig;
+  userId: string;
+  cycle: Cycle;
+  extraProfessionals: number;
+  payer: { name: string; cpfCnpj: string; email: string };
+  couponCode?: string | null;
+}): Promise<{ invoiceUrl: string | null; changed: boolean }> {
+  const admin = createAdminClient();
+  const existing = await loadSubscription(input.business.id);
+  const extras = Math.max(0, Math.min(49, Math.floor(input.extraProfessionals)));
+  const seats = extras + 1;
+  const description = `${input.brand.name} · ${input.cycle === "yearly" ? "anual" : "mensal"}${
+    extras > 0 ? ` · ${seats} profissionais` : ""
+  }`;
+
+  let discount = 0;
+  if (input.couponCode) {
+    const { data } = await admin.rpc("redeem_platform_coupon", {
+      p_code: input.couponCode,
+      p_brand_key: input.brand.key,
+    });
+    if (data === null || data === undefined) throw new Error("coupon_invalid");
+    discount = data as number;
+  }
+  const value = subscriptionPrice(input.cycle, extras, discount);
+
+  // Change on an active subscription: update it and apply the seats right away.
+  if (
+    existing?.provider_subscription_id &&
+    (existing.status === "active" || existing.status === "overdue")
+  ) {
+    await updateSubscription(existing.provider_subscription_id, {
+      valueCents: value,
+      cycle: CYCLES[input.cycle],
+      description,
+    });
+    await admin
+      .from("subscriptions")
+      .update({
+        plan: "pro",
+        billing_cycle: input.cycle,
+        extra_professionals: extras,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", existing.id);
+    await admin.rpc("apply_professional_seats", {
+      p_business_id: input.business.id,
+      p_seats: seats,
+    });
+    invalidatePublicPage(input.business.slug);
+    await audit({
+      businessId: input.business.id,
+      userId: input.userId,
+      action: "plan.changed",
+      details: { cycle: input.cycle, seats, value_cents: value },
+    });
+    return { invoiceUrl: null, changed: true };
+  }
+
+  const customerId = await ensureCustomer(input.business, existing, input.payer);
+  const subscription = await createSubscription({
+    customer: customerId,
+    valueCents: value,
+    cycle: CYCLES[input.cycle],
+    nextDueDate: today(),
+    description,
+    externalReference: `${input.business.id}:plan`,
+  });
+  const { error } = await admin.from("subscriptions").upsert(
+    {
+      business_id: input.business.id,
+      provider: "asaas",
+      provider_customer_id: customerId,
+      provider_subscription_id: subscription.id,
+      plan: "pro",
+      billing_cycle: input.cycle,
+      extra_professionals: extras,
+      addons: existing?.addons ?? {},
+      status: "pending",
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "business_id" },
+  );
+  if (error) throw new Error(`subscriptions upsert failed: ${error.message}`);
+  await audit({
+    businessId: input.business.id,
+    userId: input.userId,
+    action: "subscription.created",
+    details: { cycle: input.cycle, seats, value_cents: value, coupon: input.couponCode ?? null },
+  });
+  return { invoiceUrl: await firstInvoiceUrl(subscription.id), changed: false };
+}
+
+/** Stops future charges. The plan stays until the paid period ends (the billing cron downgrades). */
+export async function cancelPlan(business: Business, userId: string): Promise<void> {
+  const existing = await loadSubscription(business.id);
+  if (!existing?.provider_subscription_id || existing.status === "cancelled") return;
+  await deleteSubscription(existing.provider_subscription_id);
+  await createAdminClient()
+    .from("subscriptions")
+    .update({ status: "cancelled", updated_at: new Date().toISOString() })
+    .eq("id", existing.id);
+  await audit({
+    businessId: business.id,
+    userId,
+    action: "subscription.cancelled",
+    details: { plan: existing.plan, until: existing.current_period_end },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Add-ons: each one is its own Asaas subscription (monthly).
+
+interface FeaturedAddon {
+  city: string;
+  subscription_id: string;
+  status: "pending" | "active" | "cancelled";
+}
+interface DomainAddon {
+  subscription_id: string;
+  status: "pending" | "active" | "cancelled";
+  paid_until?: string;
+}
+interface Addons {
+  featured?: FeaturedAddon[];
+  custom_domain?: DomainAddon;
+}
+
+export async function subscribeAddon(input: {
+  business: Business;
+  brand: BrandConfig;
+  userId: string;
+  addon: "featured" | "custom_domain";
+  city?: string;
+  payer: { name: string; cpfCnpj: string; email: string };
+}): Promise<string | null> {
+  const admin = createAdminClient();
+  const existing = await loadSubscription(input.business.id);
+  if (!existing) throw new Error("no_plan");
+  const addons = (existing.addons ?? {}) as Addons;
+  const customerId = await ensureCustomer(input.business, existing, input.payer);
+  const isFeatured = input.addon === "featured";
+  const city = input.city?.trim() ?? "";
+  if (
+    isFeatured &&
+    (!city ||
+      addons.featured?.some(
+        (f) => f.city.toLowerCase() === city.toLowerCase() && f.status !== "cancelled",
+      ))
+  ) {
+    throw new Error("featured_exists");
+  }
+
+  const subscription = await createSubscription({
+    customer: customerId,
+    valueCents: isFeatured ? PLAN_PRICES.featured.monthly : PLAN_PRICES.customDomain.monthly,
+    cycle: "MONTHLY",
+    nextDueDate: today(),
+    description: `${input.brand.name} · ${isFeatured ? `Destaque no portal (${city})` : "Domínio próprio"}`,
+    externalReference: `${input.business.id}:${isFeatured ? `featured:${city}` : "domain"}`,
+  });
+
+  const next: Addons = isFeatured
+    ? {
+        ...addons,
+        featured: [
+          ...(addons.featured ?? []),
+          { city, subscription_id: subscription.id, status: "pending" },
+        ],
+      }
+    : { ...addons, custom_domain: { subscription_id: subscription.id, status: "pending" } };
+  await admin
+    .from("subscriptions")
+    .update({
+      addons: next,
+      provider_customer_id: customerId,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", existing.id);
+  await audit({
+    businessId: input.business.id,
+    userId: input.userId,
+    action: "plan.changed",
+    details: { addon: input.addon, city },
+  });
+  return firstInvoiceUrl(subscription.id);
+}
+
+export async function cancelAddon(
+  business: Business,
+  userId: string,
+  subscriptionId: string,
+): Promise<void> {
+  const existing = await loadSubscription(business.id);
+  if (!existing) return;
+  const addons = (existing.addons ?? {}) as Addons;
+  const owned =
+    addons.featured?.some((f) => f.subscription_id === subscriptionId) ||
+    addons.custom_domain?.subscription_id === subscriptionId;
+  if (!owned) return;
+  await deleteSubscription(subscriptionId);
+  await applyAddonStatus(existing, subscriptionId, "cancelled");
+  await audit({
+    businessId: business.id,
+    userId,
+    action: "subscription.cancelled",
+    details: { addon_subscription: subscriptionId },
+  });
+}
+
+async function applyAddonStatus(
+  row: Subscription,
+  subscriptionId: string,
+  status: FeaturedAddon["status"],
+  paidUntil?: string,
+) {
+  const admin = createAdminClient();
+  const addons = (row.addons ?? {}) as Addons;
+  const featured = addons.featured?.find((f) => f.subscription_id === subscriptionId);
+  if (featured) {
+    featured.status = status;
+    if (status === "active" && paidUntil) {
+      await admin
+        .from("portal_featured")
+        .upsert(
+          { business_id: row.business_id, city: featured.city, active_until: paidUntil },
+          { onConflict: "business_id,city" },
+        );
+    } else if (status === "cancelled") {
+      await admin
+        .from("portal_featured")
+        .update({ active_until: new Date().toISOString() })
+        .eq("business_id", row.business_id)
+        .eq("city", featured.city);
+    }
+  } else if (addons.custom_domain?.subscription_id === subscriptionId) {
+    addons.custom_domain.status = status;
+    if (paidUntil) addons.custom_domain.paid_until = paidUntil;
+  } else {
+    return;
+  }
+  await admin
+    .from("subscriptions")
+    .update({ addons, updated_at: new Date().toISOString() })
+    .eq("id", row.id);
+}
+
+// ---------------------------------------------------------------------------
+// Webhook
+
+export interface AsaasEvent {
+  id: string;
+  event: string;
+  payment?: AsaasPayment;
+  subscription?: { id: string; status?: string };
+}
+
+async function findBySubscription(
+  subscriptionId: string,
+): Promise<{ row: Subscription; kind: "plan" | "addon" } | null> {
+  const admin = createAdminClient();
+  const { data: plan } = await admin
+    .from("subscriptions")
+    .select("*")
+    .eq("provider_subscription_id", subscriptionId)
+    .maybeSingle();
+  if (plan) return { row: plan as Subscription, kind: "plan" };
+  const { data: featured } = await admin
+    .from("subscriptions")
+    .select("*")
+    .contains("addons", { featured: [{ subscription_id: subscriptionId }] })
+    .maybeSingle();
+  if (featured) return { row: featured as Subscription, kind: "addon" };
+  const { data: domain } = await admin
+    .from("subscriptions")
+    .select("*")
+    .contains("addons", { custom_domain: { subscription_id: subscriptionId } })
+    .maybeSingle();
+  return domain ? { row: domain as Subscription, kind: "addon" } : null;
+}
+
+async function businessOf(businessId: string): Promise<Business | null> {
+  const { data } = await createAdminClient()
+    .from("businesses")
+    .select("*")
+    .eq("id", businessId)
+    .maybeSingle();
+  return (data as Business | null) ?? null;
+}
+
+/** Applies one Asaas event. Callers guarantee each event id is handled once. */
+export async function handleAsaasEvent(event: AsaasEvent): Promise<string> {
+  const admin = createAdminClient();
+  const subscriptionId = event.payment?.subscription ?? event.subscription?.id;
+  if (!subscriptionId) return "ignored: no subscription";
+  const found = await findBySubscription(subscriptionId);
+  if (!found) return "ignored: unknown subscription";
+  const { row, kind } = found;
+
+  if (event.event === "PAYMENT_CONFIRMED" || event.event === "PAYMENT_RECEIVED") {
+    const cycle: Cycle = kind === "plan" ? row.billing_cycle : "monthly";
+    const paidUntil = addPeriod(event.payment!.dueDate, cycle);
+    if (kind === "addon") {
+      // A few days of tolerance until the next charge is paid.
+      await applyAddonStatus(
+        row,
+        subscriptionId,
+        "active",
+        new Date(new Date(paidUntil).getTime() + 3 * 86_400_000).toISOString(),
+      );
+      return "addon active";
+    }
+    await admin
+      .from("subscriptions")
+      .update({
+        status: "active",
+        current_period_end: paidUntil,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", row.id);
+    const business = await businessOf(row.business_id);
+    if (business) {
+      await admin.rpc("apply_professional_seats", {
+        p_business_id: business.id,
+        p_seats: (row.extra_professionals ?? 0) + 1,
+      });
+    }
+    if (business && business.plan !== "pro") {
+      await admin.from("businesses").update({ plan: "pro" }).eq("id", business.id);
+      await audit({
+        businessId: business.id,
+        userId: null,
+        action: "plan.changed",
+        details: { from: business.plan, to: "pro", via: "payment" },
+      });
+      invalidatePublicPage(business.slug);
+    }
+    return "plan active";
+  }
+
+  if (event.event === "PAYMENT_OVERDUE") {
+    if (kind === "plan") {
+      await admin
+        .from("subscriptions")
+        .update({ status: "overdue", updated_at: new Date().toISOString() })
+        .eq("id", row.id);
+      if (await claimNotification(row.business_id, "billing_overdue", event.payment!.id)) {
+        await notifyTeam({
+          businessId: row.business_id,
+          type: "account",
+          subject: "Pagamento da assinatura em atraso",
+          content: {
+            heading: "Seu pagamento está em atraso",
+            paragraphs: [
+              "Não identificamos o pagamento da sua assinatura. Pague em até 5 dias para não pausar sua agenda.",
+            ],
+            cta: { label: "Pagar agora", url: event.payment!.invoiceUrl },
+          },
+          push: {
+            title: "Assinatura em atraso",
+            body: "Pague em até 5 dias para manter seu plano.",
+            url: "/painel/plano",
+          },
+        });
+      }
+    }
+    return "overdue";
+  }
+
+  if (event.event === "SUBSCRIPTION_DELETED" || event.event === "SUBSCRIPTION_INACTIVATED") {
+    if (kind === "addon") {
+      await applyAddonStatus(row, subscriptionId, "cancelled");
+      return "addon cancelled";
+    }
+    const stillPaid = row.current_period_end && new Date(row.current_period_end) > new Date();
+    await admin
+      .from("subscriptions")
+      .update({ status: "cancelled", updated_at: new Date().toISOString() })
+      .eq("id", row.id);
+    // Cancelled by the owner with a paid period left: the billing cron downgrades at period end.
+    if (!stillPaid) await downgradeToFree(row.business_id, "subscription cancelled");
+    return "plan cancelled";
+  }
+
+  return `ignored: ${event.event}`;
+}
+
+/** Subscription ended without payment: same state as an ended trial (data kept). */
+export async function downgradeToFree(businessId: string, reason: string): Promise<void> {
+  const business = await businessOf(businessId);
+  if (!business || business.plan === "free") return;
+  // Nothing is hidden or deleted: the chat switches to the WhatsApp hand-off and the panel
+  // shows only the plan screen until a new subscription is paid.
+  await createAdminClient().from("businesses").update({ plan: "free" }).eq("id", businessId);
+  invalidatePublicPage(business.slug);
+  await audit({
+    businessId,
+    userId: null,
+    action: "plan.changed",
+    details: { from: business.plan, to: "free", reason },
+  });
+}
+
+/** Daily: plans cancelled whose period ended, or overdue for more than 5 days, are paused. */
+export async function processBillingExpirations(): Promise<number> {
+  const admin = createAdminClient();
+  const now = Date.now();
+  const { data } = await admin
+    .from("subscriptions")
+    .select("*")
+    .in("status", ["cancelled", "overdue"]);
+  let downgraded = 0;
+  for (const row of (data ?? []) as Subscription[]) {
+    const end = row.current_period_end ? new Date(row.current_period_end).getTime() : 0;
+    const expired = row.status === "cancelled" ? end < now : end + 5 * 86_400_000 < now;
+    if (expired) {
+      await downgradeToFree(
+        row.business_id,
+        row.status === "cancelled" ? "cancelled period ended" : "overdue 5 days",
+      );
+      downgraded++;
+    }
+  }
+  return downgraded;
+}
