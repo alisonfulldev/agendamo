@@ -33,7 +33,7 @@ for (const brand of [beauty, barber]) {
   }) => {
     await page.goto(`/${brand.niche.route}`);
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(brand.sales.title);
-    await expect(page.getByRole("banner")).toContainText(brand.niche.label);
+    await expect(page.getByRole("banner")).toContainText(`para ${brand.niche.name.toLowerCase()}`);
     expect(await scopedVar(page, "--brand-primary")).toBe(brand.theme.primary);
 
     await page.getByRole("link", { name: "Testar 30 dias grátis" }).first().click();

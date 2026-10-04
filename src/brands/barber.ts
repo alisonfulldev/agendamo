@@ -11,6 +11,7 @@ export const barber = {
   niche: {
     route: "barbearia",
     name: "Barbearia",
+    icon: "scissors",
     label: "Barbearias e barbeiros",
     pitch: "Corte, barba e combo marcados sozinhos, com agenda por barbeiro.",
   },

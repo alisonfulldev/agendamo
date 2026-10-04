@@ -11,6 +11,7 @@ export const beauty = {
   niche: {
     route: "beleza",
     name: "Beleza",
+    icon: "sparkles",
     label: "Salões, esmalterias e estúdios de beleza",
     pitch: "Unhas, cabelo, cílios e sobrancelha com agenda cheia e menos faltas.",
   },

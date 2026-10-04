@@ -76,6 +76,8 @@ export const brandConfigSchema = z.object({
       route: z.string().regex(/^[a-z]+$/),
       /** Short name for menus and links ("Beleza"). */
       name: text,
+      /** Icon shown on the niche cards (mapped to an icon in the UI). */
+      icon: z.enum(["sparkles", "scissors", "flower", "brain", "activity"]),
       label: text,
       pitch: text,
     })

@@ -11,6 +11,7 @@ export const aesthetics = {
   niche: {
     route: "estetica",
     name: "Estética",
+    icon: "flower",
     label: "Clínicas de estética e esteticistas",
     pitch: "Procedimentos sem conflito de sala ou maca, com sinal por Pix.",
   },

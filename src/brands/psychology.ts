@@ -11,6 +11,7 @@ export const psychology = {
   niche: {
     route: "psicologia",
     name: "Psicologia",
+    icon: "brain",
     label: "Psicólogas e psicólogos",
     pitch: "Agendamento discreto de sessões, presenciais ou online.",
   },

@@ -11,6 +11,7 @@ export const physio = {
   niche: {
     route: "fisioterapia",
     name: "Fisioterapia",
+    icon: "activity",
     label: "Fisioterapeutas e pilates",
     pitch: "Sessões e pacotes organizados, com lembretes contra faltas.",
   },
