@@ -32,6 +32,15 @@ export interface SendEmailResult {
 
 let client: Resend | undefined;
 
+/**
+ * Sender of a brand. RESEND_FROM overrides it while the brand domain is not verified: a full
+ * "Name <address>" replaces everything; a bare address keeps the brand's name.
+ */
+export function senderFor(brand: Pick<BrandConfig, "emailFrom">, override?: string): string {
+  if (override?.includes("<")) return override;
+  return `${brand.emailFrom.name} <${override || brand.emailFrom.address}>`;
+}
+
 /** Sends a branded e-mail. Sender is the brand's emailFrom (RESEND_FROM overrides in development). */
 export async function sendEmail(input: SendEmailInput): Promise<SendEmailResult> {
   const env = getServerEnv();
@@ -57,8 +66,7 @@ export async function sendEmail(input: SendEmailInput): Promise<SendEmailResult>
   }
 
   client ??= new Resend(env.RESEND_API_KEY);
-  const from =
-    env.RESEND_FROM ?? `${input.brand.emailFrom.name} <${input.brand.emailFrom.address}>`;
+  const from = senderFor(input.brand, env.RESEND_FROM);
   const headers: Record<string, string> = {};
   if (input.content.unsubscribeUrl) {
     // One-click endpoint (RFC 8058); the visible link opens the confirmation page.

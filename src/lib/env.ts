@@ -24,7 +24,10 @@ export const serverEnvSchema = clientEnvSchema.extend({
   R2_BUCKET: optionalString,
   R2_PUBLIC_URL: optionalUrl,
   RESEND_API_KEY: optionalString,
-  /** Development sender override, e.g. "Lively <onboarding@resend.dev>". */
+  /**
+   * Sender override while the brand domains are not verified: a bare address keeps each brand's
+   * name ("nao-responda@dominio.com.br"); "Name <address>" replaces it entirely.
+   */
   RESEND_FROM: optionalString,
   VAPID_PRIVATE_KEY: optionalString,
   VAPID_SUBJECT: z.preprocess(empty, z.string().startsWith("mailto:").optional()),

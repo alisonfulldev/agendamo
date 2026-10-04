@@ -15,7 +15,11 @@ que copiar e onde colar. Ao final, `npm run check:setup` confere tudo sem mostra
       variáveis de produção cadastradas, `vercel.json` fixa o framework Next.js. Testado em produção:
       chat, agendamento, login e painel. **Falta:** conectar o GitHub (Settings → Git) para cada push
       publicar sozinho; até lá, publicar com `npx vercel deploy --prod`.
-- [ ] Resend
+- [x] **Resend:** domínio `topsitebr.com.br` (já verificado) como remetente compartilhado:
+      `RESEND_FROM=nao-responda@topsitebr.com.br` mantém o nome de cada marca. Chave só de envio,
+      restrita a esse domínio, no `.env.local` e na Vercel. Cadastro em produção testado (e-mail
+      entregue). Quando houver domínio próprio do agendamo/das marcas, verificar no Resend e trocar
+      `RESEND_FROM`.
 - [ ] Asaas
 
 > A chave secreta nova do Supabase (`sb_secret_…`) só aparece completa com
