@@ -20,7 +20,12 @@ que copiar e onde colar. Ao final, `npm run check:setup` confere tudo sem mostra
       restrita a esse domínio, no `.env.local` e na Vercel. Cadastro em produção testado (e-mail
       entregue). Quando houver domínio próprio do agendamo/das marcas, verificar no Resend e trocar
       `RESEND_FROM`.
-- [ ] Asaas
+- [x] **Asaas (produção, mesma conta do topsite):** chave de API compartilhada com o outro sistema,
+      webhook próprio `agendamo` → `https://agendamo.vercel.app/api/webhooks/asaas` (o webhook
+      `topsite` não foi alterado). Testado em produção: Pix gerado no painel, avisos
+      `PAYMENT_CREATED` e `SUBSCRIPTION_DELETED` recebidos; cobrança, assinatura e cliente de teste
+      apagados. **Falta:** pedir ao Asaas a habilitação da tokenização de cartão (para o cartão no
+      checkout próprio). Se a chave for trocada no Asaas, atualizar nos dois sistemas.
 
 > A chave secreta nova do Supabase (`sb_secret_…`) só aparece completa com
 > `npx supabase projects api-keys --project-ref <ref> --reveal`.
