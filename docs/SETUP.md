@@ -6,6 +6,18 @@ que copiar e onde colar. Ao final, `npm run check:setup` confere tudo sem mostra
 > O modo demonstração (`npm run dev:demo`) continua existindo só para testes no seu computador.
 > Ele nunca liga em produção: na Vercel o sistema usa apenas os serviços reais.
 
+## Situação (2026-10-04)
+
+- [x] **Supabase:** projeto `agendamo` (ref `cloorbuzuuoohnvwjyxr`, São Paulo) criado pela CLI, 20
+      migrations aplicadas, chaves no `.env.local` local. Fluxo real testado (cadastro, negócio,
+      agendamento) e os dados de teste apagados. Falta só a parte que depende da Vercel (1.5 e 1.6).
+- [ ] Resend
+- [ ] Vercel
+- [ ] Asaas
+
+> A chave secreta nova do Supabase (`sb_secret_…`) só aparece completa com
+> `npx supabase projects api-keys --project-ref <ref> --reveal`.
+
 ## 0. Antes de começar
 
 - [ ] **Domínios das marcas.** Hoje estão provisórios (`beauty.example.com`…), em

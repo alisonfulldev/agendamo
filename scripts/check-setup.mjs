@@ -48,10 +48,13 @@ if (
     "banco com a chave secreta (tabela businesses — exige as migrations aplicadas)",
     `${env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/businesses?select=id&limit=1`,
     {
-      headers: {
-        apikey: env.SUPABASE_SERVICE_ROLE_KEY,
-        Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
-      },
+      // New "sb_secret_…" keys go only in apikey; legacy JWT keys also need the Bearer header.
+      headers: env.SUPABASE_SERVICE_ROLE_KEY.startsWith("sb_")
+        ? { apikey: env.SUPABASE_SERVICE_ROLE_KEY }
+        : {
+            apikey: env.SUPABASE_SERVICE_ROLE_KEY,
+            Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
+          },
     },
   );
 } else
