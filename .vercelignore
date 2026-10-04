@@ -1,0 +1,10 @@
+# Never upload local secrets or local-only data with `vercel deploy`.
+.env*
+!.env.example
+.demo-data
+.next
+node_modules
+test-results
+playwright-report
+supabase/.temp
+.vercel

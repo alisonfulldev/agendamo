@@ -10,9 +10,12 @@ que copiar e onde colar. Ao final, `npm run check:setup` confere tudo sem mostra
 
 - [x] **Supabase:** projeto `agendamo` (ref `cloorbuzuuoohnvwjyxr`, São Paulo) criado pela CLI, 20
       migrations aplicadas, chaves no `.env.local` local. Fluxo real testado (cadastro, negócio,
-      agendamento) e os dados de teste apagados. Falta só a parte que depende da Vercel (1.5 e 1.6).
+      agendamento) e os dados de teste apagados. Tarefas agendadas apontando para a Vercel.
+- [x] **Vercel:** projeto `agendamo` (time _alison's projects_) no ar em https://agendamo.vercel.app,
+      variáveis de produção cadastradas, `vercel.json` fixa o framework Next.js. Testado em produção:
+      chat, agendamento, login e painel. **Falta:** conectar o GitHub (Settings → Git) para cada push
+      publicar sozinho; até lá, publicar com `npx vercel deploy --prod`.
 - [ ] Resend
-- [ ] Vercel
 - [ ] Asaas
 
 > A chave secreta nova do Supabase (`sb_secret_…`) só aparece completa com
