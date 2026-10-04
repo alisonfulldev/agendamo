@@ -213,3 +213,9 @@ Revise antes de aplicar no Supabase de produção.
 - Marcas com domínio provisório (`*.example.com`) usam o endereço do app com `?brand=` nos links, também em produção, até o domínio real entrar no arquivo da marca.
 - `docs/SETUP.md` (guia curto para Supabase, Resend, Vercel e Asaas) e `npm run check:setup` (confere chaves e conexões sem exibi-las).
 - Modo demo: Asaas simulado (cartão terminado em 0000 é recusado; `/demo` confirma pagamentos); nunca liga em produção.
+
+## E-mails: remetente "Agendamo" e sem marketing (2026-10-04)
+
+- Remetente de todos os e-mails: `Agendamo <nao-responda@topsitebr.com.br>` (`RESEND_FROM` na forma completa), pelo domínio já verificado no Resend.
+- Sem e-mail marketing: saíram os e-mails "Hora de voltar" e "Aniversário" (rota `/api/cron/marketing` removida; migration `20261004100000` desliga a tarefa). Ficam só os necessários: cadastro, troca de senha, confirmações/lembretes/cancelamentos de agendamento, lista de espera pedida pela cliente, convite de equipe, mensalidade e avisos operacionais para a dona.
+- A caixinha do chat passou a ser só a autorização para a dona chamar no WhatsApp se a cliente não terminar ("Quase agendaram"); ninguém é inscrito em novidades.

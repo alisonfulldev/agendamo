@@ -6,7 +6,6 @@ import { useState, useTransition } from "react";
 import { FieldShell } from "@/components/forms/field";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { TEMPLATE_LABELS, type MarketingSettings, type TemplateKey } from "@/lib/sales/settings";
 
@@ -167,30 +166,6 @@ export function MarketingSettingsForm({
               value={draft.inactive_days}
               onChange={(e) => setDraft({ ...draft, inactive_days: Number(e.target.value) })}
               className="h-10 w-32"
-            />
-          </FieldShell>
-          <label className="flex items-center justify-between gap-3 rounded-xl border p-3 text-sm">
-            <span>E-mail automático “Hora de voltar” (só para quem aceitou novidades)</span>
-            <Switch
-              checked={draft.return_email_enabled}
-              onCheckedChange={(v) => setDraft({ ...draft, return_email_enabled: v })}
-            />
-          </label>
-          <label className="flex items-center justify-between gap-3 rounded-xl border p-3 text-sm">
-            <span>E-mail de aniversário (só para quem aceitou novidades)</span>
-            <Switch
-              checked={draft.birthday_email_enabled}
-              onCheckedChange={(v) => setDraft({ ...draft, birthday_email_enabled: v })}
-            />
-          </label>
-          <FieldShell name="birthday_coupon_code" label="Cupom de aniversário (opcional)">
-            <Input
-              id="birthday_coupon_code"
-              value={draft.birthday_coupon_code ?? ""}
-              onChange={(e) =>
-                setDraft({ ...draft, birthday_coupon_code: e.target.value.toUpperCase() })
-              }
-              className="h-10 w-48"
             />
           </FieldShell>
           {keys.map((key) => (

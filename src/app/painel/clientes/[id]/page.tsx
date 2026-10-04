@@ -84,7 +84,6 @@ export default async function CustomerPage({ params }: PageProps<"/painel/client
           <span className="flex flex-wrap items-center gap-2">
             {formatBrPhone(customer.phone)} {customer.email ? `· ${customer.email}` : ""}
             {customer.blocked ? <Badge variant="destructive">Bloqueada</Badge> : null}
-            {customer.marketing_opt_in ? <Badge variant="secondary">Aceita novidades</Badge> : null}
           </span>
         }
         actions={
@@ -166,12 +165,7 @@ export default async function CustomerPage({ params }: PageProps<"/painel/client
 
       {isOwner ? (
         <Section title="Ações">
-          <OwnerActions
-            id={customer.id}
-            blocked={customer.blocked}
-            optIn={customer.marketing_opt_in}
-            slug={business.slug}
-          />
+          <OwnerActions id={customer.id} blocked={customer.blocked} slug={business.slug} />
         </Section>
       ) : null}
     </div>

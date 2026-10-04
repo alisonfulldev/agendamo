@@ -145,18 +145,6 @@ export async function setBlockedAction(
   return { ok: !error };
 }
 
-export async function removeOptInAction(customerId: string): Promise<{ ok: boolean }> {
-  const { business } = await requireOwner();
-  const supabase = await createClient();
-  const { error } = await supabase
-    .from("customers")
-    .update({ marketing_opt_in: false })
-    .eq("id", z.uuid().parse(customerId))
-    .eq("business_id", business.id);
-  revalidatePath(`/painel/clientes/${customerId}`);
-  return { ok: !error };
-}
-
 /** LGPD request from the customer, handled by the owner: deletes the customer and their history. */
 export async function deleteCustomerAction(customerId: string): Promise<void> {
   const { business, user } = await requireOwner();

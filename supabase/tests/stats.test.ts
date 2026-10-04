@@ -57,7 +57,7 @@ describe("cron jobs", () => {
       "daily-alert",
       "deposits",
       "empty-slots",
-      "marketing",
+      // No "marketing": marketing e-mails were dropped (2026-10-04).
       "portal-stats",
       "reminders",
       "stats",

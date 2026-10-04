@@ -10,7 +10,6 @@ import { Textarea } from "@/components/ui/textarea";
 
 import {
   deleteCustomerAction,
-  removeOptInAction,
   saveCustomerNotesAction,
   sellPackageAction,
   setBlockedAction,
@@ -71,12 +70,10 @@ export function NotesForm({
 export function OwnerActions({
   id,
   blocked,
-  optIn,
   slug,
 }: {
   id: string;
   blocked: boolean;
-  optIn: boolean;
   slug: string;
 }) {
   const router = useRouter();
@@ -98,21 +95,6 @@ export function OwnerActions({
         >
           {blocked ? "Desbloquear" : "Bloquear cliente"}
         </Button>
-        {optIn ? (
-          <Button
-            type="button"
-            variant="ghost"
-            disabled={pending}
-            onClick={() =>
-              startTransition(async () => {
-                await removeOptInAction(id);
-                router.refresh();
-              })
-            }
-          >
-            Parar de enviar novidades
-          </Button>
-        ) : null}
       </div>
       <details className="rounded-lg border p-3 text-sm">
         <summary className="cursor-pointer font-medium">

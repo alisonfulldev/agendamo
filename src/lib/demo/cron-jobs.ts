@@ -6,7 +6,6 @@ export const CRON_JOBS = [
   "daily-alert",
   "weekly-summary",
   "empty-slots",
-  "marketing",
   "stats",
   "portal-stats",
   "cleanup",

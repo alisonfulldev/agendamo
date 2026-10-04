@@ -145,7 +145,7 @@ export const beauty = {
     askName: "Pra confirmar, me diz seu nome:",
     askPhone: "Agora seu WhatsApp:",
     askEmail: "Quer receber a confirmação por e-mail? Se quiser, me diz seu e-mail (é opcional):",
-    optInLabel: "Quero receber novidades e lembretes de retorno",
+    optInLabel: "Se eu não terminar o agendamento, podem me chamar no WhatsApp",
     askCoupon: "Tem cupom de desconto?",
     summary: "Confere pra mim: {service} com {professional}, {date} às {time}, valor R$ {price}",
     successConfirmed: "Prontinho, {customerName}! Seu horário está confirmado. 💅",

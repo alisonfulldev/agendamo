@@ -145,7 +145,7 @@ export const barber = {
     askName: "Pra confirmar, qual seu nome?",
     askPhone: "Agora seu WhatsApp:",
     askEmail: "Quer a confirmação no e-mail? Se quiser, manda aí (é opcional):",
-    optInLabel: "Quero receber novidades e lembretes de retorno",
+    optInLabel: "Se eu não terminar o agendamento, podem me chamar no WhatsApp",
     askCoupon: "Tem cupom de desconto?",
     summary: "Confere: {service} com {professional}, {date} às {time}, valor R$ {price}",
     successConfirmed: "Fechado, {customerName}! Seu horário está confirmado. 💈",

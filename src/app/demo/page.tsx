@@ -36,7 +36,6 @@ const CRON_LABELS: Record<(typeof CRON_JOBS)[number], string> = {
   "daily-alert": "Alerta diário da dona",
   "weekly-summary": "Resumo semanal",
   "empty-slots": "Horários vazios amanhã",
-  marketing: "E-mails de marketing",
   stats: "Consolidar estatísticas",
   "portal-stats": "Estatísticas do portal",
   cleanup: "Limpeza de dados antigos",

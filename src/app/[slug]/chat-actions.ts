@@ -328,7 +328,7 @@ export async function confirmChatBookingAction(input: unknown): Promise<ConfirmR
     selection: { serviceIds: data.serviceIds, comboId: data.comboId },
     professional: ctx.professional,
     startsAt: data.startsAt,
-    customer: { name: data.name, phone: data.phone, email: data.email, marketingOptIn: data.optIn },
+    customer: { name: data.name, phone: data.phone, email: data.email, marketingOptIn: false },
     source: "chat",
     couponCode: features.salesTools ? data.couponCode : null,
     referralCode: data.referralCode,

@@ -135,7 +135,7 @@ export const psychology = {
     askName: "Para confirmar, qual é o seu nome?",
     askPhone: "Agora seu WhatsApp:",
     askEmail: "Se quiser receber a confirmação por e-mail, informe seu e-mail (é opcional):",
-    optInLabel: "Quero receber lembretes e novidades",
+    optInLabel: "Se eu não terminar o agendamento, podem me chamar no WhatsApp",
     askCoupon: "Tem cupom de desconto?",
     summary: "Confira: {service} com {professional}, {date} às {time}, valor R$ {price}",
     successConfirmed: "Obrigada, {customerName}. Sua sessão está confirmada.",
