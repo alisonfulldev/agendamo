@@ -1,61 +1,58 @@
 import type { BrandConfigInput } from "./schema";
 
-// Niche of the Agendamo product (domain still provisional).
-export const beauty = {
-  key: "beauty",
+/**
+ * The Agendamo product itself: generic home page (/) that sells to every niche and links to the
+ * niche pages (/beleza, /barbearia…). Not a niche: no business ever belongs to it.
+ */
+export const platform = {
+  key: "agendamo",
   name: "Agendamo",
-  domains: ["beauty.example.com"],
-  logo: "/brands/beauty/logo.svg",
-  favicon: "/brands/beauty/favicon.svg",
+  domains: ["agendamo.example.com"],
+  logo: "/brands/agendamo/logo.svg",
+  favicon: "/brands/agendamo/favicon.svg",
   defaultSegment: "beauty",
-  niche: {
-    route: "beleza",
-    name: "Beleza",
-    label: "Salões, esmalterias e estúdios de beleza",
-    pitch: "Unhas, cabelo, cílios e sobrancelha com agenda cheia e menos faltas.",
-  },
   theme: {
-    primary: "#A8466D",
-    background: "#FFF8F6",
+    primary: "#4338CA",
+    background: "#F8F9FC",
     surface: "#FFFFFF",
-    text: "#2B1B22",
-    muted: "#7A6670",
-    button: "#A8466D",
-    accent: "#F3D6DF",
+    text: "#141A2E",
+    muted: "#5B6478",
+    button: "#4338CA",
+    accent: "#E3E5FB",
     danger: "#B42318",
     headingFont: "poppins",
-    bodyFont: "poppins",
+    bodyFont: "inter",
     radius: "1rem",
   },
   sales: {
-    title: "Suas clientes agendam sozinhas, direto pelo link da bio",
+    title: "Seus clientes agendam sozinhos, direto pelo link da bio",
     subtitle:
-      "Um chat de agendamento com a cara do seu salão. A cliente toca no link, escolhe o serviço e o horário livre, e pronto: já está na sua agenda. Sem ficar respondendo no WhatsApp.",
+      "O Agendamo é um chat de agendamento para quem trabalha com hora marcada. O cliente toca no seu link, escolhe o serviço e um horário livre, e já fica na sua agenda. Sem ficar respondendo mensagem.",
     demo: {
-      businessName: "Studio Bela",
-      bio: "Unhas, cabelo e sobrancelha com carinho.",
-      prices: [9000, 6000, 4000, 4500],
-      customerName: "Mariana",
+      businessName: "Seu negócio",
+      bio: "Atendimento com hora marcada.",
+      prices: [8000, 12000, 6000],
+      customerName: "Ana",
       dayLabel: "Sábado, 14 de março",
-      time: "14:00",
+      time: "10:00",
     },
     pains: [
       "Responder “tem horário?” o dia inteiro",
-      "Perder a cliente que chamou à noite e você só viu de manhã",
-      "Cliente que esquece e falta",
+      "Perder o cliente que chamou à noite e você só viu de manhã",
+      "Horário marcado que fica vazio porque esqueceram",
     ],
     benefits: [
       {
         title: "Chat de agendamento 24 horas",
-        description: "A cliente escolhe serviço, dia e horário livre e já fica agendada.",
+        description: "O cliente escolhe serviço, dia e horário livre e já fica agendado.",
       },
       {
         title: "Perfil igual ao do WhatsApp",
-        description: "Tocando na sua foto, ela vê fotos dos trabalhos, preços e avaliações.",
+        description: "Tocando na sua foto, ele vê fotos, serviços, preços e avaliações.",
       },
       {
         title: "Lembretes automáticos",
-        description: "Menos faltas: a cliente recebe o lembrete antes do horário.",
+        description: "Menos faltas: o cliente recebe o lembrete antes do horário.",
       },
       {
         title: "Sinal por Pix",
@@ -72,26 +69,31 @@ export const beauty = {
     ],
     howItWorks: [
       {
+        title: "Escolha seu tipo de negócio",
+        description: "Os textos, serviços e cores já vêm prontos para o seu nicho.",
+      },
+      {
         title: "Cadastre serviços e horários",
         description: "Em 5 minutos, com preço, duração e seus dias de atendimento.",
       },
       {
         title: "Cole o link na bio",
-        description: "Instagram, status do WhatsApp, Google e onde mais quiser.",
-      },
-      {
-        title: "Receba agendamentos",
-        description: "As clientes escolhem o horário livre sozinhas, até de madrugada.",
+        description: "Instagram, status do WhatsApp, Google e o seu site. Pronto: é só receber.",
       },
     ],
     faq: [
+      {
+        question: "Para quais tipos de negócio funciona?",
+        answer:
+          "Para quem atende com hora marcada: salões, barbearias, estética, psicologia, fisioterapia e outros. Cada nicho tem textos e exemplos próprios.",
+      },
       {
         question: "Preciso de cartão para testar?",
         answer:
           "Não. São 30 dias grátis com tudo liberado, sem cartão. Depois, R$ 29/mês ou R$ 240/ano (sai R$ 20/mês).",
       },
       {
-        question: "Minhas clientes precisam baixar algum aplicativo?",
+        question: "Meus clientes precisam baixar algum aplicativo?",
         answer: "Não. O link abre direto no navegador do celular, como uma conversa.",
       },
       {
@@ -105,37 +107,17 @@ export const beauty = {
           "Sim. Cada profissional tem a própria agenda. O plano inclui 1 profissional e cada extra custa R$ 9/mês.",
       },
       {
-        question: "Funciona para unhas, cílios, sobrancelha e cabelo?",
-        answer: "Sim. Você cadastra cada serviço com a duração e o preço que quiser.",
-      },
-      {
         question: "Posso colocar no meu site?",
         answer:
           "Pode. Cole o link do chat nos botões do site ou use o botão pronto que abre o chat por cima da página.",
       },
     ],
-    testimonials: [
-      {
-        name: "Camila",
-        role: "Nail designer",
-        quote: "Parei de responder horário por mensagem o dia inteiro.",
-        isExample: true,
-      },
-      {
-        name: "Renata",
-        role: "Dona de salão",
-        quote: "As clientes acham a página linda e agendam sozinhas.",
-        isExample: true,
-      },
-    ],
+    testimonials: [],
   },
   suggestedServices: [
-    { name: "Corte feminino", durationMinutes: 60 },
-    { name: "Escova", durationMinutes: 45 },
-    { name: "Manicure", durationMinutes: 45 },
-    { name: "Pedicure", durationMinutes: 45 },
-    { name: "Design de sobrancelha", durationMinutes: 30 },
-    { name: "Extensão de cílios", durationMinutes: 120 },
+    { name: "Atendimento", durationMinutes: 60 },
+    { name: "Avaliação", durationMinutes: 60 },
+    { name: "Retorno", durationMinutes: 30 },
   ],
   terms: {
     customer: { singular: "cliente", plural: "clientes" },
@@ -153,12 +135,12 @@ export const beauty = {
     askEmail: "Quer receber a confirmação por e-mail? Se quiser, me diz seu e-mail (é opcional):",
     optInLabel: "Se eu não terminar o agendamento, podem me chamar no WhatsApp",
     askCoupon: "Tem cupom de desconto?",
-    summary: "Confere pra mim: {service} com {professional}, {date} às {time}, valor R$ {price}",
-    successConfirmed: "Prontinho, {customerName}! Seu horário está confirmado. 💅",
-    emailNote: "Te mandei a confirmação por e-mail.",
-    successPending: "Recebi seu pedido! {business} vai confirmar seu horário.",
+    summary: "Confere: {service} com {professional}, {date} às {time}, valor R$ {price}",
+    successConfirmed: "Prontinho, {customerName}! Seu horário está confirmado. ✅",
+    emailNote: "A confirmação foi para o seu e-mail.",
+    successPending: "Recebemos seu pedido! {business} vai confirmar seu horário.",
     successDeposit:
-      "Pra garantir seu horário, pague o sinal de R$ {depositAmount} pelo Pix abaixo até {deadline}.",
+      "Para garantir seu horário, pague o sinal de R$ {depositAmount} pelo Pix abaixo até {deadline}.",
     conflict: "Ops, esse horário acabou de ser ocupado. Veja os horários atualizados:",
     blocked:
       "No momento não conseguimos concluir seu agendamento por aqui. Fale direto com {business} pelo WhatsApp.",
@@ -166,17 +148,13 @@ export const beauty = {
   },
   messageTemplates: {
     reactivation:
-      "Oi, {customerName}! Aqui é {business}. Faz tempo que não te vejo por aqui 💕 Que tal marcar um horário essa semana?",
+      "Oi, {customerName}! Aqui é {business}. Faz tempo que não te vejo por aqui. Que tal marcar um horário essa semana?",
     return:
       "Oi, {customerName}! Já está na hora de renovar o seu {service}. Quer que eu reserve um horário pra você?",
-    birthday:
-      "Feliz aniversário, {customerName}! 🎉 A {business} preparou um mimo pra você. Bora marcar?",
+    birthday: "Feliz aniversário, {customerName}! 🎉 Que tal marcar um horário essa semana?",
     abandoned:
       "Oi, {customerName}! Vi que você quase agendou {service} com a gente. Posso te ajudar a escolher um horário?",
   },
-  emailFrom: {
-    name: "Agendamo",
-    address: "contato@beauty.example.com",
-  },
+  emailFrom: { name: "Agendamo", address: "contato@agendamo.example.com" },
   socialLinks: {},
 } satisfies BrandConfigInput;

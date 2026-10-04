@@ -3,11 +3,17 @@ import type { BrandConfigInput } from "./schema";
 // Example brand (Prompt 39): configuration only. Provisional name, domain and copy.
 export const psychology = {
   key: "psychology",
-  name: "Lively Psicologia",
+  name: "Agendamo",
   domains: ["psicologia.example.com"],
   logo: "/brands/psychology/logo.svg",
   favicon: "/brands/psychology/favicon.svg",
   defaultSegment: "psychology",
+  niche: {
+    route: "psicologia",
+    name: "Psicologia",
+    label: "Psicólogas e psicólogos",
+    pitch: "Agendamento discreto de sessões, presenciais ou online.",
+  },
   theme: {
     primary: "#4A5B7A",
     background: "#F6F5FA",
@@ -156,6 +162,6 @@ export const psychology = {
     abandoned:
       "Olá, {customerName}. Vi que você começou a agendar {service}. Posso ajudar com algum horário?",
   },
-  emailFrom: { name: "Lively Psicologia", address: "contato@psicologia.example.com" },
+  emailFrom: { name: "Agendamo", address: "contato@psicologia.example.com" },
   socialLinks: {},
 } satisfies BrandConfigInput;

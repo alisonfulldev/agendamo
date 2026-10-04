@@ -3,7 +3,10 @@ import path from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-import { BRANDS, DEFAULT_BRAND, parseBrands } from "@/brands";
+import { BRANDS, DEFAULT_BRAND, NICHES, parseBrands, PLATFORM } from "@/brands";
+
+/** Every theme on the site: the niches and the Agendamo product (generic home). */
+const ALL = [...BRANDS, PLATFORM];
 import { beauty } from "@/brands/beauty";
 import { contrastRatio, readableOn } from "@/brands/theme";
 
@@ -20,7 +23,7 @@ describe("brand configs", () => {
   });
 
   // Prompt 39: every theme passes WCAG AA for normal text.
-  it.each(BRANDS.map((brand) => [brand.key, brand] as const))(
+  it.each(ALL.map((brand) => [brand.key, brand] as const))(
     "%s: theme contrast is AA (4.5:1)",
     (_key, brand) => {
       const { theme } = brand;
@@ -39,7 +42,7 @@ describe("brand configs", () => {
     },
   );
 
-  it.each(BRANDS.map((brand) => [brand.key, brand] as const))(
+  it.each(ALL.map((brand) => [brand.key, brand] as const))(
     "%s: logo and favicon exist in public/",
     (_key, brand) => {
       for (const asset of [brand.logo, brand.favicon]) {
@@ -84,5 +87,17 @@ describe("parseBrands", () => {
   it("rejects invalid colors", () => {
     const invalid = { ...beauty, theme: { ...beauty.theme, primary: "pink" } };
     expect(() => parseBrands([invalid])).toThrow(/theme\.primary/);
+  });
+
+  it("every niche has its own page route and the product is named Agendamo", () => {
+    expect(NICHES.map((brand) => brand.niche!.route)).toEqual([
+      "beleza",
+      "barbearia",
+      "estetica",
+      "psicologia",
+      "fisioterapia",
+    ]);
+    for (const brand of ALL) expect(brand.name).toBe("Agendamo");
+    expect(BRANDS.map((b) => b.key)).not.toContain(PLATFORM.key);
   });
 });

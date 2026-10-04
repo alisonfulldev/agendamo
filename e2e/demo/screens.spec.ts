@@ -96,11 +96,13 @@ test("admin and new account", async ({ page }) => {
 test("public pages of every brand", async ({ page }) => {
   const errors = watchErrors(page);
   const pages = [
-    "/?brand=beauty",
-    "/?brand=barber",
-    "/?brand=aesthetics",
-    "/?brand=psychology",
-    "/?brand=physio",
+    "/",
+    "/beleza",
+    "/barbearia",
+    "/estetica",
+    "/psicologia",
+    "/fisioterapia",
+    "/comecar",
     "/studio-bela?brand=beauty",
     "/studio-bela/agendar?brand=beauty",
     "/barbearia-navalha?brand=barber",

@@ -7,7 +7,11 @@ import { BRANDS } from "@/brands";
 
 // CLAUDE.md rule 14: no literal colors outside brand files. Colors come from CSS variables of the theme.
 const SRC = path.join(process.cwd(), "src");
-const ALLOWED = new Set(BRANDS.map((brand) => path.join(SRC, "brands", `${brand.key}.ts`)));
+const ALLOWED = new Set([
+  ...BRANDS.map((brand) => path.join(SRC, "brands", `${brand.key}.ts`)),
+  // The Agendamo product config (generic home) is a brand file too.
+  path.join(SRC, "brands", "platform.ts"),
+]);
 
 const PALETTE =
   "slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose";

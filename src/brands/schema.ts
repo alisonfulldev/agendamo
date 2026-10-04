@@ -70,6 +70,16 @@ export const brandConfigSchema = z.object({
   logo: publicAsset,
   favicon: publicAsset,
   defaultSegment: z.enum(SEGMENTS),
+  /** Niche landing page on the Agendamo site (/beleza…) and how the niche is presented there. */
+  niche: z
+    .object({
+      route: z.string().regex(/^[a-z]+$/),
+      /** Short name for menus and links ("Beleza"). */
+      name: text,
+      label: text,
+      pitch: text,
+    })
+    .optional(),
   theme: z.object({
     primary: hexColor,
     background: hexColor,

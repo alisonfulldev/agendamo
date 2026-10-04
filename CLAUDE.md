@@ -5,6 +5,8 @@ Página tipo "link na bio" + agenda + ferramentas de venda para negócios de ser
 Vendido como várias MARCAS, uma por nicho (beleza, barbearia, estética, psicologia, fisioterapia, personal, tatuagem...), cada uma com domínio, nome, cores e textos próprios, usando o MESMO sistema.
 Segmentos: beauty, barber, aesthetics, psychology, physio, personal_trainer, tattoo.
 
+Nome do produto: **Agendamo** (definido em 2026-10-04). O site tem uma página inicial genérica (/) que apresenta o sistema e vende para todos os nichos, e uma página por nicho (/beleza, /barbearia, /estetica, /psicologia, /fisioterapia) com textos, cores e exemplos próprios. Os nichos são as "marcas" de src/brands (todas com nome "Agendamo"); a configuração da página inicial é src/brands/platform.ts (PLATFORM), que não é um nicho. O cadastro vindo de um nicho cria o negócio naquele nicho (/cadastro?brand=<chave>); da página inicial, /comecar pergunta o nicho antes.
+
 Produto "chat primeiro": o link do negócio (/<slug>) abre direto no chat de agendamento; tocar na foto abre o perfil (estilo dados do contato); /<slug>/perfil é a versão indexável (portal e Google).
 
 Plano único (igual em todas as marcas; definido em 2026-10-03):

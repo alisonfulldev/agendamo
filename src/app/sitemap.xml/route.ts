@@ -1,21 +1,32 @@
+import { BRANDS, NICHES } from "@/brands";
 import { getCurrentBrand } from "@/brands/server";
-import { brandUrl } from "@/brands/urls";
+import { brandUrl, hasRealDomain } from "@/brands/urls";
 import { indexableBusinessSlugs, indexablePortalPaths } from "@/lib/portal/seo";
 
 function escapeXml(value: string): string {
   return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
-/** Sitemap of the brand domain: sales pages, complete business profiles and portal pages with content. */
+/**
+ * Sitemap. On a niche's own real domain: its sales page, complete business profiles and portal
+ * pages. On the Agendamo site (shared domain): the generic home, every niche page and the
+ * complete profiles of every niche.
+ */
 export async function GET() {
   const brand = await getCurrentBrand();
-  const [businesses, portal] = await Promise.all([
-    indexableBusinessSlugs(brand.key),
-    indexablePortalPaths(brand.key),
+  const ownDomain = hasRealDomain(brand);
+  const keys = ownDomain ? [brand.key] : BRANDS.map((b) => b.key);
+  const [businessLists, portal] = await Promise.all([
+    Promise.all(keys.map((key) => indexableBusinessSlugs(key))),
+    ownDomain ? indexablePortalPaths(brand.key) : Promise.resolve([] as string[]),
   ]);
+  const businesses = businessLists.flat();
   const base = (path: string) => brandUrl(brand, path).split("?")[0]!;
   const urls: { loc: string; priority: string; lastmod?: string }[] = [
     { loc: base("/"), priority: "1.0" },
+    ...(ownDomain
+      ? []
+      : NICHES.map((niche) => ({ loc: base(`/${niche.niche!.route}`), priority: "0.9" }))),
     { loc: base("/cadastro"), priority: "0.6" },
     { loc: base("/termos"), priority: "0.2" },
     { loc: base("/privacidade"), priority: "0.2" },

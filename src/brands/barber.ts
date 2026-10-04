@@ -1,13 +1,19 @@
 import type { BrandConfigInput } from "./schema";
 
-// Provisional name, domains and copy.
+// Niche of the Agendamo product (domain still provisional).
 export const barber = {
   key: "barber",
-  name: "Lively Barber",
+  name: "Agendamo",
   domains: ["barber.example.com"],
   logo: "/brands/barber/logo.svg",
   favicon: "/brands/barber/favicon.svg",
   defaultSegment: "barber",
+  niche: {
+    route: "barbearia",
+    name: "Barbearia",
+    label: "Barbearias e barbeiros",
+    pitch: "Corte, barba e combo marcados sozinhos, com agenda por barbeiro.",
+  },
   theme: {
     primary: "#C8A15A",
     background: "#141414",
@@ -169,7 +175,7 @@ export const barber = {
       "Fala, {customerName}! Vi que você quase marcou {service}. Quer ajuda pra escolher o horário?",
   },
   emailFrom: {
-    name: "Lively Barber",
+    name: "Agendamo",
     address: "contato@barber.example.com",
   },
   socialLinks: {},

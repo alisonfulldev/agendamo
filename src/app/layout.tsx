@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { getBrandBaseUrl } from "@/brands";
 import { fontVariables } from "@/brands/fonts";
+import { FONT_KEYS } from "@/brands/schema";
 import { getCurrentBrand } from "@/brands/server";
 import { brandThemeStyle } from "@/brands/theme";
 import { hasRealDomain } from "@/brands/urls";
@@ -40,13 +41,12 @@ export async function generateViewport(): Promise<Viewport> {
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   const brand = await getCurrentBrand();
-  const { theme } = brand;
 
   return (
     <html
       lang="pt-BR"
       data-brand={brand.key}
-      className={`${fontVariables([theme.headingFont, theme.bodyFont])} h-full antialiased`}
+      className={`${fontVariables(FONT_KEYS)} h-full antialiased`}
       style={brandThemeStyle(brand)}
     >
       <body className="flex min-h-full flex-col">

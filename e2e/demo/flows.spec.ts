@@ -221,7 +221,7 @@ test("signed in on another brand: sign-up shows the account in use and lets you 
     .getByRole("button", { name: "Entrar" })
     .click();
   await page.waitForURL(/\/painel/);
-  await page.goto("/?brand=psychology");
+  await page.goto("/psicologia");
   await page.getByRole("link", { name: "Testar 30 dias grátis" }).first().click();
   await expect(page).toHaveURL(/\/cadastro/);
   await expect(page.getByText("dona.beleza@demo.com")).toBeVisible();

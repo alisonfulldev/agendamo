@@ -219,3 +219,11 @@ Revise antes de aplicar no Supabase de produção.
 - Remetente de todos os e-mails: `Agendamo <nao-responda@topsitebr.com.br>` (`RESEND_FROM` na forma completa), pelo domínio já verificado no Resend.
 - Sem e-mail marketing: saíram os e-mails "Hora de voltar" e "Aniversário" (rota `/api/cron/marketing` removida; migration `20261004100000` desliga a tarefa). Ficam só os necessários: cadastro, troca de senha, confirmações/lembretes/cancelamentos de agendamento, lista de espera pedida pela cliente, convite de equipe, mensalidade e avisos operacionais para a dona.
 - A caixinha do chat passou a ser só a autorização para a dona chamar no WhatsApp se a cliente não terminar ("Quase agendaram"); ninguém é inscrito em novidades.
+
+## Agendamo: página inicial genérica e páginas por nicho (2026-10-04)
+
+- Nome do produto: **Agendamo** em todo lugar (site, painel, chat, e-mails). Os nichos continuam como configurações em `src/brands` (tema, termos, mensagens, serviços sugeridos), todos com o nome "Agendamo".
+- `/`: página genérica (configuração `src/brands/platform.ts`, fora de `BRANDS`): o que o sistema faz, o chat, cartões dos 5 nichos, preço e perguntas. "Testar grátis" leva a `/comecar` (escolha do nicho).
+- `/beleza`, `/barbearia`, `/estetica`, `/psicologia`, `/fisioterapia`: a landing do nicho (componente `SalesPage`), com o tema aplicado só na página; o cadastro sai em `/cadastro?brand=<nicho>`.
+- Endereços reservados (migration `20261004110000`) para nenhum negócio usar esses links. Sitemap lista a home e as páginas de nicho.
+- Se um nicho ganhar domínio próprio no futuro, a home daquele domínio mostra a landing do nicho.
