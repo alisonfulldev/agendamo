@@ -1,10 +1,15 @@
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
+
 import { ImageResponse } from "next/og";
 import QRCode from "qrcode";
+import sharp from "sharp";
 
-import { readableOn } from "@/brands/theme";
+import { readableOn, themeInk } from "@/brands/theme";
 import { brandUrl } from "@/brands/urls";
 import { addDaysToDate, todayIn } from "@/lib/availability";
 import { loadCatalog } from "@/lib/booking/data";
+import { formatDateLong } from "@/lib/booking/details";
 import { freeTimesOn } from "@/lib/booking/free-times";
 import { getBusinessContext } from "@/lib/business/context";
 import { formatBRL } from "@/lib/money";
@@ -15,6 +20,48 @@ import { createClient } from "@/lib/supabase/server";
 
 export type ArtType =
   "agenda-aberta" | "horarios-hoje" | "horarios-amanha" | "novo-servico" | "oferta";
+
+// Poppins (SIL Open Font License, assets/fonts/OFL.txt): read once, the built-in font has no bold.
+const FONT_DIR = join(process.cwd(), "assets/fonts");
+const FONTS = Promise.all(
+  (
+    [
+      ["Poppins-Regular.ttf", 400],
+      ["Poppins-SemiBold.ttf", 600],
+      ["Poppins-ExtraBold.ttf", 800],
+    ] as const
+  ).map(async ([file, weight]) => ({
+    name: "Poppins",
+    data: await readFile(join(FONT_DIR, file)),
+    weight,
+    style: "normal" as const,
+  })),
+);
+
+const toDataUrl = (jpeg: Buffer) => `data:image/jpeg;base64,${jpeg.toString("base64")}`;
+
+/**
+ * The art's photo in the two forms it is drawn: a softly blurred story background (profile photos
+ * are small, so a sharp full-screen version would look pixelated) and a sharp square portrait.
+ * Photos are stored as WebP, which the image renderer cannot read, so both become JPEG data URLs.
+ * Null when the photo cannot be fetched or read.
+ */
+async function artPhoto(url: string | null) {
+  if (!url) return null;
+  try {
+    const response = await fetch(url, { signal: AbortSignal.timeout(8000) });
+    if (!response.ok) return null;
+    const source = sharp(Buffer.from(await response.arrayBuffer())).rotate();
+    const [background, portrait] = await Promise.all([
+      source.clone().resize(540, 960, { fit: "cover" }).blur(18).jpeg({ quality: 80 }).toBuffer(),
+      source.clone().resize(600, 600, { fit: "cover" }).jpeg({ quality: 85 }).toBuffer(),
+    ]);
+    return { background: toDataUrl(background), portrait: toDataUrl(portrait) };
+  } catch (error) {
+    console.error("art photo failed", error);
+    return null;
+  }
+}
 
 /** 1080×1920 story art in the brand theme with the business identity, QR code and link (Prompt 33). */
 export async function GET(request: Request) {
@@ -35,7 +82,24 @@ export async function GET(request: Request) {
   const onPrimary = readableOn(primary, brand.theme);
   const pageUrl = brandUrl(brand, `/${business.slug}`);
   const qr = await QRCode.toDataURL(pageUrl, { width: 360, margin: 1 });
-  const avatar = publicUrl(page.data?.avatar_key as string | null);
+  // The profile photo, else the first photo of the gallery.
+  let photoUrl = publicUrl(page.data?.avatar_key as string | null);
+  if (!photoUrl) {
+    const { data: first } = await supabase
+      .from("page_photos")
+      .select("object_key")
+      .eq("business_id", business.id)
+      .eq("hidden", false)
+      .order("position")
+      .limit(1)
+      .maybeSingle();
+    photoUrl = publicUrl(first?.object_key as string | null);
+  }
+  const photo = await artPhoto(photoUrl);
+  const ink = themeInk(brand.theme);
+  const fg = photo ? ink.light : onPrimary;
+  const shortUrl = pageUrl.replace(/^https?:\/\//, "").split("?")[0];
+  let dayLabel = "";
 
   let title = "Agenda aberta!";
   let subtitle = "Escolha seu horário pelo link";
@@ -47,6 +111,7 @@ export async function GET(request: Request) {
     const date = type === "horarios-hoje" ? today : addDaysToDate(today, 1);
     const times = catalog ? await freeTimesOn(catalog, date) : [];
     title = type === "horarios-hoje" ? "Horários livres hoje" : "Horários livres amanhã";
+    dayLabel = formatDateLong(`${date}T15:00:00Z`, "UTC");
     subtitle = times.length
       ? "Corre que é por ordem de chegada"
       : "Consulte os próximos dias pelo link";
@@ -80,82 +145,185 @@ export async function GET(request: Request) {
       : "Consulte as condições pelo link";
   }
 
+  const W = 1080;
+  const H = 1920;
+  const layer = { position: "absolute", top: 0, left: 0, width: W, height: H } as const;
+  // Smaller portrait when many times need the room.
+  const portraitSize = highlight.length > 4 ? 360 : 480;
+
   return new ImageResponse(
     <div
       style={{
-        width: "100%",
-        height: "100%",
+        position: "relative",
+        width: W,
+        height: H,
         display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "space-between",
-        padding: "120px 80px",
         background: primary,
-        color: onPrimary,
-        fontFamily: "sans-serif",
+        color: fg,
+        fontFamily: "Poppins",
       }}
     >
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 24 }}>
-        {avatar ? (
-          // eslint-disable-next-line @next/next/no-img-element -- next/og renders plain img
+      {photo ? (
+        <>
+          {/* eslint-disable-next-line @next/next/no-img-element -- next/og renders plain img */}
           <img
-            src={avatar}
-            width={220}
-            height={220}
-            style={{ borderRadius: 110, border: `8px solid ${onPrimary}` }}
+            src={photo.background}
+            width={W}
+            height={H}
+            style={{ ...layer, objectFit: "cover" }}
             alt=""
           />
-        ) : null}
-        <div style={{ fontSize: 56, fontWeight: 700 }}>{business.name}</div>
-      </div>
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          gap: 32,
-          textAlign: "center",
-        }}
-      >
-        <div style={{ fontSize: 110, fontWeight: 800, lineHeight: 1.05 }}>{title}</div>
-        <div style={{ fontSize: 48 }}>{subtitle}</div>
-        {highlight.length ? (
+          <div style={{ ...layer, background: ink.dark, opacity: 0.3 }} />
           <div
             style={{
-              display: "flex",
-              flexWrap: "wrap",
-              justifyContent: "center",
-              gap: 20,
-              maxWidth: 900,
+              ...layer,
+              top: H - 1350,
+              height: 1350,
+              backgroundImage: `linear-gradient(180deg, transparent, ${ink.dark})`,
+              opacity: 0.95,
             }}
-          >
-            {highlight.map((time) => (
-              <div
-                key={time}
-                style={{
-                  display: "flex",
-                  fontSize: 54,
-                  fontWeight: 700,
-                  padding: "16px 32px",
-                  borderRadius: 24,
-                  background: brand.theme.background,
-                  color: brand.theme.text,
-                }}
-              >
-                {time}
-              </div>
-            ))}
+          />
+          <div
+            style={{
+              ...layer,
+              height: 420,
+              backgroundImage: `linear-gradient(0deg, transparent, ${ink.dark})`,
+              opacity: 0.6,
+            }}
+          />
+        </>
+      ) : (
+        <>
+          <div
+            style={{
+              position: "absolute",
+              top: -260,
+              left: W - 500,
+              width: 760,
+              height: 760,
+              borderRadius: 380,
+              background: onPrimary,
+              opacity: 0.08,
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              top: 760,
+              left: -320,
+              width: 640,
+              height: 640,
+              borderRadius: 320,
+              background: onPrimary,
+              opacity: 0.06,
+            }}
+          />
+        </>
+      )}
+
+      <div
+        style={{
+          ...layer,
+          display: "flex",
+          flexDirection: "column",
+          padding: "96px 80px 80px",
+        }}
+      >
+        {/* Identity */}
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          <div style={{ fontSize: 50, fontWeight: 800, lineHeight: 1.1 }}>{business.name}</div>
+          <div style={{ fontSize: 30, fontWeight: 600, opacity: 0.85 }}>Agendamento online</div>
+        </div>
+
+        {photo ? (
+          <div style={{ display: "flex", justifyContent: "center", marginTop: 56 }}>
+            {/* eslint-disable-next-line @next/next/no-img-element -- next/og renders plain img */}
+            <img
+              src={photo.portrait}
+              width={portraitSize}
+              height={portraitSize}
+              style={{
+                borderRadius: portraitSize / 2,
+                border: `10px solid ${ink.light}`,
+                objectFit: "cover",
+              }}
+              alt=""
+            />
           </div>
         ) : null}
-      </div>
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 20 }}>
-        {/* eslint-disable-next-line @next/next/no-img-element -- next/og renders plain img */}
-        <img src={qr} width={300} height={300} style={{ borderRadius: 24 }} alt="" />
-        <div style={{ fontSize: 40, fontWeight: 600 }}>
-          {pageUrl.replace(/^https?:\/\//, "").split("?")[0]}
+
+        {/* Message */}
+        <div style={{ display: "flex", flexDirection: "column", marginTop: "auto", gap: 24 }}>
+          {dayLabel ? (
+            <div
+              style={{
+                display: "flex",
+                fontSize: 32,
+                fontWeight: 600,
+                letterSpacing: 4,
+                textTransform: "uppercase",
+                opacity: 0.9,
+              }}
+            >
+              {dayLabel}
+            </div>
+          ) : null}
+          <div style={{ display: "flex", fontSize: 128, fontWeight: 800, lineHeight: 1 }}>
+            {title}
+          </div>
+          <div style={{ display: "flex", fontSize: 44, opacity: 0.92 }}>{subtitle}</div>
+          {highlight.length ? (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 20, marginTop: 16 }}>
+              {highlight.map((time) => (
+                <div
+                  key={time}
+                  style={{
+                    display: "flex",
+                    fontSize: 60,
+                    fontWeight: 800,
+                    padding: "14px 36px",
+                    borderRadius: 28,
+                    background: photo ? ink.light : onPrimary,
+                    color: photo ? ink.dark : primary,
+                  }}
+                >
+                  {time}
+                </div>
+              ))}
+            </div>
+          ) : null}
+        </div>
+
+        {/* Call to action */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 36,
+            marginTop: 64,
+            padding: 32,
+            borderRadius: 44,
+            background: brand.theme.surface,
+            color: brand.theme.text,
+          }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element -- next/og renders plain img */}
+          <img src={qr} width={230} height={230} style={{ borderRadius: 20 }} alt="" />
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, flex: 1 }}>
+            <div style={{ fontSize: 50, fontWeight: 800, color: primary }}>Agende pelo link</div>
+            <div style={{ fontSize: 32, fontWeight: 600 }}>{shortUrl}</div>
+            <div style={{ fontSize: 28, color: brand.theme.muted }}>
+              ou aponte a câmera para o QR code
+            </div>
+          </div>
         </div>
       </div>
     </div>,
-    { width: 1080, height: 1920, headers: { "Cache-Control": "private, no-store" } },
+    {
+      width: W,
+      height: H,
+      fonts: await FONTS,
+      headers: { "Cache-Control": "private, no-store" },
+    },
   );
 }

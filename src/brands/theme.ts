@@ -20,6 +20,13 @@ export function readableOn(color: string, theme: BrandConfig["theme"]): string {
     : theme.background;
 }
 
+/** The theme's darkest and lightest colors (text/background), for content over photos. */
+export function themeInk(theme: BrandConfig["theme"]): { dark: string; light: string } {
+  return relativeLuminance(theme.text) <= relativeLuminance(theme.background)
+    ? { dark: theme.text, light: theme.background }
+    : { dark: theme.background, light: theme.text };
+}
+
 /** Brand theme as CSS custom properties, applied on <html>. globals.css maps them to Tailwind/shadcn tokens. */
 export function brandThemeStyle(brand: BrandConfig): CSSProperties {
   const { theme } = brand;
