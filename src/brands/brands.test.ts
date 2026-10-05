@@ -7,7 +7,8 @@ import { BRANDS, DEFAULT_BRAND, NICHES, parseBrands, PLATFORM } from "@/brands";
 
 /** Every theme on the site: the niches and the Agendamo product (generic home). */
 const ALL = [...BRANDS, PLATFORM];
-import { beauty } from "@/brands/beauty";
+import { psychology } from "@/brands/psychology";
+import { PRICE_TEXT } from "@/lib/plans";
 import { contrastRatio, readableOn } from "@/brands/theme";
 
 describe("brand configs", () => {
@@ -16,8 +17,34 @@ describe("brand configs", () => {
       "beauty",
       "barber",
       "aesthetics",
+      "nails",
+      "lash-brow",
+      "tattoo",
       "psychology",
+      "psychoanalysis",
       "physio",
+      "nutrition",
+      "speech-therapy",
+      "occupational-therapy",
+      "psychopedagogy",
+      "dentistry",
+      "medical",
+      "podiatry",
+      "chiropractic",
+      "osteopathy",
+      "acupuncture",
+      "massage-therapy",
+      "integrative-therapy",
+      "pilates",
+      "yoga",
+      "personal-trainer",
+      "pet-grooming",
+      "veterinary",
+      "tutoring",
+      "photography",
+      "consulting",
+      "auto-detailing",
+      "sports-court",
     ]);
     expect(DEFAULT_BRAND.key).toBe("beauty");
   });
@@ -68,24 +95,24 @@ describe("brand configs", () => {
 
 describe("parseBrands", () => {
   it("rejects duplicate keys", () => {
-    expect(() => parseBrands([beauty, beauty])).toThrow(/Duplicate brand key/);
+    expect(() => parseBrands([psychology, psychology])).toThrow(/Duplicate brand key/);
   });
 
   it("rejects a domain used by two brands", () => {
-    const copy = { ...beauty, key: "beauty-copy" };
-    expect(() => parseBrands([beauty, copy])).toThrow(/beauty\.example\.com/);
+    const copy = { ...psychology, key: "psychology-copy" };
+    expect(() => parseBrands([psychology, copy])).toThrow(/psicologia\.example\.com/);
   });
 
   it("rejects unknown chat variables", () => {
     const invalid = {
-      ...beauty,
-      chatMessages: { ...beauty.chatMessages, greeting: "Oi {nome}" },
+      ...psychology,
+      chatMessages: { ...psychology.chatMessages, greeting: "Oi {nome}" },
     };
     expect(() => parseBrands([invalid])).toThrow(/chatMessages\.greeting/);
   });
 
   it("rejects invalid colors", () => {
-    const invalid = { ...beauty, theme: { ...beauty.theme, primary: "pink" } };
+    const invalid = { ...psychology, theme: { ...psychology.theme, primary: "pink" } };
     expect(() => parseBrands([invalid])).toThrow(/theme\.primary/);
   });
 
@@ -94,10 +121,51 @@ describe("parseBrands", () => {
       "beleza",
       "barbearia",
       "estetica",
+      "manicure",
+      "cilios-e-sobrancelhas",
+      "tatuagem",
       "psicologia",
+      "psicanalise",
       "fisioterapia",
+      "nutricao",
+      "fonoaudiologia",
+      "terapia-ocupacional",
+      "psicopedagogia",
+      "odontologia",
+      "consultorios",
+      "podologia",
+      "quiropraxia",
+      "osteopatia",
+      "acupuntura",
+      "massoterapia",
+      "terapias-integrativas",
+      "pilates",
+      "yoga",
+      "personal",
+      "banho-e-tosa",
+      "veterinaria",
+      "aulas",
+      "fotografia",
+      "consultoria",
+      "estetica-automotiva",
+      "quadras",
     ]);
     for (const brand of ALL) expect(brand.name).toBe("Agendamo");
+    for (const brand of NICHES) {
+      expect(existsSync(path.join(process.cwd(), "src/app", brand.niche!.route, "page.tsx"))).toBe(
+        true,
+      );
+    }
     expect(BRANDS.map((b) => b.key)).not.toContain(PLATFORM.key);
+  });
+});
+
+describe("niche copy", () => {
+  it("FAQ prices always match the price table", () => {
+    for (const brand of [...BRANDS, PLATFORM]) {
+      const answers = brand.sales.faq.map((item) => item.answer).join(" ");
+      expect(answers, brand.key).toContain(PRICE_TEXT.summary);
+      expect(answers, brand.key).toContain(PRICE_TEXT.extraProfessional);
+    }
   });
 });

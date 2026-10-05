@@ -1,9 +1,35 @@
+import { acupuncture } from "./acupuncture";
 import { aesthetics } from "./aesthetics";
+import { autoDetailing } from "./auto-detailing";
 import { barber } from "./barber";
 import { beauty } from "./beauty";
+import { chiropractic } from "./chiropractic";
+import { consulting } from "./consulting";
+import { dentistry } from "./dentistry";
+import { integrativeTherapy } from "./integrative-therapy";
+import { lashBrow } from "./lash-brow";
+import { massageTherapy } from "./massage-therapy";
+import { medical } from "./medical";
+import { nails } from "./nails";
+import { nutrition } from "./nutrition";
+import { occupationalTherapy } from "./occupational-therapy";
+import { osteopathy } from "./osteopathy";
+import { personalTrainer } from "./personal-trainer";
+import { petGrooming } from "./pet-grooming";
+import { photography } from "./photography";
 import { physio } from "./physio";
+import { pilates } from "./pilates";
 import { platform } from "./platform";
+import { podiatry } from "./podiatry";
+import { psychoanalysis } from "./psychoanalysis";
 import { psychology } from "./psychology";
+import { psychopedagogy } from "./psychopedagogy";
+import { speechTherapy } from "./speech-therapy";
+import { sportsCourt } from "./sports-court";
+import { tattoo } from "./tattoo";
+import { tutoring } from "./tutoring";
+import { veterinary } from "./veterinary";
+import { yoga } from "./yoga";
 import { brandConfigSchema, type BrandConfig } from "./schema";
 
 export type { BrandConfig } from "./schema";
@@ -42,8 +68,34 @@ export const BRANDS: readonly BrandConfig[] = parseBrands([
   beauty,
   barber,
   aesthetics,
+  nails,
+  lashBrow,
+  tattoo,
   psychology,
+  psychoanalysis,
   physio,
+  nutrition,
+  speechTherapy,
+  occupationalTherapy,
+  psychopedagogy,
+  dentistry,
+  medical,
+  podiatry,
+  chiropractic,
+  osteopathy,
+  acupuncture,
+  massageTherapy,
+  integrativeTherapy,
+  pilates,
+  yoga,
+  personalTrainer,
+  petGrooming,
+  veterinary,
+  tutoring,
+  photography,
+  consulting,
+  autoDetailing,
+  sportsCourt,
 ]);
 
 /**
@@ -52,7 +104,7 @@ export const BRANDS: readonly BrandConfig[] = parseBrands([
  */
 export const PLATFORM: BrandConfig = parseBrands([platform])[0]!;
 
-/** Niche brands that have a landing page on the Agendamo site (/beleza…). */
+/** Niche brands that have a landing page on the Agendamo site (/psicologia…). */
 export const NICHES = BRANDS.filter((brand) => brand.niche);
 
 const brandsByKey = new Map(BRANDS.map((brand) => [brand.key, brand]));

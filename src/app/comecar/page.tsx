@@ -2,9 +2,9 @@ import { ArrowRight, CircleCheck } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { NICHES, PLATFORM } from "@/brands";
+import { PLATFORM } from "@/brands";
 import { brandThemeStyle } from "@/brands/theme";
-import { NICHE_ICONS } from "@/components/sales/niche-cards";
+import { NICHE_ICONS, nichesByGroup } from "@/components/sales/niche-cards";
 
 export const metadata: Metadata = {
   title: { absolute: "Comece grátis · Agendamo" },
@@ -35,34 +35,40 @@ export default function StartPage() {
       <p className="mt-4 mb-10 max-w-xl text-center text-lg text-pretty text-muted-foreground">
         Os textos, serviços e cores já vêm prontos para a sua área.
       </p>
-      <ul className="grid w-full max-w-3xl gap-4 sm:grid-cols-2">
-        {NICHES.map((brand) => {
-          const niche = brand.niche!;
-          const Icon = NICHE_ICONS[niche.icon];
-          return (
-            <li key={brand.key}>
-              <Link
-                href={`/cadastro?brand=${brand.key}`}
-                data-theme-scope=""
-                style={brandThemeStyle(brand)}
-                className="group flex h-full items-center gap-4 rounded-2xl border bg-card p-5 text-card-foreground shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-primary hover:shadow-lg"
-              >
-                <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                  <Icon className="size-6" aria-hidden />
-                </span>
-                <span className="flex-1">
-                  <span className="block font-semibold">{niche.label}</span>
-                  <span className="mt-0.5 block text-sm text-muted-foreground">{niche.pitch}</span>
-                </span>
-                <ArrowRight
-                  className="size-5 shrink-0 text-primary transition-transform group-hover:translate-x-1"
-                  aria-hidden
-                />
-              </Link>
-            </li>
-          );
-        })}
-      </ul>
+      <div className="flex w-full max-w-4xl flex-col gap-8">
+        {nichesByGroup().map((section) => (
+          <div key={section.group}>
+            <h2 className="mb-3 text-sm font-semibold tracking-wide text-muted-foreground uppercase">
+              {section.label}
+            </h2>
+            <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {section.niches.map((brand) => {
+                const niche = brand.niche!;
+                const Icon = NICHE_ICONS[niche.icon];
+                return (
+                  <li key={brand.key}>
+                    <Link
+                      href={`/cadastro?brand=${brand.key}`}
+                      data-theme-scope=""
+                      style={brandThemeStyle(brand)}
+                      className="group flex h-full items-center gap-3 rounded-2xl border bg-card p-4 text-card-foreground shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-primary hover:shadow-lg"
+                    >
+                      <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                        <Icon className="size-5" aria-hidden />
+                      </span>
+                      <span className="flex-1 text-sm font-semibold">{niche.label}</span>
+                      <ArrowRight
+                        className="size-4 shrink-0 text-primary transition-transform group-hover:translate-x-1"
+                        aria-hidden
+                      />
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ))}
+      </div>
       <ul className="mt-10 flex flex-wrap justify-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
         {["30 dias grátis", "Sem cartão de crédito", "Cancele quando quiser"].map((item) => (
           <li key={item} className="flex items-center gap-1.5">

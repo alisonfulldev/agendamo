@@ -14,7 +14,7 @@ beforeAll(async () => {
        ($1, 'view', gen_random_uuid(), '2030-01-08T13:00:00Z', false),
        ($1, 'view', gen_random_uuid(), '2030-01-08T14:00:00Z', false),
        ($1, 'click_book', gen_random_uuid(), '2030-01-08T23:30:00Z', true)`,
-    [SEED.beauty.business],
+    [SEED.psychology.business],
   );
 }, 60_000);
 
@@ -27,7 +27,7 @@ describe("refresh_page_stats", () => {
       outside_hours: Record<string, number>;
     }>(
       "select date::text, counts, outside_hours from public.page_stats_daily where business_id = $1 order by date",
-      [SEED.beauty.business],
+      [SEED.psychology.business],
     );
     expect(rows).toEqual([
       { date: "2030-01-07", counts: { view: 1 }, outside_hours: { view: 1 } },
@@ -40,7 +40,7 @@ describe("refresh_page_stats", () => {
     await db.query("select public.refresh_page_stats('2030-01-07')");
     const { rows } = await db.query<{ counts: Record<string, number> }>(
       "select counts from public.page_stats_daily where business_id = $1 and date = '2030-01-08'",
-      [SEED.beauty.business],
+      [SEED.psychology.business],
     );
     expect(rows).toHaveLength(1);
     expect(rows[0]!.counts).toEqual({ view: 2, click_book: 1 });

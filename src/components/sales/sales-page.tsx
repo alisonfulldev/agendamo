@@ -15,6 +15,8 @@ import type { ReactNode } from "react";
 
 import { NICHES, type BrandConfig } from "@/brands";
 import { brandThemeStyle } from "@/brands/theme";
+import { brandUrl } from "@/brands/urls";
+import { ClaimLink } from "@/components/sales/claim-link";
 import { DemoChat } from "@/components/sales/demo-chat";
 import { FEATURE_VISUALS } from "@/components/sales/feature-visuals";
 import { PlansTable } from "@/components/sales/plans-table";
@@ -35,6 +37,18 @@ const WITH_AGENDAMO = [
   "Confirmação e lembrete automáticos, sem você digitar nada",
   "Agenda organizada, sem horário duplicado nem anotação perdida",
 ];
+
+/** A few niches in the footer; the full list is on the home (#nichos). */
+const FOOTER_NICHES = [
+  "beauty",
+  "barber",
+  "aesthetics",
+  "psychology",
+  "physio",
+  "nutrition",
+  "pet-grooming",
+  "tutoring",
+].flatMap((key) => NICHES.filter((brand) => brand.key === key));
 
 const STEP_ICONS = [ListChecks, Link2, CalendarCheck];
 
@@ -82,7 +96,7 @@ function HeroTitle({ title }: { title: string }) {
 }
 
 /**
- * Sales page of the Agendamo site: the generic home (PLATFORM) and each niche page (/beleza…).
+ * Sales page of the Agendamo site: the generic home (PLATFORM) and each niche page (/psicologia…).
  * Content and theme come from the brand file; the theme is scoped to the page, so a brand
  * remembered in the cookie never changes how these pages look.
  */
@@ -97,6 +111,8 @@ export function SalesPage({
   afterHero?: ReactNode;
 }) {
   const { sales } = brand;
+  // "agendamo.vercel.app/" in front of the link field (the brand domain once it has one).
+  const linkPrefix = `${new URL(brandUrl(brand, "/")).host}/`;
   const isHome = !brand.niche;
   const socialLinks = Object.entries(brand.socialLinks).filter(
     (entry): entry is [keyof typeof SOCIAL_LABELS, string] => Boolean(entry[1]),
@@ -204,21 +220,7 @@ export function SalesPage({
               <p className="max-w-xl text-lg leading-relaxed text-pretty text-muted-foreground">
                 {sales.subtitle}
               </p>
-              <div className="flex flex-wrap gap-3">
-                <Button asChild size="lg" className="site-card-glow h-12 gap-2 px-6 text-base">
-                  <Link href={signupHref}>
-                    Testar {TRIAL_DAYS} dias grátis <ArrowRight className="size-4" aria-hidden />
-                  </Link>
-                </Button>
-                <Button
-                  asChild
-                  size="lg"
-                  variant="outline"
-                  className="h-12 bg-card/70 px-6 text-base"
-                >
-                  <a href="#como-funciona">Ver como funciona</a>
-                </Button>
-              </div>
+              <ClaimLink prefix={linkPrefix} signupHref={signupHref} />
               <ul className="flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground">
                 {["30 dias grátis", "Sem cartão de crédito", "Cancele quando quiser"].map(
                   (item) => (
@@ -562,9 +564,12 @@ export function SalesPage({
               Entrar
             </Link>
           </nav>
-          <nav aria-label="Nichos" className="flex flex-col gap-2.5 text-sm">
-            <p className="font-semibold">Para quem</p>
-            {NICHES.map((niche) => (
+          <nav
+            aria-label="Nichos"
+            className="grid grid-cols-2 content-start gap-x-4 gap-y-2.5 text-sm md:col-span-1"
+          >
+            <p className="col-span-2 font-semibold">Para quem</p>
+            {FOOTER_NICHES.map((niche) => (
               <Link
                 key={niche.key}
                 href={`/${niche.niche!.route}`}
@@ -573,6 +578,9 @@ export function SalesPage({
                 {niche.niche!.name}
               </Link>
             ))}
+            <Link href="/#nichos" className="col-span-2 font-medium text-primary hover:underline">
+              Ver todas as áreas
+            </Link>
           </nav>
           <nav aria-label="Institucional" className="flex flex-col gap-2.5 text-sm">
             <p className="font-semibold">Institucional</p>

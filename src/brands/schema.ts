@@ -1,14 +1,75 @@
 import { z } from "zod";
 
-/** Brand niche. Services like nails, lashes and brows live inside "beauty". */
+/** Niches: every kind of business that works with appointments (2026-10-05). */
 export const SEGMENTS = [
   "beauty",
   "barber",
   "aesthetics",
-  "psychology",
-  "physio",
-  "personal_trainer",
+  "nails",
+  "lash_brow",
   "tattoo",
+  "psychology",
+  "psychoanalysis",
+  "physio",
+  "nutrition",
+  "speech_therapy",
+  "occupational_therapy",
+  "psychopedagogy",
+  "dentistry",
+  "medical",
+  "podiatry",
+  "chiropractic",
+  "osteopathy",
+  "acupuncture",
+  "massage_therapy",
+  "integrative_therapy",
+  "pilates",
+  "yoga",
+  "personal_trainer",
+  "pet_grooming",
+  "veterinary",
+  "tutoring",
+  "photography",
+  "consulting",
+  "auto_detailing",
+  "sports_court",
+] as const;
+
+/** Sections of the niche list on the Agendamo site. */
+export const NICHE_GROUPS = ["beauty", "health", "wellness", "pets", "services"] as const;
+
+/** Icons for the niche cards (mapped to lucide icons in the UI). */
+export const NICHE_ICON_KEYS = [
+  "sparkles",
+  "scissors",
+  "flower",
+  "brush",
+  "eye",
+  "pen",
+  "brain",
+  "sofa",
+  "activity",
+  "apple",
+  "audio",
+  "puzzle",
+  "book",
+  "smile",
+  "stethoscope",
+  "footprints",
+  "bone",
+  "hand-heart",
+  "target",
+  "hand",
+  "leaf",
+  "person",
+  "sun",
+  "dumbbell",
+  "paw",
+  "cap",
+  "camera",
+  "briefcase",
+  "car",
+  "trophy",
 ] as const;
 
 /** Fonts available to brands. Each one must also be loaded in src/brands/fonts.ts. */
@@ -70,14 +131,16 @@ export const brandConfigSchema = z.object({
   logo: publicAsset,
   favicon: publicAsset,
   defaultSegment: z.enum(SEGMENTS),
-  /** Niche landing page on the Agendamo site (/beleza…) and how the niche is presented there. */
+  /** Niche landing page on the Agendamo site (/psicologia…) and how the niche is presented there. */
   niche: z
     .object({
-      route: z.string().regex(/^[a-z]+$/),
-      /** Short name for menus and links ("Beleza"). */
+      route: z.string().regex(/^[a-z]+(-[a-z]+)*$/),
+      /** Short name for menus and links ("Psicologia"). */
       name: text,
       /** Icon shown on the niche cards (mapped to an icon in the UI). */
-      icon: z.enum(["sparkles", "scissors", "flower", "brain", "activity"]),
+      icon: z.enum(NICHE_ICON_KEYS),
+      /** Section where the niche is listed on the site. */
+      group: z.enum(NICHE_GROUPS),
       label: text,
       pitch: text,
     })
@@ -182,5 +245,6 @@ export const brandConfigSchema = z.object({
 export type BrandConfig = z.infer<typeof brandConfigSchema>;
 export type BrandConfigInput = z.input<typeof brandConfigSchema>;
 export type Segment = (typeof SEGMENTS)[number];
+export type NicheGroup = (typeof NICHE_GROUPS)[number];
 export type FontKey = keyof typeof FONT_CSS_VARIABLES;
 export type ChatVariable = (typeof CHAT_VARIABLES)[number];

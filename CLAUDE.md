@@ -1,17 +1,17 @@
 # Projeto: Lively — agenda e link de bio multimarcas
 
 ## Produto
-Página tipo "link na bio" + agenda + ferramentas de venda para negócios de serviço com horário marcado.
-Vendido como várias MARCAS, uma por nicho (beleza, barbearia, estética, psicologia, fisioterapia, personal, tatuagem...), cada uma com domínio, nome, cores e textos próprios, usando o MESMO sistema.
-Segmentos: beauty, barber, aesthetics, psychology, physio, personal_trainer, tattoo.
+Chat de agendamento + agenda + financeiro simples para qualquer negócio que trabalha com hora marcada (decidido em 2026-10-05). É um sistema só de agendamento e financeiro simples: nada específico de consultório (sem prontuário, recibo, termo, recorrência). Os recursos que já existem (ferramentas de venda, portal, pacotes, combos, cupons, sinal por Pix, avaliações, lista de espera) continuam; não criar recursos novos fora de agendamento e financeiro sem pedido.
+Vendido como vários nichos (MARCAS), cada um com cores, textos e exemplos próprios, usando o MESMO sistema.
+Segmentos (= nichos): beauty, barber, aesthetics, nails, lash_brow, tattoo, psychology, psychoanalysis, physio, nutrition, speech_therapy, occupational_therapy, psychopedagogy, dentistry, medical, podiatry, chiropractic, osteopathy, acupuncture, massage_therapy, integrative_therapy, pilates, yoga, personal_trainer, pet_grooming, veterinary, tutoring, photography, consulting, auto_detailing, sports_court. As chaves de marca usam hífen (lash-brow...). Nichos novos usam nicheBrand (src/brands/niche.ts: textos comuns, tipo "general" ou "health"); cada nicho tem um grupo (beleza, saúde, bem-estar, pets, serviços) para a lista do site.
 
-Nome do produto: **Agendamo** (definido em 2026-10-04). O site tem uma página inicial genérica (/) que apresenta o sistema e vende para todos os nichos, e uma página por nicho (/beleza, /barbearia, /estetica, /psicologia, /fisioterapia) com textos, cores e exemplos próprios. Os nichos são as "marcas" de src/brands (todas com nome "Agendamo"); a configuração da página inicial é src/brands/platform.ts (PLATFORM), que não é um nicho. O cadastro vindo de um nicho cria o negócio naquele nicho (/cadastro?brand=<chave>); da página inicial, /comecar pergunta o nicho antes.
+Nome do produto: **Agendamo** (definido em 2026-10-04). O site tem uma página inicial genérica (/) que apresenta o sistema e vende para todos os nichos, e uma página por nicho (/beleza, /barbearia, /psicologia, /banho-e-tosa, /aulas...) com textos, cores e exemplos próprios. Os nichos são as "marcas" de src/brands (todas com nome "Agendamo"); a configuração da página inicial é src/brands/platform.ts (PLATFORM), que não é um nicho. O cadastro vindo de um nicho cria o negócio naquele nicho (/cadastro?brand=<chave>); da página inicial, /comecar pergunta o nicho antes.
 
-Produto "chat primeiro": o link do negócio (/<slug>) abre direto no chat de agendamento; tocar na foto abre o perfil (estilo dados do contato); /<slug>/perfil é a versão indexável (portal e Google).
+Produto "chat primeiro" (confirmado em 2026-10-05, sem página do profissional): o link do negócio (/<slug>) abre direto no chat de agendamento; tocar na foto abre o perfil (estilo dados do contato); /<slug>/perfil é a versão indexável (portal e Google).
 
-Plano único (igual em todas as marcas; definido em 2026-10-03):
+Plano único (igual em todas as marcas):
 - 30 dias grátis ao criar o negócio, sem cartão, uma vez por negócio. Durante o teste, tudo liberado (até 10 profissionais).
-- Depois: R$ 29/mês ou R$ 240/ano (R$ 20/mês, mostrar a economia). 1 profissional incluso; cada profissional extra R$ 9/mês (R$ 90/ano).
+- Depois: R$ 19/mês ou R$ 192/ano (R$ 16/mês, mostrar a economia). 1 profissional incluso; cada profissional extra R$ 9/mês (R$ 90/ano). Preços em src/lib/plans.ts (PLAN_PRICES); textos usam PRICE_TEXT, nunca valores escritos à mão. (Preços de 2026-10-05.)
 - Inclui tudo: chat com horários livres e confirmação na hora, agenda, lembretes, financeiro (receitas automáticas dos atendimentos concluídos + lançamentos manuais e custos), até 60 fotos, ferramentas de venda, sinal por Pix, pacotes e combos, Google Agenda, modal para sites externos, equipe, recursos compartilhados. Sem rodapé "Feito com [marca]" para assinantes.
 - Sem assinatura após o teste (ou assinatura vencida): o chat continua, mas termina abrindo o WhatsApp da dona com o pedido pronto (nada é gravado nem reservado); o painel abre só a tela de assinatura e a conta. Nada é apagado.
 - No banco: plan "free" = sem assinatura (teste ou expirado), "pro" = assinante ("team" é legado e conta como "pro"); businesses.professional_seats = profissionais pagos.
@@ -20,7 +20,7 @@ Plano único (igual em todas as marcas; definido em 2026-10-03):
 
 Canais:
 - Avisos para a dona e equipe: SOMENTE e-mail e notificação web (push). Nunca WhatsApp, nunca SMS.
-- Clientes finais: e-mail transacional sempre; e-mail de marketing só com opt-in e descadastro.
+- Clientes finais: só e-mails necessários (confirmação, lembrete, cancelamento). Sem e-mail de marketing (confirmado em 2026-10-05).
 - WhatsApp apenas como link comum wa.me aberto manualmente pela pessoa. Sem API.
 
 ## Stack fixa (não trocar, não adicionar bibliotecas sem perguntar)

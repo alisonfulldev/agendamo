@@ -12,7 +12,7 @@ describe("monthlyRevenue", () => {
         addons: {},
         extra_professionals: 0,
       }),
-    ).toBe(2900);
+    ).toBe(1900);
     expect(
       monthlyRevenue({
         plan: "pro",
@@ -21,7 +21,7 @@ describe("monthlyRevenue", () => {
         addons: {},
         extra_professionals: 0,
       }),
-    ).toBe(2000);
+    ).toBe(1600);
     expect(
       monthlyRevenue({
         plan: "pro",
@@ -35,7 +35,7 @@ describe("monthlyRevenue", () => {
           ],
         },
       }),
-    ).toBe(2900 + 2 * 900 + 4900);
+    ).toBe(1900 + 2 * 900 + 4900);
     expect(
       monthlyRevenue({
         plan: "pro",
@@ -91,7 +91,7 @@ describe("computeMetrics", () => {
       trials: 1,
       activeTrials: 1,
       subscribers: 1,
-      mrrCents: 2900,
+      mrrCents: 1900,
     });
   });
 });

@@ -139,17 +139,40 @@ export async function onAppointmentCompleted(appointmentId: string): Promise<voi
 
 /** Prompt 28: a freed slot goes to the waitlist of that day and service, once per cancellation. */
 export async function onAppointmentCancelled(appointmentId: string): Promise<void> {
+  await notifyWaitlistOfFreedSlot(appointmentId, null);
+}
+
+/** A rescheduled appointment frees its old time: the waitlist of that day hears about it too. */
+export async function onAppointmentRescheduled(
+  appointmentId: string,
+  previousStartsAt: string,
+): Promise<void> {
+  await notifyWaitlistOfFreedSlot(appointmentId, previousStartsAt);
+}
+
+/**
+ * Notifies the waitlist of the day and services of a freed slot: the appointment's own time when
+ * cancelled, or its previous time when rescheduled. Once per freed slot (notification_log).
+ */
+async function notifyWaitlistOfFreedSlot(
+  appointmentId: string,
+  previousStartsAt: string | null,
+): Promise<void> {
   const d = await loadAppointmentDetails(appointmentId);
   if (!d) return;
-  if (new Date(d.appointment.starts_at) <= new Date()) return;
-  if (!(await claimNotification(d.business.id, "waitlist_cancel", d.appointment.id))) return;
+  const freedStartsAt = previousStartsAt ?? d.appointment.starts_at;
+  if (new Date(freedStartsAt) <= new Date()) return;
+  const claimed = previousStartsAt
+    ? await claimNotification(
+        d.business.id,
+        "waitlist_reschedule",
+        `${d.appointment.id}:${freedStartsAt}`,
+      )
+    : await claimNotification(d.business.id, "waitlist_cancel", d.appointment.id);
+  if (!claimed) return;
 
   const admin = createAdminClient();
-  const date = formatInTimeZone(
-    new Date(d.appointment.starts_at),
-    d.business.timezone,
-    "yyyy-MM-dd",
-  );
+  const date = formatInTimeZone(new Date(freedStartsAt), d.business.timezone, "yyyy-MM-dd");
   const { data: services } = await admin
     .from("appointment_services")
     .select("service_id")
@@ -175,7 +198,7 @@ export async function onAppointmentCancelled(appointmentId: string): Promise<voi
       await sendEmail({
         brand: d.brand,
         to: entry.email as string,
-        subject: `Abriu um horário em ${formatDateLong(d.appointment.starts_at, d.business.timezone)} · ${d.business.name}`,
+        subject: `Abriu um horário em ${formatDateLong(freedStartsAt, d.business.timezone)} · ${d.business.name}`,
         content: {
           heading: "Abriu um horário!",
           paragraphs: [

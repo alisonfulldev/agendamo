@@ -1,4 +1,4 @@
-import { Bell, Check, Star } from "lucide-react";
+import { BadgeCheck, Bell, Check } from "lucide-react";
 
 /*
  * Small product illustrations for the features grid, drawn with plain elements in the theme
@@ -23,10 +23,10 @@ export function ChatVisual() {
   return (
     <div className="flex flex-col gap-1.5 rounded-xl bg-muted p-3" aria-hidden>
       <Bubble>Qual serviço você quer agendar?</Bubble>
-      <Bubble me>Corte + escova</Bubble>
-      <Bubble>Esses são os horários livres sábado:</Bubble>
+      <Bubble me>Avaliação</Bubble>
+      <Bubble>Estes são os horários livres na terça:</Bubble>
       <div className="flex justify-end gap-1.5">
-        {["09:00", "10:30", "14:00"].map((t, i) => (
+        {["17:00", "18:00", "19:00"].map((t, i) => (
           <span
             key={t}
             className={`rounded-lg border bg-card px-2 py-1 text-xs font-medium ${i === 2 ? "border-primary text-primary" : ""}`}
@@ -35,7 +35,7 @@ export function ChatVisual() {
           </span>
         ))}
       </div>
-      <Bubble>Prontinho! Horário confirmado ✅</Bubble>
+      <Bubble>Obrigado! Seu horário está confirmado.</Bubble>
     </div>
   );
 }
@@ -49,7 +49,7 @@ export function ProfileVisual() {
       <div className="min-w-0 flex-1">
         <span className="block h-2.5 w-24 rounded-full bg-foreground/70" />
         <span className="mt-1.5 flex items-center gap-1 text-xs text-muted-foreground">
-          <Star className="size-3 fill-primary text-primary" /> 4,9 · 23 avaliações
+          <BadgeCheck className="size-3 text-primary" /> Fotos · Serviços · Avaliações
         </span>
         <div className="mt-2 grid grid-cols-4 gap-1">
           {[0, 1, 2, 3].map((i) => (
@@ -104,7 +104,7 @@ export function PixVisual() {
         )}
       </div>
       <div className="text-xs">
-        <span className="block font-semibold">Sinal de R$ 20,00</span>
+        <span className="block font-semibold">Sinal de R$ 50,00</span>
         <span className="block text-muted-foreground">Pix direto pra você</span>
         <span className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 font-medium text-primary">
           <Check className="size-3" /> Pago

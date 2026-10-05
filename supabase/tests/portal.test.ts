@@ -41,12 +41,12 @@ async function business(
 
 beforeAll(async () => {
   db = await createTestDb();
-  await business("salao-um", "beauty");
-  await business("salao-dois", "beauty");
-  const featured = await business("salao-tres", "beauty");
-  await business("salao-incompleto", "beauty", { complete: false });
-  await business("salao-fora", "beauty", { optOut: true });
-  await business("barbearia-sp", "barber");
+  await business("salao-um", "psychology");
+  await business("salao-dois", "psychology");
+  const featured = await business("salao-tres", "psychology");
+  await business("salao-incompleto", "psychology", { complete: false });
+  await business("salao-fora", "psychology", { optOut: true });
+  await business("barbearia-sp", "physio");
   await db.query(
     "insert into public.portal_featured (business_id, city, active_until) values ($1, 'São Paulo', now() + interval '10 days')",
     [featured],
@@ -56,24 +56,24 @@ beforeAll(async () => {
 describe("portal SEO rules", () => {
   it("indexes only complete businesses of the brand", async () => {
     const { rows } = await db.query<{ slug: string }>(
-      "select slug from public.indexable_businesses('beauty') order by slug",
+      "select slug from public.indexable_businesses('psychology') order by slug",
     );
     expect(rows.map((r) => r.slug)).toEqual(["salao-dois", "salao-tres", "salao-um"]);
   });
 
   it("indexes listing pages only with 3+ complete businesses", async () => {
     const { rows } = await db.query<{ path: string }>(
-      "select path from public.indexable_portal_pages('beauty') order by path",
+      "select path from public.indexable_portal_pages('psychology') order by path",
     );
     expect(rows.map((r) => r.path)).toContain("/explorar/sao-paulo/corte");
     expect(rows.map((r) => r.path)).toContain("/explorar/sao-paulo/moema/corte");
-    const barber = await db.query("select path from public.indexable_portal_pages('barber')");
+    const barber = await db.query("select path from public.indexable_portal_pages('physio')");
     expect(barber.rows).toEqual([]);
   });
 
   it("lists featured first and never shows another brand", async () => {
     const { rows } = await db.query<{ slug: string; featured: boolean }>(
-      "select slug, featured from public.portal_listing('beauty', 'sao-paulo', 'corte')",
+      "select slug, featured from public.portal_listing('psychology', 'sao-paulo', 'corte')",
     );
     expect(rows[0]).toEqual(expect.objectContaining({ slug: "salao-tres", featured: true }));
     expect(rows.map((r) => r.slug)).not.toContain("barbearia-sp");
@@ -83,7 +83,7 @@ describe("portal SEO rules", () => {
   it("drops the featured flag when the add-on expires", async () => {
     await db.query("update public.portal_featured set active_until = now() - interval '1 day'");
     const { rows } = await db.query<{ featured: boolean }>(
-      "select featured from public.portal_listing('beauty', 'sao-paulo', 'corte')",
+      "select featured from public.portal_listing('psychology', 'sao-paulo', 'corte')",
     );
     expect(rows.every((r) => !r.featured)).toBe(true);
   });

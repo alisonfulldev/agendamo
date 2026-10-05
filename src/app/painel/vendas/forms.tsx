@@ -62,7 +62,7 @@ export function PackageForm({ services }: { services: { id: string; name: string
         </select>
       </FieldShell>
       <FieldShell name="name" label="Nome do pacote">
-        <Input id="name" name="name" placeholder="Ex.: 5 escovas" className="h-10" />
+        <Input id="name" name="name" placeholder="Ex.: 10 sessões" className="h-10" />
       </FieldShell>
       <FieldShell name="sessions" label="Sessões">
         <Input

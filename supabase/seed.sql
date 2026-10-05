@@ -2,8 +2,8 @@
 -- working hours Tuesday to Saturday with a lunch break. Safe to run more than once.
 
 insert into public.businesses (id, name, slug, brand_key, segment) values
-  ('b0000000-0000-4000-8000-000000000001', 'Studio Bela', 'studio-bela', 'beauty', 'beauty'),
-  ('b0000000-0000-4000-8000-000000000002', 'Barbearia Navalha', 'barbearia-navalha', 'barber', 'barber')
+  ('b0000000-0000-4000-8000-000000000001', 'Studio Bela', 'studio-bela', 'psychology', 'psychology'),
+  ('b0000000-0000-4000-8000-000000000002', 'Barbearia Navalha', 'barbearia-navalha', 'physio', 'physio')
 on conflict (id) do nothing;
 
 insert into public.professionals (id, business_id, name, position) values

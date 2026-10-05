@@ -2,8 +2,9 @@
 // configured last; once it exists, `supabase gen types typescript` can replace them.
 
 export type Plan = "free" | "pro" | "team";
-export type Segment =
-  "beauty" | "barber" | "aesthetics" | "psychology" | "physio" | "personal_trainer" | "tattoo";
+import type { Segment } from "@/brands/schema";
+
+export type { Segment };
 export type AppointmentStatus =
   "confirmed" | "pending" | "awaiting_deposit" | "cancelled" | "completed" | "no_show";
 export const ACTIVE_APPOINTMENT_STATUSES: AppointmentStatus[] = [

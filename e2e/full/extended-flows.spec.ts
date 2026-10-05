@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
-import { barber } from "../../src/brands/barber";
-import { beauty } from "../../src/brands/beauty";
+import { physio } from "../../src/brands/physio";
+import { psychology } from "../../src/brands/psychology";
 import { createUser, db, deleteUser, signIn, skipUnlessFull, uniqueSuffix } from "./helpers";
 
 /**
@@ -91,7 +91,7 @@ async function bookThroughChat(
   await page.getByRole("button", { name: "Confirmar agendamento" }).click();
 }
 
-for (const brand of [beauty, barber]) {
+for (const brand of [psychology, physio]) {
   test.describe(`extended flows · ${brand.key}`, () => {
     skipUnlessFull();
     let fx: Fixture;
@@ -253,7 +253,7 @@ for (const brand of [beauty, barber]) {
     test("portal: listing shows only this brand's businesses", async ({ page }) => {
       await page.goto(`/explorar?brand=${brand.key}`);
       await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-      const other = brand.key === "beauty" ? "barber" : "beauty";
+      const other = brand.key === "psychology" ? "physio" : "psychology";
       const html = await (await page.request.get(`/sitemap.xml?brand=${brand.key}`)).text();
       expect(html).not.toContain(`e2e-${other}-`);
     });

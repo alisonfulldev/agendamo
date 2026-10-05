@@ -5,7 +5,7 @@ import { getBrand } from "@/brands";
 
 import { SalesPage } from "./sales-page";
 
-/** Metadata of a niche page (/beleza…). */
+/** Metadata of a niche page (/psicologia…). */
 export function nicheMetadata(key: string): Metadata {
   const brand = getBrand(key);
   if (!brand?.niche) return {};

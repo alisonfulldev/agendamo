@@ -14,6 +14,7 @@ import { QR_PNG_DOWNLOAD_URL, QR_SVG_URL } from "@/lib/qr";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { DEFAULT_HOURS, onboardingSchema } from "@/lib/business/schemas";
+import { clearDesiredSlug } from "@/lib/desired-slug";
 import type { Segment } from "@/lib/db/types";
 import { maskBrPhone } from "@/lib/phone";
 import { slugify } from "@/lib/slug";
@@ -49,17 +50,20 @@ export function OnboardingWizard({
   suggestions,
   brandName,
   domain,
+  initialSlug,
 }: {
   defaultSegment: Segment;
   suggestions: { name: string; durationMinutes: number }[];
   brandName: string;
   domain: string;
+  /** Link picked on the sales page before signing up (comes filled in). */
+  initialSlug: string | null;
 }) {
   const [step, setStep] = useState(0);
   const [draft, setDraft] = useState<Draft>({
     segment: defaultSegment,
     name: "",
-    slug: "",
+    slug: initialSlug ?? "",
     whatsapp: "",
     instagram: "",
     address: "",
@@ -68,7 +72,7 @@ export function OnboardingWizard({
     services: [],
     hours: DEFAULT_HOURS,
   });
-  const [slugTouched, setSlugTouched] = useState(false);
+  const [slugTouched, setSlugTouched] = useState(Boolean(initialSlug));
   const [checked, setChecked] = useState<{ slug: string; result: SlugCheck } | null>(null);
   const slugCheck = checked?.slug === draft.slug ? checked.result : null;
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -121,6 +125,7 @@ export function OnboardingWizard({
     startTransition(async () => {
       const response = await createBusinessAction(draft);
       if (response.ok) {
+        clearDesiredSlug();
         setResult({ slug: response.slug, pageUrl: response.pageUrl });
       } else {
         setMessage(response.message);

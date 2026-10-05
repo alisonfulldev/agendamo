@@ -82,6 +82,8 @@ interface ServiceSeed {
   name: string;
   minutes: number;
   price: number;
+  /** Usual days until the next visit (the chat offers booking it right away). */
+  returnDays?: number;
 }
 
 interface BusinessSeed {
@@ -122,8 +124,8 @@ const BUSINESSES: BusinessSeed[] = [
     whatsapp: "5511999990001",
     instagram: "https://instagram.com/studiobela",
     services: [
-      { name: "Manicure", minutes: 45, price: 4000 },
-      { name: "Pedicure", minutes: 45, price: 4500 },
+      { name: "Manicure", minutes: 45, price: 4000, returnDays: 15 },
+      { name: "Pedicure", minutes: 45, price: 4500, returnDays: 21 },
       { name: "Escova", minutes: 45, price: 6000 },
       { name: "Design de sobrancelha", minutes: 30, price: 5000 },
     ],
@@ -143,7 +145,7 @@ const BUSINESSES: BusinessSeed[] = [
     address: "Rua dos Pinheiros, 500",
     whatsapp: "5511999990002",
     services: [
-      { name: "Corte", minutes: 30, price: 4500 },
+      { name: "Corte", minutes: 30, price: 4500, returnDays: 30 },
       { name: "Barba", minutes: 30, price: 3500 },
       { name: "Corte + barba", minutes: 60, price: 7000 },
     ],
@@ -342,6 +344,12 @@ async function seedBusiness(db: PGlite, seed: BusinessSeed, userIds: Map<string,
      where id = $1`,
     [businessId, seed.plan, seed.trialDaysLeft ?? null, seed.seats ?? 1],
   );
+  for (const service of seed.services.filter((s) => s.returnDays)) {
+    await db.query(
+      "update public.services set return_after_days = $3::int where business_id = $1 and name = $2",
+      [businessId, service.name, service.returnDays],
+    );
+  }
   await db.query(
     `update public.page_settings set bio = $2,
        pix_key = case when $3::boolean then 'contato@' || $4::text || '.com.br' end,

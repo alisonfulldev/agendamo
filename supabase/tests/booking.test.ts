@@ -4,12 +4,12 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { createTestDb, SEED } from "./harness";
 
 let db: PGlite;
-const [ANA, BRUNA] = SEED.beauty.professionals;
+const [ANA, BRUNA] = SEED.psychology.professionals;
 
 async function customer(phone: string, name = "Cliente") {
   const { rows } = await db.query<{ id: string; created: boolean; blocked: boolean }>(
     "select * from public.upsert_customer($1, $2, $3, null, false, null)",
-    [SEED.beauty.business, name, phone],
+    [SEED.psychology.business, name, phone],
   );
   return rows[0]!;
 }
@@ -23,7 +23,7 @@ function book(
 ) {
   return db.query<{ id: string }>("select public.book_appointment($1) as id", [
     {
-      business_id: SEED.beauty.business,
+      business_id: SEED.psychology.business,
       professional_id: professional,
       customer_id: customerId,
       starts_at: start,
@@ -32,7 +32,7 @@ function book(
       source: "chat",
       services: [
         {
-          service_id: SEED.beauty.services[0],
+          service_id: SEED.psychology.services[0],
           name: "Manicure",
           duration_minutes: 45,
           price_cents: 4000,
@@ -59,11 +59,11 @@ describe("upsert_customer", () => {
   it("never turns marketing opt-in off", async () => {
     await db.query(
       "select * from public.upsert_customer($1, 'Opt', '5511922220000', null, true, null)",
-      [SEED.beauty.business],
+      [SEED.psychology.business],
     );
     await db.query(
       "select * from public.upsert_customer($1, 'Opt', '5511922220000', null, false, null)",
-      [SEED.beauty.business],
+      [SEED.psychology.business],
     );
     const { rows } = await db.query<{ marketing_opt_in: boolean }>(
       "select marketing_opt_in from public.customers where phone = '5511922220000'",
@@ -77,7 +77,7 @@ describe("book_appointment", () => {
     const c = await customer("5511933330000");
     const { rows } = await book(c.id, ANA, "2030-02-05T12:00:00Z", "2030-02-05T13:00:00Z", [
       {
-        resource_id: SEED.beauty.resource,
+        resource_id: SEED.psychology.resource,
         starts_at: "2030-02-05T12:00:00Z",
         ends_at: "2030-02-05T13:00:00Z",
       },
@@ -115,7 +115,7 @@ describe("book_appointment", () => {
     await expect(
       book(c.id, BRUNA, "2030-02-05T12:30:00Z", "2030-02-05T13:00:00Z", [
         {
-          resource_id: SEED.beauty.resource,
+          resource_id: SEED.psychology.resource,
           starts_at: "2030-02-05T12:30:00Z",
           ends_at: "2030-02-05T13:00:00Z",
         },
@@ -133,7 +133,7 @@ describe("reschedule_appointment", () => {
     const c = await customer("5511977770000");
     const { rows } = await book(c.id, ANA, "2030-02-07T12:00:00Z", "2030-02-07T13:00:00Z", [
       {
-        resource_id: SEED.beauty.resource,
+        resource_id: SEED.psychology.resource,
         starts_at: "2030-02-07T12:00:00Z",
         ends_at: "2030-02-07T13:00:00Z",
       },
@@ -145,7 +145,7 @@ describe("reschedule_appointment", () => {
       "2030-02-07T16:00:00Z",
       [
         {
-          resource_id: SEED.beauty.resource,
+          resource_id: SEED.psychology.resource,
           starts_at: "2030-02-07T15:00:00Z",
           ends_at: "2030-02-07T16:00:00Z",
         },
@@ -170,26 +170,26 @@ describe("apply_plan_limits", () => {
     for (let i = 0; i < 62; i++) {
       await db.query(
         "insert into public.page_photos (business_id, object_key, width, height, size_bytes, position) values ($1, $2, 800, 800, 1000, $3)",
-        [SEED.beauty.business, `businesses/x/photo/${i}.webp`, i],
+        [SEED.psychology.business, `businesses/x/photo/${i}.webp`, i],
       );
     }
-    await db.query("select public.apply_plan_limits($1, 'pro')", [SEED.beauty.business]);
+    await db.query("select public.apply_plan_limits($1, 'pro')", [SEED.psychology.business]);
     const visible = await db.query<{ n: number }>(
       "select count(*)::int as n from public.page_photos where business_id = $1 and not hidden",
-      [SEED.beauty.business],
+      [SEED.psychology.business],
     );
     expect(visible.rows[0]!.n).toBe(60);
 
-    await db.query("select public.apply_professional_seats($1, 1)", [SEED.beauty.business]);
-    await db.query("select public.apply_professional_seats($1, 1)", [SEED.beauty.business]); // idempotent
+    await db.query("select public.apply_professional_seats($1, 1)", [SEED.psychology.business]);
+    await db.query("select public.apply_professional_seats($1, 1)", [SEED.psychology.business]); // idempotent
     const pros = await db.query<{ active: boolean }>(
       "select active from public.professionals where business_id = $1 order by position",
-      [SEED.beauty.business],
+      [SEED.psychology.business],
     );
     expect(pros.rows.map((p) => p.active)).toEqual([true, false]);
     const seats = await db.query<{ professional_seats: number }>(
       "select professional_seats from public.businesses where id = $1",
-      [SEED.beauty.business],
+      [SEED.psychology.business],
     );
     expect(seats.rows[0]!.professional_seats).toBe(1);
   });

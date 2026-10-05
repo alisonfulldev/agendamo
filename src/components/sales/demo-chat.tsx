@@ -54,7 +54,9 @@ export function DemoChat({ data }: { data: DemoChatData }) {
       { kind: "system", text: fill(data.messages.greeting, vars), ms: 900 },
       {
         kind: "options",
-        items: data.services.slice(0, 3).map((s) => `${s.name} · ${formatBRL(s.price)}`),
+        items: data.services
+          .slice(0, 3)
+          .map((s) => `${s.name} · ${s.price ? formatBRL(s.price) : "grátis"}`),
         pick: 0,
         ms: 1400,
       },

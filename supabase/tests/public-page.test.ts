@@ -16,10 +16,10 @@ beforeAll(async () => {
   db = await createTestDb({ seed: true });
   await db.query(
     `insert into public.page_settings (business_id, bio, pix_key, pix_receiver_name) values ($1, 'Bem-vinda!', 'secret@pix.com', 'ANA')`,
-    [SEED.beauty.business],
+    [SEED.psychology.business],
   );
   await db.query("update public.services set active = false where id = $1", [
-    SEED.beauty.services[2],
+    SEED.psychology.services[2],
   ]);
 }, 60_000);
 

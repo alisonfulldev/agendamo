@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { getPlanFeatures, subscriptionPrice, yearlySavings } from "@/lib/plans";
+import { getPlanFeatures, subscriptionPrice, yearlySavings, PRICE_TEXT } from "@/lib/plans";
 
 const NOW = new Date("2030-01-15T12:00:00Z");
 
@@ -74,16 +74,21 @@ describe("getPlanFeatures (single plan)", () => {
 });
 
 describe("prices", () => {
-  it("R$ 29/month or R$ 240/year, R$ 9 (R$ 90/year) per extra professional", () => {
-    expect(subscriptionPrice("monthly", 0)).toBe(2900);
-    expect(subscriptionPrice("yearly", 0)).toBe(24000);
-    expect(subscriptionPrice("monthly", 2)).toBe(2900 + 1800);
-    expect(subscriptionPrice("yearly", 2)).toBe(24000 + 18000);
-    expect(subscriptionPrice("monthly", 0, 50)).toBe(1450);
+  it("R$ 19/month or R$ 192/year, R$ 9 (R$ 90/year) per extra professional", () => {
+    expect(subscriptionPrice("monthly", 0)).toBe(1900);
+    expect(subscriptionPrice("yearly", 0)).toBe(19200);
+    expect(subscriptionPrice("monthly", 2)).toBe(1900 + 1800);
+    expect(subscriptionPrice("yearly", 2)).toBe(19200 + 18000);
+    expect(subscriptionPrice("monthly", 0, 50)).toBe(950);
   });
 
-  it("yearly saves R$ 108 for one professional", () => {
-    expect(yearlySavings(0)).toBe(10800);
-    expect(yearlySavings(1)).toBe(10800 + (900 * 12 - 9000));
+  it("yearly saves R$ 36 for one professional", () => {
+    expect(yearlySavings(0)).toBe(3600);
+    expect(yearlySavings(1)).toBe(3600 + (900 * 12 - 9000));
+  });
+
+  it("copy prices come from the price table", () => {
+    expect(PRICE_TEXT.summary).toBe("R$ 19/mês ou R$ 192/ano (sai R$ 16/mês)");
+    expect(PRICE_TEXT.extraProfessional).toBe("R$ 9/mês");
   });
 });

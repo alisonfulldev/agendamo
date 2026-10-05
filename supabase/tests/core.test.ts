@@ -7,7 +7,7 @@ const OWNER_BEAUTY = "a0000000-0000-4000-8000-000000000001";
 const OWNER_BARBER = "a0000000-0000-4000-8000-000000000002";
 const STAFF_ANA = "a0000000-0000-4000-8000-000000000003";
 
-const [ANA, BRUNA] = SEED.beauty.professionals;
+const [ANA, BRUNA] = SEED.psychology.professionals;
 const CUSTOMER_ANA = "f0000000-0000-4000-8000-000000000001";
 const CUSTOMER_BRUNA = "f0000000-0000-4000-8000-000000000002";
 const CUSTOMER_BARBER = "f0000000-0000-4000-8000-000000000003";
@@ -48,32 +48,32 @@ beforeAll(async () => {
   await db.query(
     `insert into public.members (business_id, user_id, role, professional_id) values
        ($1, $2, 'owner', null), ($3, $4, 'owner', null), ($1, $5, 'staff', $6)`,
-    [SEED.beauty.business, OWNER_BEAUTY, SEED.barber.business, OWNER_BARBER, STAFF_ANA, ANA],
+    [SEED.psychology.business, OWNER_BEAUTY, SEED.physio.business, OWNER_BARBER, STAFF_ANA, ANA],
   );
   await db.query(
     `insert into public.customers (id, business_id, name, phone) values
        ($1, $4, 'Cliente da Ana', '5511900000001'),
        ($2, $4, 'Cliente da Bruna', '5511900000002'),
        ($3, $5, 'Cliente da barbearia', '5511900000003')`,
-    [CUSTOMER_ANA, CUSTOMER_BRUNA, CUSTOMER_BARBER, SEED.beauty.business, SEED.barber.business],
+    [CUSTOMER_ANA, CUSTOMER_BRUNA, CUSTOMER_BARBER, SEED.psychology.business, SEED.physio.business],
   );
   await insertAppointment(db, {
-    business: SEED.beauty.business,
+    business: SEED.psychology.business,
     professional: ANA,
     customer: CUSTOMER_ANA,
     start: "2030-01-08T12:00:00Z",
     end: "2030-01-08T13:00:00Z",
   });
   await insertAppointment(db, {
-    business: SEED.beauty.business,
+    business: SEED.psychology.business,
     professional: BRUNA,
     customer: CUSTOMER_BRUNA,
     start: "2030-01-08T12:00:00Z",
     end: "2030-01-08T13:00:00Z",
   });
   await insertAppointment(db, {
-    business: SEED.barber.business,
-    professional: SEED.barber.professionals[0],
+    business: SEED.physio.business,
+    professional: SEED.physio.professionals[0],
     customer: CUSTOMER_BARBER,
     start: "2030-01-08T12:00:00Z",
     end: "2030-01-08T13:00:00Z",
@@ -101,7 +101,7 @@ describe("schema", () => {
     ]) {
       await expect(
         db.query(
-          "insert into public.businesses (name, slug, brand_key, segment) values ('X', $1, 'beauty', 'beauty')",
+          "insert into public.businesses (name, slug, brand_key, segment) values ('X', $1, 'psychology', 'psychology')",
           [slug],
         ),
       ).rejects.toThrow();
@@ -123,7 +123,7 @@ describe("no double booking", () => {
   it("rejects an overlapping appointment for the same professional", async () => {
     await expect(
       insertAppointment(db, {
-        business: SEED.beauty.business,
+        business: SEED.psychology.business,
         professional: ANA,
         customer: CUSTOMER_BRUNA,
         start: "2030-01-08T12:30:00Z",
@@ -135,14 +135,14 @@ describe("no double booking", () => {
   it("allows back-to-back appointments and cancelled overlaps", async () => {
     await as(db, { role: "service_role" }, async (tx) => {
       await insertAppointment(tx, {
-        business: SEED.beauty.business,
+        business: SEED.psychology.business,
         professional: ANA,
         customer: CUSTOMER_BRUNA,
         start: "2030-01-08T13:00:00Z",
         end: "2030-01-08T14:00:00Z",
       });
       await insertAppointment(tx, {
-        business: SEED.beauty.business,
+        business: SEED.psychology.business,
         professional: ANA,
         customer: CUSTOMER_BRUNA,
         start: "2030-01-08T12:15:00Z",
@@ -156,14 +156,14 @@ describe("no double booking", () => {
     await expect(
       as(db, { role: "service_role" }, async (tx) => {
         const first = await insertAppointment(tx, {
-          business: SEED.beauty.business,
+          business: SEED.psychology.business,
           professional: ANA,
           customer: CUSTOMER_ANA,
           start: "2030-01-09T12:00:00Z",
           end: "2030-01-09T13:00:00Z",
         });
         const second = await insertAppointment(tx, {
-          business: SEED.beauty.business,
+          business: SEED.psychology.business,
           professional: BRUNA,
           customer: CUSTOMER_BRUNA,
           start: "2030-01-09T12:30:00Z",
@@ -173,7 +173,7 @@ describe("no double booking", () => {
           tx.query(
             `insert into public.appointment_resources (business_id, appointment_id, resource_id, starts_at, ends_at)
              values ($1, $2, $3, $4, $5)`,
-            [SEED.beauty.business, appointment, SEED.beauty.resource, start, end],
+            [SEED.psychology.business, appointment, SEED.psychology.resource, start, end],
           );
         await useResource(first, "2030-01-09T12:00:00Z", "2030-01-09T13:00:00Z");
         await useResource(second, "2030-01-09T12:30:00Z", "2030-01-09T13:30:00Z");
@@ -184,14 +184,14 @@ describe("no double booking", () => {
   it("frees the resource when the appointment is cancelled", async () => {
     await as(db, { role: "service_role" }, async (tx) => {
       const first = await insertAppointment(tx, {
-        business: SEED.beauty.business,
+        business: SEED.psychology.business,
         professional: ANA,
         customer: CUSTOMER_ANA,
         start: "2030-01-10T12:00:00Z",
         end: "2030-01-10T13:00:00Z",
       });
       const second = await insertAppointment(tx, {
-        business: SEED.beauty.business,
+        business: SEED.psychology.business,
         professional: BRUNA,
         customer: CUSTOMER_BRUNA,
         start: "2030-01-10T12:00:00Z",
@@ -201,7 +201,7 @@ describe("no double booking", () => {
         tx.query(
           `insert into public.appointment_resources (business_id, appointment_id, resource_id, starts_at, ends_at)
            values ($1, $2, $3, '2030-01-10T12:00:00Z', '2030-01-10T13:00:00Z')`,
-          [SEED.beauty.business, appointment, SEED.beauty.resource],
+          [SEED.psychology.business, appointment, SEED.psychology.resource],
         );
       await useResource(first);
       await tx.query("update public.appointments set status = 'cancelled' where id = $1", [first]);
@@ -221,15 +221,15 @@ describe("tenant isolation", () => {
   it("owner reads only their own business data", async () => {
     await as(db, ownerBeauty, async (tx) => {
       const businesses = await tx.query<{ id: string }>("select id from public.businesses");
-      expect(businesses.rows.map((r) => r.id)).toEqual([SEED.beauty.business]);
+      expect(businesses.rows.map((r) => r.id)).toEqual([SEED.psychology.business]);
 
       const appointments = await tx.query<{ business_id: string }>(
         "select distinct business_id from public.appointments",
       );
-      expect(appointments.rows.map((r) => r.business_id)).toEqual([SEED.beauty.business]);
+      expect(appointments.rows.map((r) => r.business_id)).toEqual([SEED.psychology.business]);
 
       const customers = await tx.query("select id from public.customers where business_id = $1", [
-        SEED.barber.business,
+        SEED.physio.business,
       ]);
       expect(customers.rows).toEqual([]);
     });
@@ -239,11 +239,11 @@ describe("tenant isolation", () => {
     await as(db, ownerBeauty, async (tx) => {
       const updated = await tx.query(
         "update public.services set price_cents = 1 where business_id = $1",
-        [SEED.barber.business],
+        [SEED.physio.business],
       );
       expect(updated.affectedRows).toBe(0);
       const renamed = await tx.query("update public.businesses set name = 'Hacked' where id = $1", [
-        SEED.barber.business,
+        SEED.physio.business,
       ]);
       expect(renamed.affectedRows).toBe(0);
     });
@@ -254,7 +254,7 @@ describe("tenant isolation", () => {
       as(db, ownerBeauty, (tx) =>
         tx.query(
           "insert into public.services (business_id, name, duration_minutes) values ($1, 'X', 30)",
-          [SEED.barber.business],
+          [SEED.physio.business],
         ),
       ),
     ).rejects.toThrow(/row-level security/);
@@ -265,7 +265,7 @@ describe("tenant isolation", () => {
       as(db, ownerBeauty, (tx) =>
         tx.query(
           "insert into public.professional_services (business_id, professional_id, service_id) values ($1, $2, $3)",
-          [SEED.beauty.business, ANA, SEED.barber.services[0]],
+          [SEED.psychology.business, ANA, SEED.physio.services[0]],
         ),
       ),
     ).rejects.toThrow();
@@ -280,7 +280,7 @@ describe("tenant isolation", () => {
       );
       expect(business.rows[0]!.name).toBe("Studio Bela");
       const services = await tx.query("select * from public.get_public_services($1)", [
-        SEED.beauty.business,
+        SEED.psychology.business,
       ]);
       expect(services.rows).toHaveLength(3);
     });
@@ -310,7 +310,7 @@ describe("staff isolation", () => {
     await expect(
       as(db, staffAna, (tx) =>
         insertAppointment(tx, {
-          business: SEED.beauty.business,
+          business: SEED.psychology.business,
           professional: BRUNA,
           customer: CUSTOMER_ANA,
           start: "2030-02-01T12:00:00Z",
@@ -324,7 +324,7 @@ describe("staff isolation", () => {
     await as(db, staffAna, async (tx) => {
       const updated = await tx.query(
         "update public.services set price_cents = 1 where business_id = $1",
-        [SEED.beauty.business],
+        [SEED.psychology.business],
       );
       expect(updated.affectedRows).toBe(0);
     });

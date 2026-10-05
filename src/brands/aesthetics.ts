@@ -1,3 +1,5 @@
+import { PRICE_TEXT, TRIAL_DAYS } from "@/lib/plans";
+
 import type { BrandConfigInput } from "./schema";
 
 // Example brand (Prompt 39): configuration only. Provisional name, domain and copy.
@@ -12,6 +14,7 @@ export const aesthetics = {
     route: "estetica",
     name: "Estética",
     icon: "flower",
+    group: "beauty",
     label: "Clínicas de estética e esteticistas",
     pitch: "Procedimentos sem conflito de sala ou maca, com sinal por Pix.",
   },
@@ -85,8 +88,7 @@ export const aesthetics = {
     faq: [
       {
         question: "Preciso de cartão para testar?",
-        answer:
-          "Não. São 30 dias grátis com tudo liberado, sem cartão. Depois, R$ 29/mês ou R$ 240/ano (sai R$ 20/mês).",
+        answer: `Não. São ${TRIAL_DAYS} dias grátis com tudo liberado, sem cartão. Depois, ${PRICE_TEXT.summary}.`,
       },
       {
         question: "Minhas clientes precisam baixar algum aplicativo?",
@@ -99,8 +101,7 @@ export const aesthetics = {
       },
       {
         question: "Funciona com mais de um profissional?",
-        answer:
-          "Sim. Cada profissional tem a própria agenda. O plano inclui 1 profissional e cada extra custa R$ 9/mês.",
+        answer: `Sim. Cada profissional tem a própria agenda. O plano inclui 1 profissional e cada extra custa ${PRICE_TEXT.extraProfessional}.`,
       },
       {
         question: "Funciona com salas e macas compartilhadas?",

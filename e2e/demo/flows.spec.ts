@@ -77,6 +77,35 @@ test("sign up, confirm by the e-mail link and reach the business wizard", async 
   await expect(page.getByRole("heading", { name: /Agendar com Barbearia Teste/ })).toBeAttached();
 });
 
+test("pick the chat link on the home: it is checked and comes filled in the wizard", async ({
+  page,
+}) => {
+  const slug = `meu-espaco-${unique()}`;
+  await page.goto("/");
+  await page.getByLabel("Escolha o link do seu chat").fill(slug);
+  await expect(page.getByText(`${slug} está livre!`)).toBeVisible();
+  // A taken link is refused with a free suggestion.
+  await page.getByLabel("Escolha o link do seu chat").fill("studio-bela");
+  await expect(page.getByText("Esse endereço já está em uso.")).toBeVisible();
+  await page.getByLabel("Escolha o link do seu chat").fill(slug);
+  await expect(page.getByText(`${slug} está livre!`)).toBeVisible();
+  await page.getByRole("button", { name: "Criar meu chat" }).click();
+
+  await expect(page).toHaveURL(/\/comecar/);
+  await page.getByRole("link", { name: /Barbearias e barbeiros/ }).click();
+  const email = `link-${unique()}@exemplo.com`;
+  await page.getByLabel("E-mail").fill(email);
+  await page.getByLabel("Senha").fill("senha-forte-123");
+  await page.locator("#terms").click();
+  await page.getByRole("button", { name: "Criar conta grátis" }).click();
+  await expect.poll(() => emailsTo(email).length).toBe(1);
+  const link = /href="([^"]*\/auth\/confirm[^"]*)"/.exec(emailsTo(email)[0]!.html)?.[1];
+  await page.goto(link!.replace(/&amp;/g, "&"));
+  await expect(page).toHaveURL(/\/painel\/novo/);
+  await expect(page.getByLabel("Seu link")).toHaveValue(slug);
+  await expect(page.getByText("Disponível!")).toBeVisible();
+});
+
 test("book through the chat: customer and owner get e-mails", async ({ page }) => {
   const email = `cliente-${unique()}@exemplo.com`;
   await page.goto("/studio-bela?brand=beauty");
@@ -123,6 +152,50 @@ test("book through the chat: customer and owner get e-mails", async ({ page }) =
     .toBeGreaterThan(0);
 });
 
+test("right after booking, the chat offers to book the next visit in two taps", async ({
+  page,
+}) => {
+  await setPlan(page, "Studio Bela", "Assinante");
+  await page.goto("/studio-bela?brand=beauty");
+  await page
+    .getByRole("button", { name: /Manicure/ })
+    .first()
+    .click();
+  await page
+    .getByRole("button", { name: /, \d{1,2} de [a-zç]+$/i })
+    .first()
+    .click();
+  await page
+    .locator("button")
+    .filter({ hasText: /^\d{2}:\d{2}$/ })
+    .first()
+    .click();
+  await page.getByLabel("Seu nome").fill("Cliente Retorno");
+  await page.getByRole("button", { name: "Enviar" }).click();
+  await page.getByLabel("WhatsApp").fill(`1197${Date.now().toString().slice(-7)}`);
+  await page.getByRole("button", { name: "Enviar" }).click();
+  await page.getByRole("button", { name: "Prefiro não informar" }).click();
+  const noCoupon = page.getByRole("button", { name: "Não tenho" });
+  if (await noCoupon.isVisible().catch(() => false)) await noCoupon.click();
+  await page.getByRole("button", { name: "Confirmar agendamento" }).click();
+
+  // Manicure returns in 15 days: the offer shows up after the confirmation.
+  await expect(page.getByText(/Quer já deixar o próximo Manicure marcado\?/)).toBeVisible();
+  await expect(page.getByText(/cerca de 15 dias/)).toBeVisible();
+  await page.getByRole("button", { name: "Sim, ver horários" }).click();
+  await page
+    .getByRole("button", { name: /, \d{1,2} de [a-zç]+$/i })
+    .first()
+    .click();
+  await page
+    .locator("button")
+    .filter({ hasText: /^\d{2}:\d{2}$/ })
+    .first()
+    .click();
+  await expect(page.getByText(/Seu próximo horário ficou para/)).toBeVisible();
+  await expect(page.getByRole("link", { name: "Calendário do iPhone" })).toHaveCount(2);
+});
+
 test("trial ended: the chat ends on the owner's WhatsApp and the panel only opens the plan", async ({
   page,
 }) => {
@@ -165,6 +238,7 @@ test("finance: automatic revenues, a new cost and the month's profit", async ({ 
   await page.goto("/painel/financeiro");
   // The sample appointments and costs are in previous months.
   await page.getByRole("link", { name: "Mês anterior" }).click();
+  await page.waitForURL(/mes=/);
   await expect(page.getByText("automático").first()).toBeVisible();
   await expect(page.getByText("Aluguel").first()).toBeVisible();
 
@@ -207,7 +281,7 @@ test("booking without e-mail: the e-mail is optional and not mentioned at the en
   const noCoupon = page.getByRole("button", { name: "Não tenho" });
   if (await noCoupon.isVisible().catch(() => false)) await noCoupon.click();
   await page.getByRole("button", { name: "Confirmar agendamento" }).click();
-  const done = page.getByText(/Sua sessão está confirmada/);
+  const done = page.getByText(/Seu horário está confirmado/);
   await expect(done).toBeVisible();
   await expect(done).not.toContainText("e-mail");
 });

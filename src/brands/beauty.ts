@@ -1,3 +1,5 @@
+import { PRICE_TEXT, TRIAL_DAYS } from "@/lib/plans";
+
 import type { BrandConfigInput } from "./schema";
 
 // Niche of the Agendamo product (domain still provisional).
@@ -12,6 +14,7 @@ export const beauty = {
     route: "beleza",
     name: "Beleza",
     icon: "sparkles",
+    group: "beauty",
     label: "Salões, esmalterias e estúdios de beleza",
     pitch: "Unhas, cabelo, cílios e sobrancelha com agenda cheia e menos faltas.",
   },
@@ -88,8 +91,7 @@ export const beauty = {
     faq: [
       {
         question: "Preciso de cartão para testar?",
-        answer:
-          "Não. São 30 dias grátis com tudo liberado, sem cartão. Depois, R$ 29/mês ou R$ 240/ano (sai R$ 20/mês).",
+        answer: `Não. São ${TRIAL_DAYS} dias grátis com tudo liberado, sem cartão. Depois, ${PRICE_TEXT.summary}.`,
       },
       {
         question: "Minhas clientes precisam baixar algum aplicativo?",
@@ -102,8 +104,7 @@ export const beauty = {
       },
       {
         question: "Funciona com mais de um profissional?",
-        answer:
-          "Sim. Cada profissional tem a própria agenda. O plano inclui 1 profissional e cada extra custa R$ 9/mês.",
+        answer: `Sim. Cada profissional tem a própria agenda. O plano inclui 1 profissional e cada extra custa ${PRICE_TEXT.extraProfessional}.`,
       },
       {
         question: "Funciona para unhas, cílios, sobrancelha e cabelo?",

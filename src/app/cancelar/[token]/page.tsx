@@ -30,8 +30,12 @@ const STATUS_TEXT = {
   no_show: "Não compareceu",
 } as const;
 
-export default async function ManageAppointmentPage({ params }: PageProps<"/cancelar/[token]">) {
+export default async function ManageAppointmentPage({
+  params,
+  searchParams,
+}: PageProps<"/cancelar/[token]">) {
   const { token } = await params;
+  const reschedule = (await searchParams).remarcar === "1";
   if (!/^[0-9a-f]{32}$/.test(token)) notFound();
   const { data } = await createAdminClient()
     .from("appointments")
@@ -44,7 +48,7 @@ export default async function ManageAppointmentPage({ params }: PageProps<"/canc
   // Always on the business's brand domain.
   const domainBrand = await getCurrentBrand();
   if (domainBrand.key !== details.brand.key)
-    redirect(brandUrl(details.brand, `/cancelar/${token}`));
+    redirect(brandUrl(details.brand, `/cancelar/${token}${reschedule ? "?remarcar=1" : ""}`));
 
   const { appointment, business, page } = details;
   const changeable = await canChange(appointment, business.min_notice_minutes);
@@ -86,6 +90,7 @@ export default async function ManageAppointmentPage({ params }: PageProps<"/canc
       <ManagePanel
         token={token}
         canChange={changeable}
+        startRescheduling={reschedule}
         awaitingDeposit={appointment.status === "awaiting_deposit"}
         depositInformed={appointment.deposit_status === "informed"}
         pix={pix}

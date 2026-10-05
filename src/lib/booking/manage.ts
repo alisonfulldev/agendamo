@@ -7,7 +7,7 @@ import type { Appointment, AppointmentStatus } from "@/lib/db/types";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 import { getSlots, loadCatalog, stepsFor } from "./data";
-import { onAppointmentCancelled, onAppointmentCompleted } from "./hooks";
+import { onAppointmentCancelled, onAppointmentCompleted, onAppointmentRescheduled } from "./hooks";
 import { notifyBookingCancelled, notifyBookingConfirmed, notifyBookingRescheduled } from "./notify";
 
 const ACTIVE: AppointmentStatus[] = ["confirmed", "pending", "awaiting_deposit"];
@@ -154,5 +154,6 @@ export async function rescheduleAppointment(
     throw new Error(`reschedule failed: ${error.message}`);
   }
   await notifyBookingRescheduled(appointmentId, by, appointment.starts_at);
+  await onAppointmentRescheduled(appointmentId, appointment.starts_at);
   return { ok: true };
 }

@@ -1,8 +1,9 @@
 import type { Business, Plan } from "@/lib/db/types";
+import { formatBRL } from "@/lib/money";
 
 /**
- * Single plan (2026-10-03): 30-day trial from sign-up (no card), then R$ 29/month or R$ 240/year
- * (R$ 20/month). 1 professional included; each extra one R$ 9/month (R$ 90/year).
+ * Single plan (prices from 2026-10-05): 30-day trial from sign-up (no card), then R$ 19/month or
+ * R$ 192/year (R$ 16/month). 1 professional included; each extra one R$ 9/month (R$ 90/year).
  * Stored values: plan "free" = no subscription (trial or expired), "pro" = subscribed
  * ("team" is legacy and counts as "pro").
  */
@@ -13,8 +14,8 @@ export const TRIAL_PROFESSIONALS = 10;
 export const MAX_PROFESSIONALS = 50;
 
 export const PLAN_PRICES = {
-  monthly: 2900,
-  yearly: 24000,
+  monthly: 1900,
+  yearly: 19200,
   extraProfessional: { monthly: 900, yearly: 9000 },
   featured: { monthly: 4900 },
   customDomain: { monthly: 1900 },
@@ -35,6 +36,18 @@ export function yearlySavings(extraProfessionals: number): number {
     subscriptionPrice("yearly", extraProfessionals)
   );
 }
+
+/** "R$ 49" (whole reais without ",00"). */
+const reais = (cents: number) => formatBRL(cents).replace(/,00$/, "");
+
+/** Prices as shown in copy (FAQ, e-mails): always derived from PLAN_PRICES. */
+export const PRICE_TEXT = {
+  monthly: `${reais(PLAN_PRICES.monthly)}/mês`,
+  yearly: `${reais(PLAN_PRICES.yearly)}/ano`,
+  yearlyPerMonth: `${reais(Math.round(PLAN_PRICES.yearly / 12))}/mês`,
+  extraProfessional: `${reais(PLAN_PRICES.extraProfessional.monthly)}/mês`,
+  summary: `${reais(PLAN_PRICES.monthly)}/mês ou ${reais(PLAN_PRICES.yearly)}/ano (sai ${reais(Math.round(PLAN_PRICES.yearly / 12))}/mês)`,
+};
 
 export type PlanStatus = "trial" | "subscribed" | "expired";
 

@@ -3,6 +3,7 @@ import { processBillingExpirations } from "@/lib/billing/service";
 import { cronRoute } from "@/lib/cron";
 import type { Business } from "@/lib/db/types";
 import { claimNotification, notifyTeam } from "@/lib/notifications/owner";
+import { PRICE_TEXT } from "@/lib/plans";
 import { invalidatePublicPage } from "@/lib/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -38,7 +39,7 @@ export const POST = cronRoute(async () => {
           paragraphs: [
             "Seu link continua no ar, mas agora os pedidos chegam só pelo seu WhatsApp: nada entra na agenda e nenhum horário fica reservado.",
             "Seus clientes, agendamentos e fotos estão guardados e voltam na hora em que você assinar.",
-            "Assine por R$ 29/mês, ou R$ 240/ano (sai R$ 20/mês).",
+            `Assine por ${PRICE_TEXT.summary}.`,
           ],
           cta: { label: "Assinar agora", url: "/painel/plano" },
         },
@@ -78,7 +79,7 @@ export const POST = cronRoute(async () => {
         content: {
           heading: "Faltam 7 dias do seu teste",
           paragraphs: [
-            "Seu teste grátis termina em 7 dias. Assine quando quiser para não perder o chat e a agenda. No plano anual, sai R$ 20/mês.",
+            `Seu teste grátis termina em 7 dias. Assine quando quiser para não perder o chat e a agenda. No plano anual, sai ${PRICE_TEXT.yearlyPerMonth}.`,
           ],
           cta: { label: "Assinar", url: "/painel/plano" },
         },

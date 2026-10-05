@@ -13,7 +13,8 @@ import { isCouponActive } from "@/lib/sales/settings";
 import { publicUrl } from "@/lib/storage/r2";
 import { createClient } from "@/lib/supabase/server";
 
-export type ArtType = "agenda-aberta" | "horarios-amanha" | "novo-servico" | "oferta";
+export type ArtType =
+  "agenda-aberta" | "horarios-hoje" | "horarios-amanha" | "novo-servico" | "oferta";
 
 /** 1080×1920 story art in the brand theme with the business identity, QR code and link (Prompt 33). */
 export async function GET(request: Request) {
@@ -40,11 +41,12 @@ export async function GET(request: Request) {
   let subtitle = "Escolha seu horário pelo link";
   let highlight: string[] = [];
 
-  if (type === "horarios-amanha") {
+  if (type === "horarios-hoje" || type === "horarios-amanha") {
     const catalog = await loadCatalog(business.id);
-    const tomorrow = addDaysToDate(todayIn(business.timezone, new Date()), 1);
-    const times = catalog ? await freeTimesOn(catalog, tomorrow) : [];
-    title = "Horários livres amanhã";
+    const today = todayIn(business.timezone, new Date());
+    const date = type === "horarios-hoje" ? today : addDaysToDate(today, 1);
+    const times = catalog ? await freeTimesOn(catalog, date) : [];
+    title = type === "horarios-hoje" ? "Horários livres hoje" : "Horários livres amanhã";
     subtitle = times.length
       ? "Corre que é por ordem de chegada"
       : "Consulte os próximos dias pelo link";

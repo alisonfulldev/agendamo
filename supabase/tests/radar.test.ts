@@ -9,12 +9,12 @@ beforeAll(async () => {
   db = await createTestDb({ seed: true });
   await db.query(
     `insert into public.portal_events (brand_key, city, service_slug, business_id, type, session_id, occurred_at) values
-       ('beauty', 'sao-paulo', 'manicure', null, 'view', gen_random_uuid(), '2030-05-10T22:00:00Z'),
-       ('beauty', 'sao-paulo', 'manicure', null, 'search', gen_random_uuid(), '2030-05-10T22:30:00Z'),
-       ('beauty', 'sao-paulo', 'manicure', $1, 'view', gen_random_uuid(), '2030-05-11T13:00:00Z'),
-       ('beauty', 'sao-paulo', 'manicure', $1, 'click', gen_random_uuid(), '2030-05-11T13:01:00Z'),
-       ('beauty', 'sao-paulo', 'manicure', $1, 'view', gen_random_uuid(), '2030-06-01T13:00:00Z')`,
-    [SEED.beauty.business],
+       ('psychology', 'sao-paulo', 'manicure', null, 'view', gen_random_uuid(), '2030-05-10T22:00:00Z'),
+       ('psychology', 'sao-paulo', 'manicure', null, 'search', gen_random_uuid(), '2030-05-10T22:30:00Z'),
+       ('psychology', 'sao-paulo', 'manicure', $1, 'view', gen_random_uuid(), '2030-05-11T13:00:00Z'),
+       ('psychology', 'sao-paulo', 'manicure', $1, 'click', gen_random_uuid(), '2030-05-11T13:01:00Z'),
+       ('psychology', 'sao-paulo', 'manicure', $1, 'view', gen_random_uuid(), '2030-06-01T13:00:00Z')`,
+    [SEED.psychology.business],
   );
 }, 60_000);
 

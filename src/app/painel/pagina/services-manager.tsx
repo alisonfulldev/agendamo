@@ -114,11 +114,11 @@ function ServiceForm({
       )}
       <TextField
         name="return_after_days"
-        label="Lembrar de voltar após (dias, opcional)"
+        label="Retorno ideal após (dias, opcional)"
         type="number"
         min={1}
         defaultValue={service?.return_after_days ?? ""}
-        hint="Ex.: 30 para manutenção mensal. Usado em “Hora de voltar”."
+        hint="Ex.: 15 para manutenção de unhas, 30 para corte. Depois de agendar, o chat oferece já deixar o próximo marcado nessa data. Também usado em “Hora de voltar”."
         state={state}
       />
       <label className="flex items-center justify-between gap-3">

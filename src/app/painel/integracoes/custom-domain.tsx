@@ -46,7 +46,7 @@ export async function CustomDomainSection() {
   return (
     <Section
       title="Domínio próprio"
-      description="Seu chat e seu perfil no seu endereço (ex.: www.meusalao.com.br), com HTTPS automático."
+      description="Seu chat e seu perfil no seu endereço (ex.: www.meuconsultorio.com.br), com HTTPS automático."
     >
       {!active && !host ? (
         <div className="flex flex-col gap-2 text-sm">

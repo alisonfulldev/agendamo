@@ -21,6 +21,7 @@ import { formatAmount, formatDuration } from "@/lib/money";
 import { maskBrPhone, whatsappLink } from "@/lib/phone";
 import { track } from "@/lib/tracking/client";
 
+import { NextBooking } from "./next-booking";
 import {
   confirmChatBookingAction,
   getChatCatalogAction,
@@ -509,6 +510,18 @@ export function BookingChat({
     composer = null;
   }
 
+  // After a confirmed single service with a usual return interval: offer the next visit.
+  const bookedService =
+    !state.comboId && state.serviceIds.length === 1
+      ? catalog.services.find((s) => s.id === state.serviceIds[0])
+      : undefined;
+  const offerNext =
+    current === "done" &&
+    state.result !== null &&
+    state.result.status !== "awaiting_deposit" &&
+    Boolean(bookedService?.returnAfterDays) &&
+    Boolean(state.date);
+
   const priceSuffix = (cents: number) =>
     catalog.showPrices && cents > 0 ? ` · R$ ${formatAmount(cents)}` : "";
   const linkClass = `${CHAT_OPTION_CLASS} justify-center text-primary`;
@@ -812,6 +825,21 @@ export function BookingChat({
               </a>
             ) : null}
           </ChatOptions>
+          {offerNext && bookedService && state.date ? (
+            <NextBooking
+              slug={slug}
+              businessId={businessId}
+              serviceId={bookedService.id}
+              serviceLabel={bookedService.name}
+              professionalId={state.result.professionalId}
+              bookedDate={state.date}
+              returnAfterDays={bookedService.returnAfterDays!}
+              contact={{ name: state.name, phone: state.phone, email: state.email }}
+              clock={clock}
+              conflictMessage={fill(messages.conflict, vars)}
+              errorMessage={fill(messages.error, vars)}
+            />
+          ) : null}
         </>
       ) : null}
 

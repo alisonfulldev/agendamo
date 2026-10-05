@@ -16,16 +16,16 @@ beforeAll(async () => {
     `insert into public.members (business_id, user_id, role, professional_id) values
        ($1, $2, 'owner', null), ($3, $4, 'owner', null), ($1, $5, 'staff', $6)`,
     [
-      SEED.beauty.business,
+      SEED.psychology.business,
       OWNER_BEAUTY,
-      SEED.barber.business,
+      SEED.physio.business,
       OWNER_BARBER,
       STAFF_ANA,
-      SEED.beauty.professionals[0],
+      SEED.psychology.professionals[0],
     ],
   );
   // Server-side inserts (as the table owner, like the service role).
-  for (const business of [SEED.beauty.business, SEED.barber.business]) {
+  for (const business of [SEED.psychology.business, SEED.physio.business]) {
     await db.query(
       `insert into public.booking_requests (business_id, customer_name, phone) values ($1, 'Maria', '5511988887777')`,
       [business],
@@ -61,7 +61,7 @@ const VISITOR_INSERTS: [string, string, (business: string) => unknown[]][] = [
   [
     "waitlist_entries",
     `insert into public.waitlist_entries (business_id, service_id, date, customer_name, phone)
-     values ($1, '${SEED.beauty.services[0]}', current_date, 'X', '5511900000000')`,
+     values ($1, '${SEED.psychology.services[0]}', current_date, 'X', '5511900000000')`,
     (b) => [b],
   ],
 ];
@@ -70,14 +70,14 @@ describe("visitor data is written only by the server", () => {
   for (const [table, sql, params] of VISITOR_INSERTS) {
     it(`anon cannot insert into ${table}`, async () => {
       await expect(
-        as(db, { role: "anon" }, (tx) => tx.query(sql, params(SEED.beauty.business))),
+        as(db, { role: "anon" }, (tx) => tx.query(sql, params(SEED.psychology.business))),
       ).rejects.toThrow(/row-level security/);
     });
 
     it(`the owner cannot insert into ${table} either`, async () => {
       await expect(
         as(db, { role: "authenticated", userId: OWNER_BEAUTY }, (tx) =>
-          tx.query(sql, params(SEED.beauty.business)),
+          tx.query(sql, params(SEED.psychology.business)),
         ),
       ).rejects.toThrow(/row-level security/);
     });
@@ -86,7 +86,7 @@ describe("visitor data is written only by the server", () => {
   it("rejects abandoned bookings without consent", async () => {
     await expect(
       db.query("insert into public.abandoned_bookings (business_id, consent) values ($1, false)", [
-        SEED.beauty.business,
+        SEED.psychology.business,
       ]),
     ).rejects.toThrow();
   });
@@ -98,11 +98,11 @@ describe("visitor data is read only by the business owner", () => {
       const requests = await tx.query<{ business_id: string }>(
         "select business_id from public.booking_requests",
       );
-      expect(requests.rows.map((r) => r.business_id)).toEqual([SEED.beauty.business]);
+      expect(requests.rows.map((r) => r.business_id)).toEqual([SEED.psychology.business]);
       const events = await tx.query<{ business_id: string }>(
         "select business_id from public.page_events",
       );
-      expect(events.rows.map((r) => r.business_id)).toEqual([SEED.beauty.business]);
+      expect(events.rows.map((r) => r.business_id)).toEqual([SEED.psychology.business]);
     });
   });
 
@@ -123,7 +123,7 @@ describe("server-only tables", () => {
   it("are invisible to authenticated users", async () => {
     await db.query(
       `insert into public.notification_log (business_id, type, reference) values ($1, 't', 'r')`,
-      [SEED.beauty.business],
+      [SEED.psychology.business],
     );
     await db.query(
       `insert into public.platform_coupons (code, discount_percent) values ('LANCE10', 10)`,
@@ -140,7 +140,7 @@ describe("server-only tables", () => {
     await expect(
       db.query(
         `insert into public.notification_log (business_id, type, reference) values ($1, 't', 'r')`,
-        [SEED.beauty.business],
+        [SEED.psychology.business],
       ),
     ).rejects.toThrow(/duplicate key/);
   });
@@ -174,17 +174,17 @@ describe("referrals", () => {
     await as(db, { role: "service_role" }, async (tx) => {
       const ids = await tx.query<{ id: string }>(
         `insert into public.customers (business_id, name) values ($1, 'A'), ($1, 'B'), ($1, 'C') returning id`,
-        [SEED.beauty.business],
+        [SEED.psychology.business],
       );
       const [a, b, c] = ids.rows.map((r) => r.id);
       await tx.query(
         "insert into public.referrals (business_id, referrer_customer_id, referred_customer_id) values ($1, $2, $3)",
-        [SEED.beauty.business, a, c],
+        [SEED.psychology.business, a, c],
       );
       await expect(
         tx.query(
           "insert into public.referrals (business_id, referrer_customer_id, referred_customer_id) values ($1, $2, $3)",
-          [SEED.beauty.business, b, c],
+          [SEED.psychology.business, b, c],
         ),
       ).rejects.toThrow(/duplicate key/);
     });

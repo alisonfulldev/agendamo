@@ -1,10 +1,15 @@
 import type { Metadata } from "next";
 
+import { brandUrl } from "@/brands/urls";
 import { PageHeader } from "@/components/panel/page-header";
 import { UpgradeNotice } from "@/components/panel/upgrade-notice";
+import { addDaysToDate, todayIn } from "@/lib/availability";
+import { loadCatalog } from "@/lib/booking/data";
+import { freeTimesOn } from "@/lib/booking/free-times";
 import { requireOwner } from "@/lib/business/context";
 import type { BusinessCoupon } from "@/lib/db/types";
 import { getPlanFeatures } from "@/lib/plans";
+import { freeSlotsMessage } from "@/lib/sales/free-slots";
 import { isCouponActive } from "@/lib/sales/settings";
 import { createClient } from "@/lib/supabase/server";
 
@@ -13,7 +18,7 @@ import { ArtStudio } from "./art-studio";
 export const metadata: Metadata = { title: "Artes para divulgar" };
 
 export default async function ArtsPage({ searchParams }: PageProps<"/painel/vendas/artes">) {
-  const { business } = await requireOwner();
+  const { business, brand } = await requireOwner();
   const features = getPlanFeatures(business);
   const { tipo } = await searchParams;
   if (!features.salesTools) {
@@ -29,6 +34,29 @@ export default async function ArtsPage({ searchParams }: PageProps<"/painel/vend
     );
   }
   const supabase = await createClient();
+  const today = todayIn(business.timezone, new Date());
+  const catalog = await loadCatalog(business.id);
+  const [todayTimes, tomorrowTimes] = catalog
+    ? await Promise.all([
+        freeTimesOn(catalog, today),
+        freeTimesOn(catalog, addDaysToDate(today, 1)),
+      ])
+    : [[], []];
+  const url = brandUrl(brand, `/${business.slug}`);
+  const texts = {
+    "horarios-hoje": freeSlotsMessage({
+      businessName: business.name,
+      day: "hoje",
+      times: todayTimes,
+      url,
+    }),
+    "horarios-amanha": freeSlotsMessage({
+      businessName: business.name,
+      day: "amanhã",
+      times: tomorrowTimes,
+      url,
+    }),
+  };
   const [services, coupons] = await Promise.all([
     supabase
       .from("services")
@@ -50,6 +78,7 @@ export default async function ArtsPage({ searchParams }: PageProps<"/painel/vend
         coupons={((coupons.data ?? []) as BusinessCoupon[])
           .filter(isCouponActive)
           .map((c) => c.code)}
+        texts={texts}
       />
     </div>
   );

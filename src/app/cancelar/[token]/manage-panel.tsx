@@ -19,15 +19,20 @@ export function ManagePanel({
   awaitingDeposit,
   depositInformed,
   pix,
+  startRescheduling = false,
 }: {
   token: string;
   canChange: boolean;
+  /** Opened from the reminder's "Preciso remarcar": go straight to the new times. */
+  startRescheduling?: boolean;
   awaitingDeposit: boolean;
   depositInformed: boolean;
   pix: { code: string; qr: string } | null;
 }) {
   const router = useRouter();
-  const [mode, setMode] = useState<"idle" | "cancel" | "reschedule">("idle");
+  const [mode, setMode] = useState<"idle" | "cancel" | "reschedule">(
+    startRescheduling && canChange ? "reschedule" : "idle",
+  );
   const [days, setDays] = useState<{ date: string; label: string }[] | null>(null);
   const [date, setDate] = useState<string | null>(null);
   const [slots, setSlots] = useState<{

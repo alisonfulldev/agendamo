@@ -4,10 +4,12 @@ import { Download, Share2 } from "lucide-react";
 import { useState } from "react";
 
 import { FieldShell } from "@/components/forms/field";
+import { CopyTextButton } from "@/components/panel/copy-text-button";
 import { Button } from "@/components/ui/button";
 
 const TYPES = [
   { value: "agenda-aberta", label: "Agenda aberta" },
+  { value: "horarios-hoje", label: "Horários livres hoje" },
   { value: "horarios-amanha", label: "Horários livres amanhã" },
   { value: "novo-servico", label: "Novo serviço" },
   { value: "oferta", label: "Oferta relâmpago (com cupom)" },
@@ -19,10 +21,13 @@ export function ArtStudio({
   initialType,
   services,
   coupons,
+  texts,
 }: {
   initialType: string;
   services: { id: string; name: string }[];
   coupons: string[];
+  /** Ready texts with the real free times, per art type (empty when nothing is free). */
+  texts: Partial<Record<string, string>>;
 }) {
   const [type, setType] = useState(
     TYPES.some((t) => t.value === initialType) ? initialType : "agenda-aberta",
@@ -112,6 +117,21 @@ export function ArtStudio({
             <Share2 /> Compartilhar
           </Button>
         </div>
+        {type in texts ? (
+          texts[type] ? (
+            <div className="flex flex-col gap-2 rounded-lg border bg-muted/50 p-3">
+              <p className="text-sm font-medium">Texto para o status do WhatsApp</p>
+              <p className="text-sm text-muted-foreground">{texts[type]}</p>
+              <div>
+                <CopyTextButton text={texts[type]} />
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              Sem horários livres nesse dia. A arte convida a ver os próximos dias pelo link.
+            </p>
+          )
+        ) : null}
         {error ? (
           <p role="alert" className="text-sm text-destructive">
             {error}

@@ -134,7 +134,7 @@ export function CombosEditor({ combos, services }: { combos: ComboView[]; servic
     <div className="flex flex-col gap-3">
       {combos.length === 0 ? (
         <p className="text-sm text-muted-foreground">
-          Junte serviços com um preço especial, como “Corte + barba”.
+          Junte serviços com um preço especial, como “Avaliação + primeira sessão”.
         </p>
       ) : (
         <ul className="flex flex-col gap-2">

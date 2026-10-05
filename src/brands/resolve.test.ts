@@ -6,34 +6,39 @@ import { getBrandByHost, isBrandSelectableHost, normalizeHost } from "@/brands/r
 
 describe("needsFullReloadForBrand", () => {
   it("reloads when ?brand= changes the brand on localhost / previews", () => {
-    expect(needsFullReloadForBrand(new URL("http://localhost:3000/?brand=beauty"), "barber")).toBe(
-      true,
-    );
-    expect(needsFullReloadForBrand(new URL("https://x.vercel.app/?brand=barber"), "beauty")).toBe(
-      true,
-    );
+    expect(
+      needsFullReloadForBrand(new URL("http://localhost:3000/?brand=psychology"), "physio"),
+    ).toBe(true);
+    expect(
+      needsFullReloadForBrand(new URL("https://x.vercel.app/?brand=physio"), "psychology"),
+    ).toBe(true);
   });
 
   it("keeps client navigation when the brand does not change", () => {
-    expect(needsFullReloadForBrand(new URL("http://localhost:3000/?brand=beauty"), "beauty")).toBe(
+    expect(
+      needsFullReloadForBrand(new URL("http://localhost:3000/?brand=psychology"), "psychology"),
+    ).toBe(false);
+    expect(needsFullReloadForBrand(new URL("http://localhost:3000/painel"), "psychology")).toBe(
       false,
     );
-    expect(needsFullReloadForBrand(new URL("http://localhost:3000/painel"), "beauty")).toBe(false);
   });
 
   it("never reloads on production domains (?brand= is ignored there)", () => {
     expect(
-      needsFullReloadForBrand(new URL("https://beauty.example.com/?brand=barber"), "beauty"),
+      needsFullReloadForBrand(
+        new URL("https://psicologia.example.com/?brand=physio"),
+        "psychology",
+      ),
     ).toBe(false);
   });
 });
 
 describe("normalizeHost", () => {
   it.each([
-    ["Beauty.Example.com", "beauty.example.com"],
-    ["beauty.example.com:443", "beauty.example.com"],
-    ["www.beauty.example.com", "beauty.example.com"],
-    ["beauty.example.com.", "beauty.example.com"],
+    ["Psicologia.Example.com", "psicologia.example.com"],
+    ["psicologia.example.com:443", "psicologia.example.com"],
+    ["www.psicologia.example.com", "psicologia.example.com"],
+    ["psicologia.example.com.", "psicologia.example.com"],
     ["localhost:3000", "localhost"],
     ["[::1]:3000", "[::1]"],
     ["", ""],
@@ -49,7 +54,7 @@ describe("isBrandSelectableHost", () => {
     (host) => expect(isBrandSelectableHost(host)).toBe(true),
   );
 
-  it.each(["beauty.example.com", "example.com", "vercel.app.evil.com"])("rejects %s", (host) =>
+  it.each(["psicologia.example.com", "example.com", "vercel.app.evil.com"])("rejects %s", (host) =>
     expect(isBrandSelectableHost(host)).toBe(false),
   );
 });
@@ -57,18 +62,19 @@ describe("isBrandSelectableHost", () => {
 describe("getBrandByHost", () => {
   describe("production domains", () => {
     it("maps each domain to its brand", () => {
-      expect(getBrandByHost("beauty.example.com").key).toBe("beauty");
-      expect(getBrandByHost("barber.example.com").key).toBe("barber");
+      expect(getBrandByHost("psicologia.example.com").key).toBe("psychology");
+      expect(getBrandByHost("fisioterapia.example.com").key).toBe("physio");
     });
 
     it("ignores case, port and www", () => {
-      expect(getBrandByHost("WWW.Barber.Example.com:443").key).toBe("barber");
+      expect(getBrandByHost("WWW.Fisioterapia.Example.com:443").key).toBe("physio");
     });
 
     it("ignores ?brand= and the cookie", () => {
       expect(
-        getBrandByHost("beauty.example.com", { brandParam: "barber", brandCookie: "barber" }).key,
-      ).toBe("beauty");
+        getBrandByHost("psicologia.example.com", { brandParam: "physio", brandCookie: "physio" })
+          .key,
+      ).toBe("psychology");
     });
   });
 
@@ -76,24 +82,24 @@ describe("getBrandByHost", () => {
     it.each(["localhost:3000", "127.0.0.1:3000", "lively-abc123.vercel.app"])(
       "picks the brand from ?brand= on %s",
       (host) => {
-        expect(getBrandByHost(host, { brandParam: "barber" }).key).toBe("barber");
+        expect(getBrandByHost(host, { brandParam: "physio" }).key).toBe("physio");
       },
     );
 
     it("uses the cookie when there is no param", () => {
-      expect(getBrandByHost("localhost:3000", { brandCookie: "barber" }).key).toBe("barber");
+      expect(getBrandByHost("localhost:3000", { brandCookie: "physio" }).key).toBe("physio");
     });
 
     it("prefers the param over the cookie", () => {
       expect(
-        getBrandByHost("localhost:3000", { brandParam: "beauty", brandCookie: "barber" }).key,
-      ).toBe("beauty");
+        getBrandByHost("localhost:3000", { brandParam: "psychology", brandCookie: "physio" }).key,
+      ).toBe("psychology");
     });
 
     it("ignores an unknown param and falls back to the cookie", () => {
       expect(
-        getBrandByHost("localhost:3000", { brandParam: "nope", brandCookie: "barber" }).key,
-      ).toBe("barber");
+        getBrandByHost("localhost:3000", { brandParam: "nope", brandCookie: "physio" }).key,
+      ).toBe("physio");
     });
 
     it("falls back to DEFAULT_BRAND without param or valid cookie", () => {
@@ -104,7 +110,7 @@ describe("getBrandByHost", () => {
 
   describe("unknown hosts", () => {
     it("use DEFAULT_BRAND and ignore ?brand=", () => {
-      expect(getBrandByHost("unknown.com", { brandParam: "barber" })).toBe(DEFAULT_BRAND);
+      expect(getBrandByHost("unknown.com", { brandParam: "physio" })).toBe(DEFAULT_BRAND);
       expect(getBrandByHost(null)).toBe(DEFAULT_BRAND);
     });
   });

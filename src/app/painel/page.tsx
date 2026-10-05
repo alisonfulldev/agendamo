@@ -1,13 +1,19 @@
-import { CheckCircle2, Circle } from "lucide-react";
+import { CalendarClock, CheckCircle2, Circle } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
 import { brandUrl } from "@/brands/urls";
 import { CopyLink } from "@/components/panel/copy-link";
+import { CopyTextButton } from "@/components/panel/copy-text-button";
 import { InstallGuide } from "@/components/panel/install-guide";
 import { PageHeader } from "@/components/panel/page-header";
+import { Button } from "@/components/ui/button";
+import { todayIn } from "@/lib/availability";
+import { loadCatalog } from "@/lib/booking/data";
+import { freeTimesOn } from "@/lib/booking/free-times";
 import { requireBusiness } from "@/lib/business/context";
 import { getPlanFeatures, PLAN_STATUS_LABELS } from "@/lib/plans";
+import { freeSlotsMessage, listTimes } from "@/lib/sales/free-slots";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export const metadata: Metadata = { title: "Início" };
@@ -91,6 +97,19 @@ export default async function PanelHomePage({ searchParams }: PageProps<"/painel
   }
   const doneCount = steps.filter((s) => s.done).length;
 
+  // Free times left today: the fastest way to fill them is posting them right now.
+  let todayTimes: string[] = [];
+  if (isOwner && features.salesTools) {
+    const catalog = await loadCatalog(business.id);
+    if (catalog) todayTimes = await freeTimesOn(catalog, todayIn(business.timezone, new Date()));
+  }
+  const todayText = freeSlotsMessage({
+    businessName: business.name,
+    day: "hoje",
+    times: todayTimes,
+    url: pageUrl,
+  });
+
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
@@ -114,6 +133,33 @@ export default async function PanelHomePage({ searchParams }: PageProps<"/painel
         </p>
         <CopyLink url={pageUrl} />
       </div>
+
+      {todayText ? (
+        <section
+          aria-labelledby="horarios-hoje"
+          className="flex flex-col gap-3 rounded-xl border border-primary/30 bg-card p-5"
+        >
+          <div className="flex items-start gap-3">
+            <CalendarClock className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden />
+            <div>
+              <h2 id="horarios-hoje" className="font-semibold">
+                Hoje ainda tem {todayTimes.length}{" "}
+                {todayTimes.length === 1 ? "horário livre" : "horários livres"}
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                {listTimes(todayTimes)}. Poste agora no status do WhatsApp ou nos stories para
+                preencher.
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button asChild>
+              <Link href="/painel/vendas/artes?tipo=horarios-hoje">Criar arte</Link>
+            </Button>
+            <CopyTextButton text={todayText} label="Copiar texto pro status" />
+          </div>
+        </section>
+      ) : null}
 
       {isOwner && doneCount < steps.length ? (
         <section aria-labelledby="primeiros-passos" className="rounded-xl border bg-card p-5">

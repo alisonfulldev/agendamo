@@ -56,7 +56,14 @@ export interface ChatCatalog {
   anyProfessional: boolean;
   /** Coupons and waitlist (sales tools). */
   salesTools: boolean;
-  services: { id: string; name: string; durationMinutes: number; priceCents: number }[];
+  services: {
+    id: string;
+    name: string;
+    durationMinutes: number;
+    priceCents: number;
+    /** Usual days until the next visit (offers to book it right after confirming). */
+    returnAfterDays: number | null;
+  }[];
   combos: {
     id: string;
     name: string;
@@ -90,6 +97,7 @@ export async function getChatCatalogAction(slug: string): Promise<ChatCatalog | 
         name: s.name,
         durationMinutes: s.duration_minutes,
         priceCents: s.price_cents,
+        returnAfterDays: s.return_after_days,
       })),
     combos: features.packagesAndCombos
       ? catalog.combos
@@ -289,6 +297,8 @@ export type ConfirmResult =
       status: "confirmed" | "pending" | "awaiting_deposit";
       vars: Record<string, string>;
       cancelToken: string;
+      /** Who will attend (the next booking offered in the chat keeps the same person). */
+      professionalId: string;
       pix: { code: string; qr: string } | null;
       whatsappSummary: string | null;
       /** Pre-filled Google Calendar link ("Salvar na minha agenda"). */
@@ -378,6 +388,7 @@ export async function confirmChatBookingAction(input: unknown): Promise<ConfirmR
     status: result.booking.status as "confirmed" | "pending" | "awaiting_deposit",
     vars,
     cancelToken: result.booking.cancelToken,
+    professionalId: result.booking.professionalId,
     googleCalendarUrl: details
       ? googleCalendarUrl({
           start: new Date(details.appointment.starts_at),

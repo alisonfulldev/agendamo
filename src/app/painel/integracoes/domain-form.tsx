@@ -52,7 +52,7 @@ export function DomainForm({ domain, verified }: { domain: string | null; verifi
         <div className="flex flex-wrap gap-2">
           <Input
             aria-label="Seu domínio"
-            placeholder="www.meusalao.com.br"
+            placeholder="www.meuconsultorio.com.br"
             value={value}
             onChange={(e) => setValue(e.target.value)}
             className="h-10 max-w-xs"

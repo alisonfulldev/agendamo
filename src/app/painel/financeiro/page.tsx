@@ -163,6 +163,8 @@ export default async function FinancePage({ searchParams }: PageProps<"/painel/f
       ) : null}
 
       <EntryForm
+        // A new month (soft navigation) must reset the form's default date.
+        key={month}
         defaultDate={
           month === today
             ? formatInTimeZone(new Date(), business.timezone, "yyyy-MM-dd")

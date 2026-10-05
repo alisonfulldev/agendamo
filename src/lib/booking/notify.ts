@@ -309,9 +309,13 @@ export async function sendReminder(appointmentId: string): Promise<boolean> {
   if (!(await claimNotification(d.business.id, "reminder_24h", d.appointment.id))) return false;
   await sendToCustomer(d, `Lembrete: ${serviceNames(d)} amanhã · ${d.business.name}`, {
     heading: `Até amanhã, ${d.customer.name.split(" ")[0]}!`,
-    paragraphs: ["Passando para lembrar do seu horário."],
+    paragraphs: [
+      "Passando para lembrar do seu horário.",
+      "Se não puder vir, remarque em poucos toques: o horário fica livre para outra pessoa.",
+    ],
     details: detailLines(d),
-    secondaryLinks: [{ label: "Precisa remarcar ou cancelar?", url: manageUrl(d) }],
+    cta: { label: "Preciso remarcar", url: manageUrl(d, { reschedule: true }) },
+    secondaryLinks: [{ label: "Cancelar horário", url: manageUrl(d) }],
   });
   return true;
 }

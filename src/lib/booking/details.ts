@@ -88,8 +88,10 @@ export function totalPrice(details: AppointmentDetails): number {
 }
 
 /** Cancel / reschedule page for the customer, on the business's brand domain. */
-export function manageUrl(details: AppointmentDetails): string {
-  return brandUrl(details.brand, `/cancelar/${details.appointment.cancel_token}`);
+/** Link to the customer's page to reschedule or cancel; `reschedule` opens the new times. */
+export function manageUrl(details: AppointmentDetails, options?: { reschedule?: boolean }): string {
+  const query = options?.reschedule ? "?remarcar=1" : "";
+  return brandUrl(details.brand, `/cancelar/${details.appointment.cancel_token}${query}`);
 }
 
 export function priceText(cents: number): string {

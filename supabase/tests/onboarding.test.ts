@@ -8,8 +8,8 @@ const USER = "a0000000-0000-4000-8000-000000000010";
 const payload = {
   name: "Barbearia Teste",
   slug: "barbearia-teste",
-  brand_key: "barber",
-  segment: "barber",
+  brand_key: "physio",
+  segment: "physio",
   page: { whatsapp_number: "5511999998888", city: "Campinas" },
   services: [
     { name: "Corte", duration_minutes: 30, price_cents: 4500 },
@@ -49,7 +49,7 @@ describe("create_business", () => {
         "select brand_key, plan from public.businesses where id = $1",
         [businessId],
       );
-      expect(business.rows[0]).toEqual({ brand_key: "barber", plan: "free" });
+      expect(business.rows[0]).toEqual({ brand_key: "physio", plan: "free" });
       const services = await tx.query("select id from public.services where business_id = $1", [
         businessId,
       ]);

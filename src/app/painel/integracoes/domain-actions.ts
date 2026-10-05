@@ -40,7 +40,7 @@ export async function addDomainAction(input: string): Promise<Result> {
   if (!isVercelConfigured())
     return { ok: false, message: "Domínios próprios ainda não estão configurados." };
   const domain = normalizeCustomDomain(input);
-  if (!domain) return { ok: false, message: "Domínio inválido. Ex.: www.meusalao.com.br" };
+  if (!domain) return { ok: false, message: "Domínio inválido. Ex.: www.meuconsultorio.com.br" };
   if (BRANDS.some((b) => b.domains.some((d) => domain === d || domain.endsWith(`.${d}`)))) {
     return { ok: false, message: "Use um domínio seu, não o da plataforma." };
   }

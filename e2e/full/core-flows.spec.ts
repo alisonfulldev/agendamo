@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
-import { barber } from "../../src/brands/barber";
-import { beauty } from "../../src/brands/beauty";
+import { physio } from "../../src/brands/physio";
+import { psychology } from "../../src/brands/psychology";
 import {
   businessBySlug,
   createUser,
@@ -15,7 +15,7 @@ import {
 
 test.describe.configure({ mode: "serial" });
 
-for (const brand of [beauty, barber]) {
+for (const brand of [psychology, physio]) {
   test.describe(`core flows · ${brand.key}`, () => {
     skipUnlessFull();
     let user: Awaited<ReturnType<typeof createUser>>;

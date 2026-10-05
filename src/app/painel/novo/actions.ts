@@ -3,23 +3,13 @@
 import { getCurrentBrand } from "@/brands/server";
 import { brandUrl } from "@/brands/urls";
 import { requireUser } from "@/lib/auth/session";
-import { onboardingSchema, slugSchema } from "@/lib/business/schemas";
+import { onboardingSchema } from "@/lib/business/schemas";
+import { checkSlug, isSlugAvailable, type SlugCheck } from "@/lib/business/slug-check";
 import { fieldErrors } from "@/lib/forms";
 import { rateLimitRequest } from "@/lib/rate-limit";
-import { slugify } from "@/lib/slug";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-export interface SlugCheck {
-  available: boolean;
-  message?: string;
-  suggestion?: string;
-}
-
-async function isAvailable(slug: string): Promise<boolean> {
-  const { data, error } = await createAdminClient().rpc("slug_is_available", { p_slug: slug });
-  if (error) throw new Error(error.message);
-  return data === true;
-}
+export type { SlugCheck } from "@/lib/business/slug-check";
 
 /** Real-time slug validation for step 2 (format, reserved words, taken). */
 export async function checkSlugAction(raw: string): Promise<SlugCheck> {
@@ -27,17 +17,7 @@ export async function checkSlugAction(raw: string): Promise<SlugCheck> {
   if (!(await rateLimitRequest("publicAction", "slug-check"))) {
     return { available: false, message: "Muitas verificações. Espere um pouco." };
   }
-  const parsed = slugSchema.safeParse(raw);
-  if (!parsed.success) return { available: false, message: parsed.error.issues[0]!.message };
-  if (await isAvailable(parsed.data)) return { available: true };
-
-  for (let n = 2; n <= 9; n++) {
-    const candidate = slugify(`${parsed.data}-${n}`);
-    if (await isAvailable(candidate)) {
-      return { available: false, message: "Esse endereço já está em uso.", suggestion: candidate };
-    }
-  }
-  return { available: false, message: "Esse endereço já está em uso." };
+  return checkSlug(raw);
 }
 
 export type CreateBusinessResult =
@@ -58,7 +38,7 @@ export async function createBusinessAction(input: unknown): Promise<CreateBusine
   const data = parsed.data;
   const brand = await getCurrentBrand();
 
-  if (!(await isAvailable(data.slug))) {
+  if (!(await isSlugAvailable(data.slug))) {
     return {
       ok: false,
       message: "Esse endereço acabou de ser usado. Escolha outro.",
