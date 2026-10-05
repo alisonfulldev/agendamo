@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, Lock, Plus } from "lucide-react";
+import { ChevronLeft, ChevronRight, Lock, MessageCircle, Plus } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
 
@@ -11,7 +11,12 @@ import { WEEKDAY_SHORT } from "@/lib/segments";
 import { rescheduleAction } from "./actions";
 import { AppointmentSheet } from "./appointment-sheet";
 import { BlockDialog, NewAppointmentDialog } from "./dialogs";
-import type { AgendaAppointment, AgendaBlock, AgendaCatalog } from "./types";
+import {
+  rescheduledText,
+  type AgendaAppointment,
+  type AgendaBlock,
+  type AgendaCatalog,
+} from "./types";
 
 const PX_PER_MINUTE = 1.2;
 const SNAP_MINUTES = 15;
@@ -61,6 +66,12 @@ export function AgendaView(props: {
   const [showCancelled, setShowCancelled] = useState(false);
   const [dragging, setDragging] = useState<AgendaAppointment | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  // After a reschedule: one-tap WhatsApp message so the customer knows the new time.
+  const [whatsappUrl, setWhatsappUrl] = useState<string | null>(null);
+  const notify = (text: string, url: string | null = null) => {
+    setMessage(text);
+    setWhatsappUrl(url);
+  };
   const [pending, startTransition] = useTransition();
 
   const appointments = useMemo(
@@ -101,11 +112,8 @@ export function AgendaView(props: {
         startsAt: localToUtc(date, time, props.timezone).toISOString(),
         professionalId: professionalId !== appointment.professionalId ? professionalId : undefined,
       });
-      setMessage(
-        result.ok
-          ? "Agendamento movido. A cliente foi avisada por e-mail."
-          : (result.message ?? "Não foi possível mover."),
-      );
+      if (result.ok) notify(rescheduledText(result.emailed), result.whatsappUrl);
+      else notify(result.message);
       router.refresh();
     });
   }
@@ -189,9 +197,19 @@ export function AgendaView(props: {
         Mostrar cancelados
       </label>
       {message ? (
-        <p role="status" className="rounded-lg bg-accent px-3 py-2 text-sm text-accent-foreground">
-          {message}
-        </p>
+        <div
+          role="status"
+          className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-accent px-3 py-2 text-sm text-accent-foreground"
+        >
+          <span>{message}</span>
+          {whatsappUrl ? (
+            <Button asChild size="sm">
+              <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
+                <MessageCircle /> Avisar pelo WhatsApp
+              </a>
+            </Button>
+          ) : null}
+        </div>
       ) : null}
 
       {props.view === "day" ? (
@@ -330,9 +348,9 @@ export function AgendaView(props: {
         timezone={props.timezone}
         catalog={props.catalog}
         onClose={() => setSelected(null)}
-        onDone={(text) => {
+        onDone={(text, url) => {
           setSelected(null);
-          setMessage(text);
+          notify(text, url ?? null);
           router.refresh();
         }}
       />

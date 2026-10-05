@@ -105,8 +105,11 @@ export function PortalListing({
                 </p>
                 {item.bio ? <p className="mt-1 line-clamp-2 text-sm">{item.bio}</p> : null}
                 <p className="mt-1 text-sm font-medium">
-                  {serviceName} a partir de {formatBRL(item.min_price_cents)} ·{" "}
-                  <span className="text-primary">Agendar</span>
+                  {serviceName}
+                  {item.min_price_cents > 0
+                    ? ` a partir de ${formatBRL(item.min_price_cents)}`
+                    : ""}{" "}
+                  · <span className="text-primary">Agendar</span>
                 </p>
               </div>
             </Link>

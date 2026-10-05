@@ -47,6 +47,19 @@ beforeAll(async () => {
   await business("salao-incompleto", "psychology", { complete: false });
   await business("salao-fora", "psychology", { optOut: true });
   await business("barbearia-sp", "physio");
+  // Bare business: no photo, no bio, one free service. Listed, never indexed.
+  const { rows: bare } = await db.query<{ id: string }>(
+    "insert into public.businesses (name, slug, brand_key, segment) values ('Sem foto', 'sem-foto', 'psychology', 'psychology') returning id",
+  );
+  await db.query("insert into public.page_settings (business_id, city) values ($1, 'São Paulo')", [
+    bare[0]!.id,
+  ]);
+  await db.query(
+    "insert into public.services (business_id, name, duration_minutes, price_cents) values ($1, 'Corte', 30, 0)",
+    [bare[0]!.id],
+  );
+  // No city: nowhere to list it.
+  await business("sem-cidade", "psychology", { city: "" });
   await db.query(
     "insert into public.portal_featured (business_id, city, active_until) values ($1, 'São Paulo', now() + interval '10 days')",
     [featured],
@@ -78,6 +91,28 @@ describe("portal SEO rules", () => {
     expect(rows[0]).toEqual(expect.objectContaining({ slug: "salao-tres", featured: true }));
     expect(rows.map((r) => r.slug)).not.toContain("barbearia-sp");
     expect(rows.map((r) => r.slug)).not.toContain("salao-fora");
+  });
+
+  it("lists any business with a city and a service, complete profiles first", async () => {
+    const { rows } = await db.query<{ slug: string; min_price_cents: number }>(
+      "select slug, min_price_cents from public.portal_listing('psychology', 'sao-paulo', 'corte')",
+    );
+    const slugs = rows.map((r) => r.slug);
+    expect(slugs).toEqual(expect.arrayContaining(["salao-incompleto", "sem-foto"]));
+    expect(slugs).not.toContain("sem-cidade");
+    // Complete profiles come before the incomplete ones (no reviews, no featured here).
+    expect(slugs.indexOf("salao-um")).toBeLessThan(slugs.indexOf("salao-incompleto"));
+    expect(slugs.indexOf("salao-um")).toBeLessThan(slugs.indexOf("sem-foto"));
+    // A free service shows no "a partir de" price.
+    expect(rows.find((r) => r.slug === "sem-foto")?.min_price_cents).toBe(0);
+  });
+
+  it("never indexes incomplete businesses", async () => {
+    const { rows } = await db.query<{ slug: string }>(
+      "select slug from public.indexable_businesses('psychology')",
+    );
+    expect(rows.map((r) => r.slug)).not.toContain("sem-foto");
+    expect(rows.map((r) => r.slug)).not.toContain("salao-incompleto");
   });
 
   it("drops the featured flag when the add-on expires", async () => {

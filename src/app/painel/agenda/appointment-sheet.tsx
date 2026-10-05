@@ -19,7 +19,12 @@ import { formatBrPhone, whatsappLink } from "@/lib/phone";
 
 import { appointmentAction, rescheduleAction } from "./actions";
 import { SlotPicker } from "./slot-picker";
-import { STATUS_LABELS, type AgendaAppointment, type AgendaCatalog } from "./types";
+import {
+  rescheduledText,
+  STATUS_LABELS,
+  type AgendaAppointment,
+  type AgendaCatalog,
+} from "./types";
 
 type Op = "cancel" | "complete" | "no_show" | "approve" | "refuse" | "confirm_deposit";
 
@@ -34,7 +39,8 @@ export function AppointmentSheet({
   timezone: string;
   catalog: AgendaCatalog;
   onClose: () => void;
-  onDone: (message: string) => void;
+  /** `whatsappUrl`: ready message to tell the customer about a reschedule. */
+  onDone: (message: string, whatsappUrl?: string | null) => void;
 }) {
   const [mode, setMode] = useState<"view" | "cancel" | "reschedule">("view");
   const [reason, setReason] = useState("");
@@ -271,8 +277,8 @@ export function AppointmentSheet({
                     });
                     if (result.ok) {
                       reset();
-                      onDone("Remarcado. A cliente foi avisada por e-mail.");
-                    } else setError(result.message ?? "Não foi possível remarcar.");
+                      onDone(rescheduledText(result.emailed), result.whatsappUrl);
+                    } else setError(result.message);
                   })
                 }
               >

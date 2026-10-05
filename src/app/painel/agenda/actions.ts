@@ -14,7 +14,7 @@ import {
   markNoShow,
   rescheduleAppointment,
 } from "@/lib/booking/manage";
-import { notifyBookingCreated } from "@/lib/booking/notify";
+import { notifyBookingCreated, rescheduleNoticeForBusiness } from "@/lib/booking/notify";
 import { requireBusiness, type BusinessContext } from "@/lib/business/context";
 import { invalidatePublicPage } from "@/lib/cache";
 import { normalizeBrPhone } from "@/lib/phone";
@@ -258,7 +258,10 @@ const rescheduleSchema = z.object({
   professionalId: z.uuid().optional(),
 });
 
-export async function rescheduleAction(input: unknown): Promise<{ ok: boolean; message?: string }> {
+export type RescheduleActionResult =
+  { ok: true; emailed: boolean; whatsappUrl: string | null } | { ok: false; message: string };
+
+export async function rescheduleAction(input: unknown): Promise<RescheduleActionResult> {
   const context = await requireAgenda();
   const parsed = rescheduleSchema.parse(input);
   await assertAppointment(context, parsed.id);
@@ -272,7 +275,7 @@ export async function rescheduleAction(input: unknown): Promise<{ ok: boolean; m
     parsed.professionalId,
   );
   refresh(context);
-  if (result.ok) return { ok: true };
+  if (result.ok) return { ok: true, ...(await rescheduleNoticeForBusiness(parsed.id)) };
   return {
     ok: false,
     message:

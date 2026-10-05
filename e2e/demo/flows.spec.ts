@@ -196,6 +196,77 @@ test("right after booking, the chat offers to book the next visit in two taps", 
   await expect(page.getByRole("link", { name: "Calendário do iPhone" })).toHaveCount(2);
 });
 
+test("owner reschedules: the panel offers a ready WhatsApp message to tell the customer", async ({
+  page,
+}) => {
+  await setPlan(page, "Studio Bela", "Assinante");
+  const customer = `Remarcar ${unique()}`;
+  await page.goto("/studio-bela?brand=beauty");
+  await page
+    .getByRole("button", { name: /Escova/ })
+    .first()
+    .click();
+  const day = page.getByRole("button", { name: /, \d{1,2} de [a-zç]+$/i }).first();
+  const dayLabel = (await day.textContent()) ?? "";
+  await day.click();
+  await page
+    .locator("button")
+    .filter({ hasText: /^\d{2}:\d{2}$/ })
+    .first()
+    .click();
+  await page.getByLabel("Seu nome").fill(customer);
+  await page.getByRole("button", { name: "Enviar" }).click();
+  await page.getByLabel("WhatsApp").fill(`1196${Date.now().toString().slice(-7)}`);
+  await page.getByRole("button", { name: "Enviar" }).click();
+  await page.getByRole("button", { name: "Prefiro não informar" }).click();
+  const noCoupon = page.getByRole("button", { name: "Não tenho" });
+  if (await noCoupon.isVisible().catch(() => false)) await noCoupon.click();
+  await page.getByRole("button", { name: "Confirmar agendamento" }).click();
+  await expect(page.getByRole("link", { name: "Calendário do iPhone" }).first()).toBeVisible();
+
+  // "segunda-feira, 5 de outubro" -> yyyy-mm-dd (this year or the next).
+  const months = [
+    "janeiro",
+    "fevereiro",
+    "março",
+    "abril",
+    "maio",
+    "junho",
+    "julho",
+    "agosto",
+    "setembro",
+    "outubro",
+    "novembro",
+    "dezembro",
+  ];
+  const [, d, m] = /(\d{1,2}) de ([a-zç]+)/i.exec(dayLabel)!;
+  const now = new Date();
+  const month = months.indexOf(m!.toLowerCase());
+  const year = month < now.getMonth() ? now.getFullYear() + 1 : now.getFullYear();
+  const date = `${year}-${String(month + 1).padStart(2, "0")}-${d!.padStart(2, "0")}`;
+
+  await page.goto("/demo");
+  await page
+    .locator("form", { hasText: "dona.beleza@demo.com" })
+    .getByRole("button", { name: "Entrar" })
+    .click();
+  await page.waitForURL(/\/painel/);
+  await page.goto(`/painel/agenda?date=${date}`);
+  await page
+    .getByRole("button", { name: new RegExp(customer) })
+    .first()
+    .click();
+  await page.getByRole("button", { name: "Remarcar" }).click();
+  await page.getByRole("radiogroup", { name: "Horários livres" }).getByRole("radio").last().click();
+  await page.getByRole("button", { name: "Confirmar novo horário" }).click();
+
+  await expect(page.getByText(/não deixou e-mail: avise pelo WhatsApp/)).toBeVisible();
+  await expect(page.getByRole("link", { name: "Avisar pelo WhatsApp" })).toHaveAttribute(
+    "href",
+    /wa\.me\/55\d+\?text=.*remarcado/,
+  );
+});
+
 test("trial ended: the chat ends on the owner's WhatsApp and the panel only opens the plan", async ({
   page,
 }) => {

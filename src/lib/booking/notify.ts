@@ -7,7 +7,7 @@ import { sendEmail } from "@/lib/email/send";
 import type { EmailContent } from "@/lib/email/layout";
 import { buildIcs } from "@/lib/ics";
 import { claimNotification, notifyTeam } from "@/lib/notifications/owner";
-import { formatBrPhone } from "@/lib/phone";
+import { formatBrPhone, whatsappLink } from "@/lib/phone";
 import { buildPixBrCode } from "@/lib/pix";
 import { syncAppointmentToGoogle } from "@/lib/google/sync";
 
@@ -256,6 +256,23 @@ export async function notifyBookingCancelled(
   await syncAppointmentToGoogle(appointmentId).catch((error) =>
     console.error("google sync failed", error),
   );
+}
+
+/**
+ * After the business reschedules: how the customer hears about it. The e-mail goes automatically
+ * (when there is one); the WhatsApp message is ready for the owner to send with one tap.
+ */
+export async function rescheduleNoticeForBusiness(
+  appointmentId: string,
+): Promise<{ emailed: boolean; whatsappUrl: string | null }> {
+  const d = await loadAppointmentDetails(appointmentId);
+  if (!d) return { emailed: false, whatsappUrl: null };
+  const firstName = d.customer.name.split(" ")[0];
+  const text = `Olá, ${firstName}! Aqui é ${d.business.name}. Seu horário de ${serviceNames(d)} foi remarcado para ${when(d)}. Se precisar mudar, é só usar este link: ${manageUrl(d)}`;
+  return {
+    emailed: Boolean(d.customer.email),
+    whatsappUrl: d.customer.phone ? whatsappLink(d.customer.phone, text) : null,
+  };
 }
 
 /** Reschedule by the customer or the business. */
