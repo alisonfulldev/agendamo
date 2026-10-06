@@ -103,6 +103,23 @@ function fill(template: string, vars: Record<string, string>): string {
   return template.replace(/\{(\w+)\}/g, (_, key: string) => vars[key] ?? "");
 }
 
+/** Rejects when the server takes too long, so the chat never waits forever. */
+function withTimeout<T>(promise: Promise<T>, ms = 15_000): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error("timeout")), ms);
+    promise.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (error: unknown) => {
+        clearTimeout(timer);
+        reject(error);
+      },
+    );
+  });
+}
+
 function storage<T>(key: string, value?: T): T | null {
   try {
     if (value === undefined) {
@@ -148,6 +165,9 @@ export function BookingChat({
   const [couponOpen, setCouponOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [waitlistDone, setWaitlistDone] = useState(false);
+  // A failed or slow load shows "Tentar de novo" instead of "digitando…" forever.
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [attempt, setAttempt] = useState(0);
   const [pending, startTransition] = useTransition();
   const clock = useChatClock();
 
@@ -156,34 +176,44 @@ export function BookingChat({
     let cancelled = false;
     const ref = new URLSearchParams(window.location.search).get("ref");
     if (ref) storage(`lv_ref_${slug}`, ref);
-    getChatCatalogAction(slug).then((data) => {
-      if (cancelled) return;
-      setCatalog(data);
-      const saved = storage<ChatState>(storageKey);
-      if (
-        saved &&
-        Date.now() - saved.savedAt < STORAGE_TTL_MS &&
-        saved.step !== "done" &&
-        saved.step !== "blocked"
-      ) {
-        setState({ ...saved, conflict: false });
-      } else if (data && initialServiceId && data.services.some((s) => s.id === initialServiceId)) {
-        const service = data.services.find((s) => s.id === initialServiceId)!;
-        setState({
-          ...INITIAL,
-          step: data.anyProfessional ? "professional" : "day",
-          history: ["service"],
-          serviceIds: [service.id],
-          serviceLabel: service.name,
-          priceCents: service.priceCents,
-          date: initialDate ?? null,
-        });
-      }
-    });
+    withTimeout(getChatCatalogAction(slug))
+      .catch((error: unknown) => {
+        console.error("chat catalog failed", error);
+        if (!cancelled) setLoadFailed(true);
+        return undefined;
+      })
+      .then((data) => {
+        if (cancelled || data === undefined) return;
+        setCatalog(data);
+        const saved = storage<ChatState>(storageKey);
+        if (
+          saved &&
+          Date.now() - saved.savedAt < STORAGE_TTL_MS &&
+          saved.step !== "done" &&
+          saved.step !== "blocked"
+        ) {
+          setState({ ...saved, conflict: false });
+        } else if (
+          data &&
+          initialServiceId &&
+          data.services.some((s) => s.id === initialServiceId)
+        ) {
+          const service = data.services.find((s) => s.id === initialServiceId)!;
+          setState({
+            ...INITIAL,
+            step: data.anyProfessional ? "professional" : "day",
+            history: ["service"],
+            serviceIds: [service.id],
+            serviceLabel: service.name,
+            priceCents: service.priceCents,
+            date: initialDate ?? null,
+          });
+        }
+      });
     return () => {
       cancelled = true;
     };
-  }, [slug, storageKey, initialServiceId, initialDate]);
+  }, [slug, storageKey, initialServiceId, initialDate, attempt]);
 
   // Persist on every change (so a reload keeps the conversation).
   useEffect(() => {
@@ -191,7 +221,7 @@ export function BookingChat({
   }, [state, storageKey]);
 
   // Short "typing" pause before each system message; options appear right away.
-  const messageKey = `:`;
+  const messageKey = `${state.step}:${state.history.length}:${state.conflict}`;
   const typing = revealed !== messageKey;
   useEffect(() => {
     const timer = setTimeout(() => setRevealed(messageKey), 300 + Math.round(Math.random() * 300));
@@ -212,25 +242,41 @@ export function BookingChat({
   useEffect(() => {
     if (state.step === "day") {
       let cancelled = false;
-      getChatDaysAction({ ...selection(), from: null }).then((list) => !cancelled && setDays(list));
+      withTimeout(getChatDaysAction({ ...selection(), from: null })).then(
+        (list) => !cancelled && setDays(list),
+        (error: unknown) => {
+          console.error("chat days failed", error);
+          if (!cancelled) setLoadFailed(true);
+        },
+      );
       return () => {
         cancelled = true;
       };
     }
     if (state.step === "time" && state.date) {
       let cancelled = false;
-      getChatSlotsAction({ ...selection(), date: state.date }).then(
+      withTimeout(getChatSlotsAction({ ...selection(), date: state.date })).then(
         (list) => !cancelled && setSlots(list),
+        (error: unknown) => {
+          console.error("chat slots failed", error);
+          if (!cancelled) setLoadFailed(true);
+        },
       );
       return () => {
         cancelled = true;
       };
     }
-  }, [state.step, state.date, state.conflict, selection]);
+  }, [state.step, state.date, state.conflict, selection, attempt]);
+
+  function retryLoad() {
+    setLoadFailed(false);
+    setAttempt((n) => n + 1);
+  }
 
   function go(next: Step, patch: Partial<ChatState> = {}) {
     if (state.history.length === 0) track(businessId, "booking_started");
     setError(null);
+    setLoadFailed(false);
     if (next === "day") setDays(null);
     if (next === "time") setSlots(null);
     setState((s) => ({
@@ -244,6 +290,7 @@ export function BookingChat({
 
   function back() {
     setError(null);
+    setLoadFailed(false);
     setState((s) => {
       const history = [...s.history];
       const previous = history.pop();
@@ -269,7 +316,17 @@ export function BookingChat({
     </ChatWindow>
   );
 
-  if (catalog === undefined) return frame(<ChatTyping />);
+  if (catalog === undefined) {
+    return frame(
+      loadFailed ? (
+        <LoadFailed time={clock} onRetry={retryLoad}>
+          Não consegui abrir a agenda agora. Pode ser a conexão.
+        </LoadFailed>
+      ) : (
+        <ChatTyping />
+      ),
+    );
+  }
   if (catalog === null) {
     return frame(
       <ChatBubble from="system" time={clock}>
@@ -635,7 +692,13 @@ export function BookingChat({
 
       {current === "day" ? (
         days === null ? (
-          <ChatTyping />
+          loadFailed ? (
+            <LoadFailed time={clock} onRetry={retryLoad}>
+              Não consegui carregar os dias livres agora. Pode ser a conexão.
+            </LoadFailed>
+          ) : (
+            <ChatTyping />
+          )
         ) : days.length === 0 ? (
           <NoSlots
             message={fill(messages.noSlots, vars)}
@@ -678,7 +741,13 @@ export function BookingChat({
 
       {current === "time" ? (
         slots === null ? (
-          <ChatTyping />
+          loadFailed ? (
+            <LoadFailed time={clock} onRetry={retryLoad}>
+              Não consegui carregar os horários agora. Pode ser a conexão.
+            </LoadFailed>
+          ) : (
+            <ChatTyping />
+          )
         ) : slots.length === 0 ? (
           waitlistDone ? (
             <ChatBubble from="system" time={clock}>
@@ -869,6 +938,30 @@ export function BookingChat({
       ) : null}
     </>,
     composer,
+  );
+}
+
+/** A load that failed or took too long: never leaves the customer on "digitando…". */
+function LoadFailed({
+  time,
+  onRetry,
+  children,
+}: {
+  time: string;
+  onRetry: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <>
+      <ChatBubble from="system" time={time}>
+        {children}
+      </ChatBubble>
+      <ChatOptions>
+        <ChatOption className="text-center text-primary" onClick={onRetry}>
+          Tentar de novo
+        </ChatOption>
+      </ChatOptions>
+    </>
   );
 }
 

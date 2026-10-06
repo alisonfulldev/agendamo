@@ -106,6 +106,50 @@ test("pick the chat link on the home: it is checked and comes filled in the wiza
   await expect(page.getByText("Disponível!")).toBeVisible();
 });
 
+test("a failed load of the free times never leaves the chat on “digitando…”", async ({ page }) => {
+  // The first request for the day's times fails (as on a bad connection).
+  let failed = false;
+  await page.route("**/studio-bela**", async (route) => {
+    const request = route.request();
+    const body = request.postData() ?? "";
+    const isSlots =
+      request.method() === "POST" &&
+      request.headers()["next-action"] &&
+      body.includes('"date"') &&
+      !body.includes('"startsAt"') &&
+      !body.includes('"name"');
+    if (isSlots && !failed) {
+      failed = true;
+      await route.abort("failed");
+      return;
+    }
+    await route.continue();
+  });
+
+  await page.goto("/studio-bela?brand=beauty");
+  await page
+    .getByRole("button", { name: /Manicure/ })
+    .first()
+    .click();
+  await page
+    .getByRole("button", { name: /, \d{1,2} de [a-zç]+$/i })
+    .first()
+    .click();
+  await expect(
+    page.getByText("Não consegui carregar os horários agora.", { exact: false }),
+  ).toBeVisible();
+  expect(failed).toBe(true);
+
+  await page.getByRole("button", { name: "Tentar de novo" }).click();
+  await expect(
+    page
+      .locator("button")
+      .filter({ hasText: /^\d{2}:\d{2}$/ })
+      .first(),
+  ).toBeVisible();
+  await expect(page.getByRole("button", { name: "Tentar de novo" })).toHaveCount(0);
+});
+
 test("book through the chat: customer and owner get e-mails", async ({ page }) => {
   const email = `cliente-${unique()}@exemplo.com`;
   await page.goto("/studio-bela?brand=beauty");
