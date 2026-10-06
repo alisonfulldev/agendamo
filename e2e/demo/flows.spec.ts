@@ -77,35 +77,6 @@ test("sign up, confirm by the e-mail link and reach the business wizard", async 
   await expect(page.getByRole("heading", { name: /Agendar com Barbearia Teste/ })).toBeAttached();
 });
 
-test("pick the chat link on the home: it is checked and comes filled in the wizard", async ({
-  page,
-}) => {
-  const slug = `meu-espaco-${unique()}`;
-  await page.goto("/");
-  await page.getByLabel("Escolha o link do seu chat").fill(slug);
-  await expect(page.getByText(`${slug} está livre!`)).toBeVisible();
-  // A taken link is refused with a free suggestion.
-  await page.getByLabel("Escolha o link do seu chat").fill("studio-bela");
-  await expect(page.getByText("Esse endereço já está em uso.")).toBeVisible();
-  await page.getByLabel("Escolha o link do seu chat").fill(slug);
-  await expect(page.getByText(`${slug} está livre!`)).toBeVisible();
-  await page.getByRole("button", { name: "Criar meu chat" }).click();
-
-  await expect(page).toHaveURL(/\/comecar/);
-  await page.getByRole("link", { name: /Barbearias e barbeiros/ }).click();
-  const email = `link-${unique()}@exemplo.com`;
-  await page.getByLabel("E-mail").fill(email);
-  await page.getByLabel("Senha").fill("senha-forte-123");
-  await page.locator("#terms").click();
-  await page.getByRole("button", { name: "Criar conta grátis" }).click();
-  await expect.poll(() => emailsTo(email).length).toBe(1);
-  const link = /href="([^"]*\/auth\/confirm[^"]*)"/.exec(emailsTo(email)[0]!.html)?.[1];
-  await page.goto(link!.replace(/&amp;/g, "&"));
-  await expect(page).toHaveURL(/\/painel\/novo/);
-  await expect(page.getByLabel("Seu link")).toHaveValue(slug);
-  await expect(page.getByText("Disponível!")).toBeVisible();
-});
-
 test("a failed load of the free times never leaves the chat on “digitando…”", async ({ page }) => {
   // The first request for the day's times fails (as on a bad connection).
   let failed = false;
@@ -148,6 +119,41 @@ test("a failed load of the free times never leaves the chat on “digitando…�
       .first(),
   ).toBeVisible();
   await expect(page.getByRole("button", { name: "Tentar de novo" })).toHaveCount(0);
+});
+
+test("“Outro / Geral”: neutral chat and profile, and the owner can change the niche", async ({
+  page,
+}) => {
+  await page.goto("/atelie-restaura");
+  await expect(page.getByText(/Qual atendimento você quer agendar\?/)).toBeVisible();
+  await expect(page.getByRole("button", { name: /Primeiro atendimento/ })).toBeVisible();
+  await page.goto("/atelie-restaura/perfil");
+  await expect(page.getByRole("heading", { name: "Ateliê Restaura", level: 1 })).toBeVisible();
+
+  await page.goto("/demo");
+  await page
+    .locator("form", { hasText: "geral@demo.com" })
+    .getByRole("button", { name: "Entrar" })
+    .click();
+  await page.waitForURL(/\/painel/);
+  await page.goto("/painel/configuracoes");
+  await page.getByLabel("Ramo do negócio").selectOption("barber");
+  await expect(page.getByText("E os seus serviços?")).toBeVisible();
+  // Keeps the current services (default choice).
+  await page.getByRole("button", { name: "Trocar ramo" }).click();
+  await expect(page.getByText("Ramo trocado. Seus serviços continuam os mesmos.")).toBeVisible();
+  await page.goto("/atelie-restaura");
+  await expect(page.getByRole("button", { name: /Primeiro atendimento/ })).toBeVisible();
+  await expect(page.getByText(/Com qual barbeiro|Qual serviço vai ser/)).toBeVisible();
+
+  // Back to “Outro / Geral”, now replacing the services with the defaults.
+  await page.goto("/painel/configuracoes");
+  await page.getByLabel("Ramo do negócio").selectOption("general");
+  await page.getByLabel(/Usar os serviços padrão de Outro \/ Geral/).check();
+  await page.getByRole("button", { name: "Trocar ramo" }).click();
+  await expect(page.getByText(/Os serviços padrão já estão no seu chat/)).toBeVisible();
+  await page.goto("/atelie-restaura");
+  await expect(page.getByText(/Qual atendimento você quer agendar\?/)).toBeVisible();
 });
 
 test("book through the chat: customer and owner get e-mails", async ({ page }) => {

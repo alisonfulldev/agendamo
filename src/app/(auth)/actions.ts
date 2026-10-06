@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { getCurrentBrand, getRequestOrigin } from "@/brands/server";
+import { sendEmailCode, verifyEmailCode } from "@/lib/auth/email-code";
 import { safeNextPath } from "@/lib/auth/session";
 import { sendEmail } from "@/lib/email/send";
 import {
@@ -180,4 +181,50 @@ export async function signOutAction(formData?: FormData): Promise<void> {
   const supabase = await createClient();
   await supabase.auth.signOut();
   redirect(safeNextPath(formData?.get("next"), "/entrar"));
+}
+
+// ---------------------------------------------------------------------------
+// Sign-in by e-mail code (default on /entrar; password stays as an option).
+
+export type LoginCodeResult = { ok: true } | { ok: false; message: string; waitSeconds?: number };
+
+/** Sends a sign-in code. Same answer whether or not the e-mail has an account. */
+export async function sendLoginCodeAction(input: unknown): Promise<LoginCodeResult> {
+  const parsed = z.object({ email }).safeParse(input);
+  if (!parsed.success) return { ok: false, message: "Informe um e-mail válido." };
+  const result = await sendEmailCode(parsed.data.email, await getCurrentBrand(), {
+    create: false,
+  });
+  if (result.ok) return { ok: true };
+  if (result.error === "wait") {
+    return {
+      ok: false,
+      message: `Espere ${result.waitSeconds} segundos para pedir outro código.`,
+      waitSeconds: result.waitSeconds,
+    };
+  }
+  return {
+    ok: false,
+    message: result.error === "rate_limited" ? TOO_MANY : "Não foi possível enviar agora.",
+  };
+}
+
+/** Checks the code; on success the session starts and the page goes to `next` (or the panel). */
+export async function verifyLoginCodeAction(
+  input: unknown,
+): Promise<{ ok: true; next: string } | { ok: false; message: string }> {
+  const parsed = z
+    .object({ email, code: z.string().regex(/^\d{6}$/), next: z.string().optional() })
+    .safeParse(input);
+  if (!parsed.success) return { ok: false, message: "Digite os 6 números do código." };
+  const result = await verifyEmailCode(parsed.data.email, parsed.data.code);
+  if (result.ok) return { ok: true, next: safeNextPath(parsed.data.next) };
+  return {
+    ok: false,
+    message: {
+      wrong: "Esse código não confere. Confira no e-mail e tente de novo.",
+      too_many: "Foram muitas tentativas. Peça um código novo.",
+      expired: "Esse código expirou. Peça um código novo.",
+    }[result.error],
+  };
 }

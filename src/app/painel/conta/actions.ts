@@ -23,6 +23,41 @@ const changePasswordSchema = z
     message: "As senhas não conferem.",
   });
 
+const createPasswordSchema = z
+  .object({
+    password: z.string().min(8, "A senha precisa ter pelo menos 8 caracteres.").max(72),
+    confirm: z.string(),
+  })
+  .refine((v) => v.password === v.confirm, {
+    path: ["confirm"],
+    message: "As senhas não conferem.",
+  });
+
+/**
+ * Accounts created with the e-mail code have no password: they can create one here (signing in
+ * stays possible with the code too).
+ */
+export async function createPasswordAction(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const user = await requireUser();
+  const { data } = await createAdminClient().auth.admin.getUserById(user.id);
+  if (data.user?.user_metadata?.password_set !== false) {
+    return { ok: false, message: "Sua conta já tem senha. Use “Trocar senha”." };
+  }
+  const parsed = createPasswordSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return invalid(parsed.error, formData);
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.updateUser({
+    password: parsed.data.password,
+    data: { password_set: true },
+  });
+  if (error) return { ok: false, message: "Não foi possível criar a senha. Tente de novo." };
+  return { ok: true, message: "Senha criada. Agora você pode entrar com código ou senha." };
+}
+
 export async function changePasswordAction(
   _prev: FormState,
   formData: FormData,

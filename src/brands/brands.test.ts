@@ -3,7 +3,7 @@ import path from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-import { BRANDS, DEFAULT_BRAND, NICHES, parseBrands, PLATFORM } from "@/brands";
+import { BRANDS, DEFAULT_BRAND, getNiche, NICHES, parseBrands, PLATFORM } from "@/brands";
 
 /** Every theme on the site: the niches and the Agendamo product (generic home). */
 const ALL = [...BRANDS, PLATFORM];
@@ -45,6 +45,7 @@ describe("brand configs", () => {
       "consulting",
       "auto-detailing",
       "sports-court",
+      "general",
     ]);
     expect(DEFAULT_BRAND.key).toBe("beauty");
   });
@@ -167,5 +168,36 @@ describe("niche copy", () => {
       expect(answers, brand.key).toContain(PRICE_TEXT.summary);
       expect(answers, brand.key).toContain(PRICE_TEXT.extraProfessional);
     }
+  });
+});
+
+describe("getNiche", () => {
+  it("returns the business niche when it exists", () => {
+    expect(getNiche("barber").key).toBe("barber");
+    expect(getNiche("pet-grooming").key).toBe("pet-grooming");
+  });
+
+  it.each([null, undefined, "", "removed-niche", "BEAUTY", "agendamo"])(
+    "falls back to “Outro / Geral” for %s",
+    (key) => {
+      const niche = getNiche(key);
+      expect(niche.key).toBe("general");
+      expect(niche.defaultSegment).toBe("general");
+    },
+  );
+
+  it("“Outro / Geral” is neutral and has no page or card on the site", () => {
+    const general = getNiche("general");
+    expect(general.niche).toBeUndefined();
+    expect(NICHES.map((b) => b.key)).not.toContain("general");
+    expect(general.suggestedServices).toEqual([
+      { name: "Primeiro atendimento", durationMinutes: 60 },
+      { name: "Atendimento", durationMinutes: 45 },
+      { name: "Retorno", durationMinutes: 30 },
+    ]);
+    expect(general.terms.customer.singular).toBe("cliente");
+    expect(general.terms.service.singular).toBe("atendimento");
+    expect(general.terms.appointment.singular).toBe("horário");
+    expect(general.chatMessages.greeting).toContain("Qual atendimento você quer agendar?");
   });
 });

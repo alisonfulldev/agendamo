@@ -6,6 +6,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 export type AuditAction =
   | "account.deleted"
   | "business.created"
+  | "business.niche_changed"
   | "business.deleted"
   | "business.suspended"
   | "business.unsuspended"

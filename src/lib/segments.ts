@@ -32,6 +32,7 @@ export const SEGMENT_LABELS: Record<Segment, string> = {
   consulting: "Consultoria",
   auto_detailing: "Estética automotiva",
   sports_court: "Quadras esportivas",
+  general: "Outro / Geral",
 };
 
 export const WEEKDAY_LABELS = [

@@ -3,7 +3,7 @@ import "server-only";
 import { formatInTimeZone } from "date-fns-tz";
 import { ptBR } from "date-fns/locale";
 
-import { DEFAULT_BRAND, getBrand, type BrandConfig } from "@/brands";
+import { type BrandConfig, getNiche } from "@/brands";
 import { brandUrl } from "@/brands/urls";
 import type { Appointment, Business, Customer, PageSettings } from "@/lib/db/types";
 import { formatAmount } from "@/lib/money";
@@ -53,7 +53,7 @@ export async function loadAppointmentDetails(
   return {
     appointment: data as unknown as Appointment,
     business,
-    brand: getBrand(business.brand_key) ?? DEFAULT_BRAND,
+    brand: getNiche(business.brand_key),
     customer: data.customer as unknown as Customer,
     professional: data.professional as unknown as { id: string; name: string },
     services,

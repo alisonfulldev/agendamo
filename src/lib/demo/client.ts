@@ -1,6 +1,6 @@
 import "server-only";
 
-import { randomBytes, randomUUID } from "node:crypto";
+import { randomBytes, randomInt, randomUUID } from "node:crypto";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -27,6 +27,7 @@ interface AuthUser {
   encrypted_password: string | null;
   email_confirmed_at: string | null;
   created_at: string;
+  raw_user_meta_data: Record<string, unknown> | null;
 }
 
 const authError = (message: string, code: string, status = 400) => ({
@@ -42,7 +43,7 @@ const toUser = (user: AuthUser) => ({
   created_at: user.created_at,
   email_confirmed_at: user.email_confirmed_at,
   app_metadata: {},
-  user_metadata: {},
+  user_metadata: user.raw_user_meta_data ?? {},
   aud: "authenticated",
 });
 
@@ -53,7 +54,7 @@ async function sql<T>(query: string, params: unknown[] = []): Promise<T[]> {
 
 async function findUserByEmail(email: string): Promise<AuthUser | null> {
   const rows = await sql<AuthUser>(
-    "select id, email, encrypted_password, email_confirmed_at, created_at from auth.users where lower(email) = lower($1)",
+    "select id, email, encrypted_password, email_confirmed_at, created_at, raw_user_meta_data from auth.users where lower(email) = lower($1)",
     [email],
   );
   return rows[0] ?? null;
@@ -61,7 +62,7 @@ async function findUserByEmail(email: string): Promise<AuthUser | null> {
 
 async function findUserById(id: string): Promise<AuthUser | null> {
   const rows = await sql<AuthUser>(
-    "select id, email, encrypted_password, email_confirmed_at, created_at from auth.users where id = $1",
+    "select id, email, encrypted_password, email_confirmed_at, created_at, raw_user_meta_data from auth.users where id = $1",
     [id],
   );
   return rows[0] ?? null;
@@ -73,14 +74,26 @@ export async function createDemoUser(
   password: string | null,
   confirmed: boolean,
   id: string = randomUUID(),
+  metadata: Record<string, unknown> = {},
 ): Promise<AuthUser> {
   const rows = await sql<AuthUser>(
-    `insert into auth.users (id, email, encrypted_password, email_confirmed_at)
-     values ($1, lower($2), $3, case when $4 then now() end)
-     returning id, email, encrypted_password, email_confirmed_at, created_at`,
-    [id, email, password, confirmed],
+    `insert into auth.users (id, email, encrypted_password, email_confirmed_at, raw_user_meta_data)
+     values ($1, lower($2), $3, case when $4 then now() end, $5::jsonb)
+     returning id, email, encrypted_password, email_confirmed_at, created_at, raw_user_meta_data`,
+    [id, email, password, confirmed, JSON.stringify(metadata)],
   );
   return rows[0]!;
+}
+
+/** 6-digit e-mail code (as Supabase's email_otp), kept as a token bound to the e-mail. */
+async function createEmailCode(userId: string, email: string, type: string): Promise<string> {
+  const code = String(randomInt(0, 1_000_000)).padStart(6, "0");
+  await sql("insert into demo.auth_tokens (token, user_id, type) values ($1, $2, $3)", [
+    `otp:${email.toLowerCase()}:${code}`,
+    userId,
+    type,
+  ]);
+  return code;
 }
 
 async function createToken(userId: string, type: string): Promise<string> {
@@ -144,7 +157,15 @@ function createAuth(cookies: DemoCookies | null, setSession: (s: DemoSession | n
       return { error: null };
     },
 
-    async updateUser({ password, email }: { password?: string; email?: string }) {
+    async updateUser({
+      password,
+      email,
+      data,
+    }: {
+      password?: string;
+      email?: string;
+      data?: Record<string, unknown>;
+    }) {
       const session = current();
       const user = session ? await findUserById(session.sub) : null;
       if (!user)
@@ -171,13 +192,30 @@ function createAuth(cookies: DemoCookies | null, setSession: (s: DemoSession | n
       if (email !== undefined) {
         await sql("update auth.users set email = lower($2) where id = $1", [user.id, email]);
       }
+      if (data !== undefined) {
+        await sql(
+          "update auth.users set raw_user_meta_data = raw_user_meta_data || $2::jsonb where id = $1",
+          [user.id, JSON.stringify(data)],
+        );
+      }
       return { data: { user: toUser({ ...user, email: email ?? user.email }) }, error: null };
     },
 
-    async verifyOtp({ token_hash, type }: { token_hash: string; type: string }) {
+    async verifyOtp({
+      token_hash,
+      email,
+      token,
+      type,
+    }: {
+      token_hash?: string;
+      email?: string;
+      token?: string;
+      type: string;
+    }) {
+      const key = token_hash ?? `otp:${(email ?? "").toLowerCase()}:${token ?? ""}`;
       const rows = await sql<{ user_id: string; type: string }>(
         "delete from demo.auth_tokens where token = $1 returning user_id, type",
-        [token_hash],
+        [key],
       );
       const row = rows[0];
       const compatible =
@@ -226,13 +264,14 @@ function createAuth(cookies: DemoCookies | null, setSession: (s: DemoSession | n
           };
         }
         const token = await createToken(user!.id, params.type);
+        const emailOtp = await createEmailCode(user!.id, user!.email, params.type);
         return {
           data: {
             user: toUser(user!),
             properties: {
               hashed_token: token,
               action_link: "",
-              email_otp: "",
+              email_otp: emailOtp,
               redirect_to: "",
               verification_type: params.type,
             },
@@ -241,7 +280,12 @@ function createAuth(cookies: DemoCookies | null, setSession: (s: DemoSession | n
         };
       },
 
-      async createUser(params: { email: string; password?: string; email_confirm?: boolean }) {
+      async createUser(params: {
+        email: string;
+        password?: string;
+        email_confirm?: boolean;
+        user_metadata?: Record<string, unknown>;
+      }) {
         if (await findUserByEmail(params.email)) {
           return {
             data: { user: null },
@@ -256,11 +300,26 @@ function createAuth(cookies: DemoCookies | null, setSession: (s: DemoSession | n
           params.email,
           params.password ?? null,
           Boolean(params.email_confirm),
+          undefined,
+          params.user_metadata ?? {},
         );
         return { data: { user: toUser(user) }, error: null };
       },
 
       async getUserById(id: string) {
+        const user = await findUserById(id);
+        return user
+          ? { data: { user: toUser(user) }, error: null }
+          : { data: { user: null }, error: authError("User not found", "user_not_found", 404) };
+      },
+
+      async updateUserById(id: string, attributes: { user_metadata?: Record<string, unknown> }) {
+        if (attributes.user_metadata) {
+          await sql(
+            "update auth.users set raw_user_meta_data = raw_user_meta_data || $2::jsonb where id = $1",
+            [id, JSON.stringify(attributes.user_metadata)],
+          );
+        }
         const user = await findUserById(id);
         return user
           ? { data: { user: toUser(user) }, error: null }

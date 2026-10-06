@@ -32,6 +32,7 @@ describe("demo seed", () => {
   it("creates every business, persona and sample data", async () => {
     const { data } = await admin().from("businesses").select("slug, brand_key, plan");
     expect((data as { slug: string }[]).map((b) => b.slug).sort()).toEqual([
+      "atelie-restaura",
       "barbearia-navalha",
       "clinica-pele",
       "esmalteria-flor",

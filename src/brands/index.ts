@@ -6,6 +6,7 @@ import { beauty } from "./beauty";
 import { chiropractic } from "./chiropractic";
 import { consulting } from "./consulting";
 import { dentistry } from "./dentistry";
+import { general } from "./general";
 import { integrativeTherapy } from "./integrative-therapy";
 import { lashBrow } from "./lash-brow";
 import { massageTherapy } from "./massage-therapy";
@@ -96,6 +97,7 @@ export const BRANDS: readonly BrandConfig[] = parseBrands([
   consulting,
   autoDetailing,
   sportsCourt,
+  general,
 ]);
 
 /**
@@ -114,6 +116,17 @@ const brandsByDomain = new Map(
 
 export function getBrand(key: string | null | undefined): BrandConfig | undefined {
   return key ? brandsByKey.get(key) : undefined;
+}
+
+/** "Outro / Geral": fallback niche of a business (see getNiche). */
+export const GENERAL_NICHE: BrandConfig = getBrand("general")!;
+
+/**
+ * Niche (brand) of a business: its brand_key, or "Outro / Geral" when the key is empty, unknown
+ * or of a removed niche. Every business-facing screen, e-mail and notice resolves it here.
+ */
+export function getNiche(key: string | null | undefined): BrandConfig {
+  return getBrand(key) ?? GENERAL_NICHE;
 }
 
 export function getBrandByDomain(domain: string): BrandConfig | undefined {

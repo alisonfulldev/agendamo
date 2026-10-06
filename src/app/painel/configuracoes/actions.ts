@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
-import { SEGMENTS } from "@/brands/schema";
+import { getBrand } from "@/brands";
+import { audit } from "@/lib/audit";
 import { localToUtc } from "@/lib/availability";
 import { requireOwner } from "@/lib/business/context";
 import { slugSchema, weeklyHoursSchema } from "@/lib/business/schemas";
@@ -22,7 +23,6 @@ function refresh(slug: string) {
 const businessSchema = z.object({
   name: z.string().trim().min(2, "Informe o nome").max(120),
   slug: slugSchema,
-  segment: z.enum(SEGMENTS),
   timezone: z.enum(BR_TIMEZONE_VALUES),
   slot_interval_minutes: z.coerce
     .number()
@@ -36,6 +36,77 @@ const businessSchema = z.object({
   ),
   portal_opt_out: z.preprocess((v) => v === "on", z.boolean()),
 });
+
+const nicheSchema = z.object({
+  brandKey: z.string().refine((key) => Boolean(getBrand(key)), "Ramo inválido"),
+  replaceServices: z.boolean(),
+});
+
+/**
+ * Changes the business's niche: theme, chat texts and suggested services follow it. With
+ * `replaceServices`, the current services are deactivated (never deleted: past appointments keep
+ * them) and the niche's default services are created.
+ */
+export async function changeNicheAction(input: unknown): Promise<{ ok: boolean; message: string }> {
+  const { business, user } = await requireOwner();
+  const parsed = nicheSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, message: "Escolha um ramo da lista." };
+  const niche = getBrand(parsed.data.brandKey)!;
+  const admin = createAdminClient();
+
+  const { error } = await admin
+    .from("businesses")
+    .update({ brand_key: niche.key, segment: niche.defaultSegment })
+    .eq("id", business.id);
+  if (error) return { ok: false, message: "Não foi possível trocar o ramo. Tente de novo." };
+
+  if (parsed.data.replaceServices) {
+    await admin.from("services").update({ active: false }).eq("business_id", business.id);
+    const { data: created } = await admin
+      .from("services")
+      .insert(
+        niche.suggestedServices.map((service, position) => ({
+          business_id: business.id,
+          name: service.name,
+          duration_minutes: service.durationMinutes,
+          position,
+        })),
+      )
+      .select("id");
+    // Every active professional offers the new services.
+    const { data: professionals } = await admin
+      .from("professionals")
+      .select("id")
+      .eq("business_id", business.id)
+      .eq("active", true);
+    const links = (professionals ?? []).flatMap((p) =>
+      (created ?? []).map((s) => ({
+        business_id: business.id,
+        professional_id: p.id as string,
+        service_id: s.id as string,
+      })),
+    );
+    if (links.length) await admin.from("professional_services").insert(links);
+  }
+
+  await audit({
+    businessId: business.id,
+    userId: user.id,
+    action: "business.niche_changed",
+    details: {
+      from: business.brand_key,
+      to: niche.key,
+      replaceServices: parsed.data.replaceServices,
+    },
+  });
+  refresh(business.slug);
+  return {
+    ok: true,
+    message: parsed.data.replaceServices
+      ? "Ramo trocado. Os serviços padrão já estão no seu chat: ajuste preços em Meu perfil."
+      : "Ramo trocado. Seus serviços continuam os mesmos.",
+  };
+}
 
 export async function saveBusinessAction(_prev: FormState, formData: FormData): Promise<FormState> {
   const { business } = await requireOwner();

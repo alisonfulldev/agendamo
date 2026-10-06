@@ -5,6 +5,8 @@ export interface EmailContent {
   /** Hidden preview text shown by mail clients. */
   preheader?: string;
   heading: string;
+  /** One-time code shown large right under the heading (sign-in by code). */
+  code?: string;
   /** Plain-text paragraphs (escaped). */
   paragraphs: string[];
   /** Label/value lines, e.g. appointment details. */
@@ -38,6 +40,10 @@ export function renderEmail(
   const buttonText = readableOn(theme.button, theme);
   const font =
     "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+
+  const code = content.code
+    ? `<p style="margin:0 0 20px;font-size:34px;line-height:44px;font-weight:700;letter-spacing:8px;font-family:'SFMono-Regular',Menlo,Consolas,monospace;color:${theme.primary};">${escapeHtml(content.code)}</p>`
+    : "";
 
   const paragraphs = content.paragraphs
     .map((p) => `<p style="margin:0 0 16px;font-size:16px;line-height:24px;">${escapeHtml(p)}</p>`)
@@ -85,7 +91,7 @@ ${content.preheader ? `<div style="display:none;max-height:0;overflow:hidden;">$
 <tr><td style="padding:0 8px 16px;font-size:20px;font-weight:700;color:${theme.primary};">${escapeHtml(brand.name)}</td></tr>
 <tr><td style="background:${theme.surface};border-radius:12px;padding:28px 24px;">
 <h1 style="margin:0 0 16px;font-size:22px;line-height:30px;">${escapeHtml(content.heading)}</h1>
-${paragraphs}${details}${cta}${secondary}${footnote}
+${code}${paragraphs}${details}${cta}${secondary}${footnote}
 </td></tr>
 <tr><td style="padding:16px 8px;font-size:12px;line-height:18px;color:${theme.muted};">
 Enviado por ${escapeHtml(brand.name)}.${unsubscribe}
@@ -99,6 +105,7 @@ Enviado por ${escapeHtml(brand.name)}.${unsubscribe}
   const text = [
     content.heading,
     "",
+    ...(content.code ? [content.code, ""] : []),
     ...content.paragraphs,
     ...(content.details?.map((d) => `${d.label}: ${d.value}`) ?? []),
     content.cta ? `\n${content.cta.label}: ${content.cta.url}` : "",

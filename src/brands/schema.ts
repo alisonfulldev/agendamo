@@ -33,6 +33,7 @@ export const SEGMENTS = [
   "consulting",
   "auto_detailing",
   "sports_court",
+  "general",
 ] as const;
 
 /** Sections of the niche list on the Agendamo site. */

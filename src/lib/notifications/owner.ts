@@ -1,6 +1,6 @@
 import "server-only";
 
-import { DEFAULT_BRAND, getBrand } from "@/brands";
+import { getNiche } from "@/brands";
 import { brandUrl } from "@/brands/urls";
 import type { EmailContent } from "@/lib/email/layout";
 import { sendEmail } from "@/lib/email/send";
@@ -92,7 +92,7 @@ export async function notifyTeam(input: {
     .select("brand_key")
     .eq("id", input.businessId)
     .single();
-  const brand = getBrand(business?.brand_key as string | undefined) ?? DEFAULT_BRAND;
+  const brand = getNiche(business?.brand_key as string | undefined);
 
   // Relative links become absolute on the business's brand domain (rule 14).
   const absolute = (url: string) => (url.startsWith("/") ? brandUrl(brand, url) : url);

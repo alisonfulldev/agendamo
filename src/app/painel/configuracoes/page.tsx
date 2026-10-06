@@ -1,8 +1,10 @@
 import { formatInTimeZone } from "date-fns-tz";
 import type { Metadata } from "next";
 
+import { GENERAL_NICHE } from "@/brands";
 import { brandUrl } from "@/brands/urls";
 import { CopyLink } from "@/components/panel/copy-link";
+import { nichesByGroup } from "@/components/sales/niche-cards";
 import { PageHeader, Section } from "@/components/panel/page-header";
 import { requireOwner } from "@/lib/business/context";
 import type { PageSettings, Professional, TimeOff, WorkingHours } from "@/lib/db/types";
@@ -10,6 +12,7 @@ import { getPlanFeatures } from "@/lib/plans";
 import { createClient } from "@/lib/supabase/server";
 
 import { BusinessSettingsForm, HoursForm, PixForm, TimeOffForm } from "./forms";
+import { NicheForm, type NicheOption } from "./niche-form";
 
 export const metadata: Metadata = { title: "Configurações" };
 
@@ -34,6 +37,18 @@ export default async function SettingsPage() {
   ]);
 
   const pros = (professionals.data ?? []) as Professional[];
+  const toOption = (niche: typeof brand, label: string): NicheOption => ({
+    key: niche.key,
+    label,
+    services: niche.suggestedServices.map((s) => s.name),
+  });
+  const nicheGroups = [
+    ...nichesByGroup().map((section) => ({
+      label: section.label,
+      options: section.niches.map((niche) => toOption(niche, niche.niche!.name)),
+    })),
+    { label: "Outro", options: [toOption(GENERAL_NICHE, "Outro / Geral")] },
+  ];
   const ranges = (hours.data ?? []) as WorkingHours[];
   const fmt = (iso: string) =>
     formatInTimeZone(new Date(iso), business.timezone, "dd/MM/yyyy HH:mm");
@@ -47,6 +62,10 @@ export default async function SettingsPage() {
 
       <Section title="Negócio e agendamento">
         <BusinessSettingsForm business={business} />
+      </Section>
+
+      <Section title="Seu ramo">
+        <NicheForm current={brand.key} groups={nicheGroups} />
       </Section>
 
       <Section

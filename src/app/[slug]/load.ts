@@ -3,7 +3,7 @@ import "server-only";
 import type { Metadata } from "next";
 import { cache, type CSSProperties } from "react";
 
-import { DEFAULT_BRAND, getBrand } from "@/brands";
+import { getNiche } from "@/brands";
 import { getCurrentBrand } from "@/brands/server";
 import { readableOn } from "@/brands/theme";
 import { brandUrl } from "@/brands/urls";
@@ -18,7 +18,7 @@ export const loadBusinessPage = cache(async (slug: string) => {
   const domainBrand = await getCurrentBrand();
   const data = await getPublicPage(domainBrand.key, slug);
   if (!data) return null;
-  const brand = getBrand(data.business.brand_key) ?? DEFAULT_BRAND;
+  const brand = getNiche(data.business.brand_key);
   const features = getPlanFeatures({
     ...data.business,
     trial_started_at: data.business.trial_started_at ?? null,

@@ -3,7 +3,7 @@ import "server-only";
 import { notFound, redirect } from "next/navigation";
 import { cache } from "react";
 
-import { DEFAULT_BRAND, getBrand, type BrandConfig } from "@/brands";
+import { type BrandConfig, getNiche } from "@/brands";
 import { getPlanFeatures } from "@/lib/plans";
 import { requireUser, type SessionUser } from "@/lib/auth/session";
 import type { Business, Member } from "@/lib/db/types";
@@ -38,7 +38,7 @@ export const getBusinessContext = cache(async (): Promise<BusinessContext | null
   return {
     user,
     business,
-    brand: getBrand(business.brand_key) ?? DEFAULT_BRAND,
+    brand: getNiche(business.brand_key),
     role: data.role as Member["role"],
     professionalId: (data.professional_id as string | null) ?? null,
     isOwner: data.role === "owner",

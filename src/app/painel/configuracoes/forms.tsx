@@ -15,7 +15,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import type { Business, PageSettings } from "@/lib/db/types";
 import { initialFormState } from "@/lib/forms";
-import { SEGMENT_LABELS } from "@/lib/segments";
 import { BR_TIMEZONES } from "@/lib/timezones";
 
 import {
@@ -80,13 +79,6 @@ export function BusinessSettingsForm({ business }: { business: Business }) {
           defaultValue={business.slug}
           hint="Trocar o endereço quebra links já divulgados."
           state={state}
-        />
-        <Select
-          name="segment"
-          label="Segmento"
-          defaultValue={v?.segment ?? business.segment}
-          options={Object.entries(SEGMENT_LABELS)}
-          error={state.errors?.segment}
         />
         <Select
           name="timezone"

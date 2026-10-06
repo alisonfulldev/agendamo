@@ -63,6 +63,13 @@ export const DEMO_PERSONAS: DemoPersona[] = [
     slug: "movimento-fisio",
   },
   {
+    email: "geral@demo.com",
+    label: "Ateliê Restaura (Outro / Geral · assinante)",
+    description: "Negócio fora dos ramos da lista: textos e serviços neutros.",
+    brandKey: "general",
+    slug: "atelie-restaura",
+  },
+  {
     email: "nova@demo.com",
     label: "Conta nova (sem negócio)",
     description: "Para testar o cadastro do negócio do zero.",
@@ -210,6 +217,23 @@ const BUSINESSES: BusinessSeed[] = [
       { name: "Avaliação", minutes: 60, price: 15000 },
     ],
     rich: true,
+  },
+  {
+    owner: "geral@demo.com",
+    name: "Ateliê Restaura",
+    slug: "atelie-restaura",
+    brand: "general",
+    plan: "pro",
+    bio: "Restauro de móveis antigos e cadeiras de palhinha, com orçamento no ateliê.",
+    city: "Porto Alegre",
+    neighborhood: "Moinhos de Vento",
+    address: "Rua Padre Chagas, 300",
+    whatsapp: "5551999990006",
+    services: [
+      { name: "Primeiro atendimento", minutes: 60, price: 0 },
+      { name: "Atendimento", minutes: 45, price: 12000 },
+      { name: "Retorno", minutes: 30, price: 6000 },
+    ],
   },
   // Two more complete beauty pages so the portal has listings to show.
   {

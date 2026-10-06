@@ -15,7 +15,34 @@ import {
 } from "@/components/ui/dialog";
 import { initialFormState } from "@/lib/forms";
 
-import { changePasswordAction, deleteAccountAction } from "./actions";
+import { changePasswordAction, createPasswordAction, deleteAccountAction } from "./actions";
+
+/** For accounts created with the e-mail code (no password yet). */
+export function CreatePasswordForm() {
+  const [state, action] = useActionState(createPasswordAction, initialFormState);
+  return (
+    <form action={action} className="flex max-w-sm flex-col gap-4" noValidate>
+      <TextField
+        name="password"
+        label="Nova senha"
+        type="password"
+        autoComplete="new-password"
+        state={state}
+      />
+      <TextField
+        name="confirm"
+        label="Repita a senha"
+        type="password"
+        autoComplete="new-password"
+        state={state}
+      />
+      <FormMessage state={state} />
+      <SubmitButton className="self-start" pendingLabel="Salvando…">
+        Criar senha
+      </SubmitButton>
+    </form>
+  );
+}
 
 export function ChangePasswordForm() {
   const [state, action] = useActionState(changePasswordAction, initialFormState);

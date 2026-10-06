@@ -34,6 +34,8 @@ export interface Business {
   suspended_at: string | null;
   /** Professionals paid for (1 included + extras). */
   professional_seats: number;
+  /** What the owner said they do when picking "Outro / Geral". */
+  niche_description: string | null;
   created_at: string;
 }
 

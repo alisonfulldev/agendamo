@@ -19,7 +19,8 @@ create table auth.users (
   created_at timestamptz not null default now(),
   -- Demo mode only (plain text, never used outside the local demo).
   encrypted_password text,
-  email_confirmed_at timestamptz
+  email_confirmed_at timestamptz,
+  raw_user_meta_data jsonb not null default '{}'::jsonb
 );
 create function auth.uid() returns uuid language sql stable as $$
   select nullif(

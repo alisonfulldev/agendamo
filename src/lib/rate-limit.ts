@@ -25,9 +25,20 @@ export const RATE_LIMITS = {
   upload: { limit: 60, windowSeconds: 60 * 60 },
   review: { limit: 10, windowSeconds: 60 * 60 },
   publicAction: { limit: 30, windowSeconds: 60 * 60 },
+  /** Sign-in / sign-up codes by e-mail (per e-mail and per IP). */
+  emailCode: { limit: 6, windowSeconds: 60 * 60 },
+  /** Accounts created through the conversation, per IP and day. */
+  accountCreate: { limit: 3, windowSeconds: 24 * 60 * 60 },
+  /** Demonstrations of the creation conversation (home page). */
+  demo: { limit: 10, windowSeconds: 60 * 60 },
 } as const satisfies Record<string, RateLimitRule>;
 
 export type RateLimitName = keyof typeof RATE_LIMITS;
+
+/** Hashed client IP, for records that must not keep the raw IP (e.g. demos). */
+export async function hashedClientIp(): Promise<string> {
+  return hashKey(`ip:${await getClientIp()}`);
+}
 
 function hashKey(value: string): string {
   const env = getServerEnv();
