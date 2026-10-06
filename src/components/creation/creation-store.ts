@@ -19,11 +19,15 @@ export function isCreationOpen(): boolean {
   return PARAMS.some((p) => params.has(p));
 }
 
-/** Opens the conversation (a history entry, so "back" closes it). */
-export function openCreation(): void {
+/**
+ * Opens the conversation (a history entry, so "back" closes it). `niche`: the niche page's route,
+ * so the conversation skips the "o que você faz?" question.
+ */
+export function openCreation(niche?: string): void {
   if (isCreationOpen()) return;
   const url = new URL(window.location.href);
   url.searchParams.set("criar", "1");
+  if (niche) url.searchParams.set("ramo", niche);
   window.history.pushState({ lvCreation: true }, "", url);
   window.dispatchEvent(new Event(EVENT));
 }

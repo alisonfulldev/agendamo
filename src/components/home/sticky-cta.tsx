@@ -4,7 +4,15 @@ import { OpenCreationLink } from "@/components/creation/open-creation";
 import { useEffect, useState } from "react";
 
 /** Phone only: the main call to action fixed at the bottom once the top of the page is gone. */
-export function StickyCta({ targetId, label }: { targetId: string; label: string }) {
+export function StickyCta({
+  targetId,
+  label,
+  niche,
+}: {
+  targetId: string;
+  label: string;
+  niche?: string;
+}) {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -23,6 +31,7 @@ export function StickyCta({ targetId, label }: { targetId: string; label: string
       aria-hidden={!visible}
     >
       <OpenCreationLink
+        niche={niche}
         tabIndex={visible ? 0 : -1}
         className="flex h-12 w-full items-center justify-center rounded-xl bg-primary text-base font-semibold text-primary-foreground"
       >

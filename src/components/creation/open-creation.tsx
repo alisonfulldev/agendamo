@@ -10,20 +10,23 @@ export function OpenCreationLink({
   className,
   children,
   tabIndex,
+  niche,
 }: {
   className?: string;
   children: React.ReactNode;
   tabIndex?: number;
+  /** Niche page route: the conversation opens with the niche already chosen. */
+  niche?: string;
 }) {
   return (
     <a
-      href="?criar=1"
+      href={niche ? `?criar=1&ramo=${niche}` : "?criar=1"}
       className={className}
       tabIndex={tabIndex}
       onClick={(event) => {
         if (event.metaKey || event.ctrlKey || event.shiftKey) return;
         event.preventDefault();
-        openCreation();
+        openCreation(niche);
       }}
     >
       {children}

@@ -7,6 +7,7 @@ const nextConfig: NextConfig = {
   // The story art reads its font files at runtime (assets/fonts).
   outputFileTracingIncludes: {
     "/painel/vendas/artes/imagem": ["./assets/fonts/**/*"],
+    "/og": ["./assets/fonts/**/*"],
   },
 };
 

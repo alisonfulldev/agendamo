@@ -1,5 +1,6 @@
 import { getCurrentBrand } from "@/brands/server";
-import { brandUrl, isProductionDeployment } from "@/brands/urls";
+import { brandUrl, hasRealDomain, isProductionDeployment } from "@/brands/urls";
+import { siteUrl } from "@/lib/site-url";
 
 /** robots.txt per brand domain. Previews and development are never indexed. */
 export async function GET() {
@@ -15,7 +16,13 @@ export async function GET() {
         "Disallow: /cancelar/",
         "Disallow: /avaliar/",
         "Disallow: /descadastrar",
-        `Sitemap: ${brandUrl(brand, "/sitemap.xml")}`,
+        "Disallow: /cadastro",
+        "Disallow: /entrar",
+        "Disallow: /demo",
+        // Links that open the creation conversation: same page, never a new one.
+        "Disallow: /*?criar=",
+        "Disallow: /*&criar=",
+        `Sitemap: ${hasRealDomain(brand) ? brandUrl(brand, "/sitemap.xml") : siteUrl("/sitemap.xml")}`,
       ].join("\n")
     : "User-agent: *\nDisallow: /";
   return new Response(`${body}\n`, {

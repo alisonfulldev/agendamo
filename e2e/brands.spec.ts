@@ -31,17 +31,22 @@ test("the home is the generic MeetChat page, whatever brand the cookie remembers
 });
 
 for (const brand of [psychology, physio]) {
-  test(`/${brand.niche.route} shows the ${brand.key} niche: copy, colors and its sign-up`, async ({
+  test(`/${brand.niche.route} is a sales page made for the ${brand.key} niche`, async ({
     page,
   }) => {
     await page.goto(`/${brand.niche.route}`);
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(brand.sales.title);
-    await expect(page.getByRole("banner")).toContainText(`para ${brand.niche.name.toLowerCase()}`);
+    await expect(page.getByRole("banner")).toContainText(brand.niche.name);
     expect(await scopedVar(page, "--brand-primary")).toBe(brand.theme.primary);
-
-    await page.getByRole("link", { name: "Testar 30 dias grátis" }).first().click();
-    await expect(page).toHaveURL(new RegExp(`/cadastro\\?brand=${brand.key}`));
-    await expect(page.locator("html")).toHaveAttribute("data-brand", brand.key);
+    await expect(page).toHaveTitle(/Agendamento por chat inteligente/);
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+      "href",
+      new RegExp(`/${brand.niche.route}$`),
+    );
+    // The call to action opens the conversation with the niche already chosen.
+    await page.getByRole("link", { name: "Criar meu link grátis" }).first().click();
+    await expect(page).toHaveURL(new RegExp(`criar=1&ramo=${brand.niche.route}`));
+    await expect(page.getByRole("dialog")).toBeVisible();
   });
 }
 

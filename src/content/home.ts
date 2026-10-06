@@ -1,10 +1,57 @@
 import { PRICE_TEXT, TRIAL_DAYS } from "@/lib/plans";
 
+type Icon =
+  | "moon"
+  | "ghost"
+  | "calendar-x"
+  | "calendar-check"
+  | "bell"
+  | "smartphone"
+  | "link"
+  | "layout"
+  | "pointer";
+
+/** Texts of a sales page: the home and each niche page share this shape. */
+export interface HomeContent {
+  meta: { title: string; description: string };
+  hero: {
+    badge: string;
+    title: string;
+    subtitle: string;
+    primaryCta: string;
+    secondaryCta: string;
+    note: string;
+  };
+  /** Unique text about the niche (niche pages), right after the top. */
+  intro?: { title: string; paragraphs: readonly string[] };
+  pains: { title: string; items: readonly { icon: Icon; text: string }[] };
+  steps: { title: string; items: readonly string[] };
+  gains: { title: string; items: readonly { icon: Icon; text: string }[] };
+  audience: { title: string; chips: readonly { label: string; href: string }[] };
+  pricing: {
+    title: string;
+    tagline: string;
+    planName: string;
+    trial: string;
+    includes: readonly string[];
+    extra: string;
+  };
+  faq: { title: string; items: readonly { question: string; answer: string }[] };
+  closing: { title: string; cta: string };
+  footer: { links: readonly { label: string; href: string }[] };
+  demo: readonly {
+    business: string;
+    customer: string;
+    service: string;
+    times: readonly string[];
+  }[];
+}
+
 /**
  * Texts of the home page (sales page of the MeetChat site). Prices always come from PRICE_TEXT /
  * PLAN_PRICES; niche routes are the existing niche pages.
  */
-export const HOME = {
+export const HOME: HomeContent = {
   meta: {
     title: "MeetChat · Seus clientes agendam sozinhos",
     description:
@@ -144,4 +191,4 @@ export const HOME = {
       times: ["11:00", "15:00", "17:30"],
     },
   ],
-} as const;
+};

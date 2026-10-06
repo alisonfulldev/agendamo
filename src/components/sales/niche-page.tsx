@@ -2,27 +2,42 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { getBrand } from "@/brands";
+import { HomePage } from "@/components/home/home-page";
+import { nicheHomeContent } from "@/content/niche-pages";
+import { siteUrl } from "@/lib/site-url";
 
-import { SalesPage } from "./sales-page";
-
-/** Metadata of a niche page (/psicologia…). */
+/** Metadata of a niche page (/psicologia…): own title, description, canonical and share image. */
 export function nicheMetadata(key: string): Metadata {
   const brand = getBrand(key);
   if (!brand?.niche) return {};
+  const content = nicheHomeContent(brand);
+  const url = siteUrl(`/${brand.niche.route}`);
   return {
-    title: { absolute: `MeetChat para ${brand.niche.label.toLowerCase()}` },
-    description: brand.sales.subtitle,
+    title: { absolute: content.meta.title },
+    description: content.meta.description,
+    alternates: { canonical: url },
     openGraph: {
-      title: brand.sales.title,
-      description: brand.sales.subtitle,
-      images: [{ url: "/og", width: 1200, height: 630 }],
+      title: content.hero.title,
+      description: content.meta.description,
+      url,
+      siteName: "MeetChat",
+      locale: "pt_BR",
+      type: "website",
+      images: [{ url: `/og?nicho=${brand.key}`, width: 1200, height: 630 }],
     },
+    twitter: { card: "summary_large_image" },
   };
 }
 
-/** Niche landing page: same sales page, with the niche copy, theme and sign-up. */
+/** Niche page: the home's structure with the niche's texts, theme and examples. */
 export function NichePage({ brandKey }: { brandKey: string }) {
   const brand = getBrand(brandKey);
   if (!brand?.niche) notFound();
-  return <SalesPage brand={brand} signupHref={`/cadastro?brand=${brand.key}`} />;
+  return (
+    <HomePage
+      content={nicheHomeContent(brand)}
+      brand={brand}
+      niche={{ route: brand.niche.route, name: brand.niche.name }}
+    />
+  );
 }

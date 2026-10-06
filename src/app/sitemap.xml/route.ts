@@ -1,7 +1,11 @@
 import { BRANDS, NICHES } from "@/brands";
 import { getCurrentBrand } from "@/brands/server";
 import { brandUrl, hasRealDomain } from "@/brands/urls";
+import { siteUrl } from "@/lib/site-url";
 import { indexableBusinessSlugs, indexablePortalPaths } from "@/lib/portal/seo";
+
+/** When this deploy started: last change of the site's own pages. */
+const SITE_UPDATED = new Date().toISOString();
 
 function escapeXml(value: string): string {
   return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -21,13 +25,16 @@ export async function GET() {
     ownDomain ? indexablePortalPaths(brand.key) : Promise.resolve([] as string[]),
   ]);
   const businesses = businessLists.flat();
-  const base = (path: string) => brandUrl(brand, path).split("?")[0]!;
+  const base = (path: string) => (ownDomain ? brandUrl(brand, path).split("?")[0]! : siteUrl(path));
   const urls: { loc: string; priority: string; lastmod?: string }[] = [
-    { loc: base("/"), priority: "1.0" },
+    { loc: base("/"), priority: "1.0", lastmod: SITE_UPDATED },
     ...(ownDomain
       ? []
-      : NICHES.map((niche) => ({ loc: base(`/${niche.niche!.route}`), priority: "0.9" }))),
-    { loc: base("/cadastro"), priority: "0.6" },
+      : NICHES.map((niche) => ({
+          loc: base(`/${niche.niche!.route}`),
+          priority: "0.9",
+          lastmod: SITE_UPDATED,
+        }))),
     { loc: base("/termos"), priority: "0.2" },
     { loc: base("/privacidade"), priority: "0.2" },
     ...portal.map((path) => ({ loc: base(path), priority: "0.7" })),
