@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { DEFAULT_BRAND } from "@/brands";
 import { needsFullReloadForBrand } from "@/brands/host";
@@ -113,5 +113,20 @@ describe("getBrandByHost", () => {
       expect(getBrandByHost("unknown.com", { brandParam: "physio" })).toBe(DEFAULT_BRAND);
       expect(getBrandByHost(null)).toBe(DEFAULT_BRAND);
     });
+  });
+});
+
+describe("main site domain (NEXT_PUBLIC_APP_URL)", () => {
+  afterEach(() => vi.unstubAllEnvs());
+
+  it("picks the brand with ?brand= / cookie on the main domain, with or without www", () => {
+    vi.stubEnv("NEXT_PUBLIC_APP_URL", "https://meetchat.com.br");
+    expect(getBrandByHost("meetchat.com.br", { brandParam: "physio" }).key).toBe("physio");
+    expect(getBrandByHost("www.meetchat.com.br", { brandCookie: "physio" }).key).toBe("physio");
+  });
+
+  it("other unknown domains still ignore ?brand=", () => {
+    vi.stubEnv("NEXT_PUBLIC_APP_URL", "https://meetchat.com.br");
+    expect(getBrandByHost("outrosite.com.br", { brandParam: "physio" })).toBe(DEFAULT_BRAND);
   });
 });

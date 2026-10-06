@@ -20,9 +20,23 @@ export function normalizeHost(host: string | null | undefined): string {
   return value;
 }
 
-/** Hosts where the brand can be picked with ?brand= / cookie: local dev and Vercel previews. */
+/** Host of the main site (NEXT_PUBLIC_APP_URL, e.g. meetchat.com.br), without www. */
+function appHost(): string | null {
+  try {
+    const url = process.env.NEXT_PUBLIC_APP_URL;
+    return url ? normalizeHost(new URL(url).host) : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Hosts where the brand can be picked with ?brand= / cookie: local dev, Vercel previews and the
+ * main site domain (one domain serves every niche; niche pages and sign-up pick the brand).
+ */
 export function isBrandSelectableHost(normalizedHost: string): boolean {
   return (
+    normalizedHost === appHost() ||
     normalizedHost === "localhost" ||
     normalizedHost.endsWith(".localhost") ||
     normalizedHost === "127.0.0.1" ||
