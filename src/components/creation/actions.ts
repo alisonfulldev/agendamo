@@ -1,11 +1,21 @@
 "use server";
 
+import { randomUUID } from "node:crypto";
+
 import { z } from "zod";
 
 import { getNiche } from "@/brands";
 import { checkSlug } from "@/lib/business/slug-check";
+import { MAX_UPLOAD_BYTES, UPLOAD_CONTENT_TYPE } from "@/lib/images/presets";
 import { hashedClientIp, rateLimitRequest } from "@/lib/rate-limit";
 import { slugify } from "@/lib/slug";
+import {
+  createUploadUrl,
+  deleteObject,
+  isStorageConfigured,
+  objectSize,
+  publicUrl,
+} from "@/lib/storage/r2";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 /** Below this, the form was filled by a robot (the conversation takes a few seconds at least). */
@@ -91,4 +101,68 @@ export async function recordTestBookingAction(id: unknown): Promise<void> {
     .from("demos")
     .update({ test_bookings: (data.test_bookings as number) + 1 })
     .eq("id", parsed.data);
+}
+
+const photoSignSchema = z.object({
+  demoId: z.uuid(),
+  contentType: z.literal(UPLOAD_CONTENT_TYPE),
+  size: z.number().int().positive().max(MAX_UPLOAD_BYTES),
+});
+
+export type DemoPhotoSign =
+  | { ok: true; key: string; uploadUrl: string; headers: Record<string, string> }
+  | { ok: false; message: string };
+
+/**
+ * Presigned upload for the photo of a demonstration (compressed in the browser, sent straight to
+ * R2, rule 7). Optional: the owner can also add it later in the panel.
+ */
+export async function signDemoPhotoAction(input: unknown): Promise<DemoPhotoSign> {
+  const parsed = photoSignSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, message: "Imagem inválida ou acima de 300 KB." };
+  if (!isStorageConfigured()) return { ok: false, message: "Envio de fotos indisponível agora." };
+  if (!(await rateLimitRequest("upload", `demo:${parsed.data.demoId}`))) {
+    return { ok: false, message: "Muitos envios. Espere um pouco." };
+  }
+  const { data: demo } = await createAdminClient()
+    .from("demos")
+    .select("id")
+    .eq("id", parsed.data.demoId)
+    .gt("expires_at", new Date().toISOString())
+    .maybeSingle();
+  if (!demo) return { ok: false, message: "Recomece a conversa para enviar a foto." };
+  const key = `demos/${parsed.data.demoId}/avatar/${randomUUID()}.webp`;
+  return {
+    ok: true,
+    key,
+    uploadUrl: await createUploadUrl(key, UPLOAD_CONTENT_TYPE, parsed.data.size),
+    headers: {
+      "Content-Type": UPLOAD_CONTENT_TYPE,
+      "Cache-Control": "public, max-age=31536000, immutable",
+    },
+  };
+}
+
+/** Saves the uploaded photo on the demonstration (replacing a previous one). */
+export async function saveDemoPhotoAction(
+  input: unknown,
+): Promise<{ ok: true; url: string } | { ok: false; message: string }> {
+  const parsed = z.object({ demoId: z.uuid(), key: z.string().max(200) }).safeParse(input);
+  if (!parsed.success || !parsed.data.key.startsWith(`demos/${parsed.data.demoId}/avatar/`)) {
+    return { ok: false, message: "Não foi possível salvar a foto." };
+  }
+  const size = await objectSize(parsed.data.key);
+  if (!size || size > MAX_UPLOAD_BYTES)
+    return { ok: false, message: "A foto não chegou. Tente de novo." };
+  const admin = createAdminClient();
+  const { data: demo } = await admin
+    .from("demos")
+    .select("photo_key")
+    .eq("id", parsed.data.demoId)
+    .gt("expires_at", new Date().toISOString())
+    .maybeSingle();
+  if (!demo) return { ok: false, message: "Recomece a conversa para enviar a foto." };
+  await admin.from("demos").update({ photo_key: parsed.data.key }).eq("id", parsed.data.demoId);
+  if (demo.photo_key) await deleteObject(demo.photo_key as string).catch(() => undefined);
+  return { ok: true, url: publicUrl(parsed.data.key)! };
 }

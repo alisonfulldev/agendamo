@@ -3,6 +3,12 @@ import path from "node:path";
 
 import { expect, test, type Page } from "@playwright/test";
 
+// Tiny PNG (8x8) for the optional photo of the conversation.
+const PHOTO = Buffer.from(
+  "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAIAAABLbSncAAAAEklEQVR4nGP4z8CAFWEXHbQSACj/P8Fu7N9hAAAAAElFTkSuQmCC",
+  "base64",
+);
+
 /** Sign-up and sign-in by e-mail code (codes read from .demo-data/emails.json). */
 
 interface CapturedEmail {
@@ -123,4 +129,40 @@ test("/entrar signs in with an e-mail code by default", async ({ page }) => {
   await page.getByRole("button", { name: "Entrar", exact: true }).click();
   await expect(page).toHaveURL(/\/painel/);
   await expect(page.getByRole("navigation", { name: "Painel" })).toBeVisible();
+});
+
+test("the optional photo of the conversation becomes the profile photo", async ({ page }) => {
+  const name = `Barbearia Foto ${unique()}`;
+  const email = `foto-${unique()}@exemplo.com`;
+  await page.goto("/?criar=1");
+  const dialog = page.getByRole("dialog");
+  await dialog.getByLabel("Nome do negócio").fill(name);
+  await page.waitForTimeout(1600);
+  await dialog.getByRole("button", { name: "Enviar", exact: true }).click();
+  await dialog.getByRole("button", { name: "Isso mesmo" }).click();
+
+  // Optional: shown in the header of her chat, never blocking the test booking.
+  const add = dialog.getByRole("button", { name: /Adicionar sua foto/ });
+  await expect(add).toBeVisible();
+  await expect(dialog.locator("button").filter({ hasText: /·/ }).first()).toBeVisible();
+  await dialog.locator('input[type="file"]').setInputFiles({
+    name: "eu.png",
+    mimeType: "image/png",
+    buffer: PHOTO,
+  });
+  await expect(dialog.getByRole("button", { name: "Trocar foto" })).toBeVisible();
+  await expect(dialog.getByRole("banner").locator("img")).toHaveAttribute("src", /demos\//);
+
+  await dialog.getByRole("button", { name: "Quero esse link para mim" }).click();
+  await dialog.getByRole("button", { name: "Depois" }).click();
+  await dialog.getByLabel("seu@email.com").fill(email);
+  await dialog.getByRole("button", { name: "Enviar", exact: true }).click();
+  const before = codes(email).length;
+  await dialog.getByRole("button", { name: "Aceito, enviar o código" }).click();
+  await dialog.getByLabel("Código de 4 números").fill(await newCode(email, before));
+  await dialog.getByRole("button", { name: "Enviar", exact: true }).click();
+  await expect(dialog.getByText(`Pronto, ${name}! Seu link está no ar:`)).toBeVisible();
+
+  await page.goto("/painel/pagina");
+  await expect(page.locator('img[src*="/avatar/"]').first()).toBeVisible();
 });

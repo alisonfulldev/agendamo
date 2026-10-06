@@ -19,6 +19,7 @@ import { brandThemeStyle } from "@/brands/theme";
 import { HOME } from "@/content/home";
 import { formatBRL } from "@/lib/money";
 import { PLAN_PRICES, PRICE_TEXT } from "@/lib/plans";
+import { isStorageConfigured } from "@/lib/storage/r2";
 
 import { CreationChat } from "@/components/creation/creation-chat";
 import { OpenCreationLink } from "@/components/creation/open-creation";
@@ -273,7 +274,7 @@ export function HomePage() {
       </footer>
 
       <StickyCta targetId="topo" label={hero.primaryCta} />
-      <CreationChat />
+      <CreationChat photos={isStorageConfigured()} />
     </div>
   );
 }

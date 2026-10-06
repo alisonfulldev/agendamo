@@ -1,5 +1,7 @@
 "use server";
 
+import { randomUUID } from "node:crypto";
+
 import QRCode from "qrcode";
 import { z } from "zod";
 
@@ -11,9 +13,11 @@ import { sendEmailCode, verifyEmailCode, type SendCodeResult } from "@/lib/auth/
 import { DEFAULT_HOURS } from "@/lib/business/schemas";
 import { checkSlug, isSlugAvailable } from "@/lib/business/slug-check";
 import { EMAIL_PATTERN } from "@/lib/email-typos";
+import { objectKey } from "@/lib/images/presets";
 import { normalizeBrPhone } from "@/lib/phone";
 import { rateLimitRequest } from "@/lib/rate-limit";
 import { slugify } from "@/lib/slug";
+import { copyObject, deleteObject } from "@/lib/storage/r2";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 const email = z.string().trim().toLowerCase().max(254).regex(EMAIL_PATTERN);
@@ -23,6 +27,7 @@ interface DemoRow {
   name: string;
   brand_key: string;
   niche_description: string | null;
+  photo_key: string | null;
   services: { name: string; durationMinutes: number }[];
   suggested_slug: string | null;
   source: Record<string, unknown>;
@@ -32,7 +37,9 @@ interface DemoRow {
 async function loadDemo(id: string): Promise<DemoRow | null> {
   const { data } = await createAdminClient()
     .from("demos")
-    .select("id, name, brand_key, niche_description, services, suggested_slug, source, consents")
+    .select(
+      "id, name, brand_key, niche_description, photo_key, services, suggested_slug, source, consents",
+    )
     .eq("id", id)
     .gt("expires_at", new Date().toISOString())
     .maybeSingle();
@@ -147,6 +154,21 @@ export async function verifySignupCodeAction(input: unknown): Promise<VerifySign
       .from("page_settings")
       .update({ bio: demo.niche_description })
       .eq("business_id", businessId);
+  }
+  // The photo added in the conversation becomes the profile photo (copied into the business
+  // folder, so deleting the account deletes it too).
+  if (demo.photo_key) {
+    const avatarKey = objectKey(businessId, "avatar", randomUUID());
+    try {
+      await copyObject(demo.photo_key, avatarKey);
+      await admin
+        .from("page_settings")
+        .update({ avatar_key: avatarKey })
+        .eq("business_id", businessId);
+      await deleteObject(demo.photo_key);
+    } catch (copyError) {
+      console.error("demo photo copy failed", copyError);
+    }
   }
   const consent = demo.consents.at(-1);
   await admin.auth.admin.updateUserById(verified.userId, {

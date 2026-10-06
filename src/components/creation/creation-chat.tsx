@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, CalendarCheck, Check, Copy, Send, X } from "lucide-react";
+import { Bell, CalendarCheck, Camera, Check, Copy, Send, X } from "lucide-react";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 import { getBrand, getNiche, NICHES, PLATFORM } from "@/brands";
@@ -8,10 +8,16 @@ import { brandThemeStyle } from "@/brands/theme";
 import { nichesByGroup } from "@/components/sales/niche-cards";
 import { CREATION, detectNiche } from "@/content/creation";
 import { EMAIL_PATTERN, suggestEmailFix } from "@/lib/email-typos";
+import { compressImage } from "@/lib/images/compress";
 import { formatDuration } from "@/lib/money";
 import { maskBrPhone } from "@/lib/phone";
 
-import { createDemoAction, recordTestBookingAction } from "./actions";
+import {
+  createDemoAction,
+  recordTestBookingAction,
+  saveDemoPhotoAction,
+  signDemoPhotoAction,
+} from "./actions";
 import { closeCreation, creationParams, isCreationOpen, subscribeCreation } from "./creation-store";
 import { sendSignupCodeAction, verifySignupCodeAction } from "./signup-actions";
 
@@ -77,6 +83,8 @@ interface CreationState {
   emailFix: string | null;
   codeSentAt: number | null;
   created: { name: string; slug: string; pageUrl: string; qr: string } | null;
+  /** Photo added in the conversation (optional; it can also be added later in the panel). */
+  photoUrl: string | null;
 }
 
 const STORAGE_KEY = "lv_creation_v1";
@@ -106,6 +114,7 @@ function fresh(): CreationState {
     emailFix: null,
     codeSentAt: null,
     created: null,
+    photoUrl: null,
   };
 }
 
@@ -193,10 +202,10 @@ function sourceInfo(viaName: boolean, viaNiche: boolean) {
  * desktop). The person names the business, the niche is detected or chosen, and the chat turns
  * into hers for a test booking. Progress survives closing (sessionStorage).
  */
-export function CreationChat() {
+export function CreationChat({ photos = false }: { photos?: boolean }) {
   const open = useSyncExternalStore(subscribeCreation, isCreationOpen, () => false);
   if (!open) return null;
-  return <Conversation />;
+  return <Conversation photos={photos} />;
 }
 
 /** Height and top of the visible area (above the on-screen keyboard), on phones. */
@@ -220,7 +229,7 @@ function useVisibleArea(): { height: number; top: number } | null {
   return area;
 }
 
-function Conversation() {
+function Conversation({ photos }: { photos: boolean }) {
   const area = useVisibleArea();
   const [state, setState] = useState<CreationState>(() => {
     const saved = load();
@@ -471,14 +480,33 @@ function Conversation() {
         className="flex h-full w-full flex-col overflow-hidden bg-background font-sans text-foreground transition-colors duration-500 md:h-[min(780px,92vh)] md:w-[400px] md:rounded-[2.4rem] md:border-[10px] md:border-foreground md:shadow-2xl"
       >
         <header className="flex items-center gap-3 bg-primary px-4 py-3 text-primary-foreground">
-          <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary-foreground/20 font-semibold">
-            {ownChat ? initials || "M" : "M"}
-          </span>
+          {ownChat && state.photoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element -- R2 public URL
+            <img
+              src={state.photoUrl}
+              alt=""
+              width={40}
+              height={40}
+              className="size-10 shrink-0 rounded-full object-cover"
+            />
+          ) : (
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary-foreground/20 font-semibold">
+              {ownChat ? initials || "M" : "M"}
+            </span>
+          )}
           <span className="min-w-0 flex-1">
             <span className="block truncate text-lg font-semibold">{headerName}</span>
-            <span className="block text-sm opacity-85">
-              {ownChat ? "Seu chat de agendamento" : "Monte seu link em 1 minuto"}
-            </span>
+            {ownChat && photos && state.demoId && !signup ? (
+              <AddPhoto
+                demoId={state.demoId}
+                hasPhoto={Boolean(state.photoUrl)}
+                onUploaded={(url) => update({ photoUrl: url })}
+              />
+            ) : (
+              <span className="block text-sm opacity-85">
+                {ownChat ? "Seu chat de agendamento" : "Monte seu link em 1 minuto"}
+              </span>
+            )}
           </span>
           <button
             type="button"
@@ -720,6 +748,83 @@ function composerFor(phase: Phase): ComposerSettings | null {
     default:
       return null;
   }
+}
+
+/**
+ * "Adicionar sua foto": optional. Compressed in the browser (WebP) and sent straight to R2; shows
+ * at once in the header. Without it, the initials stay and the photo can be added in the panel.
+ */
+function AddPhoto({
+  demoId,
+  hasPhoto,
+  onUploaded,
+}: {
+  demoId: string;
+  hasPhoto: boolean;
+  onUploaded: (url: string) => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [status, setStatus] = useState<"idle" | "working" | "error">("idle");
+
+  async function upload(file: File) {
+    setStatus("working");
+    try {
+      const image = await compressImage(file, "avatar");
+      const signed = await signDemoPhotoAction({
+        demoId,
+        contentType: image.blob.type,
+        size: image.blob.size,
+      });
+      if (!signed.ok) throw new Error(signed.message);
+      const put = await fetch(signed.uploadUrl, {
+        method: "PUT",
+        headers: signed.headers,
+        body: image.blob,
+      });
+      if (!put.ok) throw new Error("upload failed");
+      const saved = await saveDemoPhotoAction({ demoId, key: signed.key });
+      if (!saved.ok) throw new Error(saved.message);
+      onUploaded(saved.url);
+      setStatus("idle");
+    } catch (error) {
+      console.error("demo photo failed", error);
+      setStatus("error");
+    } finally {
+      if (inputRef.current) inputRef.current.value = "";
+    }
+  }
+
+  return (
+    <>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        className="sr-only"
+        tabIndex={-1}
+        aria-hidden
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) void upload(file);
+        }}
+      />
+      <button
+        type="button"
+        disabled={status === "working"}
+        onClick={() => inputRef.current?.click()}
+        className="flex items-center gap-1 text-sm underline underline-offset-2 opacity-90"
+      >
+        <Camera className="size-3.5" aria-hidden />
+        {status === "working"
+          ? "Enviando a foto…"
+          : status === "error"
+            ? "Não deu certo, tentar de novo"
+            : hasPhoto
+              ? "Trocar foto"
+              : CREATION.addPhoto}
+      </button>
+    </>
+  );
 }
 
 /** "Estamos criando seu chat…": spinner and steps lighting up one after the other. */

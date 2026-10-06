@@ -1,6 +1,7 @@
 import "server-only";
 
 import {
+  CopyObjectCommand,
   DeleteObjectCommand,
   DeleteObjectsCommand,
   HeadObjectCommand,
@@ -17,6 +18,8 @@ import {
   demoObjectSize,
   demoPublicUrl,
   demoUploadUrl,
+  readDemoObject,
+  writeDemoObject,
 } from "@/lib/demo/storage";
 import { getServerEnv, requireServerEnv } from "@/lib/env";
 
@@ -85,6 +88,26 @@ export async function objectSize(key: string): Promise<number | null> {
   } catch {
     return null;
   }
+}
+
+/** Copies an object to a new key (e.g. a demo photo into the business folder). */
+export async function copyObject(from: string, to: string): Promise<void> {
+  if (isDemoMode()) {
+    const body = readDemoObject(from);
+    if (body) writeDemoObject(to, body);
+    return;
+  }
+  const { client, bucket } = r2();
+  await client.send(
+    new CopyObjectCommand({
+      Bucket: bucket,
+      CopySource: `${bucket}/${from}`,
+      Key: to,
+      CacheControl: IMMUTABLE_CACHE,
+      MetadataDirective: "REPLACE",
+      ContentType: "image/webp",
+    }),
+  );
 }
 
 export async function deleteObject(key: string): Promise<void> {

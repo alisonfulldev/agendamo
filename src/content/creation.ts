@@ -20,6 +20,7 @@ export const CREATION = {
     "Deixando com a cara do seu negócio",
   ],
   banner: "Prévia do seu chat · experimente à vontade, nada é salvo",
+  addPhoto: "Adicionar sua foto (opcional)",
   testDone: "Prontinho! Seu horário de teste está confirmado.",
   arrives: "É isso que chega para você:",
   claim: "Quero esse link para mim",
