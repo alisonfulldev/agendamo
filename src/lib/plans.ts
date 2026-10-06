@@ -13,9 +13,17 @@ export const TRIAL_DAYS = 30;
 export const TRIAL_PROFESSIONALS = 10;
 export const MAX_PROFESSIONALS = 50;
 
+/**
+ * Temporary real-payment test: while NEXT_PUBLIC_PRICE_TEST_CENTS is set (e.g. 500 = R$ 5, the
+ * Asaas minimum), the plan costs that for everyone, monthly and yearly. Remove it to go back.
+ */
+const TEST_PRICE = Number(process.env.NEXT_PUBLIC_PRICE_TEST_CENTS) || 0;
+const ASAAS_MINIMUM_CENTS = 500;
+const testPrice = TEST_PRICE > 0 ? Math.max(TEST_PRICE, ASAAS_MINIMUM_CENTS) : 0;
+
 export const PLAN_PRICES = {
-  monthly: 1900,
-  yearly: 19200,
+  monthly: testPrice || 1900,
+  yearly: testPrice || 19200,
   extraProfessional: { monthly: 900, yearly: 9000 },
   featured: { monthly: 4900 },
   customDomain: { monthly: 1900 },
