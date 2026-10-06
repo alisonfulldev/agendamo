@@ -1,12 +1,12 @@
 import { PRICE_TEXT, TRIAL_DAYS } from "@/lib/plans";
 
 /**
- * Texts of the home page (sales page of the Agendamo site). Prices always come from PRICE_TEXT /
+ * Texts of the home page (sales page of the MeetChat site). Prices always come from PRICE_TEXT /
  * PLAN_PRICES; niche routes are the existing niche pages.
  */
 export const HOME = {
   meta: {
-    title: "Agendamo · Seus clientes agendam sozinhos",
+    title: "MeetChat · Seus clientes agendam sozinhos",
     description:
       "Coloque seu link na bio. O cliente escolhe o serviço e o horário, e já cai na sua agenda, 24 horas por dia.",
   },
@@ -61,7 +61,7 @@ export const HOME = {
   pricing: {
     title: "Um preço simples",
     tagline: "Um cliente que não falta já paga o mês.",
-    planName: "Agendamo completo",
+    planName: "MeetChat completo",
     trial: `${TRIAL_DAYS} dias grátis, sem cartão`,
     includes: [
       "Agendamento pelo link, 24 horas por dia",
@@ -100,7 +100,7 @@ export const HOME = {
       {
         question: "E se eu não souber mexer?",
         answer:
-          "Em 1 minuto o Agendamo monta seu link com os serviços do seu ramo. Depois é só ajustar preços e horários, pelo celular mesmo.",
+          "Em 1 minuto o MeetChat monta seu link com os serviços do seu ramo. Depois é só ajustar preços e horários, pelo celular mesmo.",
       },
     ],
   },
@@ -112,8 +112,8 @@ export const HOME = {
     links: [
       { label: "Termos de uso", href: "/termos" },
       { label: "Privacidade", href: "/privacidade" },
-      // A confirmar: e-mail ou WhatsApp de contato.
-      { label: "Contato", href: "/termos" },
+      // Support is by e-mail only.
+      { label: "Contato", href: "mailto:contato@brandcodesolutions.com.br" },
       { label: "Entrar", href: "/entrar" },
     ],
   },

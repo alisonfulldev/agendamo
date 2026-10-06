@@ -84,7 +84,7 @@ export function PlansTable({ signupHref = "/cadastro" }: { signupHref?: string }
       <p className="mx-auto max-w-2xl text-center text-sm text-pretty text-muted-foreground">
         {TRIAL_DAYS} dias grátis, sem cartão. 1 profissional incluso; cada profissional extra{" "}
         {formatBRL(PLAN_PRICES.extraProfessional.monthly)}/mês. Adicionais: Destaque no portal (
-        {formatBRL(PLAN_PRICES.featured.monthly)}/mês por cidade) e Domínio próprio.
+        {formatBRL(PLAN_PRICES.featured.monthly)}/mês por cidade).
       </p>
     </div>
   );

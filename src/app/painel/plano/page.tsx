@@ -232,7 +232,6 @@ export default async function PlanPage() {
           hasActiveSubscription={active}
           addonPrices={{
             featured: PLAN_PRICES.featured.monthly,
-            customDomain: PLAN_PRICES.customDomain.monthly,
           }}
         />
       </Section>

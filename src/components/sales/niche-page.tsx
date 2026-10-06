@@ -10,7 +10,7 @@ export function nicheMetadata(key: string): Metadata {
   const brand = getBrand(key);
   if (!brand?.niche) return {};
   return {
-    title: { absolute: `Agendamo para ${brand.niche.label.toLowerCase()}` },
+    title: { absolute: `MeetChat para ${brand.niche.label.toLowerCase()}` },
     description: brand.sales.subtitle,
     openGraph: {
       title: brand.sales.title,

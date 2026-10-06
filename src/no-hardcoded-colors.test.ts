@@ -9,7 +9,7 @@ import { BRANDS } from "@/brands";
 const SRC = path.join(process.cwd(), "src");
 const ALLOWED = new Set([
   ...BRANDS.map((brand) => path.join(SRC, "brands", `${brand.key}.ts`)),
-  // The Agendamo product config (generic home) is a brand file too.
+  // The MeetChat product config (generic home) is a brand file too.
   path.join(SRC, "brands", "platform.ts"),
 ]);
 

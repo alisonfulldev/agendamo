@@ -31,7 +31,7 @@ const SOCIAL_LABELS = {
   youtube: "YouTube",
 } as const;
 
-/** What changes with Agendamo (facts of the product, shared by every niche). */
+/** What changes with MeetChat (facts of the product, shared by every niche). */
 const WITH_AGENDAMO = [
   "O cliente escolhe o horário livre sozinho, 24 horas por dia",
   "Confirmação e lembrete automáticos, sem você digitar nada",
@@ -96,7 +96,7 @@ function HeroTitle({ title }: { title: string }) {
 }
 
 /**
- * Sales page of the Agendamo site: the generic home (PLATFORM) and each niche page (/psicologia…).
+ * Sales page of the MeetChat site: the generic home (PLATFORM) and each niche page (/psicologia…).
  * Content and theme come from the brand file; the theme is scoped to the page, so a brand
  * remembered in the cookie never changes how these pages look.
  */

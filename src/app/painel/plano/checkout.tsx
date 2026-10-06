@@ -84,7 +84,7 @@ export function PlanCheckout({
   /** Active professionals today (suggested number of seats). */
   activeProfessionals: number;
   hasActiveSubscription: boolean;
-  addonPrices: { featured: number; customDomain: number };
+  addonPrices: { featured: number };
 }) {
   const router = useRouter();
   const [cycle, setCycle] = useState<Cycle>(initialCycle);
@@ -316,16 +316,6 @@ export function PlanCheckout({
               <span className="font-medium">Destaque no portal</span>
               <span className="block text-sm text-muted-foreground">
                 {formatBRL(addonPrices.featured)}/mês por cidade. Aparece primeiro nas buscas.
-              </span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setAddon("custom_domain")}
-              className={`rounded-xl border p-4 text-left ${addon === "custom_domain" ? "ring-2 ring-primary" : ""}`}
-            >
-              <span className="font-medium">Domínio próprio</span>
-              <span className="block text-sm text-muted-foreground">
-                {formatBRL(addonPrices.customDomain)}/mês. Seu chat e seu perfil no seu endereço.
               </span>
             </button>
           </div>

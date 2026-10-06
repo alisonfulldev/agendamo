@@ -5,7 +5,7 @@ import type { BrandConfigInput } from "./schema";
 // Example brand (Prompt 39): configuration only. Provisional name, domain and copy.
 export const aesthetics = {
   key: "aesthetics",
-  name: "Agendamo",
+  name: "MeetChat",
   domains: ["estetica.example.com"],
   logo: "/brands/aesthetics/logo.svg",
   favicon: "/brands/aesthetics/favicon.svg",
@@ -167,6 +167,6 @@ export const aesthetics = {
     abandoned:
       "Olá, {customerName}! Vi que você quase agendou {service}. Posso ajudar a escolher um horário?",
   },
-  emailFrom: { name: "Agendamo", address: "contato@estetica.example.com" },
+  emailFrom: { name: "MeetChat", address: "contato@estetica.example.com" },
   socialLinks: {},
 } satisfies BrandConfigInput;

@@ -101,12 +101,12 @@ export const BRANDS: readonly BrandConfig[] = parseBrands([
 ]);
 
 /**
- * The Agendamo product (generic home page). Validated like a brand but kept out of BRANDS: it is
+ * The MeetChat product (generic home page). Validated like a brand but kept out of BRANDS: it is
  * not a niche, so no business, domain lookup or ?brand= ever resolves to it.
  */
 export const PLATFORM: BrandConfig = parseBrands([platform])[0]!;
 
-/** Niche brands that have a landing page on the Agendamo site (/psicologia…). */
+/** Niche brands that have a landing page on the MeetChat site (/psicologia…). */
 export const NICHES = BRANDS.filter((brand) => brand.niche);
 
 const brandsByKey = new Map(BRANDS.map((brand) => [brand.key, brand]));

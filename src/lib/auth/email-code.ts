@@ -109,7 +109,7 @@ export async function sendEmailCode(
   await sendEmail({
     brand,
     to: email,
-    subject: `Seu código do Agendamo: ${code}`,
+    subject: `Seu código do MeetChat: ${code}`,
     content: {
       preheader: `Seu código: ${code}`,
       heading: "Seu código de acesso",

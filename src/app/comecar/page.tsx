@@ -7,7 +7,7 @@ import { brandThemeStyle } from "@/brands/theme";
 import { NICHE_ICONS, nichesByGroup } from "@/components/sales/niche-cards";
 
 export const metadata: Metadata = {
-  title: { absolute: "Comece grátis · Agendamo" },
+  title: { absolute: "Comece grátis · MeetChat" },
   robots: { index: false },
 };
 
@@ -24,7 +24,7 @@ export default function StartPage() {
       <Link href="/" className="mb-12 flex items-center gap-2.5 font-heading text-lg font-semibold">
         {/* eslint-disable-next-line @next/next/no-img-element -- small static SVG logo */}
         <img src={PLATFORM.logo} alt="" width={32} height={32} />
-        Agendamo
+        MeetChat
       </Link>
       <p className="mb-3 text-sm font-semibold tracking-wide text-primary uppercase">
         Passo 1 de 2

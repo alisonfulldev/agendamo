@@ -5,7 +5,7 @@ Chat de agendamento + agenda + financeiro simples para qualquer negócio que tra
 Vendido como vários nichos (MARCAS), cada um com cores, textos e exemplos próprios, usando o MESMO sistema.
 Segmentos (= nichos): beauty, barber, aesthetics, nails, lash_brow, tattoo, psychology, psychoanalysis, physio, nutrition, speech_therapy, occupational_therapy, psychopedagogy, dentistry, medical, podiatry, chiropractic, osteopathy, acupuncture, massage_therapy, integrative_therapy, pilates, yoga, personal_trainer, pet_grooming, veterinary, tutoring, photography, consulting, auto_detailing, sports_court. As chaves de marca usam hífen (lash-brow...). Nichos novos usam nicheBrand (src/brands/niche.ts: textos comuns, tipo "general" ou "health"); cada nicho tem um grupo (beleza, saúde, bem-estar, pets, serviços) para a lista do site.
 
-Nome do produto: **Agendamo** (definido em 2026-10-04). O site tem uma página inicial genérica (/) que apresenta o sistema e vende para todos os nichos, e uma página por nicho (/beleza, /barbearia, /psicologia, /banho-e-tosa, /aulas...) com textos, cores e exemplos próprios. Os nichos são as "marcas" de src/brands (todas com nome "Agendamo"); a configuração da página inicial é src/brands/platform.ts (PLATFORM), que não é um nicho. O cadastro vindo de um nicho cria o negócio naquele nicho (/cadastro?brand=<chave>); da página inicial, /comecar pergunta o nicho antes.
+Nome do produto: **MeetChat** (definido em 2026-10-04). O site tem uma página inicial genérica (/) que apresenta o sistema e vende para todos os nichos, e uma página por nicho (/beleza, /barbearia, /psicologia, /banho-e-tosa, /aulas...) com textos, cores e exemplos próprios. Os nichos são as "marcas" de src/brands (todas com nome "MeetChat"); a configuração da página inicial é src/brands/platform.ts (PLATFORM), que não é um nicho. O cadastro vindo de um nicho cria o negócio naquele nicho (/cadastro?brand=<chave>); da página inicial, /comecar pergunta o nicho antes.
 
 Produto "chat primeiro" (confirmado em 2026-10-05, sem página do profissional): o link do negócio (/<slug>) abre direto no chat de agendamento; tocar na foto abre o perfil (estilo dados do contato); /<slug>/perfil é a versão indexável (portal e Google).
 
@@ -17,7 +17,8 @@ Plano único (igual em todas as marcas):
 - Inclui tudo: chat com horários livres e confirmação na hora, agenda, lembretes, financeiro (receitas automáticas dos atendimentos concluídos + lançamentos manuais e custos), até 60 fotos, ferramentas de venda, sinal por Pix, pacotes e combos, Google Agenda, modal para sites externos, equipe, recursos compartilhados. Sem rodapé "Feito com [marca]" para assinantes.
 - Sem assinatura após o teste (ou assinatura vencida): o chat continua, mas termina abrindo o WhatsApp da dona com o pedido pronto (nada é gravado nem reservado); o painel abre só a tela de assinatura e a conta. Nada é apagado.
 - No banco: plan "free" = sem assinatura (teste ou expirado), "pro" = assinante ("team" é legado e conta como "pro"); businesses.professional_seats = profissionais pagos.
-- Adicionais: Destaque no portal (R$ 49/mês por cidade) e Domínio próprio.
+- Adicional: Destaque no portal (R$ 49/mês por cidade). Domínio próprio não é vendido (2026-10-06).
+- Suporte só por e-mail: contato@brandcodesolutions.com.br (sem WhatsApp de contato).
 - Cupons de desconto na assinatura.
 
 Canais:

@@ -75,7 +75,7 @@ que copiar e onde colar. Ao final, `npm run check:setup` confere tudo sem mostra
 
 1. Crie a conta em resend.com → **API Keys → Create** (permissão _Sending access_) →
    `RESEND_API_KEY`.
-2. **Para testar antes de ter domínio:** use `RESEND_FROM="Agendamo <onboarding@resend.dev>"`. Nesse
+2. **Para testar antes de ter domínio:** use `RESEND_FROM="MeetChat <onboarding@resend.dev>"`. Nesse
    modo o Resend só entrega para o e-mail da sua própria conta.
 3. **Para valer:** em **Domains → Add domain**, adicione o domínio de cada marca (o do
    `emailFrom.address`), crie no DNS os registros que o Resend mostrar (SPF, DKIM, DMARC) até

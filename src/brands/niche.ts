@@ -17,7 +17,7 @@ export interface NicheBrandInput {
   key: string;
   segment: Segment;
   kind?: NicheKind;
-  /** Absent only for the Agendamo product itself (generic home). */
+  /** Absent only for the MeetChat product itself (generic home). */
   niche?: Niche;
   domains?: string[];
   theme: BrandConfigInput["theme"];
@@ -97,7 +97,7 @@ export function nicheBrand<T extends NicheBrandInput>(input: T) {
   };
   return {
     key: input.key,
-    name: "Agendamo",
+    name: "MeetChat",
     domains: input.domains ?? [`${input.niche?.route ?? input.key}.example.com`],
     logo: `/brands/${input.key}/logo.svg`,
     favicon: `/brands/${input.key}/favicon.svg`,
@@ -205,7 +205,7 @@ export function nicheBrand<T extends NicheBrandInput>(input: T) {
       abandoned:
         "Oi, {customerName}! Vi que você começou a agendar {service}. Posso ajudar com algum horário?",
     },
-    emailFrom: { name: "Agendamo", address: "contato@agendamo.example.com" },
+    emailFrom: { name: "MeetChat", address: "contato@agendamo.example.com" },
     socialLinks: {},
   } satisfies BrandConfigInput;
 }

@@ -14,12 +14,12 @@ const scopedVar = (page: Page, name: string) =>
     name,
   );
 
-test("the home is the generic Agendamo page, whatever brand the cookie remembers", async ({
+test("the home is the generic MeetChat page, whatever brand the cookie remembers", async ({
   page,
 }) => {
   await page.goto("/?brand=physio");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(HOME.hero.title);
-  await expect(page.getByRole("banner")).toContainText("Agendamo");
+  await expect(page.getByRole("banner")).toContainText("MeetChat");
   expect(await scopedVar(page, "--brand-primary")).toBe(platform.theme.primary);
   // Chips lead to the niche pages.
   await expect(page.getByRole("link", { name: "Psicologia", exact: true })).toHaveAttribute(

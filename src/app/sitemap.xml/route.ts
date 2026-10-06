@@ -9,7 +9,7 @@ function escapeXml(value: string): string {
 
 /**
  * Sitemap. On a niche's own real domain: its sales page, complete business profiles and portal
- * pages. On the Agendamo site (shared domain): the generic home, every niche page and the
+ * pages. On the MeetChat site (shared domain): the generic home, every niche page and the
  * complete profiles of every niche.
  */
 export async function GET() {

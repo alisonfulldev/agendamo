@@ -56,7 +56,7 @@ export function HomePage() {
         <Link href="/" className="flex items-center gap-2 font-heading text-lg font-semibold">
           {/* eslint-disable-next-line @next/next/no-img-element -- small static SVG logo */}
           <img src={PLATFORM.logo} alt="" width={30} height={30} />
-          Agendamo
+          MeetChat
         </Link>
         <Link
           href="/entrar"
@@ -261,7 +261,7 @@ export function HomePage() {
 
       <footer className="border-t pb-24 md:pb-0">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-5 py-8 text-sm text-muted-foreground sm:flex-row">
-          <p>© 2026 Agendamo</p>
+          <p>© 2026 MeetChat</p>
           <nav aria-label="Rodapé" className="flex flex-wrap justify-center gap-5">
             {HOME.footer.links.map((link) => (
               <Link key={link.label} href={link.href} className="hover:text-foreground">

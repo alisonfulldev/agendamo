@@ -15,6 +15,6 @@ describe("senderFor", () => {
     );
   });
   it("a full RESEND_FROM replaces everything", () => {
-    expect(senderFor(brand, "Agendamo <oi@x.com>")).toBe("Agendamo <oi@x.com>");
+    expect(senderFor(brand, "MeetChat <oi@x.com>")).toBe("MeetChat <oi@x.com>");
   });
 });

@@ -60,7 +60,7 @@ interface Bubble {
 
 interface CreationState {
   phase: Phase;
-  /** Setup conversation (with Agendamo) and, after the transformation, her own chat. */
+  /** Setup conversation (with MeetChat) and, after the transformation, her own chat. */
   log: Bubble[];
   name: string;
   detected: string | null;
@@ -446,7 +446,7 @@ function Conversation() {
 
   const days = nextDays();
   const theme = brandThemeStyle(niche && ownChat ? niche : PLATFORM);
-  const headerName = ownChat ? state.name : "Agendamo";
+  const headerName = ownChat ? state.name : "MeetChat";
   const initials = state.name
     .split(/\s+/)
     .filter(Boolean)
@@ -472,7 +472,7 @@ function Conversation() {
       >
         <header className="flex items-center gap-3 bg-primary px-4 py-3 text-primary-foreground">
           <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary-foreground/20 font-semibold">
-            {ownChat ? initials || "A" : "A"}
+            {ownChat ? initials || "M" : "M"}
           </span>
           <span className="min-w-0 flex-1">
             <span className="block truncate text-lg font-semibold">{headerName}</span>

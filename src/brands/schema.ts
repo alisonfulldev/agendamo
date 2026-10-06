@@ -36,7 +36,7 @@ export const SEGMENTS = [
   "general",
 ] as const;
 
-/** Sections of the niche list on the Agendamo site. */
+/** Sections of the niche list on the MeetChat site. */
 export const NICHE_GROUPS = ["beauty", "health", "wellness", "pets", "services"] as const;
 
 /** Icons for the niche cards (mapped to lucide icons in the UI). */
@@ -132,7 +132,7 @@ export const brandConfigSchema = z.object({
   logo: publicAsset,
   favicon: publicAsset,
   defaultSegment: z.enum(SEGMENTS),
-  /** Niche landing page on the Agendamo site (/psicologia…) and how the niche is presented there. */
+  /** Niche landing page on the MeetChat site (/psicologia…) and how the niche is presented there. */
   niche: z
     .object({
       route: z.string().regex(/^[a-z]+(-[a-z]+)*$/),

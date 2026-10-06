@@ -89,7 +89,7 @@ async function request<T>(
     headers: {
       "Content-Type": "application/json",
       access_token: env.ASAAS_API_KEY,
-      "User-Agent": "Lively",
+      "User-Agent": "MeetChat",
     },
     body: body === undefined ? undefined : JSON.stringify(body),
     cache: "no-store",

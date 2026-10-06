@@ -7,7 +7,7 @@ import { SalesPage } from "@/components/sales/sales-page";
 import { HOME } from "@/content/home";
 
 /**
- * Home: the short Agendamo sales page (src/content/home.ts). A niche that one day answers on its
+ * Home: the short MeetChat sales page (src/content/home.ts). A niche that one day answers on its
  * own real domain shows its niche page there instead.
  */
 async function homeBrand() {

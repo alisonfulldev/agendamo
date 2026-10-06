@@ -239,7 +239,8 @@ export async function previewPlatformCouponAction(code: string): Promise<number 
 }
 
 const addonSchema = payerSchema.extend({
-  addon: z.enum(["featured", "custom_domain"]),
+  // Only the portal highlight is sold (no custom domain since 2026-10-06).
+  addon: z.enum(["featured"]),
   city: z.string().trim().max(80).optional(),
 });
 

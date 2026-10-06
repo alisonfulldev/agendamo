@@ -13,7 +13,7 @@ export const metadata: Metadata = { title: "Criar seu chat de agendamento" };
 export default async function OnboardingPage() {
   const brand = await getCurrentBrand();
   const domain = new URL(brandUrl(brand, "/")).host;
-  // Link picked on the sales page ("agendamo.com/seu-nome") before signing up.
+  // Link picked on the sales page ("meetchat.com/seu-nome") before signing up.
   const desired = (await cookies()).get(DESIRED_SLUG_COOKIE)?.value ?? null;
   return (
     <OnboardingWizard

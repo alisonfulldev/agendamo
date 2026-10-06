@@ -1,7 +1,7 @@
 import { nicheBrand } from "./niche";
 
 /**
- * The Agendamo product itself: generic home page (/) that sells to every niche and links to the
+ * The MeetChat product itself: generic home page (/) that sells to every niche and links to the
  * niche pages (/beleza, /psicologia, /banho-e-tosa…). Not a niche: no business ever belongs to it.
  */
 export const platform = nicheBrand({
@@ -23,7 +23,7 @@ export const platform = nicheBrand({
   },
   title: "Seus clientes agendam sozinhos, direto pelo link da bio",
   subtitle:
-    "O Agendamo é um chat de agendamento para quem trabalha com hora marcada. O cliente toca no seu link, escolhe o serviço e um horário livre, e já fica na sua agenda. Sem ficar respondendo mensagem.",
+    "O MeetChat é um chat de agendamento para quem trabalha com hora marcada. O cliente toca no seu link, escolhe o serviço e um horário livre, e já fica na sua agenda. Sem ficar respondendo mensagem.",
   demo: {
     businessName: "Seu negócio",
     bio: "Atendimento com hora marcada.",

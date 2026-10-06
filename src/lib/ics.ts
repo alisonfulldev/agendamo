@@ -44,7 +44,7 @@ export function buildIcs(event: IcsEvent): string {
   const lines = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//Lively//Agenda//PT-BR",
+    "PRODID:-//MeetChat//Agenda//PT-BR",
     "CALSCALE:GREGORIAN",
     `METHOD:${event.status === "CANCELLED" ? "CANCEL" : "PUBLISH"}`,
     "BEGIN:VEVENT",

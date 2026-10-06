@@ -21,7 +21,7 @@ function typingSlug(value: string): string {
 }
 
 /**
- * "agendamo.com/ [seu-nome] [Criar meu chat]": the visitor picks the link of their chat right on
+ * "meetchat.com/ [seu-nome] [Criar meu chat]": the visitor picks the link of their chat right on
  * the sales page, sees if it is free and goes to sign-up with it saved for the wizard.
  */
 export function ClaimLink({ prefix, signupHref }: { prefix: string; signupHref: string }) {

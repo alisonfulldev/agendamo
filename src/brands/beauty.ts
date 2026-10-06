@@ -2,10 +2,10 @@ import { PRICE_TEXT, TRIAL_DAYS } from "@/lib/plans";
 
 import type { BrandConfigInput } from "./schema";
 
-// Niche of the Agendamo product (domain still provisional).
+// Niche of the MeetChat product (domain still provisional).
 export const beauty = {
   key: "beauty",
-  name: "Agendamo",
+  name: "MeetChat",
   domains: ["beauty.example.com"],
   logo: "/brands/beauty/logo.svg",
   favicon: "/brands/beauty/favicon.svg",
@@ -177,7 +177,7 @@ export const beauty = {
       "Oi, {customerName}! Vi que você quase agendou {service} com a gente. Posso te ajudar a escolher um horário?",
   },
   emailFrom: {
-    name: "Agendamo",
+    name: "MeetChat",
     address: "contato@beauty.example.com",
   },
   socialLinks: {},

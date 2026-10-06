@@ -62,7 +62,7 @@ export const CREATION = {
       "Muitas contas criadas daqui hoje. Tente amanhã ou entre com uma conta que você já tem.",
     failed: "Não consegui enviar agora. Tenta de novo em instantes?",
     created: "Pronto, {nome}! Seu link está no ar:",
-    hasBusiness: "Você já tem um negócio no Agendamo e entrou na sua conta.",
+    hasBusiness: "Você já tem um negócio no MeetChat e entrou na sua conta.",
     goPanel: "Ir para meu painel",
     copyLink: "Copiar link",
     copied: "Copiado!",

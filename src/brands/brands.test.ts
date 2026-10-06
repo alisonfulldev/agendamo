@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 
 import { BRANDS, DEFAULT_BRAND, getNiche, NICHES, parseBrands, PLATFORM } from "@/brands";
 
-/** Every theme on the site: the niches and the Agendamo product (generic home). */
+/** Every theme on the site: the niches and the MeetChat product (generic home). */
 const ALL = [...BRANDS, PLATFORM];
 import { psychology } from "@/brands/psychology";
 import { PRICE_TEXT } from "@/lib/plans";
@@ -117,7 +117,7 @@ describe("parseBrands", () => {
     expect(() => parseBrands([invalid])).toThrow(/theme\.primary/);
   });
 
-  it("every niche has its own page route and the product is named Agendamo", () => {
+  it("every niche has its own page route and the product is named MeetChat", () => {
     expect(NICHES.map((brand) => brand.niche!.route)).toEqual([
       "beleza",
       "barbearia",
@@ -151,7 +151,7 @@ describe("parseBrands", () => {
       "estetica-automotiva",
       "quadras",
     ]);
-    for (const brand of ALL) expect(brand.name).toBe("Agendamo");
+    for (const brand of ALL) expect(brand.name).toBe("MeetChat");
     for (const brand of NICHES) {
       expect(existsSync(path.join(process.cwd(), "src/app", brand.niche!.route, "page.tsx"))).toBe(
         true,

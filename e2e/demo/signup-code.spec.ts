@@ -108,7 +108,7 @@ test("an e-mail that already has a business signs in instead", async ({ page }) 
     .getByLabel("Código de 4 números")
     .fill(await newCode("dona.beleza@demo.com", before));
   await dialog.getByRole("button", { name: "Enviar", exact: true }).click();
-  await expect(dialog.getByText(/Você já tem um negócio no Agendamo/)).toBeVisible();
+  await expect(dialog.getByText(/Você já tem um negócio no MeetChat/)).toBeVisible();
   await dialog.getByRole("button", { name: "Ir para meu painel" }).click();
   await expect(page).toHaveURL(/\/painel/);
 });
