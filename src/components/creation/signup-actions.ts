@@ -84,7 +84,7 @@ export async function verifySignupCodeAction(input: unknown): Promise<VerifySign
     .object({
       demoId: z.uuid(),
       email,
-      code: z.string().regex(/^\d{6}$/),
+      code: z.string().regex(/^\d{4}$/),
       whatsapp: z.string().max(30).nullable().default(null),
     })
     .safeParse(input);

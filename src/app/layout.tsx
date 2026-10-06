@@ -36,7 +36,12 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export async function generateViewport(): Promise<Viewport> {
   const brand = await getCurrentBrand();
-  return { themeColor: brand.theme.primary };
+  return {
+    themeColor: brand.theme.primary,
+    // The on-screen keyboard shrinks the page instead of covering it (chats keep their header
+    // and messages visible while typing).
+    interactiveWidget: "resizes-content",
+  };
 }
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {

@@ -17,7 +17,7 @@ function codes(address: string): string[] {
     ) as CapturedEmail[];
     return all
       .filter((e) => e.to.includes(address) && e.subject.includes("Seu código"))
-      .map((e) => /(\d{6})/.exec(e.subject)?.[1] ?? "");
+      .map((e) => /(\d{4})/.exec(e.subject)?.[1] ?? "");
   } catch {
     return [];
   }
@@ -64,17 +64,17 @@ test("sign-up in the conversation: WhatsApp, e-mail fix, terms, code and the lin
   await expect(dialog.getByRole("link", { name: "Termos de uso" })).toBeVisible();
   const before = codes(email).length;
   await dialog.getByRole("button", { name: "Aceito, enviar o código" }).click();
-  await expect(dialog.getByText(`Te mandei um código de 6 dígitos para ${email}.`)).toBeVisible();
+  await expect(dialog.getByText(`Te mandei um código de 4 números para ${email}.`)).toBeVisible();
   await expect(dialog.getByRole("button", { name: /Reenviar em \d+s/ })).toBeDisabled();
   const code = await newCode(email, before);
 
   // A wrong code first.
-  const wrong = code === "000000" ? "111111" : "000000";
-  await dialog.getByLabel("Código de 6 dígitos").fill(wrong);
+  const wrong = code === "0000" ? "1111" : "0000";
+  await dialog.getByLabel("Código de 4 números").fill(wrong);
   await dialog.getByRole("button", { name: "Enviar", exact: true }).click();
   await expect(dialog.getByText(/Esse código não confere/)).toBeVisible();
 
-  await dialog.getByLabel("Código de 6 dígitos").fill(code);
+  await dialog.getByLabel("Código de 4 números").fill(code);
   await dialog.getByRole("button", { name: "Enviar", exact: true }).click();
   await expect(dialog.getByText(`Pronto, ${name}! Seu link está no ar:`)).toBeVisible();
   await expect(dialog.getByRole("img", { name: "QR code do seu link" })).toBeVisible();
@@ -105,7 +105,7 @@ test("an e-mail that already has a business signs in instead", async ({ page }) 
   await dialog.getByRole("button", { name: "Aceito, enviar o código" }).click();
   await expect(dialog.getByText(/Esse e-mail já tem conta/)).toBeVisible();
   await dialog
-    .getByLabel("Código de 6 dígitos")
+    .getByLabel("Código de 4 números")
     .fill(await newCode("dona.beleza@demo.com", before));
   await dialog.getByRole("button", { name: "Enviar", exact: true }).click();
   await expect(dialog.getByText(/Você já tem um negócio no Agendamo/)).toBeVisible();
@@ -118,8 +118,8 @@ test("/entrar signs in with an e-mail code by default", async ({ page }) => {
   const before = codes("fisio@demo.com").length;
   await page.locator("#code-email").fill("fisio@demo.com");
   await page.getByRole("button", { name: "Receber código por e-mail" }).click();
-  await expect(page.getByText(/enviamos um código de 6 dígitos/)).toBeVisible();
-  await page.getByLabel("Código de 6 dígitos").fill(await newCode("fisio@demo.com", before));
+  await expect(page.getByText(/enviamos um código de 4 números/)).toBeVisible();
+  await page.getByLabel("Código de 4 números").fill(await newCode("fisio@demo.com", before));
   await page.getByRole("button", { name: "Entrar", exact: true }).click();
   await expect(page).toHaveURL(/\/painel/);
   await expect(page.getByRole("navigation", { name: "Painel" })).toBeVisible();

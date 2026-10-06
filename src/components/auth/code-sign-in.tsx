@@ -39,7 +39,7 @@ export function CodeSignIn({ next }: { next?: string }) {
         setCode("");
         setMessage({
           ok: true,
-          text: `Se ${target} tiver conta, enviamos um código de 6 dígitos. Ele vale por 10 minutos.`,
+          text: `Se ${target} tiver conta, enviamos um código de 4 números. Ele vale por 10 minutos.`,
         });
       } else setMessage({ ok: false, text: result.message });
     });
@@ -104,18 +104,18 @@ export function CodeSignIn({ next }: { next?: string }) {
     >
       {message ? <Feedback message={message} /> : null}
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="code-value">Código de 6 dígitos</Label>
+        <Label htmlFor="code-value">Código de 4 números</Label>
         <Input
           id="code-value"
           inputMode="numeric"
           autoComplete="one-time-code"
-          maxLength={6}
+          maxLength={4}
           value={code}
-          onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+          onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 4))}
           className="h-12 text-center text-xl tracking-[0.4em]"
         />
       </div>
-      <Button type="submit" className="h-11" disabled={pending || code.length !== 6}>
+      <Button type="submit" className="h-11" disabled={pending || code.length !== 4}>
         {pending ? "Conferindo…" : "Entrar"}
       </Button>
       <div className="flex justify-between gap-2 text-sm">

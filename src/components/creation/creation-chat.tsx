@@ -80,6 +80,8 @@ interface CreationState {
 }
 
 const STORAGE_KEY = "lv_creation_v1";
+/** Minimum time of the "Estamos criando seu chat…" screen. */
+const BUILDING_MS = 2200;
 const TYPING_MS = 450;
 
 function fresh(): CreationState {
@@ -197,7 +199,29 @@ export function CreationChat() {
   return <Conversation />;
 }
 
+/** Height and top of the visible area (above the on-screen keyboard), on phones. */
+function useVisibleArea(): { height: number; top: number } | null {
+  const [area, setArea] = useState<{ height: number; top: number } | null>(null);
+  useEffect(() => {
+    const viewport = window.visualViewport;
+    if (!viewport) return;
+    const update = () =>
+      setArea(
+        window.innerWidth < 768 ? { height: viewport.height, top: viewport.offsetTop } : null,
+      );
+    update();
+    viewport.addEventListener("resize", update);
+    viewport.addEventListener("scroll", update);
+    return () => {
+      viewport.removeEventListener("resize", update);
+      viewport.removeEventListener("scroll", update);
+    };
+  }, []);
+  return area;
+}
+
 function Conversation() {
+  const area = useVisibleArea();
   const [state, setState] = useState<CreationState>(() => {
     const saved = load();
     if (saved && saved.name && saved.phase !== "name") {
@@ -230,7 +254,7 @@ function Conversation() {
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
-  }, [revealed, state.phase]);
+  }, [revealed, state.phase, area?.height]);
 
   // Lock the page behind and close on Escape.
   useEffect(() => {
@@ -258,7 +282,8 @@ function Conversation() {
 
   async function build(brandKey: string, nicheDescription: string | null, current = state) {
     const viaParams = creationParams();
-    update({ phase: "building", brandKey, nicheDescription }, [system(CREATION.building)]);
+    update({ phase: "building", brandKey, nicheDescription });
+    const buildingSince = Date.now();
     const result = await createDemoAction({
       name: current.name,
       brandKey,
@@ -275,6 +300,9 @@ function Conversation() {
       return;
     }
     const chosen = getNiche(brandKey);
+    // The loading screen stays at least ~2 s, so the transformation reads as a step.
+    const left = BUILDING_MS - (Date.now() - buildingSince);
+    if (left > 0) await new Promise((resolve) => setTimeout(resolve, left));
     // The transformation: the chat starts over as hers.
     setRevealed(0);
     setState((s) => ({
@@ -430,7 +458,8 @@ function Conversation() {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/60 md:p-6"
+      className="fixed inset-x-0 top-0 z-50 flex h-dvh items-center justify-center bg-foreground/60 md:p-6"
+      style={area ? { height: area.height, transform: `translateY(${area.top}px)` } : undefined}
       role="dialog"
       aria-modal="true"
       aria-label="Criar meu link de agendamento"
@@ -439,15 +468,15 @@ function Conversation() {
       <div
         data-theme-scope=""
         style={theme}
-        className="flex h-dvh w-full flex-col overflow-hidden bg-background font-sans text-foreground transition-colors duration-500 md:h-[min(780px,92vh)] md:w-[400px] md:rounded-[2.4rem] md:border-[10px] md:border-foreground md:shadow-2xl"
+        className="flex h-full w-full flex-col overflow-hidden bg-background font-sans text-foreground transition-colors duration-500 md:h-[min(780px,92vh)] md:w-[400px] md:rounded-[2.4rem] md:border-[10px] md:border-foreground md:shadow-2xl"
       >
         <header className="flex items-center gap-3 bg-primary px-4 py-3 text-primary-foreground">
           <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary-foreground/20 font-semibold">
             {ownChat ? initials || "A" : "A"}
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block truncate font-semibold">{headerName}</span>
-            <span className="block text-xs opacity-85">
+            <span className="block truncate text-lg font-semibold">{headerName}</span>
+            <span className="block text-sm opacity-85">
               {ownChat ? "Seu chat de agendamento" : "Monte seu link em 1 minuto"}
             </span>
           </span>
@@ -462,19 +491,24 @@ function Conversation() {
         </header>
 
         {ownChat ? (
-          <p className="bg-accent px-4 py-2 text-center text-sm font-medium text-accent-foreground">
+          <p className="bg-accent px-4 py-2 text-center text-[15px] font-medium text-accent-foreground">
             {CREATION.banner}
           </p>
         ) : null}
 
-        <div ref={scrollRef} className="flex flex-1 flex-col gap-2 overflow-y-auto p-4">
+        {state.phase === "building" ? <BuildingScreen /> : null}
+
+        <div
+          ref={scrollRef}
+          className={`flex flex-1 flex-col gap-2 overflow-y-auto p-4 ${state.phase === "building" ? "hidden" : ""}`}
+        >
           {visible.map((bubble, i) => (
             <div
               key={i}
               className={`flex ${bubble.from === "user" ? "justify-end" : "justify-start"}`}
             >
               <p
-                className={`max-w-[85%] rounded-2xl px-3.5 py-2 text-[15px] shadow-sm motion-safe:animate-in motion-safe:fade-in ${
+                className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-[17px] leading-snug shadow-sm motion-safe:animate-in motion-safe:fade-in ${
                   bubble.from === "user"
                     ? "bg-primary text-primary-foreground"
                     : "bg-card text-card-foreground"
@@ -501,7 +535,7 @@ function Conversation() {
           ))}
           {typing ? (
             <div className="flex">
-              <span className="rounded-2xl bg-card px-3.5 py-2 text-sm text-muted-foreground shadow-sm">
+              <span className="rounded-2xl bg-card px-4 py-2.5 text-[15px] text-muted-foreground shadow-sm">
                 digitando…
               </span>
             </div>
@@ -605,7 +639,7 @@ function Conversation() {
             </ShortcutChip>
             <a
               href={CREATION.shortcuts.account.href}
-              className="shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium whitespace-nowrap"
+              className="shrink-0 rounded-full border px-3.5 py-2 text-sm font-medium whitespace-nowrap"
             >
               {CREATION.shortcuts.account.label}
             </a>
@@ -679,13 +713,47 @@ function composerFor(phase: Phase): ComposerSettings | null {
         placeholder: SU.codePlaceholder,
         inputMode: "numeric",
         autoComplete: "one-time-code",
-        maxLength: 6,
-        minLength: 6,
-        mask: (value) => value.replace(/\D/g, "").slice(0, 6),
+        maxLength: 4,
+        minLength: 4,
+        mask: (value) => value.replace(/\D/g, "").slice(0, 4),
       };
     default:
       return null;
   }
+}
+
+/** "Estamos criando seu chat…": spinner and steps lighting up one after the other. */
+function BuildingScreen() {
+  const [step, setStep] = useState(0);
+  useEffect(() => {
+    if (step >= CREATION.buildingSteps.length) return;
+    const timer = setTimeout(() => setStep(step + 1), 600);
+    return () => clearTimeout(timer);
+  }, [step]);
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      className="flex flex-1 flex-col items-center justify-center gap-6 p-8 text-center"
+    >
+      <span
+        className="size-14 animate-spin rounded-full border-4 border-primary/20 border-t-primary motion-reduce:animate-none"
+        aria-hidden
+      />
+      <p className="text-xl font-semibold">{CREATION.building}</p>
+      <ul className="flex flex-col gap-2.5 text-left text-[17px]">
+        {CREATION.buildingSteps.map((label, i) => (
+          <li
+            key={label}
+            className={`flex items-center gap-2.5 transition-opacity duration-300 ${i < step ? "opacity-100" : "opacity-35"}`}
+          >
+            <Check className={`size-5 ${i < step ? "text-primary" : "text-muted-foreground"}`} />
+            {label}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
 }
 
 function ShortcutChip({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
@@ -693,7 +761,7 @@ function ShortcutChip({ onClick, children }: { onClick: () => void; children: Re
     <button
       type="button"
       onClick={onClick}
-      className="shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium whitespace-nowrap"
+      className="shrink-0 rounded-full border px-3.5 py-2 text-sm font-medium whitespace-nowrap"
     >
       {children}
     </button>
@@ -701,7 +769,7 @@ function ShortcutChip({ onClick, children }: { onClick: () => void; children: Re
 }
 
 const OPTION =
-  "rounded-xl border bg-card px-3 py-2.5 text-left text-[15px] font-medium text-card-foreground shadow-sm transition-colors hover:border-primary";
+  "rounded-xl border bg-card px-4 py-3 text-left text-[17px] font-medium text-card-foreground shadow-sm transition-colors hover:border-primary";
 
 function Options({
   state,
@@ -1090,13 +1158,13 @@ function Composer({
         maxLength={maxLength}
         aria-label={placeholder}
         placeholder={enabled ? placeholder : "Escolha uma opção acima"}
-        className="h-11 min-w-0 flex-1 rounded-full border bg-background px-4 text-[15px] outline-none focus:ring-2 focus:ring-ring disabled:opacity-60"
+        className="h-12 min-w-0 flex-1 rounded-full border bg-background px-4 text-[17px] outline-none focus:ring-2 focus:ring-ring disabled:opacity-60"
       />
       <button
         type="submit"
         disabled={!enabled}
         aria-label="Enviar"
-        className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground disabled:opacity-50"
+        className="flex size-12 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground disabled:opacity-50"
       >
         <Send className="size-4" />
       </button>

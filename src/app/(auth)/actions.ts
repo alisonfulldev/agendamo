@@ -214,9 +214,9 @@ export async function verifyLoginCodeAction(
   input: unknown,
 ): Promise<{ ok: true; next: string } | { ok: false; message: string }> {
   const parsed = z
-    .object({ email, code: z.string().regex(/^\d{6}$/), next: z.string().optional() })
+    .object({ email, code: z.string().regex(/^\d{4}$/), next: z.string().optional() })
     .safeParse(input);
-  if (!parsed.success) return { ok: false, message: "Digite os 6 números do código." };
+  if (!parsed.success) return { ok: false, message: "Digite os 4 números do código." };
   const result = await verifyEmailCode(parsed.data.email, parsed.data.code);
   if (result.ok) return { ok: true, next: safeNextPath(parsed.data.next) };
   return {

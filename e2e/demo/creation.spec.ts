@@ -48,9 +48,11 @@ test("niche detected from the name, transformation, test booking and “Quero es
   await typeName(page, name);
   await expect(dialog.getByText(/você trabalha com barbearia, certo\?/)).toBeVisible();
   await dialog.getByRole("button", { name: "Isso mesmo" }).click();
+  // Loading screen before her chat shows up.
+  await expect(dialog.getByText("Estamos criando seu chat…")).toBeVisible();
 
   await expect(
-    dialog.getByText("Agora você é sua cliente. Faça um agendamento de teste."),
+    dialog.getByText("Prévia do seu chat · experimente à vontade, nada é salvo"),
   ).toBeVisible();
   await expect(dialog.getByRole("banner")).toContainText(name);
   await expect(dialog.getByText(/Você está na agenda de/)).toBeVisible();
@@ -89,7 +91,7 @@ test("prospecting link ?nome=&ramo= skips the answered questions", async ({ page
   const dialog = page.getByRole("dialog");
   await expect(dialog).toBeVisible();
   await expect(
-    dialog.getByText("Agora você é sua cliente. Faça um agendamento de teste."),
+    dialog.getByText("Prévia do seu chat · experimente à vontade, nada é salvo"),
   ).toBeVisible();
   await expect(dialog.getByRole("banner")).toContainText("Studio Ana Brow");
   await expect(dialog.getByText("O que você faz?")).toHaveCount(0);
@@ -100,7 +102,7 @@ test("closing and reopening resumes where it stopped", async ({ page }) => {
   const dialog = page.getByRole("dialog");
   await typeName(page, "Barbearia Retomada");
   await dialog.getByRole("button", { name: "Isso mesmo" }).click();
-  await expect(dialog.getByText("Agora você é sua cliente.", { exact: false })).toBeVisible();
+  await expect(dialog.getByText("Prévia do seu chat", { exact: false })).toBeVisible();
   await dialog.getByRole("button", { name: "Fechar" }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
 
