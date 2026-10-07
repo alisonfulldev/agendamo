@@ -4,6 +4,9 @@ import { physio } from "../src/brands/physio";
 import { psychology } from "../src/brands/psychology";
 import { platform } from "../src/brands/platform";
 import { HOME } from "../src/content/home";
+import { nicheHomeContent } from "../src/content/niche-pages";
+
+const h1 = (brand: Parameters<typeof nicheHomeContent>[0]) => nicheHomeContent(brand).hero.title;
 
 const scopedVar = (page: Page, name: string) =>
   page.evaluate(
@@ -35,10 +38,10 @@ for (const brand of [psychology, physio]) {
     page,
   }) => {
     await page.goto(`/${brand.niche.route}`);
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText(brand.sales.title);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(h1(brand));
     await expect(page.getByRole("banner")).toContainText(brand.niche.name);
     expect(await scopedVar(page, "--brand-primary")).toBe(brand.theme.primary);
-    await expect(page).toHaveTitle(/Agendamento por chat inteligente/);
+    await expect(page).toHaveTitle(nicheHomeContent(brand).meta.title);
     await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
       "href",
       new RegExp(`/${brand.niche.route}$`),
@@ -66,11 +69,11 @@ test("/comecar still lets you pick the niche and sign up in it", async ({ page }
 
 test("niche pages switch fully between each other", async ({ page }) => {
   await page.goto(`/${psychology.niche.route}`);
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText(psychology.sales.title);
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(h1(psychology));
   const response = await page.goto(`/${physio.niche.route}`);
   const html = (await response?.text()) ?? "";
-  expect(html).toContain(physio.sales.title);
-  expect(html).not.toContain(psychology.sales.title);
+  expect(html).toContain(h1(physio));
+  expect(html).not.toContain(h1(psychology));
   expect(await scopedVar(page, "--brand-primary")).toBe(physio.theme.primary);
 });
 

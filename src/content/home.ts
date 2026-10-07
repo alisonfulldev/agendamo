@@ -157,6 +157,7 @@ export const HOME: HomeContent = {
   },
   footer: {
     links: [
+      { label: "Preços", href: "/precos" },
       { label: "Termos de uso", href: "/termos" },
       { label: "Privacidade", href: "/privacidade" },
       // Support is by e-mail only.
