@@ -29,6 +29,7 @@ type Phase =
   | "all"
   | "other"
   | "building"
+  | "ready"
   | "service"
   | "day"
   | "time"
@@ -308,19 +309,28 @@ function Conversation({ photos }: { photos: boolean }) {
       ]);
       return;
     }
-    const chosen = getNiche(brandKey);
     // The loading screen stays at least ~2 s, so the transformation reads as a step.
     const left = BUILDING_MS - (Date.now() - buildingSince);
     if (left > 0) await new Promise((resolve) => setTimeout(resolve, left));
-    // The transformation: the chat starts over as hers.
+    // The transformation: the chat is hers, and she chooses between signing up and the simulation.
     setRevealed(0);
     setState((s) => ({
       ...s,
-      phase: "service",
+      phase: "ready",
       demoId: result.id,
       suggestedSlug: result.suggestedSlug,
-      log: [system(fill(chosen.chatMessages.greeting, { business: s.name }))],
+      log: [],
     }));
+  }
+
+  /** "Ver como meu cliente vai agendar": the simulation of her chat. */
+  function preview() {
+    if (!niche) return;
+    setRevealed(0);
+    update({
+      phase: "service",
+      log: [system(fill(niche.chatMessages.greeting, { business: state.name }))],
+    });
   }
 
   function submitName(raw: string, current = state) {
@@ -369,7 +379,7 @@ function Conversation({ photos }: { photos: boolean }) {
     setState(fresh());
   }
 
-  /** "Quero esse link para mim": the sign-up goes on right here. */
+  /** "Criar minha conta grátis": the sign-up goes on right here. */
   function claim() {
     update({ phase: "whatsapp" }, [user(CREATION.claim), system(SU.askWhatsapp)]);
   }
@@ -518,17 +528,18 @@ function Conversation({ photos }: { photos: boolean }) {
           </button>
         </header>
 
-        {ownChat ? (
+        {ownChat && !signup && state.phase !== "ready" ? (
           <p className="bg-accent px-4 py-2 text-center text-[15px] font-medium text-accent-foreground">
             {CREATION.banner}
           </p>
         ) : null}
 
         {state.phase === "building" ? <BuildingScreen /> : null}
+        {state.phase === "ready" ? <ReadyScreen onSignup={claim} onPreview={preview} /> : null}
 
         <div
           ref={scrollRef}
-          className={`flex flex-1 flex-col gap-2 overflow-y-auto p-4 ${state.phase === "building" ? "hidden" : ""}`}
+          className={`flex flex-1 flex-col gap-2 overflow-y-auto p-4 ${state.phase === "building" || state.phase === "ready" ? "hidden" : ""}`}
         >
           {visible.map((bubble, i) => (
             <div
@@ -639,7 +650,7 @@ function Conversation({ photos }: { photos: boolean }) {
           )}
         </div>
 
-        {ownChat && state.phase !== "done" && !signup ? (
+        {ownChat && state.phase !== "done" && state.phase !== "ready" && !signup ? (
           <div className="border-t bg-card px-3 py-2">
             <button
               type="button"
@@ -861,6 +872,28 @@ function BuildingScreen() {
   );
 }
 
+/** Her chat is ready: create the account now (main) or first see how a customer books. */
+function ReadyScreen({ onSignup, onPreview }: { onSignup: () => void; onPreview: () => void }) {
+  return (
+    <div className="flex flex-1 flex-col items-center justify-center gap-4 p-8 text-center motion-safe:animate-in motion-safe:fade-in">
+      <p className="text-2xl font-semibold text-balance">{CREATION.ready.title}</p>
+      <p className="text-[17px] text-muted-foreground">{CREATION.ready.subtitle}</p>
+      <div className="mt-4 flex w-full flex-col gap-3">
+        <button
+          type="button"
+          onClick={onSignup}
+          className="h-12 rounded-xl bg-primary text-base font-semibold text-primary-foreground"
+        >
+          {CREATION.claim}
+        </button>
+        <button type="button" className={`${OPTION} text-center`} onClick={onPreview}>
+          {CREATION.ready.preview}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function ShortcutChip({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
   return (
     <button
@@ -1028,6 +1061,7 @@ function Options({
       return (
         <div className="mt-1 flex flex-col gap-3">
           <ArrivesPreview state={state} />
+          <p className="text-center text-[15px] font-medium">{CREATION.simulationEnd}</p>
           <button
             type="button"
             onClick={onClaim}

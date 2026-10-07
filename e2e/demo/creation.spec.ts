@@ -10,6 +10,15 @@ async function typeName(page: Page, name: string) {
   await dialog.getByRole("button", { name: "Enviar" }).click();
 }
 
+/** "Ver como meu cliente vai agendar": from the choice screen to the simulation. */
+async function openSimulation(page: Page) {
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("button", { name: "Ver como meu cliente vai agendar" }).click();
+  await expect(
+    dialog.getByText("Simulação: é assim que seu cliente vai agendar.", { exact: false }),
+  ).toBeVisible();
+}
+
 async function testBooking(page: Page) {
   const dialog = page.getByRole("dialog");
   await dialog.locator("button").filter({ hasText: /·/ }).first().click();
@@ -35,7 +44,7 @@ test("CTA opens the conversation over the site; back closes it", async ({ page }
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 });
 
-test("niche detected from the name, transformation, test booking and “Quero esse link”", async ({
+test("niche detected from the name, transformation, test booking and “Criar minha conta grátis”", async ({
   page,
 }) => {
   await page.goto("/?criar=1");
@@ -52,14 +61,18 @@ test("niche detected from the name, transformation, test booking and “Quero es
   await expect(dialog.getByText("Estamos criando seu chat…")).toBeVisible();
 
   await expect(
-    dialog.getByText("Prévia do seu chat · experimente à vontade, nada é salvo"),
+    dialog.getByText("Seu chat de agendamento está pronto para ser criado", { exact: false }),
   ).toBeVisible();
   await expect(dialog.getByRole("banner")).toContainText(name);
+  // The choice screen: no booking is started before she asks for the simulation.
+  await expect(dialog.getByText(/Você está na agenda de/)).toHaveCount(0);
+  await openSimulation(page);
   await expect(dialog.getByText(/Você está na agenda de/)).toBeVisible();
   await testBooking(page);
+  await expect(dialog.getByText("Isso foi só uma simulação.", { exact: false })).toBeVisible();
 
   // The sign-up goes on in the conversation (see signup-code.spec.ts).
-  await dialog.getByRole("button", { name: "Quero esse link para mim" }).click();
+  await dialog.getByRole("button", { name: "Criar minha conta grátis" }).click();
   await expect(dialog.getByText(/Qual o seu WhatsApp\?/)).toBeVisible();
 });
 
@@ -73,6 +86,7 @@ test("name not recognized: chips, “Outro” and the neutral chat", async ({ pa
   await expect(dialog.getByText("Me conta em poucas palavras o que você faz.")).toBeVisible();
   await dialog.getByLabel(/Ex\.: restauro móveis/).fill("Restauro móveis antigos");
   await dialog.getByRole("button", { name: "Enviar" }).click();
+  await openSimulation(page);
   await expect(dialog.getByText(/Qual atendimento você quer agendar\?/)).toBeVisible();
   await expect(dialog.getByRole("button", { name: /Primeiro atendimento/ })).toBeVisible();
 });
@@ -83,6 +97,7 @@ test("“Ver todos” lists every niche", async ({ page }) => {
   await typeName(page, "Espaço Luz");
   await dialog.getByRole("button", { name: "Ver todos" }).click();
   await dialog.getByRole("button", { name: "Banho e tosa" }).click();
+  await openSimulation(page);
   await expect(dialog.getByRole("button", { name: /Banho e tosa ·/ })).toBeVisible();
 });
 
@@ -91,7 +106,7 @@ test("prospecting link ?nome=&ramo= skips the answered questions", async ({ page
   const dialog = page.getByRole("dialog");
   await expect(dialog).toBeVisible();
   await expect(
-    dialog.getByText("Prévia do seu chat · experimente à vontade, nada é salvo"),
+    dialog.getByText("Seu chat de agendamento está pronto para ser criado", { exact: false }),
   ).toBeVisible();
   await expect(dialog.getByRole("banner")).toContainText("Studio Ana Brow");
   await expect(dialog.getByText("O que você faz?")).toHaveCount(0);
@@ -102,7 +117,7 @@ test("closing and reopening resumes where it stopped", async ({ page }) => {
   const dialog = page.getByRole("dialog");
   await typeName(page, "Barbearia Retomada");
   await dialog.getByRole("button", { name: "Isso mesmo" }).click();
-  await expect(dialog.getByText("Prévia do seu chat", { exact: false })).toBeVisible();
+  await expect(dialog.getByText("pronto para ser criado", { exact: false })).toBeVisible();
   await dialog.getByRole("button", { name: "Fechar" }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
 
@@ -110,5 +125,6 @@ test("closing and reopening resumes where it stopped", async ({ page }) => {
   await expect(page.getByText("Quer continuar de onde parou, Barbearia Retomada?")).toBeVisible();
   await page.getByRole("button", { name: "Continuar" }).click();
   await expect(page.getByRole("dialog").getByRole("banner")).toContainText("Barbearia Retomada");
+  await openSimulation(page);
   await testBooking(page);
 });

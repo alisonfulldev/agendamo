@@ -45,7 +45,7 @@ async function startConversation(page: Page, name: string) {
   await page.waitForTimeout(1600);
   await dialog.getByRole("button", { name: "Enviar", exact: true }).click();
   await dialog.getByRole("button", { name: "Isso mesmo" }).click();
-  await dialog.getByRole("button", { name: "Quero esse link para mim" }).click();
+  await dialog.getByRole("button", { name: "Criar minha conta grátis" }).click();
   return dialog;
 }
 
@@ -144,6 +144,7 @@ test("the optional photo of the conversation becomes the profile photo", async (
   // Optional: shown in the header of her chat, never blocking the test booking.
   const add = dialog.getByRole("button", { name: /Adicionar sua foto/ });
   await expect(add).toBeVisible();
+  await dialog.getByRole("button", { name: "Ver como meu cliente vai agendar" }).click();
   await expect(dialog.locator("button").filter({ hasText: /·/ }).first()).toBeVisible();
   await dialog.locator('input[type="file"]').setInputFiles({
     name: "eu.png",
@@ -153,7 +154,7 @@ test("the optional photo of the conversation becomes the profile photo", async (
   await expect(dialog.getByRole("button", { name: "Trocar foto" })).toBeVisible();
   await expect(dialog.getByRole("banner").locator("img")).toHaveAttribute("src", /demos\//);
 
-  await dialog.getByRole("button", { name: "Quero esse link para mim" }).click();
+  await dialog.getByRole("button", { name: "Criar minha conta grátis" }).click();
   await dialog.getByRole("button", { name: "Depois" }).click();
   await dialog.getByLabel("seu@email.com").fill(email);
   await dialog.getByRole("button", { name: "Enviar", exact: true }).click();
