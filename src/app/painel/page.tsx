@@ -8,12 +8,13 @@ import { CopyTextButton } from "@/components/panel/copy-text-button";
 import { InstallGuide } from "@/components/panel/install-guide";
 import { PageHeader } from "@/components/panel/page-header";
 import { Button } from "@/components/ui/button";
-import { todayIn } from "@/lib/availability";
+import { localToUtc, todayIn } from "@/lib/availability";
 import { loadCatalog } from "@/lib/booking/data";
 import { freeTimesOn } from "@/lib/booking/free-times";
 import { requireBusiness } from "@/lib/business/context";
 import { getPlanFeatures, PLAN_STATUS_LABELS } from "@/lib/plans";
 import { freeSlotsMessage, listTimes } from "@/lib/sales/free-slots";
+import { ACTIVE_APPOINTMENT_STATUSES } from "@/lib/db/types";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export const metadata: Metadata = { title: "Início" };
@@ -97,11 +98,21 @@ export default async function PanelHomePage({ searchParams }: PageProps<"/painel
   }
   const doneCount = steps.filter((s) => s.done).length;
 
-  // Free times left today: the fastest way to fill them is posting them right now.
+  // Free times left today: the fastest way to fill them is posting them right now. Only once the
+  // day already has a booking: with an empty agenda (a new business) every time is free, and "only
+  // N left" would read as an almost full agenda.
   let todayTimes: string[] = [];
   if (isOwner && features.salesTools) {
-    const catalog = await loadCatalog(business.id);
-    if (catalog) todayTimes = await freeTimesOn(catalog, todayIn(business.timezone, new Date()));
+    const today = todayIn(business.timezone, new Date());
+    const { count } = await createAdminClient()
+      .from("appointments")
+      .select("id", { count: "exact", head: true })
+      .eq("business_id", business.id)
+      .in("status", ACTIVE_APPOINTMENT_STATUSES)
+      .gte("starts_at", localToUtc(today, "00:00", business.timezone).toISOString())
+      .lt("starts_at", localToUtc(today, "24:00", business.timezone).toISOString());
+    const catalog = (count ?? 0) > 0 ? await loadCatalog(business.id) : null;
+    if (catalog) todayTimes = await freeTimesOn(catalog, today);
   }
   const todayText = freeSlotsMessage({
     businessName: business.name,
