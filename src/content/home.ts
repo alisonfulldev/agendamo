@@ -59,9 +59,8 @@ export const HOME: HomeContent = {
   },
   hero: {
     badge: "Para quem trabalha com hora marcada",
-    title: "Seus clientes agendam sozinhos. Você para de responder mensagem.",
-    subtitle:
-      "Coloque seu link na bio. O cliente escolhe o serviço e o horário, e já cai na sua agenda, 24 horas por dia.",
+    title: "Seus clientes agendam sozinhos. Você só atende.",
+    subtitle: "Um link na bio e o cliente marca pelo chat, 24h por dia.",
     primaryCta: "Criar meu link grátis",
     secondaryCta: "Ver como fica o meu",
     note: `${TRIAL_DAYS} dias grátis · sem cartão · pronto em 1 minuto`,

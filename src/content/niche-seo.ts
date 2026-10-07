@@ -26,9 +26,8 @@ export const NICHE_SEO: Record<string, NicheSeo> = {
     title: "Agenda online para salão de beleza | MeetChat",
     description:
       "Sistema de agendamento para salão de beleza: a cliente marca corte, escova e unhas pelo link da bio, 24h, e você recebe o aviso no celular. 30 dias grátis.",
-    h1: "Agenda online para salão de beleza: suas clientes marcam sozinhas pelo link da bio",
-    subtitle:
-      "Corte, escova, coloração, unhas e sobrancelha marcados por chat, a qualquer hora, sem você parar o atendimento para responder mensagem.",
+    h1: "Salão de agenda cheia, sem responder mensagem",
+    subtitle: "A cliente marca pelo link da bio, 24h. Você só atende.",
     painsTitle: "Quanto tempo o seu salão perde respondendo “tem horário?”",
     intro: {
       title: "Um sistema de agendamento feito para salão de beleza",
@@ -67,9 +66,8 @@ export const NICHE_SEO: Record<string, NicheSeo> = {
     title: "Sistema de agendamento para barbearia | MeetChat",
     description:
       "Agenda online para barbearia: o cliente marca corte e barba pelo link da bio, escolhe o barbeiro e o horário livre, 24h por dia. Teste grátis por 30 dias.",
-    h1: "Sistema de agendamento para barbearia: o cliente marca o corte sozinho, até de madrugada",
-    subtitle:
-      "Corte, barba e combo marcados por chat, com agenda separada por barbeiro e lembrete automático para o cliente não faltar.",
+    h1: "Barbearia lotada sem largar a máquina",
+    subtitle: "O cliente marca o corte pelo link, até de madrugada.",
     painsTitle: "Quantos cortes você perde parando para responder “tem horário hoje?”",
     intro: {
       title: "Feito para o ritmo de uma barbearia",
@@ -108,9 +106,8 @@ export const NICHE_SEO: Record<string, NicheSeo> = {
     title: "Agenda para clínica de estética | MeetChat",
     description:
       "Sistema de agendamento para clínica de estética e esteticistas: procedimentos marcados por chat, sem conflito de sala ou maca, com sinal por Pix. 30 dias grátis.",
-    h1: "Agenda para clínica de estética: procedimentos marcados por chat, sem conflito de sala",
-    subtitle:
-      "Limpeza de pele, drenagem, depilação e procedimentos faciais e corporais agendados 24h, respeitando sala, maca e profissional livres.",
+    h1: "Sua clínica de estética agendando sozinha",
+    subtitle: "Procedimentos marcados por chat, sem conflito de sala.",
     intro: {
       title: "Agendamento pensado para estética",
       paragraphs: [
@@ -148,9 +145,8 @@ export const NICHE_SEO: Record<string, NicheSeo> = {
     title: "Agenda para manicure e nail designer | MeetChat",
     description:
       "Agendamento online para manicure, esmalteria e nail designer: a cliente marca unha, alongamento e manutenção pelo link, 24h. Teste grátis por 30 dias.",
-    h1: "Agenda para manicure e nail designer: suas clientes marcam as unhas sozinhas",
-    subtitle:
-      "Manicure, pedicure, alongamento em gel e manutenção agendados por chat, sem você parar com o esmalte na mão.",
+    h1: "Unhas agendadas sem largar o esmalte",
+    subtitle: "A cliente marca pelo link da bio, 24h por dia.",
     intro: {
       title: "Agenda online para esmalteria e nail designer",
       paragraphs: [
@@ -188,9 +184,8 @@ export const NICHE_SEO: Record<string, NicheSeo> = {
     title: "Agenda para lash designer e sobrancelha | MeetChat",
     description:
       "Agendamento online para lash designer e designer de sobrancelha: extensão de cílios, manutenção e brow lamination marcados por chat, 24h. 30 dias grátis.",
-    h1: "Agenda para lash designer e designer de sobrancelha: marcação por chat, 24h",
-    subtitle:
-      "Extensão de cílios, manutenção, design e brow lamination agendados pelo link da bio, com lembrete automático contra faltas.",
+    h1: "Cílios e sobrancelha agendados sozinhos",
+    subtitle: "A cliente marca pelo link e recebe lembrete. Menos faltas.",
     intro: {
       title: "Feito para quem trabalha com cílios e sobrancelhas",
       paragraphs: [
@@ -228,9 +223,8 @@ export const NICHE_SEO: Record<string, NicheSeo> = {
     title: "Agenda para estúdio de tatuagem e piercing | MeetChat",
     description:
       "Agendamento online para estúdio de tatuagem: orçamentos, sessões e piercings marcados por chat, com agenda por tatuador e sinal por Pix. 30 dias grátis.",
-    h1: "Agenda para estúdio de tatuagem: sessões e orçamentos marcados por chat, com sinal no Pix",
-    subtitle:
-      "O cliente escolhe o tatuador e o horário livre pelo link da bio e garante a sessão com sinal pelo Pix.",
+    h1: "Sessões de tatuagem garantidas com sinal no Pix",
+    subtitle: "O cliente escolhe o tatuador e o horário pelo link.",
     intro: {
       title: "Agendamento feito para estúdio de tatuagem",
       paragraphs: [
@@ -269,9 +263,8 @@ export const NICHE_SEO: Record<string, NicheSeo> = {
     title: "Agenda online para psicólogos | MeetChat",
     description:
       "Sistema de agendamento para psicólogos: o paciente marca a sessão, presencial ou online, pelo seu link, com discrição e lembrete automático. 30 dias grátis.",
-    h1: "Agenda online para psicólogos: o paciente marca a sessão com discrição, pelo seu link",
-    subtitle:
-      "Sessões presenciais e online agendadas por chat, sem troca de mensagens para combinar horário.",
+    h1: "Seu paciente agenda a sessão com discrição",
+    subtitle: "Pelo seu link, sem troca de mensagens. Presencial ou online.",
     painsTitle: "Quanto do seu dia vai em combinar horário por mensagem?",
     intro: {
       title: "Um agendamento discreto para o consultório de psicologia",
@@ -310,9 +303,8 @@ export const NICHE_SEO: Record<string, NicheSeo> = {
     title: "Agenda online para psicanalistas | MeetChat",
     description:
       "Agendamento online para psicanalistas: o analisando marca a sessão pelo seu link, com confirmação e lembrete automáticos. Teste grátis por 30 dias.",
-    h1: "Agenda online para psicanalistas: sessões marcadas em poucos toques, com discrição",
-    subtitle:
-      "Entrevista inicial e sessões presenciais ou online agendadas por chat, sem troca de mensagens.",
+    h1: "Sessões de psicanálise agendadas sem interrupção",
+    subtitle: "O analisando marca pelo seu link, com lembrete automático.",
     intro: {
       title: "Agenda simples para o consultório de psicanálise",
       paragraphs: [
@@ -337,9 +329,8 @@ export const NICHE_SEO: Record<string, NicheSeo> = {
     title: "Sistema de agendamento para fisioterapia | MeetChat",
     description:
       "Agenda online para fisioterapeutas e clínicas de fisioterapia: sessões, avaliações e pacotes marcados por chat, com lembrete contra faltas. 30 dias grátis.",
-    h1: "Sistema de agendamento para fisioterapia: sessões e pacotes organizados, sem faltas",
-    subtitle:
-      "O paciente marca avaliação e sessões pelo seu link, recebe lembrete automático e você acompanha o pacote de cada um.",
+    h1: "Fisioterapia sem faltas e sem planilha",
+    subtitle: "Sessões e pacotes marcados pelo paciente, com lembrete.",
     intro: {
       title: "Agenda feita para clínica de fisioterapia",
       paragraphs: [
@@ -377,9 +368,8 @@ export const NICHE_SEO: Record<string, NicheSeo> = {
     title: "Agenda online para nutricionistas | MeetChat",
     description:
       "Sistema de agendamento para nutricionista: consultas, retornos e atendimentos online marcados por chat, com lembrete automático. Teste grátis por 30 dias.",
-    h1: "Agenda online para nutricionistas: consulta e retorno marcados sozinhos pelo paciente",
-    subtitle:
-      "Primeira consulta, retorno e consulta online agendados pelo seu link, sem responder “quanto custa?” o dia todo.",
+    h1: "Seu paciente marca consulta e retorno sozinho",
+    subtitle: "Pelo seu link, 24h por dia. Presencial ou online.",
     intro: {
       title: "Agendamento para o consultório de nutrição",
       paragraphs: [
@@ -412,9 +402,8 @@ export const NICHE_SEO: Record<string, NicheSeo> = {
     title: "Agenda online para fonoaudiólogos | MeetChat",
     description:
       "Agendamento online para fonoaudiologia: pais e pacientes marcam terapias e avaliações pelo seu link, com lembrete automático. 30 dias grátis.",
-    h1: "Agenda online para fonoaudiólogos: pais e pacientes marcam a terapia sozinhos",
-    subtitle:
-      "Avaliações e sessões semanais agendadas por chat, com confirmação e lembrete para a família.",
+    h1: "Fono agendada pelos pais, a qualquer hora",
+    subtitle: "Eles marcam pelo seu link e recebem lembrete.",
     intro: {
       title: "Agenda feita para o consultório de fonoaudiologia",
       paragraphs: [
@@ -438,9 +427,8 @@ export const NICHE_SEO: Record<string, NicheSeo> = {
     title: "Agenda para terapeuta ocupacional | MeetChat",
     description:
       "Sistema de agendamento para terapia ocupacional: famílias marcam avaliações e atendimentos pelo seu link, com lembrete automático. 30 dias grátis.",
-    h1: "Agenda para terapeuta ocupacional: famílias marcam os atendimentos sozinhas",
-    subtitle:
-      "Avaliações, sessões e integração sensorial agendadas por chat, com salas e materiais sem conflito.",
+    h1: "Terapia ocupacional agendada pelas famílias",
+    subtitle: "Pelo seu link, com lembrete e salas sem conflito.",
     intro: {
       title: "Agendamento para terapia ocupacional",
       paragraphs: [
@@ -464,9 +452,8 @@ export const NICHE_SEO: Record<string, NicheSeo> = {
     title: "Agenda online para psicopedagogos | MeetChat",
     description:
       "Agendamento online para psicopedagogia: os pais marcam avaliações, atendimentos e devolutivas pelo seu link, com lembrete automático. 30 dias grátis.",
-    h1: "Agenda online para psicopedagogos: os pais marcam os atendimentos pelo seu link",
-    subtitle:
-      "Avaliações, atendimentos e devolutivas agendados por chat, sem responder mensagem entre um atendimento e outro.",
+    h1: "Psicopedagogia agendada pelos pais, sem mensagem",
+    subtitle: "Eles marcam pelo seu link, à noite ou no fim de semana.",
     intro: {
       title: "Agenda para o espaço de psicopedagogia",
       paragraphs: [
@@ -490,9 +477,8 @@ export const NICHE_SEO: Record<string, NicheSeo> = {
     title: "Agenda online para dentista e clínica odontológica | MeetChat",
     description:
       "Sistema de agendamento para dentistas: o paciente marca avaliação, limpeza e manutenção pelo link, com lembrete automático. Teste grátis por 30 dias.",
-    h1: "Agenda online para dentistas: o paciente marca a consulta sozinho, 24h",
-    subtitle:
-      "Avaliações, limpezas e manutenções agendadas por chat, com agenda por dentista e cadeira sem conflito.",
+    h1: "Consultório odontológico agendando 24h",
+    subtitle: "O paciente marca pelo link. A recepção respira.",
     intro: {
       title: "Agendamento para consultório e clínica odontológica",
       paragraphs: [
@@ -517,9 +503,8 @@ export const NICHE_SEO: Record<string, NicheSeo> = {
     title: "Agenda online para consultório médico | MeetChat",
     description:
       "Sistema de agendamento para consultório médico particular: o paciente marca consulta e retorno pelo seu link, com confirmação e lembrete. 30 dias grátis.",
-    h1: "Agenda online para consultório médico: consultas marcadas pelo paciente, 24h",
-    subtitle:
-      "Consultas, retornos e teleconsultas agendados por chat, sem a secretária passar o dia no WhatsApp.",
+    h1: "Consultas médicas marcadas pelo paciente, 24h",
+    subtitle: "Pelo seu link, com confirmação e lembrete automáticos.",
     intro: {
       title: "Agendamento para consultório particular",
       paragraphs: [
@@ -544,9 +529,8 @@ export const NICHE_SEO: Record<string, NicheSeo> = {
     title: "Agenda online para podólogos | MeetChat",
     description:
       "Agendamento online para podologia: o paciente marca atendimentos e retornos pelo seu link, com lembrete automático. Teste grátis por 30 dias.",
-    h1: "Agenda online para podólogos: atendimentos e retornos marcados pelo paciente",
-    subtitle:
-      "Podologia clínica, tratamento de unha encravada e retornos agendados por chat, 24 horas.",
+    h1: "Podologia com agenda cheia e retornos marcados",
+    subtitle: "O paciente agenda pelo seu link, 24h por dia.",
     intro: {
       title: "Agendamento para o consultório de podologia",
       paragraphs: [
@@ -566,9 +550,8 @@ export const NICHE_SEO: Record<string, NicheSeo> = {
     title: "Agenda online para quiropraxia | MeetChat",
     description:
       "Sistema de agendamento para quiropraxistas: avaliações, ajustes e retornos marcados pelo paciente pelo seu link, com lembrete. 30 dias grátis.",
-    h1: "Agenda online para quiropraxia: o paciente marca avaliação e ajustes sozinho",
-    subtitle:
-      "Avaliação quiroprática, sessões de ajuste e retornos agendados por chat, com lembrete automático.",
+    h1: "Quiropraxia: o paciente com dor marca na hora",
+    subtitle: "Pelo seu link, até à noite e no fim de semana.",
     intro: {
       title: "Agendamento para o consultório de quiropraxia",
       paragraphs: [
@@ -587,9 +570,8 @@ export const NICHE_SEO: Record<string, NicheSeo> = {
     title: "Agenda online para osteopatas | MeetChat",
     description:
       "Agendamento online para osteopatia: o paciente marca primeira consulta e sessões pelo seu link, com confirmação e lembrete. Teste grátis por 30 dias.",
-    h1: "Agenda online para osteopatas: sessões marcadas pelo paciente, sem troca de mensagens",
-    subtitle:
-      "Primeira consulta, sessões e osteopatia pediátrica agendadas por chat, 24 horas por dia.",
+    h1: "Osteopatia agendada sem troca de mensagens",
+    subtitle: "O paciente marca pelo seu link e recebe lembrete.",
     intro: {
       title: "Agendamento para o consultório de osteopatia",
       paragraphs: [
@@ -611,9 +593,8 @@ export const NICHE_SEO: Record<string, NicheSeo> = {
     title: "Agenda online para acupunturistas | MeetChat",
     description:
       "Sistema de agendamento para acupuntura e auriculoterapia: sessões e pacotes marcados pelo seu link, com lembrete automático. 30 dias grátis.",
-    h1: "Agenda online para acupunturistas: sessões e pacotes marcados pelo paciente",
-    subtitle:
-      "Acupuntura, auriculoterapia e primeira consulta agendadas por chat, com lembrete antes do horário.",
+    h1: "Acupuntura com sessões em dia, sem cobrar ninguém",
+    subtitle: "O paciente agenda pelo link e recebe lembrete.",
     intro: {
       title: "Agendamento para o espaço de acupuntura",
       paragraphs: [
@@ -632,9 +613,8 @@ export const NICHE_SEO: Record<string, NicheSeo> = {
     title: "Agenda online para massoterapeutas | MeetChat",
     description:
       "Agendamento online para massoterapia e espaços de massagem: o cliente marca massagem e drenagem pelo link, 24h, com lembrete. 30 dias grátis.",
-    h1: "Agenda online para massoterapeutas: o cliente marca a massagem sozinho, até de madrugada",
-    subtitle:
-      "Massagem terapêutica, relaxante, drenagem e quick massage agendadas por chat, com salas e macas sem conflito.",
+    h1: "Massagens agendadas até de madrugada",
+    subtitle: "O cliente marca pelo link. Salas e macas sem conflito.",
     intro: {
       title: "Agendamento para espaço de massoterapia",
       paragraphs: [
@@ -658,9 +638,8 @@ export const NICHE_SEO: Record<string, NicheSeo> = {
     title: "Agenda para terapeuta holístico e integrativo | MeetChat",
     description:
       "Agendamento online para terapias integrativas: reiki, aromaterapia, terapia floral e constelação marcados pelo seu link, 24h. 30 dias grátis.",
-    h1: "Agenda para terapeutas integrativos: reiki, florais e constelação marcados por chat",
-    subtitle:
-      "Cada pessoa escolhe a terapia e um horário livre pelo seu link e recebe a confirmação e o lembrete.",
+    h1: "Terapias integrativas agendadas sem quebrar o clima",
+    subtitle: "A pessoa marca pelo seu link e recebe lembrete.",
     intro: {
       title: "Agendamento para terapias integrativas e holísticas",
       paragraphs: [
@@ -680,9 +659,8 @@ export const NICHE_SEO: Record<string, NicheSeo> = {
     title: "Agenda online para estúdio de pilates | MeetChat",
     description:
       "Sistema de agendamento para pilates: o aluno marca aula individual e experimental pelo link, com lembrete automático. Teste grátis por 30 dias.",
-    h1: "Agenda online para estúdio de pilates: o aluno marca a aula sozinho",
-    subtitle:
-      "Aulas individuais, experimentais e de reabilitação agendadas por chat, com aparelhos sem conflito de horário.",
+    h1: "Aula experimental de pilates marcada na hora",
+    subtitle: "Quem chega pelo Instagram agenda pelo link da bio.",
     intro: {
       title: "Agendamento para estúdio e instrutor de pilates",
       paragraphs: [
@@ -706,9 +684,8 @@ export const NICHE_SEO: Record<string, NicheSeo> = {
     title: "Agenda online para professor de yoga | MeetChat",
     description:
       "Agendamento online para yoga e meditação: o aluno marca aula individual e experimental pelo seu link, com lembrete. Teste grátis por 30 dias.",
-    h1: "Agenda online para professores de yoga: o aluno marca a aula pelo seu link",
-    subtitle:
-      "Aulas individuais, experimentais e meditação guiada agendadas por chat, com lembrete antes da aula.",
+    h1: "Alunos de yoga agendando sozinhos",
+    subtitle: "Aula experimental ou individual marcada pelo seu link.",
     intro: {
       title: "Agendamento para professores e estúdios de yoga",
       paragraphs: [
@@ -727,9 +704,8 @@ export const NICHE_SEO: Record<string, NicheSeo> = {
     title: "Agenda online para personal trainer | MeetChat",
     description:
       "Sistema de agendamento para personal trainer: o aluno marca treino e avaliação física pelo seu link, com lembrete contra faltas. 30 dias grátis.",
-    h1: "Agenda online para personal trainer: o aluno marca o treino sozinho",
-    subtitle:
-      "Treinos, avaliações físicas e aulas experimentais agendados por chat, sem remarcar por mensagem toda semana.",
+    h1: "Treinos marcados sem remarcar por mensagem",
+    subtitle: "O aluno agenda pelo seu link e recebe lembrete.",
     intro: {
       title: "Agendamento para personal trainers",
       paragraphs: [
@@ -750,9 +726,8 @@ export const NICHE_SEO: Record<string, NicheSeo> = {
     title: "Sistema de agendamento para pet shop e banho e tosa | MeetChat",
     description:
       "Agenda online para banho e tosa: o tutor marca banho, tosa e hidratação pelo link, 24h, com lembrete automático. Teste grátis por 30 dias.",
-    h1: "Agenda online para banho e tosa: o tutor marca o banho do pet sozinho",
-    subtitle:
-      "Banho, tosa, tosa higiênica e hidratação agendados por chat, com serviços por porte e lembrete automático.",
+    h1: "Banho e tosa agendado sem atender telefone",
+    subtitle: "O tutor marca pelo link da bio, 24h por dia.",
     intro: {
       title: "Agendamento feito para pet shop",
       paragraphs: [
@@ -777,9 +752,8 @@ export const NICHE_SEO: Record<string, NicheSeo> = {
     title: "Agenda online para clínica veterinária | MeetChat",
     description:
       "Sistema de agendamento para veterinários: o tutor marca consulta, vacina e retorno pelo seu link, com lembrete automático. 30 dias grátis.",
-    h1: "Agenda online para clínica veterinária: o tutor marca consulta e vacina sozinho",
-    subtitle:
-      "Consultas, vacinação, retornos e atendimentos domiciliares agendados por chat, 24 horas por dia.",
+    h1: "Consultas e vacinas agendadas pelo tutor",
+    subtitle: "Pelo seu link, sem ocupar a recepção.",
     intro: {
       title: "Agendamento para clínica veterinária",
       paragraphs: [
@@ -801,9 +775,8 @@ export const NICHE_SEO: Record<string, NicheSeo> = {
     title: "Agenda online para professor particular | MeetChat",
     description:
       "Agendamento online para aulas particulares, idiomas e música: o aluno (ou os pais) marca a aula pelo seu link, com lembrete. 30 dias grátis.",
-    h1: "Agenda online para professores particulares: o aluno marca a aula pelo seu link",
-    subtitle:
-      "Aulas avulsas, experimentais e online agendadas por chat, sem combinar horário com cada aluno.",
+    h1: "Aulas particulares marcadas pelo aluno",
+    subtitle: "Pelo seu link, sem combinar horário um por um.",
     intro: {
       title: "Agendamento para aulas particulares, idiomas e música",
       paragraphs: [
@@ -822,9 +795,8 @@ export const NICHE_SEO: Record<string, NicheSeo> = {
     title: "Agenda online para fotógrafos | MeetChat",
     description:
       "Sistema de agendamento para fotógrafos: o cliente marca ensaio e sessão de estúdio pelo seu link e garante a data com sinal pelo Pix. 30 dias grátis.",
-    h1: "Agenda online para fotógrafos: o cliente marca o ensaio e garante a data com sinal",
-    subtitle:
-      "Ensaios externos, retratos e newborn agendados por chat, com sinal pelo Pix para evitar reservas que não aparecem.",
+    h1: "Ensaios fotográficos com data garantida no Pix",
+    subtitle: "O cliente marca pelo link e paga o sinal na hora.",
     intro: {
       title: "Agendamento para fotógrafos e estúdios",
       paragraphs: [
@@ -844,9 +816,8 @@ export const NICHE_SEO: Record<string, NicheSeo> = {
     title: "Agenda online para advogados e consultores | MeetChat",
     description:
       "Agendamento online para advogados, contadores e consultores: o cliente marca a reunião pelo seu link, presencial ou online. 30 dias grátis.",
-    h1: "Agenda online para advogados e consultores: o cliente marca a reunião sozinho",
-    subtitle:
-      "Consulta inicial, acompanhamento e reuniões online agendados por chat, sem troca de e-mails.",
+    h1: "Reuniões marcadas sem troca de e-mails",
+    subtitle: "O cliente escolhe o horário pelo seu link.",
     intro: {
       title: "Agendamento para escritórios e consultores",
       paragraphs: [
@@ -866,9 +837,8 @@ export const NICHE_SEO: Record<string, NicheSeo> = {
     title: "Agenda online para estética automotiva e lava-rápido | MeetChat",
     description:
       "Sistema de agendamento para estética automotiva: o cliente marca lavagem, polimento e higienização pelo link, com box sem conflito. 30 dias grátis.",
-    h1: "Agenda online para estética automotiva: o cliente marca a lavagem sozinho",
-    subtitle:
-      "Lavagem, polimento, higienização e vitrificação agendados por chat, respeitando o tempo de cada serviço e os boxes livres.",
+    h1: "Estética automotiva com box sempre ocupado",
+    subtitle: "O cliente marca a lavagem pelo link, 24h.",
     intro: {
       title: "Agendamento para estética automotiva e lava-rápidos",
       paragraphs: [
@@ -888,9 +858,8 @@ export const NICHE_SEO: Record<string, NicheSeo> = {
     title: "Sistema de reserva de quadras | MeetChat",
     description:
       "Reserva online de quadras de beach tennis, futebol e padel: o cliente reserva o horário pelo link, sem conflito de reserva. 30 dias grátis.",
-    h1: "Sistema de reserva de quadras: o cliente reserva o horário sozinho, sem conflito",
-    subtitle:
-      "Quadras de beach tennis, futevôlei, futebol society e padel reservadas por chat, 24 horas por dia.",
+    h1: "Quadras reservadas sem caderno e sem conflito",
+    subtitle: "O cliente reserva o horário pelo link, 24h.",
     intro: {
       title: "Reserva online feita para arenas e quadras",
       paragraphs: [
