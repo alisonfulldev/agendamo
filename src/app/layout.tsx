@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import Link from "next/link";
 
-import { getBrandBaseUrl } from "@/brands";
+import { getBrandBaseUrl, PLATFORM } from "@/brands";
 import { fontVariables } from "@/brands/fonts";
 import { FONT_KEYS } from "@/brands/schema";
 import { getCurrentBrand } from "@/brands/server";
@@ -21,7 +21,8 @@ export async function generateMetadata(): Promise<Metadata> {
     title: { default: brand.name, template: `%s · ${brand.name}` },
     description: brand.sales.subtitle,
     applicationName: brand.name,
-    icons: { icon: brand.favicon, apple: "/icons/180" },
+    // One mark for the product on the shared domain (search engines show one icon per domain).
+    icons: { icon: hasRealDomain(brand) ? brand.favicon : PLATFORM.favicon, apple: "/icons/180" },
     manifest: "/manifest.webmanifest",
     appleWebApp: { capable: true, title: brand.name, statusBarStyle: "default" },
     openGraph: {

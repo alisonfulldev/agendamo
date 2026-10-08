@@ -499,10 +499,19 @@ function Conversation({ photos }: { photos: boolean }) {
               height={40}
               className="size-10 shrink-0 rounded-full object-cover"
             />
-          ) : (
+          ) : ownChat ? (
             <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary-foreground/20 font-semibold">
-              {ownChat ? initials || "M" : "M"}
+              {initials || "M"}
             </span>
+          ) : (
+            // eslint-disable-next-line @next/next/no-img-element -- small static SVG logo
+            <img
+              src={PLATFORM.logo}
+              alt=""
+              width={40}
+              height={40}
+              className="size-10 shrink-0 rounded-xl"
+            />
           )}
           <span className="min-w-0 flex-1">
             <span className="block truncate text-lg font-semibold">{headerName}</span>
