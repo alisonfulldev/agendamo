@@ -416,9 +416,8 @@ test("signed in on another brand: sign-up shows the account in use and lets you 
     .getByRole("button", { name: "Entrar" })
     .click();
   await page.waitForURL(/\/painel/);
-  await page.goto("/psicologia");
-  await page.getByRole("link", { name: "Testar 30 dias grátis" }).first().click();
-  await expect(page).toHaveURL(/\/cadastro/);
+  // Niche pages open the creation conversation; /cadastro?brand= is the form sign-up of a niche.
+  await page.goto("/cadastro?brand=psychology");
   await expect(page.getByText("dona.beleza@demo.com")).toBeVisible();
   await page.getByRole("button", { name: "Sair e usar outra conta" }).click();
   await expect(page).toHaveURL(/\/cadastro/);

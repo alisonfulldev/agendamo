@@ -68,24 +68,26 @@ export default async function SettingsPage() {
         <NicheForm current={brand.key} groups={nicheGroups} />
       </Section>
 
-      <Section
-        title="Expediente"
-        description="Várias faixas por dia: o espaço entre elas vira pausa (ex.: almoço)."
-      >
-        <HoursForm
-          professionals={pros.map((p) => ({
-            id: p.id,
-            name: p.name,
-            hours: ranges
-              .filter((r) => r.professional_id === p.id)
-              .map((r) => ({
-                weekday: r.weekday,
-                start: r.start_time.slice(0, 5),
-                end: r.end_time.slice(0, 5),
-              })),
-          }))}
-        />
-      </Section>
+      <div data-tour="hours">
+        <Section
+          title="Expediente"
+          description="Várias faixas por dia: o espaço entre elas vira pausa (ex.: almoço)."
+        >
+          <HoursForm
+            professionals={pros.map((p) => ({
+              id: p.id,
+              name: p.name,
+              hours: ranges
+                .filter((r) => r.professional_id === p.id)
+                .map((r) => ({
+                  weekday: r.weekday,
+                  start: r.start_time.slice(0, 5),
+                  end: r.end_time.slice(0, 5),
+                })),
+            }))}
+          />
+        </Section>
+      </div>
 
       <Section title="Bloqueios" description="Folgas, férias ou horários em que você não atende.">
         <TimeOffForm

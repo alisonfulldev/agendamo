@@ -44,6 +44,7 @@ export function ProfileView({
   const { data, brand, features } = loaded;
   const { business, page } = data;
   const avatar = publicUrl(page?.avatar_key);
+  const cover = publicUrl(page?.cover_key);
   const showPrices = page?.show_prices ?? true;
   const servicesById = new Map(data.services.map((s) => [s.id, s]));
   const terms = brand.terms;
@@ -52,8 +53,22 @@ export function ProfileView({
 
   return (
     <div className="flex flex-col gap-2 bg-muted pb-6">
-      <header className="flex flex-col items-center gap-2 bg-card px-5 pt-6 pb-5 text-center">
-        <div className="size-32 overflow-hidden rounded-full bg-muted">
+      <header
+        className={`flex flex-col items-center gap-2 bg-card px-5 pb-5 text-center ${cover ? "" : "pt-6"}`}
+      >
+        {cover ? (
+          // eslint-disable-next-line @next/next/no-img-element -- R2 public URL
+          <img
+            src={cover}
+            alt=""
+            width={800}
+            height={300}
+            className="-mx-5 aspect-[3/1] w-[calc(100%+2.5rem)] max-w-none object-cover"
+          />
+        ) : null}
+        <div
+          className={`size-32 overflow-hidden rounded-full bg-muted ${cover ? "-mt-16 ring-4 ring-card" : ""}`}
+        >
           {avatar ? (
             // eslint-disable-next-line @next/next/no-img-element -- R2 public URL
             <img

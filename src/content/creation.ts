@@ -69,20 +69,10 @@ export const CREATION = {
     accountsLimit:
       "Muitas contas criadas daqui hoje. Tente amanhã ou entre com uma conta que você já tem.",
     failed: "Não consegui enviar agora. Tenta de novo em instantes?",
-    created: "Pronto, {nome}! Seu link está no ar:",
+    created: "🎉 Sua conta está pronta, {nome}!",
+    createdHint: "Seu link de agendamento está te esperando no painel.",
     hasBusiness: "Você já tem um negócio no MeetChat e entrou na sua conta.",
-    goPanel: "Ir para meu painel",
-    copyLink: "Copiar link",
-    copied: "Copiado!",
-    nextStepsTitle: "Próximos passos",
-    nextSteps: [
-      "Defina seus horários de atendimento",
-      "Ajuste serviços e preços",
-      "Coloque o link na bio do Instagram",
-      "Configure a resposta automática do WhatsApp com o texto abaixo",
-    ],
-    whatsappReply: "Oi! Para agendar, é só tocar no link e escolher o horário: {link}",
-    copyReply: "Copiar texto da resposta automática",
+    goPanel: "Entrar no meu painel",
   },
   rateLimited: "Muitas tentativas por aqui. Espere alguns minutos e tente de novo.",
   shortcuts: {

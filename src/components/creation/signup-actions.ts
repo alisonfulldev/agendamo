@@ -172,7 +172,12 @@ export async function verifySignupCodeAction(input: unknown): Promise<VerifySign
   }
   const consent = demo.consents.at(-1);
   await admin.auth.admin.updateUserById(verified.userId, {
-    user_metadata: { terms_version: consent?.version, terms_accepted_at: consent?.at },
+    // tour_pending: the panel opens with the first-access tutorial (src/app/painel/tour.tsx).
+    user_metadata: {
+      terms_version: consent?.version,
+      terms_accepted_at: consent?.at,
+      tour_pending: true,
+    },
   });
   await audit({
     businessId,

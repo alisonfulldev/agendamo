@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, CalendarCheck, Camera, Check, Copy, Send, X } from "lucide-react";
+import { ArrowRight, Bell, CalendarCheck, Camera, Check, Send, X } from "lucide-react";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 import { getBrand, getNiche, NICHES, PLATFORM } from "@/brands";
@@ -1113,7 +1113,7 @@ function Options({
         2,
       );
     case "created":
-      return state.created ? <CreatedCard created={state.created} /> : null;
+      return state.created ? <CreatedCard /> : null;
     case "has_business":
       return wrap(
         <GoPanelButton className="flex h-12 items-center justify-center rounded-xl bg-primary text-base font-semibold text-primary-foreground" />,
@@ -1136,6 +1136,7 @@ function GoPanelButton({ className }: { className: string }) {
       onClick={() => window.location.assign("/painel")}
     >
       {SU.goPanel}
+      <ArrowRight className="size-5" aria-hidden />
     </button>
   );
 }
@@ -1162,59 +1163,14 @@ function ResendButton({ sentAt, onResend }: { sentAt: number | null; onResend: (
 }
 
 /** The link is live: copy, open the panel, QR code and next steps. */
-function CreatedCard({
-  created,
-}: {
-  created: { name: string; slug: string; pageUrl: string; qr: string };
-}) {
-  const [copied, setCopied] = useState<string | null>(null);
-  const reply = fill(SU.whatsappReply, { link: created.pageUrl });
-  const copy = async (text: string, key: string) => {
-    await navigator.clipboard.writeText(text).catch(() => undefined);
-    setCopied(key);
-  };
+/** End of the sign-up: one way only, into the panel (the link, the QR code and the tips are there). */
+function CreatedCard() {
   return (
     <div className="mt-1 flex flex-col gap-3">
-      <div className="flex flex-col items-center gap-3 rounded-2xl border bg-card p-4 text-center shadow-sm">
-        <a
-          href={created.pageUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="font-semibold break-all text-primary"
-        >
-          {created.pageUrl.replace(/^https?:\/\//, "").split("?")[0]}
-        </a>
-        {/* eslint-disable-next-line @next/next/no-img-element -- generated QR (data URL) */}
-        <img src={created.qr} alt="QR code do seu link" width={160} height={160} />
-      </div>
-      <div className="grid grid-cols-2 gap-2">
-        <button
-          type="button"
-          className={`${OPTION} flex items-center justify-center gap-1.5`}
-          onClick={() => copy(created.pageUrl, "link")}
-        >
-          {copied === "link" ? <Check className="size-4" /> : <Copy className="size-4" />}
-          {copied === "link" ? SU.copied : SU.copyLink}
-        </button>
-        <GoPanelButton className="flex items-center justify-center rounded-xl bg-primary px-3 text-[15px] font-semibold text-primary-foreground" />
-      </div>
-      <div className="rounded-2xl border bg-card p-4 text-sm shadow-sm">
-        <p className="mb-2 font-semibold">{SU.nextStepsTitle}</p>
-        <ol className="flex list-decimal flex-col gap-1 pl-5 text-muted-foreground">
-          {SU.nextSteps.map((step) => (
-            <li key={step}>{step}</li>
-          ))}
-        </ol>
-        <p className="mt-3 rounded-lg bg-muted p-2.5 text-card-foreground">{reply}</p>
-        <button
-          type="button"
-          className="mt-2 flex items-center gap-1.5 text-sm font-medium text-primary"
-          onClick={() => copy(reply, "reply")}
-        >
-          {copied === "reply" ? <Check className="size-4" /> : <Copy className="size-4" />}
-          {copied === "reply" ? SU.copied : SU.copyReply}
-        </button>
-      </div>
+      <p className="rounded-2xl bg-card px-4 py-3 text-center text-[17px] text-card-foreground shadow-sm">
+        {SU.createdHint}
+      </p>
+      <GoPanelButton className="flex h-14 items-center justify-center gap-2 rounded-xl bg-primary text-lg font-semibold text-primary-foreground shadow-lg ring-4 ring-primary/30 motion-safe:animate-pulse" />
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { CalendarClock, CheckCircle2, Circle } from "lucide-react";
+import { CalendarClock, CheckCircle2, Circle, Sparkles } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -14,6 +14,7 @@ import { freeTimesOn } from "@/lib/booking/free-times";
 import { requireBusiness } from "@/lib/business/context";
 import { getPlanFeatures, PLAN_STATUS_LABELS } from "@/lib/plans";
 import { freeSlotsMessage, listTimes } from "@/lib/sales/free-slots";
+import { TOUR_TEXT } from "@/content/tour";
 import { ACTIVE_APPOINTMENT_STATUSES } from "@/lib/db/types";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -78,8 +79,8 @@ export default async function PanelHomePage({ searchParams }: PageProps<"/painel
       },
       {
         done: (views.count ?? 0) > 0,
-        label: "Coloque o link na bio",
-        hint: "Instagram, TikTok, status do WhatsApp. Marca sozinho com a primeira visita.",
+        label: "Divulgue seu link",
+        hint: "WhatsApp, Instagram, Facebook, botões do seu site… Marca sozinho quando alguém abrir seu link (suas visitas não contam).",
         href: "/painel/pagina",
       },
       {
@@ -130,6 +131,16 @@ export default async function PanelHomePage({ searchParams }: PageProps<"/painel
             ? `Teste grátis: faltam ${features.trialDaysLeft} dias`
             : PLAN_STATUS_LABELS[features.status]
         }
+        actions={
+          isOwner ? (
+            <Button asChild variant="outline" size="sm">
+              <Link href="/painel?tour=1">
+                <Sparkles aria-hidden />
+                {TOUR_TEXT.replay}
+              </Link>
+            </Button>
+          ) : null
+        }
       />
       {senha === "alterada" ? (
         <p role="status" className="rounded-lg bg-accent px-3 py-2 text-sm text-accent-foreground">
@@ -140,7 +151,8 @@ export default async function PanelHomePage({ searchParams }: PageProps<"/painel
       <div className="rounded-xl border bg-card p-5">
         <p className="font-medium">Seu link de agendamento</p>
         <p className="mb-2 text-sm text-muted-foreground">
-          Abre direto no chat. Cole na bio do Instagram, no Google e nos botões do seu site.
+          Abre direto no chat. Divulgue no WhatsApp, Instagram, Facebook, Google e nos botões do seu
+          site.
         </p>
         <CopyLink url={pageUrl} />
       </div>

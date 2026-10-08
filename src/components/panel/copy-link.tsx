@@ -23,8 +23,9 @@ export function CopyLink({ url, qr = true }: { url: string; qr?: boolean }) {
         type="button"
         size="sm"
         variant="outline"
+        data-tour="link-copy"
         onClick={async () => {
-          await navigator.clipboard.writeText(url);
+          await navigator.clipboard.writeText(url).catch(() => undefined);
           setCopied(true);
           setTimeout(() => setCopied(false), 2000);
         }}

@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import { ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
 
 import { signOutAction } from "@/app/(auth)/actions";
 import { getCurrentBrand, getRequestPath } from "@/brands/server";
@@ -11,7 +13,9 @@ import { requireUser } from "@/lib/auth/session";
 import { getBusinessContext } from "@/lib/business/context";
 import { getPlanFeatures } from "@/lib/plans";
 
+import { MobileNav } from "./mobile-nav";
 import { PanelNav } from "./panel-nav";
+import { PanelTour } from "./tour";
 
 export const metadata: Metadata = { title: "Painel", robots: { index: false } };
 
@@ -37,6 +41,8 @@ export default async function PanelLayout({ children }: LayoutProps<"/painel">) 
   // Trial ended without a subscription: the pages lock themselves (requireBusiness); here only
   // the notice and the reduced menu.
   const expired = !getPlanFeatures(context.business).active;
+  const customers = context.brand.terms.customer.plural;
+  const customersLabel = customers.charAt(0).toUpperCase() + customers.slice(1);
 
   // Rule 14: the panel uses the business's brand. In production, send owners to that domain.
   if (context.brand.key !== domainBrand.key && isProductionDeployment()) {
@@ -56,13 +62,15 @@ export default async function PanelLayout({ children }: LayoutProps<"/painel">) 
             <img src={context.brand.logo} alt="" width={28} height={28} />
             <span className="truncate font-heading font-semibold">{context.business.name}</span>
           </Link>
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-2">
             <Button asChild variant="outline" size="sm">
-              <Link href={`/${context.business.slug}`} target="_blank">
-                Ver meu chat
+              <Link href={`/${context.business.slug}`} target="_blank" data-tour="view-chat">
+                <ExternalLink aria-hidden />
+                Ver chat
               </Link>
             </Button>
-            <form action={signOutAction}>
+            {/* On the phone, "Sair" is in "Mais". */}
+            <form action={signOutAction} className="hidden md:block">
               <Button type="submit" variant="ghost" size="sm">
                 Sair
               </Button>
@@ -70,7 +78,7 @@ export default async function PanelLayout({ children }: LayoutProps<"/painel">) 
           </div>
         </div>
       </header>
-      <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-4 py-6 md:flex-row">
+      <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-4 pt-4 pb-28 md:flex-row md:py-6">
         <aside className="md:w-52 md:shrink-0">
           {expired ? (
             <p className="mb-3 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
@@ -79,17 +87,18 @@ export default async function PanelLayout({ children }: LayoutProps<"/painel">) 
                 : "O painel está pausado até a assinatura ser renovada."}
             </p>
           ) : null}
-          <PanelNav
-            locked={expired}
-            isOwner={context.isOwner}
-            customersLabel={
-              context.brand.terms.customer.plural.charAt(0).toUpperCase() +
-              context.brand.terms.customer.plural.slice(1)
-            }
-          />
+          <div className="hidden md:block">
+            <PanelNav locked={expired} isOwner={context.isOwner} customersLabel={customersLabel} />
+          </div>
         </aside>
         <main className="min-w-0 flex-1">{children}</main>
       </div>
+      <MobileNav locked={expired} isOwner={context.isOwner} customersLabel={customersLabel} />
+      {context.isOwner && !expired ? (
+        <Suspense>
+          <PanelTour />
+        </Suspense>
+      ) : null}
     </div>
   );
 }

@@ -338,8 +338,8 @@ function Success({ pageUrl, slug }: { pageUrl: string; slug: string }) {
     <div className="flex flex-col items-center gap-5 text-center">
       <h1 className="text-2xl font-bold">Seu chat de agendamento está no ar!</h1>
       <p className="text-muted-foreground">
-        Coloque este link na bio do Instagram, no status do WhatsApp e nos botões do seu site: ele
-        abre direto no chat.
+        Divulgue este link no WhatsApp, Instagram, Facebook e nos botões do seu site: ele abre
+        direto no chat.
       </p>
       <div className="flex w-full max-w-md items-center gap-2 rounded-xl border bg-card p-2">
         <a

@@ -3,35 +3,31 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { isActive, PANEL_NAV } from "./nav";
+import { isActive, navTourId, visibleNav } from "./nav";
 
-/** customersLabel follows the brand terms (e.g. "Pacientes"). */
+/** Side menu (computer). On the phone the bottom tabs take its place (MobileNav). */
 export function PanelNav({
   isOwner,
   customersLabel,
   locked = false,
 }: {
   isOwner: boolean;
+  /** Follows the brand terms (e.g. "Pacientes"). */
   customersLabel: string;
   /** Trial ended without a subscription: only the plan and the account. */
   locked?: boolean;
 }) {
   const pathname = usePathname();
-  const items = PANEL_NAV.filter((item) => isOwner || item.staff).filter(
-    (item) => !locked || item.href === "/painel/plano" || item.href === "/painel/conta",
-  );
   return (
-    <nav
-      aria-label="Painel"
-      className="-mx-4 overflow-x-auto px-4 md:mx-0 md:overflow-visible md:px-0"
-    >
-      <ul className="flex gap-1 md:flex-col">
-        {items.map((item) => {
+    <nav aria-label="Painel">
+      <ul className="flex flex-col gap-1">
+        {visibleNav(isOwner, locked).map((item) => {
           const active = isActive(pathname, item.href);
           return (
-            <li key={item.href} className="shrink-0">
+            <li key={item.href}>
               <Link
                 href={item.href}
+                data-tour={navTourId(item.href)}
                 aria-current={active ? "page" : undefined}
                 className={`block rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                   active

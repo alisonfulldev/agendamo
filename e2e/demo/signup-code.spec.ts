@@ -82,15 +82,20 @@ test("sign-up in the conversation: WhatsApp, e-mail fix, terms, code and the lin
 
   await dialog.getByLabel("Código de 4 números").fill(code);
   await dialog.getByRole("button", { name: "Enviar", exact: true }).click();
-  await expect(dialog.getByText(`Pronto, ${name}! Seu link está no ar:`)).toBeVisible();
-  await expect(dialog.getByRole("img", { name: "QR code do seu link" })).toBeVisible();
+  // The end leads only to the panel: the link is shown there, not here.
+  await expect(dialog.getByText(`🎉 Sua conta está pronta, ${name}!`)).toBeVisible();
+  await expect(
+    dialog.getByText("Seu link de agendamento está te esperando no painel."),
+  ).toBeVisible();
+  await expect(dialog.getByRole("img", { name: "QR code do seu link" })).toHaveCount(0);
   const slug = name.toLowerCase().replace(/\s+/g, "-");
-  await expect(dialog.getByRole("link", { name: new RegExp(slug) })).toBeVisible();
 
-  // Signed in, with the business ready.
-  await dialog.getByRole("button", { name: "Ir para meu painel" }).first().click();
+  // Signed in, with the business ready; the first-access tutorial can be skipped.
+  await dialog.getByRole("button", { name: "Entrar no meu painel" }).click();
   await expect(page).toHaveURL(/\/painel/);
   await expect(page.getByRole("navigation", { name: "Painel" })).toBeVisible();
+  await page.getByRole("button", { name: "Pular tutorial" }).click();
+  await expect(page.getByTestId("tour")).toHaveCount(0);
   await page.goto(`/${slug}`);
   await expect(page.getByText(/Você está na agenda de/)).toBeVisible();
 
@@ -115,7 +120,7 @@ test("an e-mail that already has a business signs in instead", async ({ page }) 
     .fill(await newCode("dona.beleza@demo.com", before));
   await dialog.getByRole("button", { name: "Enviar", exact: true }).click();
   await expect(dialog.getByText(/Você já tem um negócio no MeetChat/)).toBeVisible();
-  await dialog.getByRole("button", { name: "Ir para meu painel" }).click();
+  await dialog.getByRole("button", { name: "Entrar no meu painel" }).click();
   await expect(page).toHaveURL(/\/painel/);
 });
 
@@ -162,8 +167,66 @@ test("the optional photo of the conversation becomes the profile photo", async (
   await dialog.getByRole("button", { name: "Aceito, enviar o código" }).click();
   await dialog.getByLabel("Código de 4 números").fill(await newCode(email, before));
   await dialog.getByRole("button", { name: "Enviar", exact: true }).click();
-  await expect(dialog.getByText(`Pronto, ${name}! Seu link está no ar:`)).toBeVisible();
+  await expect(dialog.getByText(`🎉 Sua conta está pronta, ${name}!`)).toBeVisible();
 
   await page.goto("/painel/pagina");
   await expect(page.locator('img[src*="/avatar/"]').first()).toBeVisible();
+});
+
+test("first access on the phone: bottom tabs and the tutorial, tapping like a game", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const email = `tour-${unique()}@gmail.com`;
+  const dialog = await startConversation(page, `Barbearia Tour ${unique()}`);
+  await dialog.getByRole("button", { name: "Depois" }).click();
+  await dialog.getByLabel("seu@email.com").fill(email);
+  await dialog.getByRole("button", { name: "Enviar", exact: true }).click();
+  const before = codes(email).length;
+  await dialog.getByRole("button", { name: "Aceito, enviar o código" }).click();
+  await dialog.getByLabel("Código de 4 números").fill(await newCode(email, before));
+  await dialog.getByRole("button", { name: "Enviar", exact: true }).click();
+  await dialog.getByRole("button", { name: "Entrar no meu painel" }).click();
+
+  const tour = page.getByTestId("tour");
+  const tabs = page.getByRole("navigation", { name: "Painel" });
+  await expect(tabs.getByRole("link", { name: "Agenda" })).toBeVisible();
+  await expect(tour.getByText("Este é o seu painel!")).toBeVisible();
+  await tour.getByRole("button", { name: "Começar" }).click();
+
+  await expect(tour.getByText("Seu link de agendamento")).toBeVisible();
+  await page.getByRole("button", { name: "Copiar link" }).first().click();
+
+  await expect(tour.getByText("Veja como seus clientes veem")).toBeVisible();
+  const popup = page.waitForEvent("popup");
+  await page.getByRole("link", { name: "Ver chat" }).click();
+  await (await popup).close();
+
+  await expect(tour.getByText("Agora toque em Agenda.")).toBeVisible();
+  await tabs.getByRole("link", { name: "Agenda" }).click();
+  await expect(page).toHaveURL(/\/painel\/agenda/);
+  await expect(tour.getByText("Aqui caem os agendamentos")).toBeVisible();
+  await tour.getByRole("button", { name: "Próximo" }).click();
+
+  await expect(tour.getByText("Toque em Mais")).toBeVisible();
+  await tabs.getByRole("button", { name: "Mais" }).click();
+  await expect(tour.getByText("Toque em Configurações.")).toBeVisible();
+  await page
+    .getByRole("navigation", { name: "Mais opções do painel" })
+    .getByRole("link", { name: /Configurações/ })
+    .click();
+  await expect(page).toHaveURL(/\/painel\/configuracoes/);
+  await expect(tour.getByText("Dias e horários de atendimento")).toBeVisible();
+  await tour.getByRole("button", { name: "Próximo" }).click();
+
+  await expect(tour.getByText(/divulgar seu link/)).toBeVisible();
+  await tour.getByRole("button", { name: "Concluir" }).click();
+  await expect(tour).toHaveCount(0);
+
+  // Done for good: it does not start by itself again, but "Ver tutorial" replays it.
+  await page.goto("/painel");
+  await page.waitForTimeout(1500);
+  await expect(tour).toHaveCount(0);
+  await page.getByRole("link", { name: "Ver tutorial" }).click();
+  await expect(tour.getByText("Este é o seu painel!")).toBeVisible();
 });
