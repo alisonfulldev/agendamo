@@ -2,6 +2,8 @@ import { withSentryConfig } from "@sentry/nextjs/config";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // The dev "N" badge sits over the panel's bottom tabs (dev only; production never shows it).
+  devIndicators: false,
   // Local demo mode only (npm run dev:demo): the embedded Postgres loads its own WASM files.
   serverExternalPackages: ["@electric-sql/pglite"],
   // The story art reads its font files at runtime (assets/fonts).

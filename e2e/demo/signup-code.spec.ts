@@ -189,18 +189,11 @@ test("first access on the phone: bottom tabs and the tutorial, tapping like a ga
   await dialog.getByRole("button", { name: "Entrar no meu painel" }).click();
 
   const tour = page.getByTestId("tour");
-  const tabs = page.getByRole("navigation", { name: "Painel" });
+  // The bottom tabs (rendered after the side menu, which the phone hides).
+  const tabs = page.getByRole("navigation", { name: "Painel" }).last();
   await expect(tabs.getByRole("link", { name: "Agenda" })).toBeVisible();
   await expect(tour.getByText("Este é o seu painel!")).toBeVisible();
   await tour.getByRole("button", { name: "Começar" }).click();
-
-  await expect(tour.getByText("Seu link de agendamento")).toBeVisible();
-  await page.getByRole("button", { name: "Copiar link" }).first().click();
-
-  await expect(tour.getByText("Veja como seus clientes veem")).toBeVisible();
-  const popup = page.waitForEvent("popup");
-  await page.getByRole("link", { name: "Ver chat" }).click();
-  await (await popup).close();
 
   await expect(tour.getByText("Agora toque em Agenda.")).toBeVisible();
   await tabs.getByRole("link", { name: "Agenda" }).click();
@@ -218,6 +211,18 @@ test("first access on the phone: bottom tabs and the tutorial, tapping like a ga
   await expect(page).toHaveURL(/\/painel\/configuracoes/);
   await expect(tour.getByText("Dias e horários de atendimento")).toBeVisible();
   await tour.getByRole("button", { name: "Próximo" }).click();
+
+  // The link and the chat come last, back on Início.
+  await expect(tour.getByText("Toque em Início.")).toBeVisible();
+  await tabs.getByRole("link", { name: "Início" }).click();
+  await expect(page).toHaveURL(/\/painel$/);
+  await expect(tour.getByText("Seu link de agendamento")).toBeVisible();
+  await page.getByRole("button", { name: "Copiar link" }).first().click();
+
+  await expect(tour.getByText("Veja como seus clientes veem")).toBeVisible();
+  const popup = page.waitForEvent("popup");
+  await page.getByRole("link", { name: "Ver chat" }).click();
+  await (await popup).close();
 
   await expect(tour.getByText(/divulgar seu link/)).toBeVisible();
   await tour.getByRole("button", { name: "Concluir" }).click();
