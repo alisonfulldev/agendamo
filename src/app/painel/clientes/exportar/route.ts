@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 
+import { getPlanFeatures } from "@/lib/plans";
+
 import { getBusinessContext } from "@/lib/business/context";
 import { toCsv } from "@/lib/csv";
 import { formatBrPhone } from "@/lib/phone";
@@ -9,6 +11,8 @@ import { createClient } from "@/lib/supabase/server";
 export async function GET() {
   const context = await getBusinessContext();
   if (!context) return new NextResponse("Not found", { status: 404 });
+  if (!getPlanFeatures(context.business).customers)
+    return new NextResponse("Not found", { status: 404 });
   const supabase = await createClient();
   const { data } = await supabase
     .from("customers")

@@ -100,16 +100,23 @@ export default async function SettingsPage() {
         />
       </Section>
 
-      <Section
-        title="Pix do sinal"
-        description={
-          getPlanFeatures(business).deposits
-            ? "Usado quando um serviço pede sinal para garantir o horário."
-            : "Sinal por Pix está disponível no Pro e no Equipe."
-        }
-      >
-        <PixForm settings={settings.data as PageSettings | null} />
-      </Section>
+      {getPlanFeatures(business).deposits ? (
+        <Section
+          title="Pix do sinal"
+          description="Usado quando um serviço pede sinal para garantir o horário."
+        >
+          <PixForm settings={settings.data as PageSettings | null} />
+        </Section>
+      ) : (
+        <Section
+          title="Sinal no agendamento"
+          description="Em breve no plano Pro: o cliente paga o sinal ou o valor total ao agendar."
+        >
+          <p className="text-sm text-muted-foreground">
+            Enquanto isso, os lembretes automáticos ajudam a reduzir as faltas.
+          </p>
+        </Section>
+      )}
     </div>
   );
 }

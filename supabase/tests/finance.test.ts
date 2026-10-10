@@ -47,13 +47,32 @@ async function appointment(status: string, discount = 0) {
   return id;
 }
 
-describe("single plan", () => {
-  it("starts the 30-day trial when the business is created", async () => {
-    const { rows } = await db.query<{ days: number }>(
+describe("three plans", () => {
+  it("a new business starts on Grátis, with no automatic trial", async () => {
+    const { rows } = await db.query<{ plan: string; trial_ends_at: string | null }>(
       `insert into public.businesses (name, slug, brand_key, segment) values ('Novo', 'novo-teste', 'psychology', 'psychology')
-       returning extract(day from trial_ends_at - trial_started_at)::int as days`,
+       returning plan, trial_ends_at`,
     );
-    expect(rows[0]!.days).toBe(30);
+    expect(rows[0]).toEqual({ plan: "free", trial_ends_at: null });
+  });
+
+  it("accepts the agenda and pro plans and only agenda / pro trials", async () => {
+    await db.query("update public.businesses set plan = 'agenda' where slug = 'novo-teste'");
+    await db.query("update public.businesses set plan = 'pro' where slug = 'novo-teste'");
+    await expect(
+      db.query("update public.businesses set trial_plan = 'free' where slug = 'novo-teste'"),
+    ).rejects.toThrow();
+    await db.query("update public.businesses set plan = 'free' where slug = 'novo-teste'");
+  });
+
+  it("one trial per person: the same e-mail hash cannot be claimed twice", async () => {
+    const hash = "a".repeat(64);
+    await db.query("insert into public.trial_claims (kind, value_hash) values ('email', $1)", [
+      hash,
+    ]);
+    await expect(
+      db.query("insert into public.trial_claims (kind, value_hash) values ('email', $1)", [hash]),
+    ).rejects.toThrow();
   });
 });
 

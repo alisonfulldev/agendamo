@@ -2,7 +2,6 @@ import {
   Bell,
   CalendarCheck,
   CalendarX,
-  Check,
   ChevronDown,
   Ghost,
   LayoutDashboard,
@@ -17,13 +16,13 @@ import Link from "next/link";
 import { PLATFORM, type BrandConfig } from "@/brands";
 import { brandThemeStyle } from "@/brands/theme";
 import { HOME, type HomeContent } from "@/content/home";
-import { formatBRL } from "@/lib/money";
-import { PLAN_PRICES, PRICE_TEXT } from "@/lib/plans";
+import { PLAN_PRICES } from "@/lib/plans";
 import { siteUrl } from "@/lib/site-url";
 import { isStorageConfigured } from "@/lib/storage/r2";
 
 import { CreationChat } from "@/components/creation/creation-chat";
 import { OpenCreationLink } from "@/components/creation/open-creation";
+import { PlanCards } from "@/components/sales/plan-cards";
 
 import { PhoneDemo } from "./phone-demo";
 import { StickyCta } from "./sticky-cta";
@@ -40,8 +39,6 @@ const ICONS: Record<string, LucideIcon> = {
   pointer: MousePointerClick,
 };
 
-const reais = (cents: number) => formatBRL(cents).replace(/,00$/, "");
-
 /** Structured data for search engines: the app with its price, the FAQ and the breadcrumb. */
 function jsonLd(content: HomeContent, niche?: { route: string; name: string }) {
   const page = siteUrl(niche ? `/${niche.route}` : "/");
@@ -54,11 +51,21 @@ function jsonLd(content: HomeContent, niche?: { route: string; name: string }) {
       operatingSystem: "Web",
       url: page,
       description: content.meta.description,
-      offers: {
-        "@type": "Offer",
-        price: (PLAN_PRICES.monthly / 100).toFixed(2),
-        priceCurrency: "BRL",
-      },
+      offers: [
+        { "@type": "Offer", name: "Grátis", price: "0.00", priceCurrency: "BRL" },
+        {
+          "@type": "Offer",
+          name: "Agenda",
+          price: (PLAN_PRICES.agenda.monthly / 100).toFixed(2),
+          priceCurrency: "BRL",
+        },
+        {
+          "@type": "Offer",
+          name: "Pro",
+          price: (PLAN_PRICES.pro.monthly / 100).toFixed(2),
+          priceCurrency: "BRL",
+        },
+      ],
     },
     {
       "@context": "https://schema.org",
@@ -271,37 +278,8 @@ export function HomePage({
             <p className="mt-3 text-center text-lg text-muted-foreground">
               {content.pricing.tagline}
             </p>
-            <div className="site-card-glow mx-auto mt-10 flex max-w-md flex-col gap-5 rounded-3xl border-2 border-primary/40 bg-card p-7">
-              <div>
-                <p className="font-semibold">{content.pricing.planName}</p>
-                <p className="mt-3 flex items-baseline gap-1">
-                  <span className="font-heading text-5xl font-bold tracking-tight">
-                    {reais(PLAN_PRICES.monthly)}
-                  </span>
-                  <span className="text-muted-foreground">/mês</span>
-                </p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  ou {PRICE_TEXT.yearlyPerMonth} no plano anual ({PRICE_TEXT.yearly})
-                </p>
-                <p className="mt-3 inline-flex rounded-full bg-primary/10 px-3 py-1 text-sm font-semibold text-primary">
-                  {content.pricing.trial}
-                </p>
-              </div>
-              <ul className="flex flex-col gap-2.5 text-sm">
-                {content.pricing.includes.map((item) => (
-                  <li key={item} className="flex gap-2.5">
-                    <Check className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-              <p className="text-sm text-muted-foreground">{content.pricing.extra}</p>
-              <OpenCreationLink
-                niche={route}
-                className="flex h-12 items-center justify-center rounded-xl bg-primary text-base font-semibold text-primary-foreground transition-opacity hover:opacity-90"
-              >
-                {hero.primaryCta}
-              </OpenCreationLink>
+            <div className="mt-10">
+              <PlanCards niche={route} />
             </div>
           </div>
         </section>

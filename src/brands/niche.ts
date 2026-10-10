@@ -1,4 +1,4 @@
-import { PRICE_TEXT, TRIAL_DAYS } from "@/lib/plans";
+import { PRICE_TEXT } from "@/lib/plans";
 
 import type { BrandConfigInput, Segment } from "./schema";
 
@@ -127,9 +127,8 @@ export function nicheBrand<T extends NicheBrandInput>(input: T) {
           description: `Menos faltas: o ${customer.singular} recebe a confirmação e o lembrete antes do horário.`,
         },
         {
-          title: "Sinal por Pix",
-          description:
-            "Se quiser, peça sinal nos horários que costumam ter falta. O Pix vai direto pra você.",
+          title: "Sinal no agendamento",
+          description: "Em breve no plano Pro: sinal pago pelo cliente ao agendar.",
         },
         {
           title: "Financeiro simples",
@@ -158,7 +157,7 @@ export function nicheBrand<T extends NicheBrandInput>(input: T) {
         ...(input.faq ?? []),
         {
           question: "Preciso de cartão para testar?",
-          answer: `Não. São ${TRIAL_DAYS} dias grátis com tudo liberado, sem cartão. Depois, ${PRICE_TEXT.summary}.`,
+          answer: PRICE_TEXT.noCard,
         },
         {
           question: `Meus ${customer.plural} precisam baixar algum aplicativo?`,

@@ -51,7 +51,9 @@ test("niche detected from the name, transformation, test booking and “Criar mi
   const dialog = page.getByRole("dialog");
   // Shortcuts answer and the conversation goes on.
   await dialog.getByRole("button", { name: "Quanto custa?" }).click();
-  await expect(dialog.getByText(/30 dias grátis, sem cartão\. Depois, R\$ 19\/mês/)).toBeVisible();
+  await expect(
+    dialog.getByText(/Grátis para sempre com 10 agendamentos por mês\. Agenda: R\$ 19,90\/mês/),
+  ).toBeVisible();
 
   const name = `Barbearia Navalha Teste ${Date.now().toString(36)}`;
   await typeName(page, name);

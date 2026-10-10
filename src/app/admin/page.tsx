@@ -6,7 +6,7 @@ import { requireAdmin } from "@/lib/admin";
 import { computeMetrics, daysAgoIso, type BrandMetrics } from "@/lib/admin-metrics";
 import type { Business, Subscription } from "@/lib/db/types";
 import { formatBRL } from "@/lib/money";
-import { getPlanFeatures, PLAN_STATUS_LABELS } from "@/lib/plans";
+import { getPlanFeatures, planLabel } from "@/lib/plans";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 import { BusinessActions, CouponForm } from "./admin-actions";
@@ -47,6 +47,37 @@ function MetricsCard({ title, metrics }: { title: string; metrics: BrandMetrics 
           <dt className="text-muted-foreground">Receita mensal</dt>
           <dd className="text-lg font-bold">{formatBRL(metrics.mrrCents)}</dd>
         </div>
+        <div>
+          <dt className="text-muted-foreground">Cadastros: Grátis / teste Agenda / teste Pro</dt>
+          <dd className="text-lg font-bold">
+            {metrics.signupsByChoice.free} / {metrics.signupsByChoice.trialAgenda} /{" "}
+            {metrics.signupsByChoice.trialPro}
+          </dd>
+        </div>
+        {(["agenda", "pro"] as const).map((plan) => {
+          const c = metrics.trialConversion[plan];
+          return (
+            <div key={plan}>
+              <dt className="text-muted-foreground">
+                Teste → pago ({plan === "agenda" ? "Agenda" : "Pro"})
+              </dt>
+              <dd className="text-lg font-bold">
+                {c.finished ? Math.round((c.paid / c.finished) * 100) : 0}%{" "}
+                <span className="text-sm font-normal text-muted-foreground">
+                  {c.paid} de {c.finished}
+                </span>
+              </dd>
+            </div>
+          );
+        })}
+        <div>
+          <dt className="text-muted-foreground">Caíram no Grátis</dt>
+          <dd className="text-lg font-bold">{metrics.fellToFree}</dd>
+        </div>
+        <div>
+          <dt className="text-muted-foreground">Upgrades (Agenda → Pro)</dt>
+          <dd className="text-lg font-bold">{metrics.upgrades}</dd>
+        </div>
       </dl>
       <div className="mt-4">
         <p className="mb-1 text-xs text-muted-foreground">Cadastros por semana</p>
@@ -80,7 +111,7 @@ export default async function AdminPage({ searchParams }: PageProps<"/admin">) {
   const db = createAdminClient();
   const weekAgo = daysAgoIso(7);
 
-  const [businesses, subscriptions, views, appointments, activated] = await Promise.all([
+  const [businesses, subscriptions, views, appointments, activated, upgraded] = await Promise.all([
     db.from("businesses").select("*").order("created_at", { ascending: false }).limit(1000),
     db.from("subscriptions").select("*"),
     db
@@ -91,7 +122,9 @@ export default async function AdminPage({ searchParams }: PageProps<"/admin">) {
       .limit(50000),
     db.from("appointments").select("business_id").gte("created_at", weekAgo).limit(50000),
     db.from("page_stats_daily").select("business_id").limit(50000),
+    db.from("audit_log").select("business_id").eq("action", "plan.upgraded").limit(50000),
   ]);
+  const upgradedIds = new Set((upgraded.data ?? []).map((r) => r.business_id as string));
   const allBusinesses = (businesses.data ?? []) as Business[];
   const allSubs = (subscriptions.data ?? []) as Subscription[];
   const activatedIds = new Set((activated.data ?? []).map((r) => r.business_id as string));
@@ -112,7 +145,10 @@ export default async function AdminPage({ searchParams }: PageProps<"/admin">) {
       <h1 className="text-2xl font-bold">Administração</h1>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <MetricsCard title="Total" metrics={computeMetrics(allBusinesses, allSubs, activatedIds)} />
+        <MetricsCard
+          title="Total"
+          metrics={computeMetrics(allBusinesses, allSubs, activatedIds, new Date(), 8, upgradedIds)}
+        />
         {BRANDS.map((brand) => (
           <MetricsCard
             key={brand.key}
@@ -121,6 +157,9 @@ export default async function AdminPage({ searchParams }: PageProps<"/admin">) {
               allBusinesses.filter((b) => b.brand_key === brand.key),
               allSubs,
               activatedIds,
+              new Date(),
+              8,
+              upgradedIds,
             )}
           />
         ))}
@@ -192,7 +231,7 @@ export default async function AdminPage({ searchParams }: PageProps<"/admin">) {
                       {BRANDS.find((x) => x.key === b.brand_key)?.name ?? b.brand_key}
                     </td>
                     <td className="p-2">
-                      {PLAN_STATUS_LABELS[getPlanFeatures(b).status]}
+                      {planLabel(getPlanFeatures(b))}
                       {sub ? ` · ${sub.status}` : ""}
                     </td>
                     <td className="p-2">

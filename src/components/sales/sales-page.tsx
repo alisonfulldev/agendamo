@@ -21,8 +21,7 @@ import { DemoChat } from "@/components/sales/demo-chat";
 import { FEATURE_VISUALS } from "@/components/sales/feature-visuals";
 import { PlansTable } from "@/components/sales/plans-table";
 import { Button } from "@/components/ui/button";
-import { formatBRL } from "@/lib/money";
-import { PLAN_PRICES, TRIAL_DAYS } from "@/lib/plans";
+import { FREE_BOOKINGS_PER_CYCLE, PLAN_PRICES, PRICE_TEXT } from "@/lib/plans";
 
 const SOCIAL_LABELS = {
   instagram: "Instagram",
@@ -125,16 +124,17 @@ export function SalesPage({
     operatingSystem: "Web",
     description: sales.subtitle,
     offers: [
+      { "@type": "Offer", name: "Grátis", price: "0.00", priceCurrency: "BRL" },
       {
         "@type": "Offer",
-        name: "Mensal",
-        price: (PLAN_PRICES.monthly / 100).toFixed(2),
+        name: "Agenda",
+        price: (PLAN_PRICES.agenda.monthly / 100).toFixed(2),
         priceCurrency: "BRL",
       },
       {
         "@type": "Offer",
-        name: "Anual",
-        price: (PLAN_PRICES.yearly / 100).toFixed(2),
+        name: "Pro",
+        price: (PLAN_PRICES.pro.monthly / 100).toFixed(2),
         priceCurrency: "BRL",
       },
     ],
@@ -150,7 +150,7 @@ export function SalesPage({
     ["24 h", "por dia recebendo agendamentos"],
     ["5 min", "para colocar seu link no ar"],
     ["0", "aplicativos para o cliente instalar"],
-    [formatBRL(Math.round(PLAN_PRICES.yearly / 12)).replace(",00", ""), "por mês no plano anual"],
+    ["R$ 0", `no Grátis, com ${FREE_BOOKINGS_PER_CYCLE} agendamentos por mês`],
   ];
 
   return (
@@ -222,7 +222,7 @@ export function SalesPage({
               </p>
               <ClaimLink prefix={linkPrefix} signupHref={signupHref} />
               <ul className="flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground">
-                {["30 dias grátis", "Sem cartão de crédito", "Cancele quando quiser"].map(
+                {["Grátis para sempre", "Sem cartão de crédito", "Cancele quando quiser"].map(
                   (item) => (
                     <li key={item} className="flex items-center gap-1.5">
                       <CircleCheck className="size-4 text-primary" aria-hidden />
@@ -424,7 +424,7 @@ export function SalesPage({
             id="plans"
             eyebrow="Preço"
             title="Um preço simples e justo"
-            text={`${TRIAL_DAYS} dias grátis com tudo liberado. Depois, escolha mensal ou anual.`}
+            text={`${PRICE_TEXT.free}. ${PRICE_TEXT.trial}.`}
           />
           <PlansTable signupHref={signupHref} />
         </section>
@@ -489,8 +489,7 @@ export function SalesPage({
                 Perguntas frequentes
               </h2>
               <p className="mt-4 text-lg text-pretty text-muted-foreground">
-                Tudo o que você precisa saber antes de começar. Teste {TRIAL_DAYS} dias sem
-                compromisso.
+                Tudo o que você precisa saber antes de começar. Comece grátis, sem compromisso.
               </p>
             </div>
             <div className="flex flex-col divide-y rounded-3xl border bg-card px-6">
@@ -520,7 +519,7 @@ export function SalesPage({
               Comece hoje: em 5 minutos seu link está no ar
             </h2>
             <p className="mx-auto mt-5 max-w-xl text-lg opacity-90">
-              {TRIAL_DAYS} dias grátis com tudo liberado. Sem cartão, sem fidelidade.
+              {PRICE_TEXT.free}. Sem cartão, sem fidelidade.
             </p>
             <Button
               asChild
@@ -529,7 +528,7 @@ export function SalesPage({
               className="mt-8 h-12 gap-2 px-7 text-base shadow-lg"
             >
               <Link href={signupHref}>
-                Testar {TRIAL_DAYS} dias grátis <ArrowRight className="size-4" aria-hidden />
+                Começar grátis <ArrowRight className="size-4" aria-hidden />
               </Link>
             </Button>
           </div>

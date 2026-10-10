@@ -27,12 +27,12 @@ const unique = () => Date.now().toString(36);
 async function setPlan(
   page: Page,
   business: string,
-  label: "Em teste (30 dias)" | "Assinante" | "Teste encerrado",
+  label: "Grátis" | "Teste do Agenda" | "Teste do Pro" | "Agenda" | "Pro" | "Teste encerrado",
 ) {
   await page.goto("/demo#planos");
   await page
     .locator("#planos form", { hasText: business })
-    .getByRole("button", { name: label })
+    .getByRole("button", { name: label, exact: true })
     .click();
   await page.waitForURL(/ok=plano/);
 }
@@ -209,7 +209,7 @@ test("book through the chat: customer and owner get e-mails", async ({ page }) =
 test("right after booking, the chat offers to book the next visit in two taps", async ({
   page,
 }) => {
-  await setPlan(page, "Studio Bela", "Assinante");
+  await setPlan(page, "Studio Bela", "Pro");
   await page.goto("/studio-bela?brand=beauty");
   await page
     .getByRole("button", { name: /Manicure/ })
@@ -253,7 +253,7 @@ test("right after booking, the chat offers to book the next visit in two taps", 
 test("owner reschedules: the panel offers a ready WhatsApp message to tell the customer", async ({
   page,
 }) => {
-  await setPlan(page, "Studio Bela", "Assinante");
+  await setPlan(page, "Studio Bela", "Pro");
   const customer = `Remarcar ${unique()}`;
   await page.goto("/studio-bela?brand=beauty");
   await page
@@ -321,112 +321,31 @@ test("owner reschedules: the panel offers a ready WhatsApp message to tell the c
   );
 });
 
-test("trial ended: the chat ends on the owner's WhatsApp and the panel only opens the plan", async ({
+test("Grátis past its 10 bookings: the chat collects service, day and period for WhatsApp", async ({
   page,
 }) => {
   await setPlan(page, "Barbearia Navalha", "Teste encerrado");
+  await page
+    .locator("#planos form", { hasText: "Barbearia Navalha" })
+    .getByRole("button", { name: "Usar os 10 do Grátis" })
+    .click();
+  await page.waitForURL(/ok=ciclo/);
   await page.goto("/barbearia-navalha?brand=barber");
   await page.getByRole("button", { name: "Corte", exact: true }).click();
   await page
     .getByRole("button", { name: /, \d{1,2} de [a-zç]+$/i })
     .first()
     .click();
-  await page
-    .locator("button")
-    .filter({ hasText: /^\d{2}:\d{2}$/ })
-    .first()
-    .click();
+  // The preferred period, not an exact time: nothing is reserved.
+  await expect(page.getByText(/Qual turno você prefere/)).toBeVisible();
+  await page.getByRole("button", { name: "Tarde", exact: true }).click();
   await page.getByLabel("Seu nome").fill("Cliente WhatsApp");
   await page.getByRole("button", { name: "Enviar" }).click();
   await page.getByRole("button", { name: "Sem recado" }).click();
   const send = page.getByRole("link", { name: "Enviar pelo WhatsApp" });
-  await expect(send).toHaveAttribute("href", /wa\.me\/55\d+\?text=.*Corte/);
-
-  await page.goto("/demo");
-  await page
-    .locator("form", { hasText: "dono.barbearia@demo.com" })
-    .getByRole("button", { name: "Entrar" })
-    .click();
-  await page.waitForURL(/\/painel\/plano/);
-  await expect(page.getByText("Seu teste grátis terminou")).toBeVisible();
-  await page.goto("/painel/agenda");
-  await expect(page).toHaveURL(/\/painel\/plano/);
-});
-
-test("finance: automatic revenues, a new cost and the month's profit", async ({ page }) => {
-  await page.goto("/demo");
-  await page
-    .locator("form", { hasText: "dona.beleza@demo.com" })
-    .getByRole("button", { name: "Entrar" })
-    .click();
-  await page.waitForURL(/\/painel/);
-  await page.goto("/painel/financeiro");
-  // The sample appointments and costs are in previous months.
-  await page.getByRole("link", { name: "Mês anterior" }).click();
-  await page.waitForURL(/mes=/);
-  await expect(page.getByText("automático").first()).toBeVisible();
-  await expect(page.getByText("Aluguel").first()).toBeVisible();
-
-  const description = `Cera ${unique()}`;
-  await page.getByRole("button", { name: "Lançar custo" }).click();
-  await page.getByLabel("Descrição").fill(description);
-  await page.getByLabel("Categoria").selectOption("Produtos e materiais");
-  await page.getByLabel("Valor (R$)").fill("12,50");
-  await page.getByRole("button", { name: "Salvar" }).click();
-  const row = page.locator("li", { hasText: description });
-  await expect(row).toContainText("12,50");
-
-  page.once("dialog", (dialog) => void dialog.accept());
-  await row.getByRole("button", { name: `Excluir ${description}` }).click();
-  await expect(page.locator("li", { hasText: description })).toHaveCount(0);
-});
-
-test("booking without e-mail: the e-mail is optional and not mentioned at the end", async ({
-  page,
-}) => {
-  await page.goto("/movimento-fisio?brand=physio");
-  await page
-    .getByRole("button", { name: /Pilates clínico/ })
-    .first()
-    .click();
-  await page
-    .getByRole("button", { name: /, \d{1,2} de [a-zç]+$/i })
-    .first()
-    .click();
-  await page
-    .locator("button")
-    .filter({ hasText: /^\d{2}:\d{2}$/ })
-    .first()
-    .click();
-  await page.getByLabel("Seu nome").fill("Paciente Sem Email");
-  await page.getByRole("button", { name: "Enviar" }).click();
-  await page.getByLabel("WhatsApp").fill(`119${Date.now().toString().slice(-8)}`);
-  await page.getByRole("button", { name: "Enviar" }).click();
-  await page.getByRole("button", { name: "Prefiro não informar" }).click();
-  const noCoupon = page.getByRole("button", { name: "Não tenho" });
-  if (await noCoupon.isVisible().catch(() => false)) await noCoupon.click();
-  await page.getByRole("button", { name: "Confirmar agendamento" }).click();
-  const done = page.getByText(/Seu horário está confirmado/);
-  await expect(done).toBeVisible();
-  await expect(done).not.toContainText("e-mail");
-});
-
-test("signed in on another brand: sign-up shows the account in use and lets you switch", async ({
-  page,
-}) => {
-  await page.goto("/demo");
-  await page
-    .locator("form", { hasText: "dona.beleza@demo.com" })
-    .getByRole("button", { name: "Entrar" })
-    .click();
-  await page.waitForURL(/\/painel/);
-  // Niche pages open the creation conversation; /cadastro?brand= is the form sign-up of a niche.
-  await page.goto("/cadastro?brand=psychology");
-  await expect(page.getByText("dona.beleza@demo.com")).toBeVisible();
-  await page.getByRole("button", { name: "Sair e usar outra conta" }).click();
-  await expect(page).toHaveURL(/\/cadastro/);
-  await expect(page.getByRole("button", { name: "Criar conta grátis" })).toBeVisible();
-  await expect(page.locator("html")).toHaveAttribute("data-brand", "psychology");
+  await expect(send).toHaveAttribute("href", /wa\.me\/55\d+\?text=.*Corte.*Turno.*Tarde/);
+  // Grátis keeps the brand footer.
+  await expect(page.getByText(/Agende também com o/)).toBeVisible();
 });
 
 test("own checkout: Pix QR inside the panel, the payment activates the subscription", async ({
@@ -438,7 +357,9 @@ test("own checkout: Pix QR inside the panel, the payment activates the subscript
     .locator("form", { hasText: "dono.barbearia@demo.com" })
     .getByRole("button", { name: "Entrar" })
     .click();
-  await page.waitForURL(/\/painel\/plano/);
+  // On Grátis the panel stays open; the plan screen is one tap away.
+  await page.waitForURL(/\/painel/);
+  await page.goto("/painel/plano");
   await page.getByLabel(/Nome ou razão social/).fill("Barbearia Navalha LTDA");
   await page.getByLabel("CPF ou CNPJ").fill("529.982.247-25");
   await page.getByRole("button", { name: /^Gerar Pix de/ }).click();

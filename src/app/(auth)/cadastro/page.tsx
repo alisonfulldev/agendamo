@@ -14,7 +14,7 @@ export default async function SignUpPage() {
   return (
     <AuthShell
       title="Criar sua conta"
-      description="30 dias grátis, sem cartão. Leva poucos minutos."
+      description="Grátis para sempre, sem cartão. Leva poucos minutos."
       footer={
         <>
           Já tem conta?{" "}

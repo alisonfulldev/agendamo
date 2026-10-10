@@ -19,7 +19,12 @@ import type { Segment } from "@/lib/db/types";
 import { maskBrPhone } from "@/lib/phone";
 import { slugify } from "@/lib/slug";
 
+import { CREATION } from "@/content/creation";
+import type { SignupChoice } from "@/lib/db/types";
+
 import { checkSlugAction, createBusinessAction, type SlugCheck } from "./actions";
+
+const PLAN_CHOICES = CREATION.signup.planOptions;
 
 interface Draft {
   segment: Segment;
@@ -32,6 +37,7 @@ interface Draft {
   neighborhood: string;
   services: ServiceDraft[];
   hours: WorkingRangeDraft[];
+  planChoice: SignupChoice;
 }
 
 // The segment comes from the brand (each brand is one niche), so it is not asked.
@@ -71,6 +77,7 @@ export function OnboardingWizard({
     neighborhood: "",
     services: [],
     hours: DEFAULT_HOURS,
+    planChoice: "free",
   });
   const [slugTouched, setSlugTouched] = useState(Boolean(initialSlug));
   const [checked, setChecked] = useState<{ slug: string; result: SlugCheck } | null>(null);
@@ -300,6 +307,23 @@ export function OnboardingWizard({
         <div className="flex flex-col gap-2">
           <WeeklyHoursEditor value={draft.hours} onChange={(hours) => set("hours", hours)} />
           {errors.hours && <p className="text-sm text-destructive">{errors.hours}</p>}
+          <fieldset className="mt-4 flex flex-col gap-2">
+            <legend className="mb-1 font-medium">Como você quer começar? (sem cartão)</legend>
+            {(Object.keys(PLAN_CHOICES) as SignupChoice[]).map((choice) => (
+              <label
+                key={choice}
+                className="flex items-center gap-2 rounded-lg border bg-card px-3 py-2.5 text-sm"
+              >
+                <input
+                  type="radio"
+                  name="planChoice"
+                  checked={draft.planChoice === choice}
+                  onChange={() => set("planChoice", choice)}
+                />
+                {PLAN_CHOICES[choice]}
+              </label>
+            ))}
+          </fieldset>
         </div>
       )}
 

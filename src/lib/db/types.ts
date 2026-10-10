@@ -1,7 +1,11 @@
 // Row types for the tables in supabase/migrations. Hand-written because the Supabase project is
 // configured last; once it exists, `supabase gen types typescript` can replace them.
 
-export type Plan = "free" | "pro" | "team";
+/** "free" also during a trial (trial_plan says which); "team" is legacy and counts as "pro". */
+export type Plan = "free" | "agenda" | "pro" | "team";
+export type PaidPlan = "agenda" | "pro";
+/** What the person chose at sign-up (admin metrics). */
+export type SignupChoice = "free" | "trial_agenda" | "trial_pro";
 import type { Segment } from "@/brands/schema";
 
 export type { Segment };
@@ -25,6 +29,9 @@ export interface Business {
   plan: Plan;
   trial_started_at: string | null;
   trial_ends_at: string | null;
+  /** Plan of the 7-day trial (set once: the trial is used only one time). */
+  trial_plan: PaidPlan | null;
+  signup_choice: SignupChoice | null;
   slot_interval_minutes: 15 | 30 | 60;
   min_notice_minutes: number;
   max_days_ahead: number;
@@ -281,7 +288,11 @@ export interface Subscription {
   provider: "asaas";
   provider_customer_id: string | null;
   provider_subscription_id: string | null;
-  plan: "pro" | "team";
+  plan: PaidPlan | "team";
+  /** Downgrade (Pro → Agenda) applied when the paid period ends. */
+  pending_plan: PaidPlan | null;
+  /** Price changed on our side: the next billing run updates the Asaas subscription value. */
+  needs_reprice: boolean;
   billing_cycle: "monthly" | "yearly";
   /** Professionals paid beyond the one included. */
   extra_professionals: number;

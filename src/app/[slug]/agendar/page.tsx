@@ -23,12 +23,10 @@ export default async function EmbeddedBookingPage({
   const brand = await getCurrentBrand();
   const page = await getPublicPage(brand.key, slug);
   if (!page || page.business.brand_key !== brand.key) notFound();
-  const features = getPlanFeatures({
-    ...page.business,
-    trial_started_at: page.business.trial_started_at ?? null,
-  });
+  // The chat on external sites is part of Agenda and Pro (not Grátis).
+  const features = getPlanFeatures(page.business);
 
-  if (!features.chatBooking || !features.embed) {
+  if (!features.embed) {
     return (
       <main className="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
         <p>O agendamento online de {page.business.name} não está disponível aqui.</p>

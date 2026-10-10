@@ -6,7 +6,9 @@ import { requireUser } from "@/lib/auth/session";
 import { onboardingSchema } from "@/lib/business/schemas";
 import { checkSlug, isSlugAvailable, type SlugCheck } from "@/lib/business/slug-check";
 import { fieldErrors } from "@/lib/forms";
+import type { Business } from "@/lib/db/types";
 import { notifyAdminsOfSignup } from "@/lib/notifications/admin-signup";
+import { startTrial } from "@/lib/trial";
 import { rateLimitRequest } from "@/lib/rate-limit";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -79,6 +81,23 @@ export async function createBusinessAction(input: unknown): Promise<CreateBusine
     return { ok: false, message: "Não foi possível criar agora. Tente de novo em instantes." };
   }
 
+  // How the account starts: Grátis, or a 7-day trial (once per person: e-mail and phone).
+  const admin = createAdminClient();
+  const { data: created } = await admin
+    .from("businesses")
+    .select("*")
+    .eq("slug", data.slug)
+    .single();
+  await admin.from("businesses").update({ signup_choice: data.planChoice }).eq("id", created!.id);
+  if (data.planChoice !== "free") {
+    await startTrial({
+      business: created as Business,
+      plan: data.planChoice === "trial_pro" ? "pro" : "agenda",
+      identity: { email: user.email, phone: data.whatsapp },
+      userId: user.id,
+      via: "signup",
+    });
+  }
   const pageUrl = brandUrl(brand, `/${data.slug}`);
   await notifyAdminsOfSignup({
     businessName: data.name,
@@ -87,6 +106,7 @@ export async function createBusinessAction(input: unknown): Promise<CreateBusine
     whatsapp: data.whatsapp || null,
     pageUrl,
     via: "formulário",
+    choice: data.planChoice,
   });
   // No revalidatePath here: re-rendering the panel layout would redirect away from the success screen.
   return { ok: true, slug: data.slug, pageUrl };

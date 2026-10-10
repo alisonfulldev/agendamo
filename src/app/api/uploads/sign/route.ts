@@ -29,9 +29,6 @@ export async function POST(request: Request) {
   if (!user) return NextResponse.json({ error: "Faça login de novo." }, { status: 401 });
   const context = await getBusinessContext();
   if (!context?.isOwner) return NextResponse.json({ error: "Sem permissão." }, { status: 403 });
-  if (!getPlanFeatures(context.business).active) {
-    return NextResponse.json({ error: "Assine para enviar fotos." }, { status: 403 });
-  }
   if (!isStorageConfigured()) {
     return NextResponse.json({ error: "Envio de imagens ainda não configurado." }, { status: 503 });
   }

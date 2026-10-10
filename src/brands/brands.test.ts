@@ -162,11 +162,17 @@ describe("parseBrands", () => {
 });
 
 describe("niche copy", () => {
-  it("FAQ prices always match the price table", () => {
+  it("FAQ prices always come from the price table", () => {
     for (const brand of [...BRANDS, PLATFORM]) {
       const answers = brand.sales.faq.map((item) => item.answer).join(" ");
-      expect(answers, brand.key).toContain(PRICE_TEXT.summary);
+      expect(answers, brand.key).toContain(PRICE_TEXT.noCard);
       expect(answers, brand.key).toContain(PRICE_TEXT.extraProfessional);
+    }
+  });
+
+  it("no copy promises the old 30-day trial", () => {
+    for (const brand of [...BRANDS, PLATFORM]) {
+      expect(JSON.stringify(brand.sales), brand.key).not.toMatch(/30 dias grátis/);
     }
   });
 });

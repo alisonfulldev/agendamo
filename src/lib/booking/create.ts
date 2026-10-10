@@ -4,6 +4,7 @@ import { formatInTimeZone } from "date-fns-tz";
 
 import { layoutBlock, pickProfessional } from "@/lib/availability";
 import type { AppointmentStatus } from "@/lib/db/types";
+import { getBookingAllowance } from "@/lib/plan-usage";
 import { getPlanFeatures } from "@/lib/plans";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -18,7 +19,14 @@ import {
 } from "./data";
 import { chargedPrices, depositFor } from "./pricing";
 
-export type BookingError = "conflict" | "blocked" | "invalid" | "unavailable" | "coupon_invalid";
+export type BookingError =
+  | "conflict"
+  | "blocked"
+  | "invalid"
+  | "unavailable"
+  | "coupon_invalid"
+  /** Grátis plan: the 10 chat bookings of the cycle are used (the chat hands off to WhatsApp). */
+  | "limit";
 
 export interface BookingCustomer {
   name: string;
@@ -73,6 +81,12 @@ export async function createBooking(input: CreateBookingInput): Promise<CreateBo
   const resolved = resolveSelection(catalog, input.selection);
   if (!resolved) return { ok: false, error: "invalid" };
   const { services, combo } = resolved;
+
+  // 0. Grátis plan: 10 automatic (chat) bookings per cycle, checked on the server (rule 6).
+  if (input.source === "chat") {
+    const allowance = await getBookingAllowance(business, now);
+    if (allowance.limited && allowance.remaining <= 0) return { ok: false, error: "limit" };
+  }
 
   // 1. The start must be offered by the engine, for this professional (or anyone, for "any").
   const date = formatInTimeZone(new Date(input.startsAt), business.timezone, "yyyy-MM-dd");

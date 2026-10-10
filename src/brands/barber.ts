@@ -1,4 +1,4 @@
-import { PRICE_TEXT, TRIAL_DAYS } from "@/lib/plans";
+import { PRICE_TEXT } from "@/lib/plans";
 
 import type { BrandConfigInput } from "./schema";
 
@@ -62,8 +62,8 @@ export const barber = {
         description: "Menos cadeira vazia: o cliente recebe o lembrete antes do horário.",
       },
       {
-        title: "Sinal por Pix",
-        description: "Peça sinal em horários concorridos. O Pix vai direto pra você.",
+        title: "Sinal no agendamento",
+        description: "Em breve no plano Pro: sinal pago pelo cliente ao agendar.",
       },
       {
         title: "Financeiro simples",
@@ -91,7 +91,7 @@ export const barber = {
     faq: [
       {
         question: "Preciso de cartão para testar?",
-        answer: `Não. São ${TRIAL_DAYS} dias grátis com tudo liberado, sem cartão. Depois, ${PRICE_TEXT.summary}.`,
+        answer: PRICE_TEXT.noCard,
       },
       {
         question: "Meus clientes precisam baixar algum aplicativo?",

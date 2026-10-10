@@ -1,4 +1,4 @@
-import { PRICE_TEXT, TRIAL_DAYS } from "@/lib/plans";
+import { PRICE_TEXT } from "@/lib/plans";
 
 import type { BrandConfigInput } from "./schema";
 
@@ -16,7 +16,7 @@ export const aesthetics = {
     icon: "flower",
     group: "beauty",
     label: "Clínicas de estética e esteticistas",
-    pitch: "Procedimentos sem conflito de sala ou maca, com sinal por Pix.",
+    pitch: "Procedimentos sem conflito de sala ou maca, com lembrete automático.",
   },
   theme: {
     primary: "#4F6B57",
@@ -59,7 +59,7 @@ export const aesthetics = {
       },
       { title: "Lembretes automáticos", description: "Menos faltas em procedimentos longos." },
       {
-        title: "Sinal por Pix e pacotes",
+        title: "Pacotes de sessões",
         description: "Sinal nos horários concorridos e pacotes de sessões.",
       },
       {
@@ -88,7 +88,7 @@ export const aesthetics = {
     faq: [
       {
         question: "Preciso de cartão para testar?",
-        answer: `Não. São ${TRIAL_DAYS} dias grátis com tudo liberado, sem cartão. Depois, ${PRICE_TEXT.summary}.`,
+        answer: PRICE_TEXT.noCard,
       },
       {
         question: "Minhas clientes precisam baixar algum aplicativo?",

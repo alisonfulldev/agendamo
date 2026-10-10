@@ -4,12 +4,15 @@ import { getBusinessContext } from "@/lib/business/context";
 import { toCsv } from "@/lib/csv";
 import { monthRange, PAYMENT_METHOD_LABELS, type FinanceEntry } from "@/lib/finance";
 import { formatAmount } from "@/lib/money";
+import { getPlanFeatures } from "@/lib/plans";
 import { createClient } from "@/lib/supabase/server";
 
 /** Entries of a month as CSV (opens in Excel pt-BR). Owner only (RLS). */
 export async function GET(request: NextRequest) {
   const context = await getBusinessContext();
   if (!context?.isOwner) return new NextResponse("Not found", { status: 404 });
+  if (!getPlanFeatures(context.business).finance)
+    return new NextResponse("Not found", { status: 404 });
   const month = request.nextUrl.searchParams.get("mes") ?? "";
   if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(month))
     return new NextResponse("Bad request", { status: 400 });

@@ -9,7 +9,7 @@ export const tattoo = nicheBrand({
     icon: "pen",
     group: "beauty",
     label: "Estúdios de tatuagem e piercing",
-    pitch: "Sessões, orçamentos e piercings marcados pelo link, com sinal por Pix.",
+    pitch: "Sessões, orçamentos e piercings marcados pelo link, com agenda por tatuador.",
   },
   theme: {
     primary: "#B91C1C",
@@ -26,7 +26,7 @@ export const tattoo = nicheBrand({
   },
   title: "Seus clientes marcam a sessão sozinhos, direto pelo seu link",
   subtitle:
-    "Um chat de agendamento para estúdios de tatuagem e piercing. O cliente escolhe o tatuador e um horário livre, e garante a sessão com sinal pelo Pix.",
+    "Um chat de agendamento para estúdios de tatuagem e piercing. O cliente escolhe o tatuador e um horário livre, e recebe a confirmação na hora.",
   demo: {
     businessName: "Black Ink Studio",
     bio: "Tatuagem fineline, blackwork e piercing.",
@@ -51,13 +51,13 @@ export const tattoo = nicheBrand({
     {
       question: "Consigo cobrar sinal para segurar a sessão?",
       answer:
-        "Consegue. O cliente paga o sinal pelo Pix direto para você, e a sessão só fica garantida depois do pagamento.",
+        "O sinal pago no agendamento chega em breve no plano Pro. Até lá, o lembrete automático chega antes da sessão.",
     },
   ],
   chat: { askProfessional: "Com qual tatuador você prefere?" },
   testimonial: {
     name: "Rafa",
     role: "Tatuador",
-    quote: "O sinal pelo Pix acabou com as faltas nas sessões longas.",
+    quote: "Os lembretes automáticos acabaram com as faltas nas sessões longas.",
   },
 });

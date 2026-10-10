@@ -39,7 +39,11 @@ export default async function TermsPage() {
           ou anual) até o cancelamento.
         </li>
         <li>
-          O teste grátis do Pro dura 30 dias e pode ser usado uma vez por negócio, sem cartão.
+          O plano Grátis permite 10 agendamentos automáticos a cada 30 dias, contados a partir do
+          cadastro; depois do limite, os pedidos são encaminhados ao WhatsApp do profissional até o
+          ciclo renovar. O teste dos planos Agenda e Pro dura 7 dias, não exige cartão e pode ser
+          usado uma vez por pessoa (e-mail, telefone e CPF/CNPJ). Sem pagamento ao fim do teste, a
+          conta passa para o Grátis, sem perda de dados.
         </li>
         <li>
           O cancelamento interrompe as próximas cobranças; o plano continua até o fim do período já

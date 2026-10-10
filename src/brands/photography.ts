@@ -9,7 +9,7 @@ export const photography = nicheBrand({
     icon: "camera",
     group: "services",
     label: "Fotógrafos e estúdios de fotografia",
-    pitch: "Ensaios e sessões de estúdio marcados pelo cliente, com sinal por Pix.",
+    pitch: "Ensaios e sessões de estúdio marcados pelo cliente, com lembrete automático.",
   },
   theme: {
     primary: "#374151",
@@ -26,7 +26,7 @@ export const photography = nicheBrand({
   },
   title: "Seus clientes agendam o ensaio sozinhos, direto pelo seu link",
   subtitle:
-    "Um chat de agendamento para fotógrafos. O cliente escolhe o ensaio e um horário livre, e garante a data com sinal pelo Pix.",
+    "Um chat de agendamento para fotógrafos. O cliente escolhe o ensaio e um horário livre, e recebe a confirmação na hora.",
   demo: {
     businessName: "Luz Estúdio",
     bio: "Ensaios, retratos corporativos e newborn.",
@@ -49,6 +49,6 @@ export const photography = nicheBrand({
   testimonial: {
     name: "Thiago",
     role: "Fotógrafo",
-    quote: "O sinal pelo Pix acabou com as reservas que não apareciam.",
+    quote: "Os lembretes automáticos acabaram com as reservas que não apareciam.",
   },
 });

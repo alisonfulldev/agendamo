@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 import { brandUrl } from "@/brands/urls";
 import { CopyLink } from "@/components/panel/copy-link";
@@ -84,15 +85,19 @@ export default async function PageEditorPage() {
         <Section
           title="Combos"
           description={
-            features.packagesAndCombos
-              ? undefined
-              : "Combos aparecem para agendamento no Pro e no Equipe."
+            features.packagesAndCombos ? undefined : "Disponível nos planos Agenda e Pro."
           }
         >
-          <CombosEditor
-            combos={comboViews}
-            services={((services.data ?? []) as Service[]).filter((s) => s.active)}
-          />
+          {features.packagesAndCombos ? (
+            <CombosEditor
+              combos={comboViews}
+              services={((services.data ?? []) as Service[]).filter((s) => s.active)}
+            />
+          ) : (
+            <Link href="/painel/plano" className="text-sm font-medium text-primary underline">
+              Ver planos
+            </Link>
+          )}
         </Section>
 
         <Section title="Links">

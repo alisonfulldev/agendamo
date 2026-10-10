@@ -42,7 +42,7 @@ export const POST = cronRoute(async () => {
       { label: "Quiseram agendar fora do horário", value: displayCount(week.outsideHours) },
     ];
 
-    if (features.chatBooking) {
+    {
       const { count } = await admin
         .from("appointments")
         .select("id", { count: "exact", head: true })
@@ -54,11 +54,9 @@ export const POST = cronRoute(async () => {
         label: "Agendamentos feitos sozinhos pelo chat",
         value: displayCount(count ?? 0),
       });
-      paragraphs.push("Seu chat de agendamento trabalhou por você, inclusive fora do horário.");
-    } else {
       paragraphs.push(
-        week.conversations > 0
-          ? "Na semana passada, pessoas pediram horário pelo seu chat. Com o Pro, o horário é confirmado na hora, sem você precisar aprovar, até de madrugada."
+        (count ?? 0) > 0
+          ? "Seu chat de agendamento trabalhou por você, inclusive fora do horário."
           : "Divulgue seu link de agendamento no WhatsApp, Instagram, Facebook e no seu site para receber mais pedidos.",
       );
     }
@@ -74,8 +72,8 @@ export const POST = cronRoute(async () => {
         heading: "Resumo da semana",
         paragraphs,
         details,
-        cta: !features.active
-          ? { label: "Assinar para voltar a agendar sozinho", url: "/painel/plano" }
+        cta: features.limitedBookings
+          ? { label: "Agendamentos ilimitados no Agenda", url: "/painel/plano" }
           : { label: "Ver estatísticas", url: "/painel/estatisticas" },
         footnote:
           "Números abaixo de 5 aparecem como “menos de 5”, para proteger a privacidade de quem visita.",

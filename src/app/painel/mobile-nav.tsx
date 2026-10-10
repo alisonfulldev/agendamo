@@ -4,6 +4,7 @@ import {
   CalendarDays,
   ChevronRight,
   Home,
+  Lock,
   LogOut,
   type LucideIcon,
   Menu,
@@ -16,6 +17,8 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 
 import { signOutAction } from "@/app/(auth)/actions";
+import { LockedModal } from "@/components/panel/locked-modal";
+import type { LockedFeature } from "@/lib/plans";
 
 import { isActive, NAV_GROUP_LABELS, navTourId, visibleNav, type NavItem } from "./nav";
 
@@ -28,28 +31,39 @@ const TAB_ICONS: Record<string, LucideIcon> = {
 
 /**
  * Phone menu, like an app: the main pages as bottom tabs and the rest in "Mais", grouped.
- * Hidden on the computer, where the side menu shows everything.
+ * Hidden on the computer, where the side menu shows everything. On the Grátis plan, paid items
+ * show a lock and open the subscription modal.
  */
 export function MobileNav({
   isOwner,
   customersLabel,
-  locked = false,
+  locked,
+  trialAvailable,
 }: {
   isOwner: boolean;
   customersLabel: string;
-  locked?: boolean;
+  locked: LockedFeature[];
+  trialAvailable: boolean;
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
-  const items = visibleNav(isOwner, locked);
-  // Ended trial: the two remaining pages are the tabs themselves.
-  const tabs = locked ? items : items.filter((item) => item.group === "main");
-  const more = locked ? [] : items.filter((item) => item.group !== "main");
+  const [modal, setModal] = useState<LockedFeature | null>(null);
+  const items = visibleNav(isOwner);
+  const tabs = items.filter((item) => item.group === "main");
+  const more = items.filter((item) => item.group !== "main");
   const label = (item: NavItem) => (item.href === "/painel/clientes" ? customersLabel : item.label);
+  const isLocked = (item: NavItem) => Boolean(item.feature && locked.includes(item.feature));
   const moreActive = more.some((item) => isActive(pathname, item.href));
 
   return (
     <div className="md:hidden">
+      {modal ? (
+        <LockedModal
+          feature={modal}
+          trialAvailable={trialAvailable}
+          onClose={() => setModal(null)}
+        />
+      ) : null}
       {open ? (
         <div className="fixed inset-0 z-40 flex flex-col justify-end">
           <button
@@ -82,15 +96,9 @@ export function MobileNav({
                     {NAV_GROUP_LABELS[group]}
                   </p>
                   <ul className="divide-y rounded-2xl border bg-card">
-                    {list.map((item) => (
-                      <li key={item.href}>
-                        <Link
-                          href={item.href}
-                          data-tour={navTourId(item.href)}
-                          aria-current={isActive(pathname, item.href) ? "page" : undefined}
-                          onClick={() => setOpen(false)}
-                          className="flex min-h-14 items-center gap-3 px-4 py-2.5"
-                        >
+                    {list.map((item) => {
+                      const content = (
+                        <>
                           <span className="min-w-0 flex-1">
                             <span className="block font-medium">{label(item)}</span>
                             {item.hint ? (
@@ -99,10 +107,42 @@ export function MobileNav({
                               </span>
                             ) : null}
                           </span>
-                          <ChevronRight className="size-4 text-muted-foreground" aria-hidden />
-                        </Link>
-                      </li>
-                    ))}
+                          {isLocked(item) ? (
+                            <Lock className="size-4 text-muted-foreground" aria-label="Bloqueado" />
+                          ) : (
+                            <ChevronRight className="size-4 text-muted-foreground" aria-hidden />
+                          )}
+                        </>
+                      );
+                      const row = "flex min-h-14 w-full items-center gap-3 px-4 py-2.5 text-left";
+                      return (
+                        <li key={item.href}>
+                          {isLocked(item) ? (
+                            <button
+                              type="button"
+                              data-tour={navTourId(item.href)}
+                              className={row}
+                              onClick={() => {
+                                setOpen(false);
+                                setModal(item.feature!);
+                              }}
+                            >
+                              {content}
+                            </button>
+                          ) : (
+                            <Link
+                              href={item.href}
+                              data-tour={navTourId(item.href)}
+                              aria-current={isActive(pathname, item.href) ? "page" : undefined}
+                              onClick={() => setOpen(false)}
+                              className={row}
+                            >
+                              {content}
+                            </Link>
+                          )}
+                        </li>
+                      );
+                    })}
                   </ul>
                 </div>
               );
@@ -126,41 +166,56 @@ export function MobileNav({
       >
         <ul className="flex">
           {tabs.map((item) => {
-            const Icon = TAB_ICONS[item.href] ?? Menu;
+            const Icon = isLocked(item) ? Lock : (TAB_ICONS[item.href] ?? Menu);
             const active = isActive(pathname, item.href) && !open;
+            const tab = `flex h-16 w-full flex-col items-center justify-center gap-0.5 text-xs font-medium ${
+              active ? "text-primary" : "text-muted-foreground"
+            }`;
+            const content = (
+              <>
+                <Icon className="size-6" aria-hidden />
+                <span className="max-w-full truncate px-1">{label(item)}</span>
+              </>
+            );
             return (
               <li key={item.href} className="flex-1">
-                <Link
-                  href={item.href}
-                  data-tour={navTourId(item.href)}
-                  aria-current={active ? "page" : undefined}
-                  onClick={() => setOpen(false)}
-                  className={`flex h-16 flex-col items-center justify-center gap-0.5 text-xs font-medium ${
-                    active ? "text-primary" : "text-muted-foreground"
-                  }`}
-                >
-                  <Icon className="size-6" aria-hidden />
-                  <span className="max-w-full truncate px-1">{label(item)}</span>
-                </Link>
+                {isLocked(item) ? (
+                  <button
+                    type="button"
+                    data-tour={navTourId(item.href)}
+                    className={tab}
+                    onClick={() => setModal(item.feature!)}
+                  >
+                    {content}
+                  </button>
+                ) : (
+                  <Link
+                    href={item.href}
+                    data-tour={navTourId(item.href)}
+                    aria-current={active ? "page" : undefined}
+                    onClick={() => setOpen(false)}
+                    className={tab}
+                  >
+                    {content}
+                  </Link>
+                )}
               </li>
             );
           })}
-          {more.length ? (
-            <li className="flex-1">
-              <button
-                type="button"
-                data-tour="nav-more"
-                aria-expanded={open}
-                onClick={() => setOpen((value) => !value)}
-                className={`flex h-16 w-full flex-col items-center justify-center gap-0.5 text-xs font-medium ${
-                  open || moreActive ? "text-primary" : "text-muted-foreground"
-                }`}
-              >
-                <Menu className="size-6" aria-hidden />
-                Mais
-              </button>
-            </li>
-          ) : null}
+          <li className="flex-1">
+            <button
+              type="button"
+              data-tour="nav-more"
+              aria-expanded={open}
+              onClick={() => setOpen((value) => !value)}
+              className={`flex h-16 w-full flex-col items-center justify-center gap-0.5 text-xs font-medium ${
+                open || moreActive ? "text-primary" : "text-muted-foreground"
+              }`}
+            >
+              <Menu className="size-6" aria-hidden />
+              Mais
+            </button>
+          </li>
         </ul>
       </nav>
     </div>

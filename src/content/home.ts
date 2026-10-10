@@ -1,4 +1,4 @@
-import { PRICE_TEXT, TRIAL_DAYS } from "@/lib/plans";
+import { PRICE_TEXT } from "@/lib/plans";
 
 type Icon =
   | "moon"
@@ -28,14 +28,7 @@ export interface HomeContent {
   steps: { title: string; items: readonly string[] };
   gains: { title: string; items: readonly { icon: Icon; text: string }[] };
   audience: { title: string; chips: readonly { label: string; href: string }[] };
-  pricing: {
-    title: string;
-    tagline: string;
-    planName: string;
-    trial: string;
-    includes: readonly string[];
-    extra: string;
-  };
+  pricing: { title: string; tagline: string };
   faq: { title: string; items: readonly { question: string; answer: string }[] };
   closing: { title: string; cta: string };
   footer: { links: readonly { label: string; href: string }[] };
@@ -63,7 +56,7 @@ export const HOME: HomeContent = {
     subtitle: "Seu link no WhatsApp, Instagram ou site, e o cliente marca pelo chat, 24h.",
     primaryCta: "Criar meu link grátis",
     secondaryCta: "Ver como fica o meu",
-    note: `${TRIAL_DAYS} dias grátis · sem cartão · pronto em 1 minuto`,
+    note: "Grátis para sempre · sem cartão · pronto em 1 minuto",
   },
   pains: {
     title: "Quanto tempo você perde respondendo “tem horário?”",
@@ -105,25 +98,15 @@ export const HOME: HomeContent = {
     ],
   },
   pricing: {
-    title: "Um preço simples",
-    tagline: "Um cliente que não falta já paga o mês.",
-    planName: "MeetChat completo",
-    trial: `${TRIAL_DAYS} dias grátis, sem cartão`,
-    includes: [
-      "Agendamento pelo link, 24 horas por dia",
-      "Lembretes automáticos para o cliente",
-      "Aviso no seu celular a cada agendamento",
-      "Agenda, clientes e financeiro simples",
-      "Botão de agendar no seu site",
-    ],
-    extra: `1 profissional incluso · cada extra ${PRICE_TEXT.extraProfessional}`,
+    title: "Comece grátis. Cresça quando quiser.",
+    tagline: `${PRICE_TEXT.free}. ${PRICE_TEXT.trial}.`,
   },
   faq: {
     title: "Perguntas frequentes",
     items: [
       {
         question: "Preciso de cartão?",
-        answer: `Não. São ${TRIAL_DAYS} dias grátis com tudo liberado, sem cartão. Depois, ${PRICE_TEXT.summary}.`,
+        answer: PRICE_TEXT.noCard,
       },
       {
         question: "Meu cliente precisa baixar app?",

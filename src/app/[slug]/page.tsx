@@ -23,13 +23,14 @@ export default async function BusinessChatPage({ params, searchParams }: PagePro
   const query = await searchParams;
   const loaded = await loadBusinessPage(slug);
   if (!loaded) notFound();
-  const { data, brand, domainBrand, features } = loaded;
+  const { data, brand, domainBrand, features, automaticBooking } = loaded;
 
   // A business always shows on its own brand's domain.
   if (brand.key !== domainBrand.key) redirect(brandUrl(brand, `/${data.business.slug}`));
 
   const { business, page } = data;
-  const mode = features.chatBooking ? "chat" : "handoff";
+  // Grátis past its 10 bookings of the cycle: the chat collects the request for WhatsApp.
+  const mode = automaticBooking ? "chat" : "handoff";
   const override = themeOverride(loaded);
   const param = (name: string) =>
     typeof query[name] === "string" ? (query[name] as string) : null;
@@ -60,7 +61,7 @@ export default async function BusinessChatPage({ params, searchParams }: PagePro
         branding={
           features.removeBranding ? null : (
             <a href={brandUrl(brand, "/")} className="hover:text-foreground">
-              Feito com <span className="font-semibold">{brand.name}</span>
+              Agende também com o <span className="font-semibold">{brand.name}</span>
             </a>
           )
         }

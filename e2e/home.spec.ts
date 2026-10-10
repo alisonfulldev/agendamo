@@ -9,7 +9,11 @@ test("home page: sales sections, current price and the main call to action", asy
   for (const title of [HOME.pains.title, HOME.steps.title, HOME.gains.title, HOME.faq.title]) {
     await expect(page.getByRole("heading", { name: title })).toBeVisible();
   }
-  await expect(page.getByText("R$ 19", { exact: true })).toBeVisible();
+  // The three plans, with the current prices.
+  for (const price of ["R$ 0", "R$ 19,90", "R$ 39,90"]) {
+    await expect(page.getByText(price, { exact: true }).first()).toBeVisible();
+  }
+  await expect(page.getByText("30 dias grátis")).toHaveCount(0);
   await expect(page.getByText(HOME.pricing.tagline)).toBeVisible();
   await expect(page.getByRole("link", { name: HOME.hero.primaryCta }).first()).toHaveAttribute(
     "href",

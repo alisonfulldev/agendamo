@@ -1,5 +1,7 @@
 "use server";
 
+import { requireFeature } from "@/lib/business/context";
+
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
@@ -9,6 +11,7 @@ import { invalidatePublicPage } from "@/lib/cache";
 import { createClient } from "@/lib/supabase/server";
 
 export async function replyReviewAction(id: string, reply: string): Promise<{ ok: boolean }> {
+  await requireFeature("reviews");
   const { business } = await requireOwner();
   const text = z.string().trim().max(1000).parse(reply);
   const supabase = await createClient();
@@ -23,6 +26,7 @@ export async function replyReviewAction(id: string, reply: string): Promise<{ ok
 }
 
 export async function setReviewHiddenAction(id: string, hidden: boolean): Promise<{ ok: boolean }> {
+  await requireFeature("reviews");
   const { business, user } = await requireOwner();
   const reviewId = z.uuid().parse(id);
   const supabase = await createClient();

@@ -1,5 +1,7 @@
 "use server";
 
+import { requireFeature } from "@/lib/business/context";
+
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
@@ -8,6 +10,7 @@ import { requireBusiness } from "@/lib/business/context";
 import { disconnect } from "@/lib/google/client";
 
 export async function disconnectGoogleAction(professionalId: string): Promise<{ ok: boolean }> {
+  await requireFeature("googleCalendar");
   const context = await requireBusiness();
   const id = z.uuid().parse(professionalId);
   if (!context.isOwner && context.professionalId !== id) return { ok: false };

@@ -1,5 +1,5 @@
-import type { Business, Subscription } from "@/lib/db/types";
-import { PLAN_PRICES, subscriptionPrice } from "@/lib/plans";
+import type { Business, PaidPlan, Subscription } from "@/lib/db/types";
+import { paidPlanOf, PLAN_PRICES, subscriptionPrice } from "@/lib/plans";
 
 /** Monthly recurring revenue (cents) of a subscription: plan normalized to a month + active add-ons. */
 export function monthlyRevenue(
@@ -10,10 +10,11 @@ export function monthlyRevenue(
 ): number {
   if (subscription.status !== "active" && subscription.status !== "overdue") return 0;
   const extras = subscription.extra_professionals ?? 0;
+  const tier = paidPlanOf(subscription.plan) ?? "agenda";
   const plan =
     subscription.billing_cycle === "yearly"
-      ? Math.round(subscriptionPrice("yearly", extras) / 12)
-      : subscriptionPrice("monthly", extras);
+      ? Math.round(subscriptionPrice(tier, "yearly", extras) / 12)
+      : subscriptionPrice(tier, "monthly", extras);
   const featured =
     (subscription.addons.featured ?? []).filter((f) => f.status === "active").length *
     PLAN_PRICES.featured.monthly;
@@ -31,6 +32,13 @@ export interface BrandMetrics {
   subscribers: number;
   cancellations: number;
   mrrCents: number;
+  /** What people chose at sign-up. */
+  signupsByChoice: { free: number; trialAgenda: number; trialPro: number };
+  /** Finished trials (ended or subscribed) and how many became paying, per plan. */
+  trialConversion: Record<PaidPlan, { finished: number; paid: number }>;
+  /** Accounts on Grátis after a trial or a cancelled subscription. */
+  fellToFree: number;
+  upgrades: number;
 }
 
 /** ISO Monday (UTC) of a timestamp, "YYYY-MM-DD". */
@@ -42,7 +50,16 @@ export function weekOf(iso: string): string {
 }
 
 export function computeMetrics(
-  businesses: Pick<Business, "id" | "created_at" | "trial_started_at" | "trial_ends_at">[],
+  businesses: Pick<
+    Business,
+    | "id"
+    | "created_at"
+    | "plan"
+    | "trial_plan"
+    | "trial_started_at"
+    | "trial_ends_at"
+    | "signup_choice"
+  >[],
   subscriptions: Pick<
     Subscription,
     "business_id" | "plan" | "billing_cycle" | "status" | "addons" | "extra_professionals"
@@ -50,6 +67,7 @@ export function computeMetrics(
   activatedIds: Set<string>,
   now = new Date(),
   weeks = 8,
+  upgradedIds: Set<string> = new Set(),
 ): BrandMetrics {
   const ids = new Set(businesses.map((b) => b.id));
   const subs = subscriptions.filter((s) => ids.has(s.business_id));
@@ -70,7 +88,36 @@ export function computeMetrics(
     subscribers: subs.filter((s) => s.status === "active" || s.status === "overdue").length,
     cancellations: subs.filter((s) => s.status === "cancelled").length,
     mrrCents: subs.reduce((sum, s) => sum + monthlyRevenue(s), 0),
+    signupsByChoice: {
+      free: businesses.filter((b) => b.signup_choice === "free").length,
+      trialAgenda: businesses.filter((b) => b.signup_choice === "trial_agenda").length,
+      trialPro: businesses.filter((b) => b.signup_choice === "trial_pro").length,
+    },
+    trialConversion: {
+      agenda: conversion(businesses, "agenda", now),
+      pro: conversion(businesses, "pro", now),
+    },
+    fellToFree: businesses.filter((b) => {
+      if (paidPlanOf(b.plan)) return false;
+      const trialEnded = b.trial_ends_at !== null && new Date(b.trial_ends_at) <= now;
+      const cancelled = subs.some((s) => s.business_id === b.id && s.status === "cancelled");
+      return trialEnded || cancelled;
+    }).length,
+    upgrades: businesses.filter((b) => upgradedIds.has(b.id)).length,
   };
+}
+
+function conversion(
+  businesses: Pick<Business, "plan" | "trial_plan" | "trial_ends_at">[],
+  plan: PaidPlan,
+  now: Date,
+): { finished: number; paid: number } {
+  const tested = businesses.filter((b) => b.trial_plan === plan);
+  const paid = tested.filter((b) => paidPlanOf(b.plan)).length;
+  const finished = tested.filter(
+    (b) => paidPlanOf(b.plan) || (b.trial_ends_at !== null && new Date(b.trial_ends_at) <= now),
+  ).length;
+  return { finished, paid };
 }
 
 /** ISO timestamp of days days ago (kept out of render functions). */

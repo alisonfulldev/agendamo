@@ -11,13 +11,25 @@ import { brandUrl, isProductionDeployment } from "@/brands/urls";
 import { Button } from "@/components/ui/button";
 import { requireUser } from "@/lib/auth/session";
 import { getBusinessContext } from "@/lib/business/context";
-import { getPlanFeatures } from "@/lib/plans";
+import { getPlanFeatures, type LockedFeature } from "@/lib/plans";
+import { trialCounter } from "@/lib/plan-text";
 
 import { MobileNav } from "./mobile-nav";
 import { PanelNav } from "./panel-nav";
 import { PanelTour } from "./tour";
 
 export const metadata: Metadata = { title: "Painel", robots: { index: false } };
+
+/** Paid features with an item in the menu. */
+const LOCKABLE: LockedFeature[] = [
+  "customers",
+  "finance",
+  "salesTools",
+  "reviews",
+  "stats",
+  "anyProfessional",
+  "googleCalendar",
+];
 
 /** Panel pages that work before the business exists. */
 const WITHOUT_BUSINESS = ["/painel/novo", "/painel/conta"];
@@ -38,9 +50,9 @@ export default async function PanelLayout({ children }: LayoutProps<"/painel">) 
   }
   if (path === "/painel/novo") redirect("/painel");
 
-  // Trial ended without a subscription: the pages lock themselves (requireBusiness); here only
-  // the notice and the reduced menu.
-  const expired = !getPlanFeatures(context.business).active;
+  // Grátis plan: paid items of the menu show a lock (pages and actions check it themselves).
+  const features = getPlanFeatures(context.business);
+  const locked = LOCKABLE.filter((feature) => !features[feature]);
   const customers = context.brand.terms.customer.plural;
   const customersLabel = customers.charAt(0).toUpperCase() + customers.slice(1);
 
@@ -78,23 +90,34 @@ export default async function PanelLayout({ children }: LayoutProps<"/painel">) 
           </div>
         </div>
       </header>
+      {features.trialActive && context.isOwner ? (
+        <Link
+          href="/painel/plano"
+          className="block bg-primary px-4 py-2 text-center text-sm font-medium text-primary-foreground"
+        >
+          {trialCounter(features)} · Assinar
+        </Link>
+      ) : null}
       <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-4 pt-4 pb-28 md:flex-row md:py-6">
         <aside className="md:w-52 md:shrink-0">
-          {expired ? (
-            <p className="mb-3 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
-              {context.isOwner
-                ? "Seu teste terminou. Assine para liberar o painel."
-                : "O painel está pausado até a assinatura ser renovada."}
-            </p>
-          ) : null}
           <div className="hidden md:block">
-            <PanelNav locked={expired} isOwner={context.isOwner} customersLabel={customersLabel} />
+            <PanelNav
+              locked={locked}
+              trialAvailable={features.trialAvailable}
+              isOwner={context.isOwner}
+              customersLabel={customersLabel}
+            />
           </div>
         </aside>
         <main className="min-w-0 flex-1">{children}</main>
       </div>
-      <MobileNav locked={expired} isOwner={context.isOwner} customersLabel={customersLabel} />
-      {context.isOwner && !expired ? (
+      <MobileNav
+        locked={locked}
+        trialAvailable={features.trialAvailable}
+        isOwner={context.isOwner}
+        customersLabel={customersLabel}
+      />
+      {context.isOwner ? (
         <Suspense>
           <PanelTour />
         </Suspense>

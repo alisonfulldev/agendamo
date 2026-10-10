@@ -2,6 +2,7 @@ import "server-only";
 
 import { dataCache, publicPageTag } from "@/lib/cache";
 import type { Business, DepositType } from "@/lib/db/types";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createAnonClient } from "@/lib/supabase/anon";
 
 export interface PublicService {
@@ -27,6 +28,8 @@ export interface PublicPage {
     | "plan"
     | "trial_started_at"
     | "trial_ends_at"
+    | "trial_plan"
+    | "created_at"
     | "slot_interval_minutes"
     | "min_notice_minutes"
     | "max_days_ahead"
@@ -67,14 +70,21 @@ async function fetchPublicPage(slug: string): Promise<PublicPage | null> {
   return (data as PublicPage | null) ?? null;
 }
 
-type LivePlan = Pick<Business, "plan" | "trial_started_at" | "trial_ends_at">;
+type LivePlan = Pick<
+  Business,
+  "plan" | "trial_plan" | "trial_started_at" | "trial_ends_at" | "created_at"
+>;
 
 /** Plan fields read fresh on every request, so trial/plan changes apply at once (rule 6). */
 async function fetchLivePlan(slug: string): Promise<LivePlan | null> {
-  const { data, error } = await createAnonClient().rpc("get_public_business", { p_slug: slug });
-  if (error) throw new Error(`get_public_business failed: ${error.message}`);
-  const row = (data as (LivePlan & { trial_ends_at: string | null })[] | null)?.[0];
-  return row ? { plan: row.plan, trial_started_at: null, trial_ends_at: row.trial_ends_at } : null;
+  const { data, error } = await createAdminClient()
+    .from("businesses")
+    .select("plan, trial_plan, trial_started_at, trial_ends_at, created_at")
+    .eq("slug", slug.toLowerCase())
+    .is("suspended_at", null)
+    .maybeSingle();
+  if (error) throw new Error(`live plan failed: ${error.message}`);
+  return (data as LivePlan | null) ?? null;
 }
 
 /**
@@ -95,6 +105,6 @@ export async function getPublicPage(
   if (!page || !live) return null;
   return {
     ...page,
-    business: { ...page.business, plan: live.plan, trial_ends_at: live.trial_ends_at },
+    business: { ...page.business, ...live },
   };
 }

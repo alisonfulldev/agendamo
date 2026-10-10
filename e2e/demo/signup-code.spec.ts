@@ -67,6 +67,9 @@ test("sign-up in the conversation: WhatsApp, e-mail fix, terms, code and the lin
   await expect(dialog.getByText(`Você quis dizer ${email}?`)).toBeVisible();
   await dialog.getByRole("button", { name: "Sim", exact: true }).click();
 
+  // End of the conversation: Grátis or a 7-day trial, no card.
+  await expect(dialog.getByText("Como você quer começar? Tudo sem cartão.")).toBeVisible();
+  await dialog.getByRole("button", { name: "Testar o Pro por 7 dias" }).click();
   await expect(dialog.getByRole("link", { name: "Termos de uso" })).toBeVisible();
   const before = codes(email).length;
   await dialog.getByRole("button", { name: "Aceito, enviar o código" }).click();
@@ -96,6 +99,8 @@ test("sign-up in the conversation: WhatsApp, e-mail fix, terms, code and the lin
   await expect(page.getByRole("navigation", { name: "Painel" })).toBeVisible();
   await page.getByRole("button", { name: "Pular tutorial" }).click();
   await expect(page.getByTestId("tour")).toHaveCount(0);
+  // The Pro trial chosen at sign-up: counter in the panel, everything unlocked.
+  await expect(page.getByRole("link", { name: /Teste do Pro: faltam 7 dias/ })).toBeVisible();
   await page.goto(`/${slug}`);
   await expect(page.getByText(/Você está na agenda de/)).toBeVisible();
 
@@ -113,6 +118,7 @@ test("an e-mail that already has a business signs in instead", async ({ page }) 
   await dialog.getByLabel("seu@email.com").fill("dona.beleza@demo.com");
   await dialog.getByRole("button", { name: "Enviar", exact: true }).click();
   const before = codes("dona.beleza@demo.com").length;
+  await dialog.getByRole("button", { name: /^Começar grátis/ }).click();
   await dialog.getByRole("button", { name: "Aceito, enviar o código" }).click();
   await expect(dialog.getByText(/Esse e-mail já tem conta/)).toBeVisible();
   await dialog
@@ -164,6 +170,7 @@ test("the optional photo of the conversation becomes the profile photo", async (
   await dialog.getByLabel("seu@email.com").fill(email);
   await dialog.getByRole("button", { name: "Enviar", exact: true }).click();
   const before = codes(email).length;
+  await dialog.getByRole("button", { name: /^Começar grátis/ }).click();
   await dialog.getByRole("button", { name: "Aceito, enviar o código" }).click();
   await dialog.getByLabel("Código de 4 números").fill(await newCode(email, before));
   await dialog.getByRole("button", { name: "Enviar", exact: true }).click();
@@ -183,6 +190,7 @@ test("first access on the phone: bottom tabs and the tutorial, tapping like a ga
   await dialog.getByLabel("seu@email.com").fill(email);
   await dialog.getByRole("button", { name: "Enviar", exact: true }).click();
   const before = codes(email).length;
+  await dialog.getByRole("button", { name: /^Começar grátis/ }).click();
   await dialog.getByRole("button", { name: "Aceito, enviar o código" }).click();
   await dialog.getByLabel("Código de 4 números").fill(await newCode(email, before));
   await dialog.getByRole("button", { name: "Enviar", exact: true }).click();

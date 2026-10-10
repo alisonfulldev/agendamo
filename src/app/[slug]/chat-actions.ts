@@ -44,7 +44,8 @@ async function chatCatalog(slug: string): Promise<Catalog | null> {
     .maybeSingle();
   if (!data || data.suspended_at) return null;
   const catalog = await loadCatalog(data.id as string);
-  if (!catalog || !getPlanFeatures(catalog.business).chatBooking) return null;
+  // The Grátis limit is checked when booking (createBooking): past it, the page reloads in the
+  // WhatsApp hand-off mode.
   return catalog;
 }
 
@@ -304,7 +305,10 @@ export type ConfirmResult =
       /** Pre-filled Google Calendar link ("Salvar na minha agenda"). */
       googleCalendarUrl: string | null;
     }
-  | { ok: false; error: "conflict" | "blocked" | "invalid" | "coupon_invalid" | "rate_limited" };
+  | {
+      ok: false;
+      error: "conflict" | "blocked" | "invalid" | "coupon_invalid" | "rate_limited" | "limit";
+    };
 
 export async function confirmChatBookingAction(input: unknown): Promise<ConfirmResult> {
   const parsed = selectionSchema

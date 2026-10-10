@@ -220,6 +220,7 @@ export async function createManualAppointmentAction(input: unknown): Promise<Man
       blocked: "Cliente bloqueada.",
       unavailable: "Horário indisponível.",
       coupon_invalid: "Cupom inválido.",
+      limit: "Limite de agendamentos automáticos do plano Grátis atingido.",
     } as const;
     return { ok: false, message: messages[result.error] };
   }

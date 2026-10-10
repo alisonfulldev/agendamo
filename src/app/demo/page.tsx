@@ -19,6 +19,7 @@ import {
   demoClearEmailsAction,
   demoConfirmPaymentAction,
   demoResetAction,
+  demoFillFreeCycleAction,
   demoRunCronAction,
   demoSetPlanAction,
   demoSignInAction,
@@ -42,10 +43,21 @@ const CRON_LABELS: Record<(typeof CRON_JOBS)[number], string> = {
 };
 
 const PLAN_OPTIONS = [
-  ["trial", "Em teste (30 dias)"],
-  ["subscribed", "Assinante"],
-  ["expired", "Teste encerrado"],
+  ["free", "Grátis"],
+  ["trial_agenda", "Teste do Agenda"],
+  ["trial_pro", "Teste do Pro"],
+  ["agenda", "Agenda"],
+  ["pro", "Pro"],
+  ["ended", "Teste encerrado"],
 ] as const;
+
+/** Which demo option matches the business now. */
+function planOption(business: BusinessRow): string {
+  const features = getPlanFeatures(business);
+  if (features.subscribed) return features.tier;
+  if (features.trialActive) return `trial_${features.tier}`;
+  return business.trial_ends_at ? "ended" : "free";
+}
 
 interface BusinessRow {
   id: string;
@@ -53,6 +65,7 @@ interface BusinessRow {
   slug: string;
   brand_key: string;
   plan: Business["plan"];
+  trial_plan: Business["trial_plan"];
   trial_started_at: string | null;
   trial_ends_at: string | null;
   professional_seats: number;
@@ -73,7 +86,7 @@ export default async function DemoPage({ searchParams }: PageProps<"/demo">) {
   const db = await getDemoDb();
   const businesses = (
     await db.query<BusinessRow>(
-      "select id, name, slug, brand_key, plan, trial_started_at, trial_ends_at, professional_seats from public.businesses order by created_at",
+      "select id, name, slug, brand_key, plan, trial_plan, trial_started_at, trial_ends_at, professional_seats from public.businesses order by created_at",
     )
   ).rows;
   const user = await getSessionUser();
@@ -220,14 +233,17 @@ export default async function DemoPage({ searchParams }: PageProps<"/demo">) {
         <CardHeader>
           <CardTitle>Trocar situação da assinatura</CardTitle>
           <CardDescription>
-            Muda na hora, sem cobrança. “Teste encerrado” mostra o chat terminando no WhatsApp e o
-            painel bloqueado.
+            Muda na hora, sem cobrança. No Grátis (e em “Teste encerrado”), passando dos 10
+            agendamentos do ciclo o chat termina no WhatsApp e as funções pagas ficam com cadeado.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-2">
           {params.ok === "plano" ? <p className="text-sm font-medium">Situação alterada.</p> : null}
+          {params.ok === "ciclo" ? (
+            <p className="text-sm font-medium">Os 10 agendamentos do ciclo foram usados.</p>
+          ) : null}
           {businesses.map((business) => {
-            const current = getPlanFeatures(business).status;
+            const current = planOption(business);
             return (
               <form
                 key={business.id}
@@ -247,6 +263,14 @@ export default async function DemoPage({ searchParams }: PageProps<"/demo">) {
                     {label}
                   </Button>
                 ))}
+                <Button
+                  formAction={demoFillFreeCycleAction}
+                  size="sm"
+                  variant="ghost"
+                  title="Cria 10 agendamentos do chat no ciclo atual"
+                >
+                  Usar os 10 do Grátis
+                </Button>
               </form>
             );
           })}

@@ -18,6 +18,8 @@ export type AuditAction =
   | "plan.trial_extended"
   | "plan.trial_ended"
   | "plan.changed"
+  | "plan.upgraded"
+  | "plan.downgrade_scheduled"
   | "subscription.created"
   | "subscription.cancelled"
   | "member.invited"

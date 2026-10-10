@@ -6,6 +6,7 @@ import type { EmailAttachment } from "@/lib/email/send";
 import { sendEmail } from "@/lib/email/send";
 import type { EmailContent } from "@/lib/email/layout";
 import { buildIcs } from "@/lib/ics";
+import { getPlanFeatures } from "@/lib/plans";
 import { claimNotification, notifyTeam } from "@/lib/notifications/owner";
 import { formatBrPhone, whatsappLink } from "@/lib/phone";
 import { buildPixBrCode } from "@/lib/pix";
@@ -323,6 +324,8 @@ export async function notifyBookingRescheduled(
 export async function sendReminder(appointmentId: string): Promise<boolean> {
   const d = await loadAppointmentDetails(appointmentId);
   if (!d || d.appointment.status !== "confirmed" || !d.customer.email) return false;
+  // Reminders are part of Agenda and Pro (not Grátis).
+  if (!getPlanFeatures(d.business).reminders) return false;
   if (!(await claimNotification(d.business.id, "reminder_24h", d.appointment.id))) return false;
   await sendToCustomer(d, `Lembrete: ${serviceNames(d)} amanhã · ${d.business.name}`, {
     heading: `Até amanhã, ${d.customer.name.split(" ")[0]}!`,

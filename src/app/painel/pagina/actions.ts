@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
+import { getPlanFeatures } from "@/lib/plans";
 import { requireOwner } from "@/lib/business/context";
 import { invalidatePublicPage } from "@/lib/cache";
 import { invalid, type FormState } from "@/lib/forms";
@@ -263,6 +264,8 @@ const comboSchema = z.object({
 
 export async function saveComboAction(input: unknown): Promise<{ ok: boolean; error?: string }> {
   const { business } = await requireOwner();
+  if (!getPlanFeatures(business).packagesAndCombos)
+    return { ok: false, error: "Combos fazem parte dos planos Agenda e Pro." };
   const parsed = comboSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]!.message };
   const price = parseBRL(parsed.data.price);

@@ -70,7 +70,7 @@ export default function StartPage() {
         ))}
       </div>
       <ul className="mt-10 flex flex-wrap justify-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
-        {["30 dias grátis", "Sem cartão de crédito", "Cancele quando quiser"].map((item) => (
+        {["Grátis para sempre", "Sem cartão de crédito", "Cancele quando quiser"].map((item) => (
           <li key={item} className="flex items-center gap-1.5">
             <CircleCheck className="size-4 text-primary" aria-hidden />
             {item}

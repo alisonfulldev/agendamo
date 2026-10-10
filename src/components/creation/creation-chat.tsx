@@ -19,6 +19,8 @@ import {
   signDemoPhotoAction,
 } from "./actions";
 import { closeCreation, creationParams, isCreationOpen, subscribeCreation } from "./creation-store";
+import type { SignupChoice } from "@/lib/db/types";
+
 import { sendSignupCodeAction, verifySignupCodeAction } from "./signup-actions";
 
 type Phase =
@@ -38,6 +40,7 @@ type Phase =
   | "whatsapp"
   | "email"
   | "email-fix"
+  | "plan"
   | "terms"
   | "sending"
   | "code"
@@ -49,6 +52,7 @@ const SIGNUP_PHASES: Phase[] = [
   "whatsapp",
   "email",
   "email-fix",
+  "plan",
   "terms",
   "sending",
   "code",
@@ -86,6 +90,8 @@ interface CreationState {
   created: { name: string; slug: string; pageUrl: string; qr: string } | null;
   /** Photo added in the conversation (optional; it can also be added later in the panel). */
   photoUrl: string | null;
+  /** How the account starts: Grátis, or a 7-day trial of Agenda or Pro. */
+  planChoice: SignupChoice | null;
 }
 
 const STORAGE_KEY = "lv_creation_v1";
@@ -116,6 +122,7 @@ function fresh(): CreationState {
     codeSentAt: null,
     created: null,
     photoUrl: null,
+    planChoice: null,
   };
 }
 
@@ -406,11 +413,20 @@ function Conversation({ photos }: { photos: boolean }) {
       ]);
       return;
     }
-    askTerms(email, [user(email)]);
+    askPlan(email, [user(email)]);
   }
 
-  function askTerms(email: string, before: Bubble[]) {
-    update({ phase: "terms", email, emailFix: null }, [
+  /** End of the conversation: Grátis or a 7-day trial (no card). */
+  function askPlan(email: string, before: Bubble[]) {
+    update({ phase: "plan", email, emailFix: null }, [...before, system(SU.askPlan)]);
+  }
+
+  function choosePlan(choice: SignupChoice) {
+    askTerms(state.email!, [user(SU.planOptions[choice])], choice);
+  }
+
+  function askTerms(email: string, before: Bubble[], planChoice = state.planChoice) {
+    update({ phase: "terms", email, emailFix: null, planChoice }, [
       ...before,
       { from: "system", text: SU.terms, links: SU.termsLinks },
     ]);
@@ -443,10 +459,12 @@ function Conversation({ photos }: { photos: boolean }) {
       email: state.email,
       code,
       whatsapp: state.whatsapp,
+      planChoice: state.planChoice ?? "free",
     }).catch(() => ({ ok: false as const, error: "failed" as const }));
     if (result.ok && result.outcome === "created") {
       update({ phase: "created", created: result }, [
         system(fill(SU.created, { nome: result.name })),
+        ...(result.trial === "used" ? [system(SU.trialUsed)] : []),
       ]);
     } else if (result.ok) {
       update({ phase: "has_business" }, [system(SU.hasBusiness)]);
@@ -649,9 +667,10 @@ function Conversation({ photos }: { photos: boolean }) {
               onWhatsappLater={() => submitWhatsapp(null)}
               onEmailFix={(accept) => {
                 const email = accept ? state.emailFix! : state.email!;
-                askTerms(email, [user(accept ? SU.yes : SU.no)]);
+                askPlan(email, [user(accept ? SU.yes : SU.no)]);
               }}
               onAcceptTerms={() => void sendCode(state.email!, [user(SU.acceptTerms)])}
+              onPlan={choosePlan}
               onResend={() => void sendCode(state.email!, [user(SU.resend)])}
               onChangeEmail={() =>
                 update({ phase: "email", codeSentAt: null }, [
@@ -936,6 +955,7 @@ function Options({
   onWhatsappLater,
   onEmailFix,
   onAcceptTerms,
+  onPlan,
   onResend,
   onChangeEmail,
 }: {
@@ -952,6 +972,7 @@ function Options({
   onWhatsappLater: () => void;
   onEmailFix: (accept: boolean) => void;
   onAcceptTerms: () => void;
+  onPlan: (choice: SignupChoice) => void;
   onResend: () => void;
   onChangeEmail: () => void;
 }) {
@@ -1104,6 +1125,25 @@ function Options({
           </button>
         </>,
         2,
+      );
+    case "plan":
+      return wrap(
+        <>
+          {(["free", "trial_agenda", "trial_pro"] as const).map((choice) => (
+            <button
+              key={choice}
+              type="button"
+              onClick={() => onPlan(choice)}
+              className={
+                choice === "free"
+                  ? "h-12 rounded-xl bg-primary text-base font-semibold text-primary-foreground"
+                  : `${OPTION} text-center`
+              }
+            >
+              {SU.planOptions[choice]}
+            </button>
+          ))}
+        </>,
       );
     case "terms":
       return wrap(

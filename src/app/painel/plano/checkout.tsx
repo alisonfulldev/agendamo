@@ -7,8 +7,10 @@ import { useState, useTransition } from "react";
 import { FieldShell } from "@/components/forms/field";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PLAN_CARDS } from "@/content/plans";
+import type { PaidPlan } from "@/lib/db/types";
 import { formatBRL } from "@/lib/money";
-import { subscriptionPrice, yearlySavings, type Cycle } from "@/lib/plans";
+import { PLAN_NAMES, subscriptionPrice, yearlySavings, type Cycle } from "@/lib/plans";
 
 import type { PixCharge } from "@/lib/billing/service";
 
@@ -29,14 +31,7 @@ import {
   type PaymentMethod,
 } from "./payment";
 
-const FEATURES = [
-  "Chat de agendamento: a cliente escolhe o horário e já fica agendada",
-  "Agenda, lembretes e confirmações automáticas",
-  "Financeiro: receitas, custos e lucro do mês",
-  "Sinal por Pix, combos, pacotes, cupons e ferramentas de venda",
-  "Google Agenda e botão de agendamento no seu site",
-  "Equipe: cada profissional com a própria agenda",
-];
+const PAID_CARDS = PLAN_CARDS.filter((card) => card.tier !== "free");
 
 function PayerFields({
   name,
@@ -73,12 +68,15 @@ function PayerFields({
 }
 
 export function PlanCheckout({
+  initialPlan,
   initialCycle,
   initialExtras,
   activeProfessionals,
   hasActiveSubscription,
   addonPrices,
 }: {
+  /** Subscribed plan (or the one tested / suggested). */
+  initialPlan: PaidPlan;
   initialCycle: Cycle;
   initialExtras: number;
   /** Active professionals today (suggested number of seats). */
@@ -87,6 +85,7 @@ export function PlanCheckout({
   addonPrices: { featured: number };
 }) {
   const router = useRouter();
+  const [plan, setPlan] = useState<PaidPlan>(initialPlan);
   const [cycle, setCycle] = useState<Cycle>(initialCycle);
   const [professionals, setProfessionals] = useState(
     Math.max(initialExtras + 1, hasActiveSubscription ? 1 : activeProfessionals, 1),
@@ -105,11 +104,17 @@ export function PlanCheckout({
   const [cardProcessing, setCardProcessing] = useState(false);
 
   const extras = professionals - 1;
-  const total = subscriptionPrice(cycle, extras, discount ?? 0);
-  const savings = yearlySavings(extras);
-  const perExtra = subscriptionPrice(cycle, 1) - subscriptionPrice(cycle, 0);
+  const total = subscriptionPrice(plan, cycle, extras, discount ?? 0);
+  const savings = yearlySavings(plan, extras);
+  const perExtra = subscriptionPrice(plan, cycle, 1) - subscriptionPrice(plan, cycle, 0);
   const unit = cycle === "monthly" ? "mês" : "ano";
-  const unchanged = hasActiveSubscription && cycle === initialCycle && extras === initialExtras;
+  const unchanged =
+    hasActiveSubscription &&
+    plan === initialPlan &&
+    cycle === initialCycle &&
+    extras === initialExtras;
+  const upgrade = hasActiveSubscription && initialPlan === "agenda" && plan === "pro";
+  const downgrade = hasActiveSubscription && initialPlan === "pro" && plan === "agenda";
 
   const finish = (
     result:
@@ -143,6 +148,41 @@ export function PlanCheckout({
 
   return (
     <div className="flex flex-col gap-6">
+      <div className="grid gap-3 sm:grid-cols-2" role="group" aria-label="Plano">
+        {PAID_CARDS.map((card) => {
+          const tier = card.tier as PaidPlan;
+          return (
+            <button
+              key={tier}
+              type="button"
+              aria-pressed={plan === tier}
+              onClick={() => setPlan(tier)}
+              className={`flex flex-col gap-2 rounded-2xl border bg-card p-5 text-left ${plan === tier ? "ring-2 ring-primary" : ""}`}
+            >
+              <span className="flex items-center justify-between font-semibold">
+                {card.name}
+                {hasActiveSubscription && initialPlan === tier ? (
+                  <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs text-primary">
+                    Seu plano
+                  </span>
+                ) : null}
+              </span>
+              <span className="text-sm text-muted-foreground">{card.tagline}</span>
+              <ul className="mt-1 flex flex-col gap-1 text-sm">
+                {card.includes.map((item) => (
+                  <li key={item}>• {item}</li>
+                ))}
+                {card.soon?.map((item) => (
+                  <li key={item} className="text-muted-foreground">
+                    • {item}
+                  </li>
+                ))}
+              </ul>
+            </button>
+          );
+        })}
+      </div>
+
       <div className="grid gap-3 sm:grid-cols-2">
         {(["monthly", "yearly"] as const).map((c) => (
           <button
@@ -160,14 +200,14 @@ export function PlanCheckout({
             <span className="font-semibold">{c === "monthly" ? "Mensal" : "Anual"}</span>
             <span>
               <span className="font-heading text-3xl font-bold">
-                {formatBRL(subscriptionPrice(c, extras))}
+                {formatBRL(subscriptionPrice(plan, c, extras))}
               </span>
               <span className="text-muted-foreground">/{c === "monthly" ? "mês" : "ano"}</span>
             </span>
             <span className="text-sm text-muted-foreground">
               {c === "monthly"
                 ? "Cancele quando quiser"
-                : `Sai ${formatBRL(Math.round(subscriptionPrice("yearly", extras) / 12))}/mês: ${formatBRL(savings)} a menos que no mensal`}
+                : `Sai ${formatBRL(Math.round(subscriptionPrice(plan, "yearly", extras) / 12))}/mês: ${formatBRL(savings)} a menos que no mensal`}
             </span>
           </button>
         ))}
@@ -212,13 +252,8 @@ export function PlanCheckout({
       </div>
 
       <div className="flex flex-col gap-4 rounded-2xl border bg-card p-5">
-        <ul className="list-disc space-y-1 pl-5 text-sm">
-          {FEATURES.map((f) => (
-            <li key={f}>{f}</li>
-          ))}
-        </ul>
         <p className="text-lg">
-          Total: <span className="font-bold">{formatBRL(total)}</span>
+          {PLAN_NAMES[plan]} · Total: <span className="font-bold">{formatBRL(total)}</span>
           <span className="text-muted-foreground">/{unit}</span>
           {discount ? (
             <span className="ml-2 text-sm text-primary">({discount}% de desconto do cupom)</span>
@@ -271,7 +306,11 @@ export function PlanCheckout({
           </>
         ) : (
           <p className="text-sm text-muted-foreground">
-            O novo valor vale a partir da próxima cobrança.
+            {upgrade
+              ? "O Pro libera na hora. O novo valor vale a partir da próxima cobrança."
+              : downgrade
+                ? "Você continua no Pro até o fim do período pago; depois passa para o Agenda."
+                : "O novo valor vale a partir da próxima cobrança."}
           </p>
         )}
         <Button
@@ -282,6 +321,7 @@ export function PlanCheckout({
             startTransition(async () => {
               finish(
                 await checkoutAction({
+                  plan,
                   cycle,
                   extraProfessionals: extras,
                   name,
@@ -296,11 +336,15 @@ export function PlanCheckout({
         >
           {pending
             ? "Processando…"
-            : hasActiveSubscription
-              ? "Salvar alteração"
-              : method === "pix"
-                ? `Gerar Pix de ${formatBRL(total)}`
-                : `Pagar ${formatBRL(total)} no cartão`}
+            : upgrade
+              ? "Mudar para o Pro agora"
+              : downgrade
+                ? "Mudar para o Agenda no fim do período"
+                : hasActiveSubscription
+                  ? "Salvar alteração"
+                  : method === "pix"
+                    ? `Gerar Pix de ${formatBRL(total)}`
+                    : `Pagar ${formatBRL(total)} no cartão`}
         </Button>
       </div>
 
@@ -381,7 +425,7 @@ export function CancelPlanButton() {
           startTransition(async () => {
             if (
               !window.confirm(
-                "Cancelar a assinatura? Tudo continua funcionando até o fim do período pago.",
+                "Cancelar a assinatura? Tudo continua funcionando até o fim do período pago; depois, a conta volta para o Grátis.",
               )
             )
               return;

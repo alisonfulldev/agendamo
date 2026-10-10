@@ -7,6 +7,7 @@ import { getNiche } from "@/brands";
 import { getCurrentBrand } from "@/brands/server";
 import { readableOn } from "@/brands/theme";
 import { brandUrl } from "@/brands/urls";
+import { getBookingAllowance } from "@/lib/plan-usage";
 import { getPlanFeatures } from "@/lib/plans";
 import { getPublicPage, type PublicPage } from "@/lib/public/page";
 import { isValidSlugFormat } from "@/lib/slug";
@@ -19,11 +20,11 @@ export const loadBusinessPage = cache(async (slug: string) => {
   const data = await getPublicPage(domainBrand.key, slug);
   if (!data) return null;
   const brand = getNiche(data.business.brand_key);
-  const features = getPlanFeatures({
-    ...data.business,
-    trial_started_at: data.business.trial_started_at ?? null,
-  });
-  return { data, domainBrand, brand, features };
+  const features = getPlanFeatures(data.business);
+  // Grátis: past the 10 chat bookings of the cycle, the chat hands off to WhatsApp.
+  const allowance = await getBookingAllowance(data.business);
+  const automaticBooking = !allowance.limited || allowance.remaining > 0;
+  return { data, domainBrand, brand, features, allowance, automaticBooking };
 });
 
 export type LoadedBusinessPage = NonNullable<Awaited<ReturnType<typeof loadBusinessPage>>>;

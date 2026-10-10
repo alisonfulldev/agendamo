@@ -18,21 +18,23 @@ import {
 import { whatsappLink } from "@/lib/phone";
 import { track } from "@/lib/tracking/client";
 
-import { getRequestDaysAction, getRequestSlotsAction } from "./actions";
+import { getRequestDaysAction } from "./actions";
 
 /**
- * Chat used when the business has no active subscription (trial ended): the customer picks
- * service, day and time as usual, but nothing is saved or reserved; the last step opens the
- * owner's WhatsApp with the request ready to send.
+ * Chat of the Grátis plan once its 10 bookings of the cycle are used: the customer picks the
+ * service, the day and the preferred period (morning, afternoon, evening) and gives a name, but
+ * nothing is saved or reserved; the last step opens the owner's WhatsApp with the request ready.
  */
-type Step = "service" | "day" | "time" | "name" | "message" | "send";
+type Step = "service" | "day" | "period" | "name" | "message" | "send";
+
+const PERIODS = ["Manhã", "Tarde", "Noite"] as const;
 
 interface Answers {
   serviceId: string | null;
   serviceLabel: string;
   date: string | null;
   dateLabel: string;
-  time: string;
+  period: string;
   name: string;
   message: string;
 }
@@ -42,13 +44,12 @@ const EMPTY: Answers = {
   serviceLabel: "",
   date: null,
   dateLabel: "",
-  time: "",
+  period: "",
   name: "",
   message: "",
 };
 
 type Day = { date: string; label: string };
-type Slot = { startsAt: string; time: string };
 
 export function HandoffChat({
   businessId,
@@ -72,7 +73,6 @@ export function HandoffChat({
   const [history, setHistory] = useState<Step[]>([]);
   const [answers, setAnswers] = useState<Answers>(EMPTY);
   const [days, setDays] = useState<Day[] | null>(null);
-  const [slots, setSlots] = useState<Slot[] | null>(null);
   const [sent, setSent] = useState(false);
 
   // Short "typing" pause before each question.
@@ -84,7 +84,7 @@ export function HandoffChat({
     return () => clearTimeout(timer);
   }, [messageKey]);
 
-  // Free days / times are only read (nothing is reserved).
+  // Free days are only read (nothing is reserved).
   useEffect(() => {
     if (step === "day" && answers.serviceId && days === null) {
       let cancelled = false;
@@ -95,31 +95,20 @@ export function HandoffChat({
         cancelled = true;
       };
     }
-    if (step === "time" && answers.serviceId && answers.date && slots === null) {
-      let cancelled = false;
-      getRequestSlotsAction({
-        businessId,
-        serviceId: answers.serviceId,
-        date: answers.date,
-      }).then((list) => !cancelled && setSlots(list));
-      return () => {
-        cancelled = true;
-      };
-    }
-  }, [step, answers.serviceId, answers.date, days, slots, businessId]);
+  }, [step, answers.serviceId, days, businessId]);
 
   const prompts: Record<Step, string> = {
     service: `Oi! 👋 Você está na agenda de ${businessName}. Qual serviço você quer?`,
     day: "Qual dia fica melhor pra você?",
-    time: `Esses são os horários em ${answers.dateLabel}:`,
+    period: `Qual turno você prefere em ${answers.dateLabel}?`,
     name: "Qual é o seu nome?",
     message: "Quer deixar algum recado? (opcional)",
-    send: `Confere: ${answers.serviceLabel}, ${answers.dateLabel} às ${answers.time}. Vou abrir o WhatsApp de ${businessName} com seu pedido pronto; é só enviar e a confirmação chega por lá.`,
+    send: `Confere: ${answers.serviceLabel}, ${answers.dateLabel}, de ${answers.period.toLowerCase()}. Vou abrir o WhatsApp de ${businessName} com seu pedido pronto; é só enviar e o horário é combinado por lá.`,
   };
   const answerText: Record<Step, string> = {
     service: answers.serviceLabel,
     day: answers.dateLabel,
-    time: answers.time,
+    period: answers.period,
     name: answers.name,
     message: answers.message || "Sem recado",
     send: "Enviar pelo WhatsApp",
@@ -136,7 +125,6 @@ export function HandoffChat({
     const previous = history.at(-1);
     if (!previous) return;
     if (previous === "service") setDays(null);
-    if (previous === "day" || previous === "service") setSlots(null);
     setHistory((h) => h.slice(0, -1));
     setStep(previous);
   }
@@ -144,7 +132,8 @@ export function HandoffChat({
   const whatsappText = [
     `Olá, ${businessName}! Quero agendar um horário.`,
     `Serviço: ${answers.serviceLabel}`,
-    `Dia: ${answers.dateLabel} às ${answers.time}`,
+    `Dia: ${answers.dateLabel}`,
+    `Turno: ${answers.period}`,
     `Nome: ${answers.name}`,
     answers.message ? `Recado: ${answers.message}` : null,
   ]
@@ -237,7 +226,6 @@ export function HandoffChat({
                       key={service.id}
                       onClick={() => {
                         setDays(null);
-                        setSlots(null);
                         go("day", { serviceId: service.id, serviceLabel: service.name });
                       }}
                     >
@@ -272,10 +260,7 @@ export function HandoffChat({
                         <ChatOption
                           key={day.date}
                           className="text-center capitalize"
-                          onClick={() => {
-                            setSlots(null);
-                            go("time", { date: day.date, dateLabel: day.label });
-                          }}
+                          onClick={() => go("period", { date: day.date, dateLabel: day.label })}
                         >
                           {day.label}
                         </ChatOption>
@@ -302,28 +287,18 @@ export function HandoffChat({
                 )
               ) : null}
 
-              {step === "time" ? (
-                slots === null ? (
-                  <ChatTyping />
-                ) : slots.length === 0 ? (
-                  <ChatOptions>
-                    <ChatOption className="text-center" onClick={back}>
-                      Esse dia lotou. Escolher outro dia
+              {step === "period" ? (
+                <ChatOptions columns={3}>
+                  {PERIODS.map((period) => (
+                    <ChatOption
+                      key={period}
+                      className="text-center font-medium"
+                      onClick={() => go("name", { period })}
+                    >
+                      {period}
                     </ChatOption>
-                  </ChatOptions>
-                ) : (
-                  <ChatOptions columns={3}>
-                    {slots.map((slot) => (
-                      <ChatOption
-                        key={slot.startsAt}
-                        className="text-center font-medium"
-                        onClick={() => go("name", { time: slot.time })}
-                      >
-                        {slot.time}
-                      </ChatOption>
-                    ))}
-                  </ChatOptions>
-                )
+                  ))}
+                </ChatOptions>
               ) : null}
 
               {step === "message" ? (

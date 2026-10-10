@@ -22,21 +22,22 @@ export interface DemoPersona {
 export const DEMO_PERSONAS: DemoPersona[] = [
   {
     email: "dona.beleza@demo.com",
-    label: "Studio Bela (Beleza · assinante)",
-    description: "Agenda cheia, financeiro, sinal por Pix, cupons, pacotes e estatísticas.",
+    label: "Studio Bela (Beleza · Pro)",
+    description: "Agenda cheia, financeiro, cupons, pacotes e estatísticas.",
     brandKey: "beauty",
     slug: "studio-bela",
   },
   {
     email: "dono.barbearia@demo.com",
-    label: "Barbearia Navalha (Barbearia · teste encerrado)",
-    description: "Sem assinatura: o chat termina no WhatsApp e o painel abre só para assinar.",
+    label: "Barbearia Navalha (Barbearia · teste encerrado, no Grátis)",
+    description:
+      "Grátis: 10 agendamentos por ciclo, depois o chat termina no WhatsApp; funções pagas com cadeado.",
     brandKey: "barber",
     slug: "barbearia-navalha",
   },
   {
     email: "dona.estetica@demo.com",
-    label: "Clínica Pele (Estética · assinante, 3 profissionais)",
+    label: "Clínica Pele (Estética · Pro, 3 profissionais)",
     description: "3 profissionais, maca compartilhada, “qualquer profissional”.",
     brandKey: "aesthetics",
     slug: "clinica-pele",
@@ -50,21 +51,21 @@ export const DEMO_PERSONAS: DemoPersona[] = [
   },
   {
     email: "psi@demo.com",
-    label: "Espaço Escuta (Psicologia · em teste)",
-    description: "Teste grátis de 30 dias em andamento (faltam 18 dias).",
+    label: "Espaço Escuta (Psicologia · teste do Agenda)",
+    description: "Teste do Agenda em andamento (faltam 5 dias).",
     brandKey: "psychology",
     slug: "espaco-escuta",
   },
   {
     email: "fisio@demo.com",
-    label: "Movimento Fisio (Fisioterapia · assinante anual)",
+    label: "Movimento Fisio (Fisioterapia · Agenda anual)",
     description: "Pacotes de sessões e lembretes.",
     brandKey: "physio",
     slug: "movimento-fisio",
   },
   {
     email: "geral@demo.com",
-    label: "Ateliê Restaura (Outro / Geral · assinante)",
+    label: "Ateliê Restaura (Outro / Geral · Pro)",
     description: "Negócio fora dos ramos da lista: textos e serviços neutros.",
     brandKey: "general",
     slug: "atelie-restaura",
@@ -98,9 +99,10 @@ interface BusinessSeed {
   name: string;
   slug: string;
   brand: string;
-  plan: "free" | "pro";
-  /** Days left in the trial (negative = ended). Omitted: the trial started at creation. */
+  plan: "free" | "agenda" | "pro";
+  /** 7-day trial: days left (negative = ended) and the plan tested. Omitted: never tested. */
   trialDaysLeft?: number;
+  trialPlan?: "agenda" | "pro";
   /** Paid professionals (subscribed businesses). */
   seats?: number;
   yearly?: boolean;
@@ -146,6 +148,7 @@ const BUSINESSES: BusinessSeed[] = [
     brand: "barber",
     plan: "free",
     trialDaysLeft: -5,
+    trialPlan: "pro",
     bio: "Corte clássico, degradê e barba na toalha quente. Cerveja gelada enquanto espera.",
     city: "São Paulo",
     neighborhood: "Pinheiros",
@@ -186,7 +189,8 @@ const BUSINESSES: BusinessSeed[] = [
     slug: "espaco-escuta",
     brand: "psychology",
     plan: "free",
-    trialDaysLeft: 18,
+    trialDaysLeft: 5,
+    trialPlan: "agenda",
     bio: "Psicoterapia para adultos, presencial e online, com sessões semanais de 50 minutos.",
     city: "Belo Horizonte",
     neighborhood: "Savassi",
@@ -204,7 +208,7 @@ const BUSINESSES: BusinessSeed[] = [
     name: "Movimento Fisio",
     slug: "movimento-fisio",
     brand: "physio",
-    plan: "pro",
+    plan: "agenda",
     yearly: true,
     bio: "Fisioterapia ortopédica, pilates clínico e reabilitação pós-cirúrgica.",
     city: "Curitiba",
@@ -363,10 +367,11 @@ async function seedBusiness(db: PGlite, seed: BusinessSeed, userIds: Map<string,
 
   await db.query(
     `update public.businesses set plan = $2, min_notice_minutes = 60, professional_seats = $4::int,
-       trial_started_at = case when $3::int is null then trial_started_at else now() - make_interval(days => 30 - $3::int) end,
-       trial_ends_at = case when $3::int is null then trial_ends_at else now() + make_interval(days => $3::int) end
+       trial_plan = $5,
+       trial_started_at = case when $3::int is null then null else now() - make_interval(days => 7 - $3::int) end,
+       trial_ends_at = case when $3::int is null then null else now() + make_interval(days => $3::int) end
      where id = $1`,
-    [businessId, seed.plan, seed.trialDaysLeft ?? null, seed.seats ?? 1],
+    [businessId, seed.plan, seed.trialDaysLeft ?? null, seed.seats ?? 1, seed.trialPlan ?? null],
   );
   for (const service of seed.services.filter((s) => s.returnDays)) {
     await db.query(
@@ -394,9 +399,9 @@ async function seedBusiness(db: PGlite, seed: BusinessSeed, userIds: Map<string,
   if (seed.plan !== "free") {
     await db.query(
       `insert into public.subscriptions (business_id, provider_customer_id, provider_subscription_id, plan, billing_cycle, extra_professionals, status, current_period_end)
-       values ($1, 'demo_cus_' || $2::text, 'demo_sub_' || $2::text, 'pro', $3, $4::int, 'active',
+       values ($1, 'demo_cus_' || $2::text, 'demo_sub_' || $2::text, $5, $3, $4::int, 'active',
          now() + case when $3 = 'yearly' then interval '300 days' else interval '20 days' end)`,
-      [businessId, seed.slug, seed.yearly ? "yearly" : "monthly", (seed.seats ?? 1) - 1],
+      [businessId, seed.slug, seed.yearly ? "yearly" : "monthly", (seed.seats ?? 1) - 1, seed.plan],
     );
   }
 

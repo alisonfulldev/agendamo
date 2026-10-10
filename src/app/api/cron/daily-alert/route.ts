@@ -44,11 +44,11 @@ export const POST = cronRoute(async () => {
         heading: "Quiseram agendar fora do horário",
         paragraphs: [
           `${people} clicaram para agendar ontem enquanto você estava fora do horário de atendimento.`,
-          features.chatBooking
-            ? "Com o chat de agendamento ativo, elas puderam escolher um horário livre sozinhas."
-            : "Com a assinatura ativa, a pessoa escolhe um horário livre e já fica agendada, mesmo com você fechada.",
+          features.limitedBookings
+            ? "No Agenda, os agendamentos automáticos são ilimitados: ninguém fica sem horário, mesmo com você fechada."
+            : "Com o chat de agendamento, elas puderam escolher um horário livre sozinhas.",
         ],
-        cta: features.chatBooking
+        cta: !features.limitedBookings
           ? { label: "Ver agenda", url: "/painel/agenda" }
           : { label: "Assinar", url: "/painel/plano" },
       },

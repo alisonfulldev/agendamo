@@ -8,11 +8,14 @@ import { CopyTextButton } from "@/components/panel/copy-text-button";
 import { InstallGuide } from "@/components/panel/install-guide";
 import { PageHeader } from "@/components/panel/page-header";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 import { localToUtc, todayIn } from "@/lib/availability";
 import { loadCatalog } from "@/lib/booking/data";
 import { freeTimesOn } from "@/lib/booking/free-times";
 import { requireBusiness } from "@/lib/business/context";
-import { getPlanFeatures, PLAN_STATUS_LABELS } from "@/lib/plans";
+import { getBookingAllowance } from "@/lib/plan-usage";
+import { allowanceText, renewsText, trialCounter } from "@/lib/plan-text";
+import { getPlanFeatures, planLabel } from "@/lib/plans";
 import { freeSlotsMessage, listTimes } from "@/lib/sales/free-slots";
 import { TOUR_TEXT } from "@/content/tour";
 import { ACTIVE_APPOINTMENT_STATUSES } from "@/lib/db/types";
@@ -98,6 +101,7 @@ export default async function PanelHomePage({ searchParams }: PageProps<"/painel
     ];
   }
   const doneCount = steps.filter((s) => s.done).length;
+  const allowance = await getBookingAllowance(business);
 
   // Free times left today: the fastest way to fill them is posting them right now. Only once the
   // day already has a booking: with an empty agenda (a new business) every time is free, and "only
@@ -126,11 +130,7 @@ export default async function PanelHomePage({ searchParams }: PageProps<"/painel
     <div className="flex flex-col gap-6">
       <PageHeader
         title={`Olá, ${business.name}!`}
-        description={
-          features.trialActive
-            ? `Teste grátis: faltam ${features.trialDaysLeft} dias`
-            : PLAN_STATUS_LABELS[features.status]
-        }
+        description={features.trialActive ? trialCounter(features) : planLabel(features)}
         actions={
           isOwner ? (
             <Button asChild variant="outline" size="sm">
@@ -142,6 +142,37 @@ export default async function PanelHomePage({ searchParams }: PageProps<"/painel
           ) : null
         }
       />
+      {allowance.limited && isOwner ? (
+        <section
+          aria-labelledby="plano-gratis"
+          className="flex flex-col gap-3 rounded-xl border bg-card p-5"
+        >
+          <div>
+            <h2 id="plano-gratis" className="font-semibold">
+              Plano Grátis: {allowanceText(allowance)}
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              {allowance.remaining > 0
+                ? `O limite ${renewsText(allowance)}. Depois dos ${allowance.limit}, os pedidos chegam pelo seu WhatsApp.`
+                : `Limite atingido: até o limite renovar (${renewsText(allowance).replace("renova em ", "")}), seu chat passa os pedidos para o seu WhatsApp.`}
+            </p>
+          </div>
+          <Progress
+            value={(allowance.used / allowance.limit) * 100}
+            aria-label="Uso do plano Grátis"
+          />
+          <div className="flex flex-wrap gap-2">
+            <Button asChild>
+              <Link href="/painel/plano">Agendamentos ilimitados</Link>
+            </Button>
+            {features.trialAvailable ? (
+              <Button asChild variant="outline">
+                <Link href="/painel/plano#teste">Testar 7 dias grátis</Link>
+              </Button>
+            ) : null}
+          </div>
+        </section>
+      ) : null}
       {senha === "alterada" ? (
         <p role="status" className="rounded-lg bg-accent px-3 py-2 text-sm text-accent-foreground">
           Senha alterada com sucesso.

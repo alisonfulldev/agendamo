@@ -1,4 +1,4 @@
-import { Check, ChevronDown } from "lucide-react";
+import { Check, ChevronDown, Minus } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -6,6 +6,7 @@ import { PLATFORM } from "@/brands";
 import { brandThemeStyle } from "@/brands/theme";
 import { CreationChat } from "@/components/creation/creation-chat";
 import { OpenCreationLink } from "@/components/creation/open-creation";
+import { PlanCards } from "@/components/sales/plan-cards";
 import { HOME } from "@/content/home";
 import { PRICING } from "@/content/pricing";
 import { PLAN_PRICES } from "@/lib/plans";
@@ -36,16 +37,17 @@ const jsonLd = [
     description: PRICING.meta.description,
     url: siteUrl("/precos"),
     offers: [
+      { "@type": "Offer", name: "Grátis", price: "0.00", priceCurrency: "BRL" },
       {
         "@type": "Offer",
-        name: "Mensal",
-        price: (PLAN_PRICES.monthly / 100).toFixed(2),
+        name: "Agenda",
+        price: (PLAN_PRICES.agenda.monthly / 100).toFixed(2),
         priceCurrency: "BRL",
       },
       {
         "@type": "Offer",
-        name: "Anual",
-        price: (PLAN_PRICES.yearly / 100).toFixed(2),
+        name: "Pro",
+        price: (PLAN_PRICES.pro.monthly / 100).toFixed(2),
         priceCurrency: "BRL",
       },
     ],
@@ -108,49 +110,49 @@ export default function PricingPage() {
           </div>
         </section>
 
-        <section aria-label="Planos" className="mx-auto max-w-4xl px-5">
-          <div className="grid gap-5 sm:grid-cols-2">
-            {PRICING.cycles.map((cycle) => (
-              <div
-                key={cycle.name}
-                className={
-                  cycle.highlight
-                    ? "site-card-glow flex flex-col gap-2 rounded-3xl border-2 border-primary/40 bg-card p-7"
-                    : "flex flex-col gap-2 rounded-3xl border bg-card p-7"
-                }
-              >
-                <p className="flex items-center justify-between font-semibold">
-                  {cycle.name}
-                  {cycle.highlight ? (
-                    <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-                      Mais econômico
-                    </span>
-                  ) : null}
-                </p>
-                <p className="flex items-baseline gap-1">
-                  <span className="font-heading text-5xl font-bold tracking-tight">
-                    {cycle.price}
-                  </span>
-                  <span className="text-muted-foreground">{cycle.period}</span>
-                </p>
-                <p className="text-sm text-muted-foreground">{cycle.note}</p>
-              </div>
-            ))}
-          </div>
+        <section aria-label="Planos" className="mx-auto max-w-6xl px-5">
+          <PlanCards />
         </section>
 
-        <section aria-labelledby="inclui" className="mx-auto max-w-4xl px-5 py-14">
-          <h2 id="inclui" className="text-center text-3xl font-bold tracking-tight">
-            {PRICING.includesTitle}
+        <section aria-labelledby="comparar" className="mx-auto max-w-4xl px-5 py-14">
+          <h2 id="comparar" className="text-center text-3xl font-bold tracking-tight">
+            {PRICING.compareTitle}
           </h2>
-          <ul className="mt-8 grid gap-3 rounded-3xl border bg-card p-7 text-sm sm:grid-cols-2">
-            {PRICING.includes.map((item) => (
-              <li key={item} className="flex gap-2.5">
-                <Check className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />
-                {item}
-              </li>
-            ))}
-          </ul>
+          <div className="mt-8 overflow-x-auto rounded-3xl border bg-card">
+            <table className="w-full min-w-[34rem] text-sm">
+              <thead>
+                <tr className="border-b">
+                  <th className="p-4 text-left font-medium text-muted-foreground">Recurso</th>
+                  {PRICING.compare.columns.map((column) => (
+                    <th key={column} className="p-4 text-center font-semibold">
+                      {column}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {PRICING.compare.rows.map((row) => (
+                  <tr key={row.label}>
+                    <td className="p-4">{row.label}</td>
+                    {row.values.map((value, i) => (
+                      <td key={i} className="p-4 text-center">
+                        {value === true ? (
+                          <Check className="mx-auto size-5 text-primary" aria-label="Sim" />
+                        ) : value === false ? (
+                          <Minus
+                            className="mx-auto size-5 text-muted-foreground"
+                            aria-label="Não"
+                          />
+                        ) : (
+                          value
+                        )}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </section>
 
         <section aria-labelledby="adicionais" className="mx-auto max-w-4xl px-5 pb-14">

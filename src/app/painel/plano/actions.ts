@@ -16,7 +16,9 @@ import {
 import { requireOwner } from "@/lib/business/context";
 import { validCnpj, validCpf } from "@/lib/pix";
 import { getClientIp, rateLimitRequest } from "@/lib/rate-limit";
+import { paidPlanOf } from "@/lib/plans";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { startTrial } from "@/lib/trial";
 
 /*
  * Own checkout: card data goes from this server straight to Asaas (tokenization) and is never
@@ -114,7 +116,11 @@ function billingError(error: unknown): { ok: false; message: string } {
   return { ok: false, message: "Não foi possível concluir agora. Tente de novo." };
 }
 
-const checkoutSchema = payerSchema.extend({
+// Name and CPF/CNPJ are asked only for a new subscription (a change keeps the Asaas customer).
+const checkoutSchema = z.object({
+  name: z.string().max(120).default(""),
+  cpfCnpj: z.string().max(30).default(""),
+  plan: z.enum(["agenda", "pro"]).default("agenda"),
   cycle: z.enum(["monthly", "yearly"]),
   extraProfessionals: z.number().int().min(0).max(49),
   paymentMethod: z.enum(["pix", "credit_card"]).default("pix"),
@@ -123,20 +129,33 @@ const checkoutSchema = payerSchema.extend({
 });
 
 export async function checkoutAction(input: unknown): Promise<CheckoutResult> {
-  const { business, brand, user } = await requireOwner({ allowExpired: true });
+  const { business, brand, user } = await requireOwner();
   if (!isAsaasConfigured()) return { ok: false, message: "Cobrança ainda não configurada." };
   if (!(await rateLimitRequest("publicAction", `checkout:${business.id}`)))
     return { ok: false, message: "Muitas tentativas. Espere um pouco e tente de novo." };
   const parsed = checkoutSchema.safeParse(input);
   if (!parsed.success) return { ok: false, message: parsed.error.issues[0]!.message };
   const data = parsed.data;
-  if (data.paymentMethod === "credit_card" && !data.card)
-    return { ok: false, message: "Preencha os dados do cartão." };
+  const { data: current } = await createAdminClient()
+    .from("subscriptions")
+    .select("status")
+    .eq("business_id", business.id)
+    .maybeSingle();
+  const changing = current?.status === "active" || current?.status === "overdue";
+  if (!changing) {
+    const payer = payerSchema.safeParse({ name: data.name, cpfCnpj: data.cpfCnpj });
+    if (!payer.success) return { ok: false, message: payer.error.issues[0]!.message };
+    data.name = payer.data.name;
+    data.cpfCnpj = payer.data.cpfCnpj;
+    if (data.paymentMethod === "credit_card" && !data.card)
+      return { ok: false, message: "Preencha os dados do cartão." };
+  }
   try {
     const result = await subscribePlan({
       business,
       brand,
       userId: user.id,
+      plan: data.plan,
       cycle: data.cycle,
       extraProfessionals: data.extraProfessionals,
       payer: { name: data.name, cpfCnpj: data.cpfCnpj, email: user.email },
@@ -159,7 +178,17 @@ export async function checkoutAction(input: unknown): Promise<CheckoutResult> {
         kind: "card",
         message: `Cartão ${result.brand} final ${result.last4} cadastrado. Estamos confirmando o pagamento…`,
       };
-    return { ok: true, kind: "changed", message: "Assinatura alterada." };
+    const current = paidPlanOf(business.plan);
+    return {
+      ok: true,
+      kind: "changed",
+      message:
+        current === "agenda" && data.plan === "pro"
+          ? "Pronto: o Pro já está liberado. O novo valor vale a partir da próxima cobrança."
+          : current === "pro" && data.plan === "agenda"
+            ? "Combinado: você continua no Pro até o fim do período pago e depois passa para o Agenda."
+            : "Assinatura alterada.",
+    };
   } catch (error) {
     return billingError(error);
   }
@@ -172,7 +201,7 @@ const methodSchema = payerSchema.extend({
 
 /** Switch between Pix and card (or a new card) on an active subscription. */
 export async function changePaymentMethodAction(input: unknown): Promise<CheckoutResult> {
-  const { business, user } = await requireOwner({ allowExpired: true });
+  const { business, user } = await requireOwner();
   if (!isAsaasConfigured()) return { ok: false, message: "Cobrança ainda não configurada." };
   if (!(await rateLimitRequest("publicAction", `checkout:${business.id}`)))
     return { ok: false, message: "Muitas tentativas. Espere um pouco e tente de novo." };
@@ -206,7 +235,7 @@ export async function changePaymentMethodAction(input: unknown): Promise<Checkou
 
 /** Pix of the open charge (first payment, renewal or overdue). */
 export async function pendingPixAction(): Promise<PixCharge | null> {
-  const { business } = await requireOwner({ allowExpired: true });
+  const { business } = await requireOwner();
   if (!isAsaasConfigured()) return null;
   try {
     return await pendingPix(business.id);
@@ -218,7 +247,7 @@ export async function pendingPixAction(): Promise<PixCharge | null> {
 
 /** Polled by the checkout while waiting for the payment (the webhook updates the status). */
 export async function subscriptionStatusAction(): Promise<string | null> {
-  const { business } = await requireOwner({ allowExpired: true });
+  const { business } = await requireOwner();
   const { data } = await createAdminClient()
     .from("subscriptions")
     .select("status")
@@ -228,7 +257,7 @@ export async function subscriptionStatusAction(): Promise<string | null> {
 }
 
 export async function previewPlatformCouponAction(code: string): Promise<number | null> {
-  const { brand } = await requireOwner({ allowExpired: true });
+  const { brand } = await requireOwner();
   const parsed = z.string().trim().min(3).max(30).safeParse(code);
   if (!parsed.success) return null;
   const { data } = await createAdminClient().rpc("preview_platform_coupon", {
@@ -245,7 +274,7 @@ const addonSchema = payerSchema.extend({
 });
 
 export async function addonAction(input: unknown): Promise<CheckoutResult> {
-  const { business, brand, user } = await requireOwner({ allowExpired: true });
+  const { business, brand, user } = await requireOwner();
   if (!isAsaasConfigured()) return { ok: false, message: "Cobrança ainda não configurada." };
   const parsed = addonSchema.safeParse(input);
   if (!parsed.success) return { ok: false, message: parsed.error.issues[0]!.message };
@@ -269,13 +298,14 @@ export async function addonAction(input: unknown): Promise<CheckoutResult> {
 }
 
 export async function cancelPlanAction(): Promise<{ ok: boolean; message: string }> {
-  const { business, user } = await requireOwner({ allowExpired: true });
+  const { business, user } = await requireOwner();
   try {
     await cancelPlan(business, user.id);
     revalidatePath("/painel/plano");
     return {
       ok: true,
-      message: "Assinatura cancelada. Tudo continua funcionando até o fim do período pago.",
+      message:
+        "Assinatura cancelada. Tudo continua funcionando até o fim do período pago; depois, a conta volta para o Grátis.",
     };
   } catch (error) {
     console.error(error);
@@ -284,7 +314,7 @@ export async function cancelPlanAction(): Promise<{ ok: boolean; message: string
 }
 
 export async function cancelAddonAction(subscriptionId: string): Promise<{ ok: boolean }> {
-  const { business, user } = await requireOwner({ allowExpired: true });
+  const { business, user } = await requireOwner();
   try {
     await cancelAddon(business, user.id, z.string().min(1).max(100).parse(subscriptionId));
     revalidatePath("/painel/plano");
@@ -293,4 +323,34 @@ export async function cancelAddonAction(subscriptionId: string): Promise<{ ok: b
     console.error(error);
     return { ok: false };
   }
+}
+
+/** "Testar 7 dias": once per account and per person (Grátis plan only). */
+export async function startTrialAction(plan: unknown): Promise<{ ok: boolean; message: string }> {
+  const { business, user } = await requireOwner();
+  const parsed = z.enum(["agenda", "pro"]).safeParse(plan);
+  if (!parsed.success) return { ok: false, message: "Escolha o plano." };
+  const { data: page } = await createAdminClient()
+    .from("page_settings")
+    .select("whatsapp_number")
+    .eq("business_id", business.id)
+    .maybeSingle();
+  const result = await startTrial({
+    business,
+    plan: parsed.data,
+    identity: { email: user.email, phone: (page?.whatsapp_number as string | null) ?? null },
+    userId: user.id,
+    via: "panel",
+  });
+  if (!result.ok) {
+    return {
+      ok: false,
+      message:
+        result.error === "subscribed"
+          ? "Você já é assinante."
+          : "O teste grátis já foi usado nesta conta (ou com este e-mail ou telefone).",
+    };
+  }
+  revalidatePath("/painel", "layout");
+  return { ok: true, message: "Teste iniciado! Tudo liberado por 7 dias." };
 }
