@@ -207,6 +207,7 @@ function sourceInfo(viaName: boolean, viaNiche: boolean) {
     utm_medium: pick("utm_medium"),
     utm_campaign: pick("utm_campaign"),
     via: viaName ? ("nome" as const) : viaNiche ? ("ramo" as const) : ("direct" as const),
+    variant: params.get("v") === "b" ? ("b" as const) : ("a" as const),
     page: window.location.pathname.slice(0, 200),
     referrer,
   };

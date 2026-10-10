@@ -26,10 +26,9 @@ test("the home is the generic MeetChat page, whatever brand the cookie remembers
   await expect(page.getByRole("banner")).toContainText("MeetChat");
   expect(await scopedVar(page, "--brand-primary")).toBe(platform.theme.primary);
   // Chips lead to the niche pages.
-  await expect(page.getByRole("link", { name: "Psicologia", exact: true })).toHaveAttribute(
-    "href",
-    `/${psychology.niche.route}`,
-  );
+  await expect(
+    page.getByRole("main").getByRole("link", { name: "Psicologia", exact: true }),
+  ).toHaveAttribute("href", `/${psychology.niche.route}`);
   const html = await (await page.request.get("/")).text();
   expect(html).not.toContain(physio.sales.title);
 });
@@ -47,28 +46,34 @@ for (const brand of [psychology, physio]) {
       "href",
       new RegExp(`/${brand.niche.route}$`),
     );
-    // The top is the chat with the niche's own example; calls to action lead to its name field.
+    // The phone plays the niche's own example; internal links to the home and /precos.
     await expect(
-      page.getByText(new RegExp(`Você está na agenda de ${heroDemoFor(brand).business}`)),
+      page.getByRole("group", { name: /Exemplo:/ }).getByText(heroDemoFor(brand).business),
     ).toBeVisible();
-    await page.getByRole("link", { name: "Criar meu link grátis" }).first().click();
-    await expect(page.getByLabel("Nome do negócio")).toBeFocused();
+    await expect(page.locator('a[href="/precos"]').first()).toBeAttached();
+    await expect(page.locator('header a[href="/"]')).toBeAttached();
+    // The main button opens the creation conversation with the niche already chosen.
+    await page.locator("#cta-topo a").click();
+    await expect(page).toHaveURL(new RegExp(`criar=1&ramo=${brand.niche.route}`));
+    await expect(page.locator("[data-creation]")).toBeVisible();
   });
 }
 
-test("generic home: “Criar meu link grátis” leads to the name question of the top chat", async ({
+test("generic home: the main button opens the creation conversation at the business name", async ({
   page,
 }) => {
   await page.goto("/");
-  await page.getByRole("link", { name: HOME.hero.primaryCta }).first().click();
-  await expect(page.getByLabel("Nome do negócio")).toBeFocused();
-  await expect(page.getByText(/Qual o nome dele\?/)).toBeVisible();
+  await page.locator("#cta-topo a").click();
+  await expect(page).toHaveURL(/\?criar=1/);
+  const chat = page.locator("[data-creation]");
+  await expect(chat.getByText("Qual o nome do seu negócio?")).toBeVisible();
+  await expect(chat.getByLabel("Nome do negócio")).toBeVisible();
 });
 
-test("?criar=1 opens the creation conversation right in the top chat", async ({ page }) => {
+test("?criar=1 opens the creation conversation over the page", async ({ page }) => {
   await page.goto("/?criar=1");
-  await expect(page.locator("[data-creation]")).toBeVisible();
-  await expect(page.getByLabel("Nome do negócio")).toBeVisible();
+  await expect(page.locator('[role="dialog"] [data-creation]')).toBeVisible();
+  await expect(page.getByLabel("Nome do negócio").last()).toBeVisible();
 });
 
 test("/comecar still lets you pick the niche and sign up in it", async ({ page }) => {

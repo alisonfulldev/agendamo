@@ -32,21 +32,20 @@ export function nicheHomeContent(brand: BrandConfig): HomeContent {
       description: (seo.description ?? brand.sales.subtitle).slice(0, 160),
     },
     hero: {
-      ...HOME.hero,
-      badge: `Agendamento por chat inteligente para ${niche.name.toLowerCase()}`,
+      eyebrow: `Agendamento online para ${niche.name.toLowerCase()}`,
       title: seo.h1 ?? brand.sales.title,
       subtitle: seo.subtitle ?? brand.sales.subtitle,
+      primaryCta: HOME.hero.primaryCta,
+      note: HOME.hero.note,
       points: HOME.hero.points.map((point) => withCustomerTerm(point, brand)),
     },
     intro: seo.intro,
-    pains: {
-      title: seo.painsTitle ?? HOME.pains.title,
-      items: brand.sales.pains.map((text, i) => ({
-        icon: (["moon", "ghost", "calendar-x"] as const)[i % 3]!,
-        text,
-      })),
-    },
     steps: HOME.steps,
+    tryIt: HOME.tryIt,
+    reminders: {
+      title: HOME.reminders.title,
+      text: withCustomerTerm(HOME.reminders.text, brand),
+    },
     gains: {
       title: HOME.gains.title,
       items: HOME.gains.items.map((item) => ({

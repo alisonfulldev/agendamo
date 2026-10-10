@@ -47,8 +47,10 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default async function Home() {
+export default async function Home({ searchParams }: PageProps<"/">) {
   const niche = await homeBrand();
   if (niche) return <SalesPage brand={niche} signupHref="/cadastro" />;
-  return <HomePage />;
+  // A/B test of the title and the button: ?v=b (recorded with the demonstration and sign-up).
+  const { v } = await searchParams;
+  return <HomePage variant={v === "b" ? "b" : "a"} />;
 }

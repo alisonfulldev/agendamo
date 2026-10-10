@@ -27,6 +27,8 @@ const sourceSchema = z
     utm_medium: z.string().max(100).optional(),
     utm_campaign: z.string().max(100).optional(),
     via: z.enum(["direct", "nome", "ramo"]).optional(),
+    /** A/B test of the home's top (?v=b). */
+    variant: z.enum(["a", "b"]).optional(),
     page: z.string().max(200).optional(),
     referrer: z.string().max(200).optional(),
   })

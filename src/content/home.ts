@@ -15,20 +15,24 @@ type Icon =
 export interface HomeContent {
   meta: { title: string; description: string };
   hero: {
-    badge: string;
+    /** Small line above the title (accent color, no badge). */
+    eyebrow: string;
     title: string;
     subtitle: string;
     primaryCta: string;
-    secondaryCta: string;
     note: string;
-    /** Short points next to the chat (computer). */
+    /** Short points with icons (computer). */
     points: readonly string[];
+    /** A/B test (?v=b): another title and button text, recorded with the sign-ups. */
+    variantB?: { title: string; primaryCta: string };
   };
-  /** Unique text about the niche (niche pages), right after the top. */
+  /** Unique text about the niche (niche pages), after "Como funciona". */
   intro?: { title: string; paragraphs: readonly string[] };
-  pains: { title: string; items: readonly { icon: Icon; text: string }[] };
   steps: { title: string; items: readonly string[] };
+  /** "Veja como fica o seu link": the creation conversation embedded in the page. */
+  tryIt: { title: string; subtitle: string; ask: string };
   gains: { title: string; items: readonly { icon: Icon; text: string }[] };
+  reminders: { title: string; text: string };
   audience: { title: string; chips: readonly { label: string; href: string }[] };
   pricing: { title: string; tagline: string };
   faq: { title: string; items: readonly { question: string; answer: string }[] };
@@ -48,41 +52,42 @@ export interface HomeContent {
  */
 export const HOME: HomeContent = {
   meta: {
-    title: "MeetChat · Seus clientes agendam sozinhos",
+    title: "Agendamento online grátis pelo link da bio | MeetChat",
     description:
-      "Divulgue seu link no WhatsApp, Instagram ou no seu site. O cliente escolhe o serviço e o horário, e já cai na sua agenda, 24 horas por dia.",
+      "Crie seu link de agendamento em 1 minuto. Seus clientes marcam horário sozinhos pelo Instagram e WhatsApp, 24h. Grátis, sem cartão.",
   },
   hero: {
-    badge: "Para quem trabalha com hora marcada",
-    title: "Seu cliente marca horário sozinho. Veja:",
-    subtitle: "Seu link no WhatsApp, Instagram ou site, e o cliente marca pelo chat, 24h.",
+    eyebrow: "Agendamento online grátis",
+    title: "Seus clientes marcam horário sozinhos, 24h",
+    subtitle:
+      "Crie seu link de agendamento em 1 minuto e coloque no Instagram e no WhatsApp. Sem app e sem responder mensagem.",
     primaryCta: "Criar meu link grátis",
-    secondaryCta: "Ver como fica o meu",
     note: PRICE_TEXT.heroNote,
     points: [
       "Agenda 24h sem responder mensagem",
       "Lembrete para o cliente não faltar",
       "Funciona no Instagram, WhatsApp e site",
     ],
-  },
-  pains: {
-    title: "Quanto tempo você perde respondendo “tem horário?”",
-    items: [
-      { icon: "moon", text: "Mensagem às 23h, e você responde de pijama." },
-      { icon: "ghost", text: "O cliente pergunta, some e não marca." },
-      { icon: "calendar-x", text: "Cliente marca e não aparece." },
-    ],
+    variantB: {
+      title: "Agendamento online grátis pelo link da bio",
+      primaryCta: "Criar meu link de agendamento",
+    },
   },
   steps: {
-    title: "Como funciona",
+    title: "Como funciona o agendamento online",
     items: [
       "Crie seu link em 1 minuto.",
       "Divulgue no WhatsApp, Instagram, Facebook e no seu site.",
       "Os clientes agendam sozinhos e você recebe o aviso no celular.",
     ],
   },
+  tryIt: {
+    title: "Veja como fica o seu link",
+    subtitle: "Digite o nome do seu negócio e teste como seu cliente vai agendar.",
+    ask: "Qual o nome do seu negócio?",
+  },
   gains: {
-    title: "O que você ganha",
+    title: "Agendamento pelo Instagram e WhatsApp",
     items: [
       { icon: "calendar-check", text: "Agenda cheia sem responder mensagem" },
       { icon: "bell", text: "Lembrete automático para o cliente não faltar" },
@@ -92,8 +97,12 @@ export const HOME: HomeContent = {
       { icon: "pointer", text: "Seu cliente não baixa nada" },
     ],
   },
+  reminders: {
+    title: "Lembrete automático para o cliente não faltar",
+    text: "Cada cliente recebe a confirmação na hora e um lembrete antes do horário, com o link para remarcar ou cancelar. Assim o horário vago volta para a agenda, em vez de virar falta.",
+  },
   audience: {
-    title: "Para quem é",
+    title: "Para salões, barbearias, estética, psicólogos e mais de 30 profissões",
     chips: [
       { label: "Sobrancelha", href: "/cilios-e-sobrancelhas" },
       { label: "Unhas", href: "/manicure" },
@@ -105,7 +114,7 @@ export const HOME: HomeContent = {
     ],
   },
   pricing: {
-    title: "Comece grátis. Cresça quando quiser.",
+    title: "Preços",
     tagline: `${PRICE_TEXT.free}. ${PRICE_TEXT.trial}.`,
   },
   faq: {

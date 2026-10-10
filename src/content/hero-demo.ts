@@ -63,15 +63,22 @@ export function heroDemoFor(brand: BrandConfig): HeroDemo {
 }
 
 export const HERO_CHAT_TEXT = {
-  greeting: "Olá! Você está na agenda de {business}. Qual atendimento você quer?",
+  /** Under the business name in the chat header. */
+  headerNote: "Agendamento 24h",
+  greeting: "Olá! Qual serviço você quer agendar?",
   askDay: "Qual dia fica melhor?",
-  confirmed: "Pronto! Horário confirmado. ✅",
+  answerDay: "Sábado, 10h",
+  /** "Pronto, Ana! Horário confirmado para sábado às 10h." (no name when the niche hides it). */
+  confirmed: (demo: HeroDemo) =>
+    demo.customer
+      ? `Pronto, ${demo.customer}! Horário confirmado para sábado às 10h.`
+      : "Pronto! Horário confirmado para sábado às 10h.",
   /** "Novo agendamento: Ana, sábado 10h" / "Novo agendamento: sessão sábado 10h". */
   notification: (demo: HeroDemo) =>
     demo.customer
       ? `Novo agendamento: ${demo.customer}, sábado 10h`
       : `Novo agendamento: ${demo.service.split(" ")[0]!.toLowerCase()} sábado 10h`,
-  ask: "Quer um desse para o seu negócio? É grátis. Qual o nome dele?",
+  replay: "Ver de novo",
   placeholder: "Ex.: Studio Bella",
   collapse: "Recolher",
   send: "Enviar",

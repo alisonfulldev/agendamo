@@ -128,7 +128,8 @@ export const NICHE_SEO: Record<string, NicheSeo> = {
       },
       {
         question: "Posso pedir sinal antes do procedimento?",
-        answer: "Dá, no plano Pro: o cliente paga o sinal pelo Pix direto para você e envia o comprovante no chat. Você confere no banco e confirma.",
+        answer:
+          "Dá, no plano Pro: o cliente paga o sinal pelo Pix direto para você e envia o comprovante no chat. Você confere no banco e confirma.",
       },
     ],
     demo: [
@@ -200,7 +201,8 @@ export const NICHE_SEO: Record<string, NicheSeo> = {
       },
       {
         question: "Posso cobrar sinal na extensão de cílios?",
-        answer: "Dá, no plano Pro: o cliente paga o sinal pelo Pix direto para você e envia o comprovante no chat. Você confere no banco e confirma.",
+        answer:
+          "Dá, no plano Pro: o cliente paga o sinal pelo Pix direto para você e envia o comprovante no chat. Você confere no banco e confirma.",
       },
       {
         question: "Funciona para studio de sobrancelha com mais de uma profissional?",
@@ -805,7 +807,8 @@ export const NICHE_SEO: Record<string, NicheSeo> = {
     faq: [
       {
         question: "Dá para cobrar sinal para reservar a data do ensaio?",
-        answer: "Dá, no plano Pro: o cliente paga o sinal pelo Pix direto para você e envia o comprovante no chat. Você confere no banco e confirma.",
+        answer:
+          "Dá, no plano Pro: o cliente paga o sinal pelo Pix direto para você e envia o comprovante no chat. Você confere no banco e confirma.",
       },
     ],
   },
@@ -871,7 +874,8 @@ export const NICHE_SEO: Record<string, NicheSeo> = {
       },
       {
         question: "Posso cobrar sinal na reserva da quadra?",
-        answer: "Pode, no plano Pro: o cliente paga o sinal pelo Pix direto para você e envia o comprovante no chat.",
+        answer:
+          "Pode, no plano Pro: o cliente paga o sinal pelo Pix direto para você e envia o comprovante no chat.",
       },
     ],
   },

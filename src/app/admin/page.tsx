@@ -129,7 +129,7 @@ export default async function AdminPage({ searchParams }: PageProps<"/admin">) {
     db.from("page_stats_daily").select("business_id").limit(50000),
     db.from("audit_log").select("business_id").eq("action", "plan.upgraded").limit(50000),
   ]);
-  const [depositRows, duplicates] = await Promise.all([
+  const [depositRows, duplicates, signupsAudit] = await Promise.all([
     db
       .from("appointments")
       .select("deposit_status, deposit_sent_at, deposit_decided_at")
@@ -139,7 +139,14 @@ export default async function AdminPage({ searchParams }: PageProps<"/admin">) {
       .from("deposit_receipts")
       .select("id", { count: "exact", head: true })
       .eq("status", "duplicate"),
+    db.from("audit_log").select("details").eq("action", "business.created").limit(50000),
   ]);
+  // A/B test of the home's top (?v=b): sign-ups by variant.
+  const variants = { a: 0, b: 0 };
+  for (const row of signupsAudit.data ?? []) {
+    const variant = (row.details as { source?: { variant?: string } } | null)?.source?.variant;
+    if (variant === "a" || variant === "b") variants[variant]++;
+  }
   const deposits = computeDepositMetrics(
     (depositRows.data ?? []) as Parameters<typeof computeDepositMetrics>[0],
     duplicates.count ?? 0,
@@ -184,6 +191,14 @@ export default async function AdminPage({ searchParams }: PageProps<"/admin">) {
           />
         ))}
       </div>
+
+      <section className="rounded-xl border bg-card p-4">
+        <h2 className="font-semibold">Teste A/B do topo da home</h2>
+        <p className="mt-2 text-sm">
+          Cadastros com a versão A: <strong>{variants.a}</strong> · com a versão B (?v=b):{" "}
+          <strong>{variants.b}</strong>
+        </p>
+      </section>
 
       <section className="rounded-xl border bg-card p-4">
         <h2 className="font-semibold">Sinais pelo Pix (Pro)</h2>

@@ -275,3 +275,10 @@
     animation: none;
   }
 }
+
+/* Sections below the first screen: the browser skips their layout until they get close (faster
+   first paint on long pages). Never on a section with position: fixed content inside. */
+@utility below-fold {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 640px;
+}

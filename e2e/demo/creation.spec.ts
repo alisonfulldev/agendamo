@@ -32,21 +32,28 @@ async function testBooking(page: Page) {
   await expect(dialog.getByText("Novo agendamento")).toBeVisible();
 }
 
-test("phone: the top chat plays the demo, asks the name and becomes the creation conversation", async ({
+test("phone: the top button opens the creation conversation at the business name", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
-  // Never empty: the first balloon comes from the server.
-  await expect(page.getByText(/Você está na agenda de Studio Lumi/)).toBeVisible();
-  // The short demo ends on the owner's notification, then the name question is ready.
-  await expect(page.getByText(/Novo agendamento: Ana, sábado 10h/)).toBeVisible();
-  await expect(page.getByText(/Qual o nome dele\?/)).toBeVisible();
-  const name = page.getByLabel("Nome do negócio");
-  await name.fill(`Barbearia Topo ${Date.now().toString(36)}`);
+  await page.locator("#cta-topo a").click();
+  const dialog = page.locator('[role="dialog"] [data-creation]');
+  await expect(dialog.getByText("Qual o nome do seu negócio?")).toBeVisible();
+  await expect(dialog.getByLabel("Nome do negócio")).toBeVisible();
+});
+
+test("“Veja como fica o seu link”: the embedded chat takes the name and goes on in full screen", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+  await page.getByRole("heading", { name: "Veja como fica o seu link" }).scrollIntoViewIfNeeded();
+  const name = page.locator("#try-name");
+  await name.fill(`Barbearia Teste ${Date.now().toString(36)}`);
   await page.waitForTimeout(1600);
   await name.press("Enter");
-  // The conversation goes on inside the top (no overlay, no new address).
+  // The conversation goes on right there (no overlay, no new address).
   const chat = page.locator("[data-creation]");
   await expect(chat.getByText(/você trabalha com barbearia, certo\?/)).toBeVisible();
   await expect(page).not.toHaveURL(/criar=1/);
@@ -54,15 +61,14 @@ test("phone: the top chat plays the demo, asks the name and becomes the creation
   await expect(chat).toBeVisible();
 });
 
-test("calls to action of the page scroll to the top chat and activate the name field", async ({
-  page,
-}) => {
+test("the bottom button of the page opens the creation conversation too", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
   await page.getByRole("heading", { name: /Perguntas frequentes/ }).scrollIntoViewIfNeeded();
   await page.getByRole("link", { name: "Criar meu link grátis" }).last().click();
-  await expect(page.getByLabel("Nome do negócio")).toBeFocused();
-  await expect(page.getByText(/Qual o nome dele\?/)).toBeVisible();
+  await expect(
+    page.locator('[role="dialog"] [data-creation]').getByText("Qual o nome do seu negócio?"),
+  ).toBeVisible();
 });
 
 test("niche detected from the name, transformation, test booking and “Criar minha conta grátis”", async ({
@@ -143,7 +149,7 @@ test("closing and reopening resumes where it stopped", async ({ page }) => {
   await expect(dialog.getByText("pronto para ser criado", { exact: false })).toBeVisible();
   // Leaving and coming back (a new visit to the page).
   await page.goto("/");
-  await page.getByRole("link", { name: "Criar meu link grátis" }).first().click();
+  await page.locator("#cta-topo a").click();
   await expect(page.getByText("Quer continuar de onde parou, Barbearia Retomada?")).toBeVisible();
   await page.getByRole("button", { name: "Continuar" }).click();
   await expect(page.locator("[data-creation]").locator("header")).toContainText(
