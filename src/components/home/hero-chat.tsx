@@ -156,13 +156,26 @@ export function HeroChat({
         return;
       }
       setStage(LAST);
+      setExpanded(true);
       setTimeout(() => inputRef.current?.focus({ preventScroll: true }), 400);
     });
     return () => registerInlineCreation(null);
   }, [started, begin]);
 
   const day = shown >= 3 ? saturdayLabel() : "";
-  const fullscreen = expanded && started !== null;
+  // Phones: from the first tap the chat takes the whole screen (the same conversation, just
+  // bigger), so the sign-up never happens inside the small card. Computers keep the phone frame.
+  const fullscreen = expanded;
+
+  // The page behind does not scroll while the chat is full screen on a phone.
+  useEffect(() => {
+    if (!fullscreen || window.innerWidth >= 768) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, [fullscreen]);
 
   return (
     <div
@@ -181,19 +194,20 @@ export function HeroChat({
             : undefined
         }
       >
+        {fullscreen ? (
+          <button
+            type="button"
+            onClick={() => {
+              inputRef.current?.blur();
+              setExpanded(false);
+            }}
+            className="absolute top-3 right-3 z-10 flex items-center gap-1 rounded-full bg-background/90 px-3 py-1.5 text-sm font-medium shadow md:hidden"
+          >
+            <ChevronDown className="size-4" aria-hidden /> {HERO_CHAT_TEXT.collapse}
+          </button>
+        ) : null}
         {started ? (
-          <>
-            {fullscreen ? (
-              <button
-                type="button"
-                onClick={() => setExpanded(false)}
-                className="absolute top-3 right-3 z-10 flex items-center gap-1 rounded-full bg-background/90 px-3 py-1.5 text-sm font-medium shadow md:hidden"
-              >
-                <ChevronDown className="size-4" aria-hidden /> {HERO_CHAT_TEXT.collapse}
-              </button>
-            ) : null}
-            <Conversation photos={photos} inline={started} />
-          </>
+          <Conversation photos={photos} inline={started} />
         ) : (
           <>
             <header className="flex items-center gap-3 bg-primary px-4 py-3 text-primary-foreground md:pt-5">
@@ -258,7 +272,13 @@ export function HeroChat({
                 id="hero-name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                onFocus={() => (hasSavedCreation() ? begin(null) : setStage(LAST))}
+                onFocus={() => {
+                  if (hasSavedCreation()) begin(null);
+                  else {
+                    setStage(LAST);
+                    setExpanded(true);
+                  }
+                }}
                 placeholder={HERO_CHAT_TEXT.placeholder}
                 autoComplete="organization"
                 maxLength={120}

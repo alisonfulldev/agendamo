@@ -12,7 +12,7 @@ const DAY = 86_400_000;
 /** What changes when the trial ends without a subscription (Grátis plan). */
 const WHAT_CHANGES = [
   `Sua conta passa para o Grátis: ${FREE_BOOKINGS_PER_CYCLE} agendamentos automáticos por mês. Depois disso, o chat passa os pedidos para o seu WhatsApp até o mês renovar.`,
-  "Sem lembretes para os clientes, sem chat no seu site e com a marca do MeetChat no rodapé.",
+  "Sem lembretes para os clientes e sem chat no seu site.",
   "Clientes, financeiro, vendas, equipe e estatísticas ficam bloqueados. Nada é apagado: tudo volta na hora em que você assinar.",
 ];
 

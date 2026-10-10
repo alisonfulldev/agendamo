@@ -4,9 +4,10 @@ import { formatBRL } from "@/lib/money";
 /**
  * Three plans (2026-10-10):
  * - Grátis: forever, 10 automatic (chat) bookings per 30-day cycle counted from the sign-up date;
- *   past the limit the chat hands off to WhatsApp until the cycle ends. Brand footer, no
- *   reminders, no chat on external sites. Only the chat and the agenda (the rest is locked).
- * - Agenda: unlimited bookings, reminders, no brand footer, chat on the site and everything else.
+ *   past the limit the chat hands off to WhatsApp until the cycle ends. No reminders, no chat on
+ *   external sites. Only the chat and the agenda (the rest is locked).
+ * - Agenda: unlimited bookings, reminders, chat on the site and everything else.
+ * Every plan shows "Agende também com o MeetChat" in the chat and on the profile.
  * - Pro: everything in Agenda + deposit / full payment by the customer (built in a separate step:
  *   off by DEPOSITS_ENABLED until then, shown as "em breve").
  * 7-day trial of Agenda or Pro, once per account (no card). Stored values: plan "free" (also
@@ -55,8 +56,7 @@ export function subscriptionPrice(
   extraProfessionals: number,
   discountPercent = 0,
 ): number {
-  const base =
-    PLAN_PRICES[plan][cycle] + PLAN_PRICES.extraProfessional[cycle] * extraProfessionals;
+  const base = PLAN_PRICES[plan][cycle] + PLAN_PRICES.extraProfessional[cycle] * extraProfessionals;
   return Math.round((base * (100 - discountPercent)) / 100);
 }
 
@@ -187,7 +187,8 @@ export function getPlanFeatures(business: PlanFields, now: Date = new Date()): P
     limitedBookings: !full,
     agenda: true,
     reminders: full,
-    removeBranding: Boolean(paid),
+    // Every plan shows "Agende também com o MeetChat" (decided 2026-10-10).
+    removeBranding: false,
     customers: full,
     finance: full,
     salesTools: full,

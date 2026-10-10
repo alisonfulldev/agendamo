@@ -32,7 +32,6 @@ export const PRICING = {
       },
       { label: "Agenda no celular", values: [true, true, true] },
       { label: "Lembretes automáticos para o cliente", values: [false, true, true] },
-      { label: "Sem marca do MeetChat", values: [false, true, true] },
       { label: "Chat de agendamento no seu site", values: [false, true, true] },
       { label: "Clientes, financeiro e estatísticas", values: [false, true, true] },
       { label: "Vendas: artes, cupons, pacotes e lista de espera", values: [false, true, true] },

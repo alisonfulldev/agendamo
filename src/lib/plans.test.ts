@@ -89,7 +89,7 @@ describe("getPlanFeatures (Grátis, Agenda, Pro)", () => {
       tier: "agenda",
       status: "subscribed",
       limitedBookings: false,
-      removeBranding: true,
+      removeBranding: false,
       professionalLimit: 3,
       deposits: false,
     });

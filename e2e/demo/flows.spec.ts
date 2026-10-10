@@ -344,8 +344,10 @@ test("Grátis past its 10 bookings: the chat collects service, day and period fo
   await page.getByRole("button", { name: "Sem recado" }).click();
   const send = page.getByRole("link", { name: "Enviar pelo WhatsApp" });
   await expect(send).toHaveAttribute("href", /wa\.me\/55\d+\?text=.*Corte.*Turno.*Tarde/);
-  // Grátis keeps the brand footer.
-  await expect(page.getByText(/Agende também com o/)).toBeVisible();
+  // Every plan shows the MeetChat badge under the chat.
+  await expect(
+    page.getByRole("link", { name: /Agende também com o MeetChat/ }).first(),
+  ).toBeVisible();
 });
 
 test("own checkout: Pix QR inside the panel, the payment activates the subscription", async ({

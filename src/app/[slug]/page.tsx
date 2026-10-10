@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 
+import { PLATFORM } from "@/brands";
+import { MeetChatBadge } from "@/components/chat/meetchat-badge";
+
 import { brandUrl } from "@/brands/urls";
 import { publicUrl } from "@/lib/storage/r2";
 
@@ -23,7 +26,7 @@ export default async function BusinessChatPage({ params, searchParams }: PagePro
   const query = await searchParams;
   const loaded = await loadBusinessPage(slug);
   if (!loaded) notFound();
-  const { data, brand, domainBrand, features, automaticBooking } = loaded;
+  const { data, brand, domainBrand, automaticBooking } = loaded;
 
   // A business always shows on its own brand's domain.
   if (brand.key !== domainBrand.key) redirect(brandUrl(brand, `/${data.business.slug}`));
@@ -58,13 +61,7 @@ export default async function BusinessChatPage({ params, searchParams }: PagePro
         initialServiceId={initialServiceId}
         initialDate={initialDate}
         openProfile={param("perfil") === "1"}
-        branding={
-          features.removeBranding ? null : (
-            <a href={brandUrl(brand, "/")} className="hover:text-foreground">
-              Agende também com o <span className="font-semibold">{brand.name}</span>
-            </a>
-          )
-        }
+        branding={<MeetChatBadge href={brandUrl(brand, "/")} logo={PLATFORM.logo} />}
         profile={
           <ProfileView
             loaded={loaded}

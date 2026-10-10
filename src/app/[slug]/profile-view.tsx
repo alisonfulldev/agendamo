@@ -1,6 +1,8 @@
 import { AtSign, ExternalLink, MapPin, Star } from "lucide-react";
 import type { ReactNode } from "react";
 
+import { PLATFORM } from "@/brands";
+import { MeetChatBadge } from "@/components/chat/meetchat-badge";
 import { brandUrl } from "@/brands/urls";
 import { formatBRL, formatDuration } from "@/lib/money";
 import { instagramHandle } from "@/lib/social";
@@ -41,7 +43,7 @@ export function ProfileView({
   /** "Agendar" / "Pedir horário": back to the conversation. */
   chatAction: ReactNode;
 }) {
-  const { data, brand, features } = loaded;
+  const { data, brand } = loaded;
   const { business, page } = data;
   const avatar = publicUrl(page?.avatar_key);
   const cover = publicUrl(page?.cover_key);
@@ -278,13 +280,9 @@ export function ProfileView({
         </Card>
       ) : null}
 
-      {features.removeBranding ? null : (
-        <p className="pt-2 text-center text-sm text-muted-foreground">
-          <a href={brandUrl(brand, "/")} className="hover:text-foreground">
-            Feito com <span className="font-semibold">{brand.name}</span>
-          </a>
-        </p>
-      )}
+      <div className="flex justify-center pt-2">
+        <MeetChatBadge href={brandUrl(brand, "/")} logo={PLATFORM.logo} />
+      </div>
     </div>
   );
 }

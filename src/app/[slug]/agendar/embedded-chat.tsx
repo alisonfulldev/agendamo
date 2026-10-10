@@ -11,12 +11,14 @@ export function EmbeddedChat({
   businessName,
   avatarUrl,
   embedded,
+  branding,
 }: {
   slug: string;
   businessId: string;
   businessName: string;
   avatarUrl: string | null;
   embedded: boolean;
+  branding?: React.ReactNode;
 }) {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -49,6 +51,7 @@ export function EmbeddedChat({
         businessId={businessId}
         businessName={businessName}
         avatarUrl={avatarUrl}
+        branding={branding}
         onClose={
           embedded ? () => window.parent.postMessage({ type: "lively:close" }, "*") : undefined
         }

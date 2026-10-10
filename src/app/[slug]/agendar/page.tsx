@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { PLATFORM } from "@/brands";
+import { brandUrl } from "@/brands/urls";
+import { MeetChatBadge } from "@/components/chat/meetchat-badge";
 import { getCurrentBrand } from "@/brands/server";
 import { getPlanFeatures } from "@/lib/plans";
 import { getPublicPage } from "@/lib/public/page";
@@ -43,6 +46,7 @@ export default async function EmbeddedBookingPage({
       businessName={page.business.name}
       avatarUrl={publicUrl(page.page?.avatar_key)}
       embedded={embed === "1"}
+      branding={<MeetChatBadge href={brandUrl(brand, "/")} logo={PLATFORM.logo} />}
     />
   );
 }

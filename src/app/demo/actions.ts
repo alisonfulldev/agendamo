@@ -114,7 +114,8 @@ export async function demoSetPlanAction(formData: FormData): Promise<void> {
 
 /**
  * Grátis plan: uses the 10 automatic bookings of the current cycle at once (10 chat bookings
- * created now, in the past so they never block a time), so the WhatsApp hand-off can be tested.
+ * created now, completed in the past so they never block a time and can be repeated), so the
+ * WhatsApp hand-off can be tested.
  */
 export async function demoFillFreeCycleAction(formData: FormData): Promise<void> {
   guard();
@@ -140,7 +141,7 @@ export async function demoFillFreeCycleAction(formData: FormData): Promise<void>
     await db.query(
       `insert into public.appointments (business_id, professional_id, customer_id, starts_at, ends_at, status, source)
        values ($1, $2, $3, now() - interval '400 days' + make_interval(hours => $4::int),
-         now() - interval '400 days' + make_interval(hours => $4::int, mins => 30), 'confirmed', 'chat')`,
+         now() - interval '400 days' + make_interval(hours => $4::int, mins => 30), 'completed', 'chat')`,
       [businessId, row.professional_id, customer.id, i * 2],
     );
   }

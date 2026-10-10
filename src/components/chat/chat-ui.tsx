@@ -31,7 +31,7 @@ export function ChatWindow({
   onClose?: () => void;
   /** Tapping the photo or name opens the business profile. */
   onProfile?: () => void;
-  /** "Feito com …" line under the composer (Free plan). */
+  /** "Agende também com o MeetChat" under the composer (every plan). */
   branding?: ReactNode;
   footer?: ReactNode;
   children: ReactNode;
@@ -126,9 +126,7 @@ export function ChatWindow({
       {footer || branding ? (
         <div className="chat-wallpaper shrink-0 px-2 pt-1 pb-2">
           {footer}
-          {branding ? (
-            <p className="pt-1.5 text-center text-xs text-muted-foreground">{branding}</p>
-          ) : null}
+          {branding ? <div className="flex justify-center pt-2">{branding}</div> : null}
         </div>
       ) : null}
     </div>
