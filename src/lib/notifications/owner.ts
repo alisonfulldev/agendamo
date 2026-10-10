@@ -12,7 +12,7 @@ export const OWNER_NOTIFICATION_TYPES = {
   booking_request: "Novo pedido de horário",
   appointment_new: "Novo agendamento",
   appointment_changed: "Cancelamentos e remarcações",
-  deposit_informed: "Cliente informou o pagamento do sinal",
+  deposit_informed: "Comprovantes de sinal para conferir",
   daily_alert: "Pessoas que quiseram agendar fora do horário",
   weekly_summary: "Resumo semanal",
   empty_slots: "Horários vagos amanhã",

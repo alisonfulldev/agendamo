@@ -75,9 +75,9 @@ export function depositBrCode(d: AppointmentDetails): string | null {
   return buildPixBrCode({
     key: d.page.pix_key,
     receiverName: d.page.pix_receiver_name ?? d.business.name,
-    city: d.page.city ?? "Brasil",
+    city: d.page.pix_city ?? d.page.city ?? "Brasil",
     amountCents: d.appointment.deposit_cents,
-    txid: `AG${d.appointment.id.replace(/-/g, "").slice(0, 20)}`,
+    txid: d.appointment.deposit_reference ?? `MC${d.appointment.id.replace(/-/g, "").slice(0, 20)}`,
     description: `Sinal ${d.business.name}`,
   });
 }
@@ -138,16 +138,16 @@ export async function notifyBookingCreated(appointmentId: string): Promise<void>
       });
     await sendToCustomer(
       d,
-      `Falta o sinal para garantir seu horário · ${d.business.name}`,
+      `Falta o Pix para garantir seu horário · ${d.business.name}`,
       {
         heading: "Garanta seu horário",
         paragraphs: [
-          `Pague o sinal de R$ ${priceText(d.appointment.deposit_cents)} pelo Pix até ${deadline}. Sem o pagamento, o horário é liberado.`,
+          `Faça o Pix de R$ ${priceText(d.appointment.deposit_cents)} (o valor exato, com os centavos) até ${deadline}. Sem o comprovante, o horário é liberado.`,
           ...(code ? ["Pix copia e cola:", code] : []),
-          "O Pix vai direto para o profissional. Depois de pagar, toque em “Já paguei” na página do agendamento.",
+          `O Pix vai direto para ${d.business.name}. Depois de pagar, envie o comprovante na página do agendamento: o horário fica pré-confirmado até a conferência.`,
         ],
         details: detailLines(d),
-        cta: { label: "Ver Pix e avisar que paguei", url: manageUrl(d) },
+        cta: { label: "Enviar comprovante", url: manageUrl(d) },
       },
       attachments,
     );
@@ -336,6 +336,61 @@ export async function sendReminder(appointmentId: string): Promise<boolean> {
     details: detailLines(d),
     cta: { label: "Preciso remarcar", url: manageUrl(d, { reschedule: true }) },
     secondaryLinks: [{ label: "Cancelar horário", url: manageUrl(d) }],
+  });
+  return true;
+}
+
+/** "{cliente} enviou comprovante de R$ {valor} para {serviço} em {data} às {hora}. Confira no seu banco." */
+function receiptLine(d: AppointmentDetails): string {
+  return `${d.customer.name.split(" ")[0]} enviou comprovante de R$ ${priceText(d.appointment.deposit_cents)} para ${serviceNames(d)} em ${formatDateLong(d.appointment.starts_at, d.business.timezone)} às ${formatTime(d.appointment.starts_at, d.business.timezone)}. Confira no seu banco.`;
+}
+
+/** A valid receipt arrived: e-mail and push to the team (the time stays pre-confirmed). */
+export async function notifyReceiptReceived(appointmentId: string): Promise<void> {
+  const d = await loadAppointmentDetails(appointmentId);
+  if (!d) return;
+  await notifyTeam({
+    businessId: d.business.id,
+    type: "deposit_informed",
+    professionalId: d.professional.id,
+    subject: `Comprovante de R$ ${priceText(d.appointment.deposit_cents)} para conferir`,
+    content: {
+      heading: "Chegou um comprovante",
+      paragraphs: [
+        receiptLine(d),
+        "O horário fica pré-confirmado até você conferir. Confirme o recebimento ou marque “Não recebi” no painel.",
+      ],
+      details: detailLines(d),
+      cta: { label: "Conferir comprovante", url: "/painel/sinais" },
+    },
+    push: { title: "Comprovante para conferir", body: receiptLine(d), url: "/painel/sinais" },
+  });
+}
+
+/** Still not checked after N hours: reminder to the team (once per N). */
+export async function notifyReceiptReminder(appointmentId: string, hours: number): Promise<boolean> {
+  const d = await loadAppointmentDetails(appointmentId);
+  if (!d || d.appointment.deposit_status !== "sent") return false;
+  if (!(await claimNotification(d.business.id, `deposit_reminder_${hours}h`, d.appointment.id)))
+    return false;
+  await notifyTeam({
+    businessId: d.business.id,
+    type: "deposit_informed",
+    professionalId: d.professional.id,
+    subject: `Comprovante esperando conferência há ${hours} horas`,
+    content: {
+      heading: "Tem um comprovante esperando você",
+      paragraphs: [
+        receiptLine(d),
+        "Enquanto você não confere, o horário continua pré-confirmado e bloqueado.",
+      ],
+      cta: { label: "Conferir agora", url: "/painel/sinais" },
+    },
+    push: {
+      title: "Comprovante esperando conferência",
+      body: receiptLine(d),
+      url: "/painel/sinais",
+    },
   });
   return true;
 }

@@ -19,6 +19,8 @@ import {
   demoClearEmailsAction,
   demoConfirmPaymentAction,
   demoResetAction,
+  demoEnableDepositsAction,
+  demoExpireDepositHoldsAction,
   demoFillFreeCycleAction,
   demoRunCronAction,
   demoSetPlanAction,
@@ -263,6 +265,9 @@ export default async function DemoPage({ searchParams }: PageProps<"/demo">) {
                     {label}
                   </Button>
                 ))}
+                <Button formAction={demoEnableDepositsAction} size="sm" variant="ghost">
+                  Ligar sinal Pix
+                </Button>
                 <Button
                   formAction={demoFillFreeCycleAction}
                   size="sm"
@@ -325,6 +330,11 @@ export default async function DemoPage({ searchParams }: PageProps<"/demo">) {
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
           <div className="flex flex-wrap gap-2">
+            <form action={demoExpireDepositHoldsAction}>
+              <Button type="submit" size="sm" variant="outline">
+                Vencer reservas de sinal
+              </Button>
+            </form>
             {CRON_JOBS.map((job) => (
               <form key={job} action={demoRunCronAction}>
                 <input type="hidden" name="job" value={job} />

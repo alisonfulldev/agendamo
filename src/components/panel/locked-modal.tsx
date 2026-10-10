@@ -42,7 +42,7 @@ export function LockedModal({
         <span className="mx-auto flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
           <Lock className="size-5" aria-hidden />
         </span>
-        <p className="mt-3 text-sm font-medium text-primary">{LOCK_TEXT.badge}</p>
+        <p className="mt-3 text-sm font-medium text-primary">{feature === "deposits" ? LOCK_TEXT.proBadge : LOCK_TEXT.badge}</p>
         <p id="locked-title" className="mt-1 text-xl font-bold">
           {info.title}
         </p>

@@ -33,7 +33,7 @@ export const NICHE_SEO: Record<string, NicheSeo> = {
       title: "Um sistema de agendamento feito para salão de beleza",
       paragraphs: [
         "No salão, cada mensagem respondida no meio de uma escova é um atendimento atrasado. Com o MeetChat, a cliente toca no seu link, no Instagram ou no WhatsApp, escolhe o serviço e a profissional, vê só os horários realmente livres e já fica na agenda.",
-        "Cada cabeleireira, manicure e designer tem a própria agenda, o tempo de cada serviço é respeitado e a cliente recebe a confirmação e o lembrete automaticamente. Para serviços longos, como mechas e progressiva, o sinal pago no agendamento chega em breve no plano Pro.",
+        "Cada cabeleireira, manicure e designer tem a própria agenda, o tempo de cada serviço é respeitado e a cliente recebe a confirmação e o lembrete automaticamente. Para serviços longos, como mechas e progressiva, o plano Pro pede sinal pelo Pix, pago direto para você.",
       ],
     },
     faq: [
@@ -45,7 +45,7 @@ export const NICHE_SEO: Record<string, NicheSeo> = {
       {
         question: "Dá para cobrar sinal em mechas, progressiva e outros serviços longos?",
         answer:
-          "O sinal pago no agendamento chega em breve no plano Pro. Enquanto isso, o lembrete automático ajuda a cliente a não faltar.",
+          "Dá, no plano Pro: o cliente paga o sinal pelo Pix direto para você e envia o comprovante no chat. Você confere no banco e confirma.",
       },
       {
         question: "Como a cliente marca horário no salão pelo Instagram?",
@@ -128,7 +128,7 @@ export const NICHE_SEO: Record<string, NicheSeo> = {
       },
       {
         question: "Posso pedir sinal antes do procedimento?",
-        answer: "O sinal pago no agendamento chega em breve no plano Pro.",
+        answer: "Dá, no plano Pro: o cliente paga o sinal pelo Pix direto para você e envia o comprovante no chat. Você confere no banco e confirma.",
       },
     ],
     demo: [
@@ -167,7 +167,7 @@ export const NICHE_SEO: Record<string, NicheSeo> = {
       {
         question: "Como evitar cliente que marca alongamento e não aparece?",
         answer:
-          "Conte com o lembrete automático antes do horário. O sinal pago no agendamento chega em breve no plano Pro.",
+          "No plano Pro, peça sinal pelo Pix nos serviços longos: a cliente envia o comprovante no chat. E conte com o lembrete automático antes do horário.",
       },
     ],
     demo: [
@@ -200,7 +200,7 @@ export const NICHE_SEO: Record<string, NicheSeo> = {
       },
       {
         question: "Posso cobrar sinal na extensão de cílios?",
-        answer: "O sinal pago no agendamento chega em breve no plano Pro.",
+        answer: "Dá, no plano Pro: o cliente paga o sinal pelo Pix direto para você e envia o comprovante no chat. Você confere no banco e confirma.",
       },
       {
         question: "Funciona para studio de sobrancelha com mais de uma profissional?",
@@ -234,7 +234,7 @@ export const NICHE_SEO: Record<string, NicheSeo> = {
       {
         question: "Dá para exigir sinal para garantir a sessão?",
         answer:
-          "O sinal pago no agendamento chega em breve no plano Pro. Até lá, o lembrete automático chega antes da sessão.",
+          "Dá, no plano Pro: o cliente paga o sinal pelo Pix direto para você e envia o comprovante no chat. Você confere no banco e confirma.",
       },
       {
         question: "Cada tatuador pode ter a própria agenda?",
@@ -805,7 +805,7 @@ export const NICHE_SEO: Record<string, NicheSeo> = {
     faq: [
       {
         question: "Dá para cobrar sinal para reservar a data do ensaio?",
-        answer: "O sinal pago no agendamento chega em breve no plano Pro.",
+        answer: "Dá, no plano Pro: o cliente paga o sinal pelo Pix direto para você e envia o comprovante no chat. Você confere no banco e confirma.",
       },
     ],
   },
@@ -871,7 +871,7 @@ export const NICHE_SEO: Record<string, NicheSeo> = {
       },
       {
         question: "Posso cobrar sinal na reserva da quadra?",
-        answer: "O sinal pago na reserva chega em breve no plano Pro.",
+        answer: "Pode, no plano Pro: o cliente paga o sinal pelo Pix direto para você e envia o comprovante no chat.",
       },
     ],
   },

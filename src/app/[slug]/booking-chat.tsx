@@ -18,6 +18,7 @@ import {
 } from "@/components/chat/chat-ui";
 import { Checkbox } from "@/components/ui/checkbox";
 import { formatAmount, formatDuration } from "@/lib/money";
+import { DepositPayment } from "@/components/deposits/deposit-payment";
 import { maskBrPhone, normalizeBrPhone, whatsappLink } from "@/lib/phone";
 import { track } from "@/lib/tracking/client";
 
@@ -386,6 +387,13 @@ export function BookingChat({
     if (prompts[step]) transcript.push({ prompt: prompts[step]!, answer: answers[step] ?? null });
   }
 
+  const selectedServiceIds = state.comboId
+    ? (catalog.combos.find((c) => c.id === state.comboId)?.serviceIds ?? [])
+    : state.serviceIds;
+  const needsDeposit = Boolean(
+    catalog.deposit && selectedServiceIds.some((id) => catalog.deposit!.serviceIds.includes(id)),
+  );
+
   function confirm() {
     startTransition(async () => {
       // A failure on the way (network, server restart) gets the friendly error, never a crash.
@@ -396,6 +404,7 @@ export function BookingChat({
         phone: state.phone,
         email: state.email,
         optIn: state.optIn,
+        depositPolicyAccepted: needsDeposit,
         couponCode: state.couponCode,
         referralCode: storage<string>(`lv_ref_${slug}`),
         abandonedId: state.abandonedId,
@@ -807,6 +816,22 @@ export function BookingChat({
 
       {current === "summary" ? (
         <ChatOptions>
+          {needsDeposit ? (
+            <div className="rounded-lg bg-card px-3 py-2 text-sm text-card-foreground shadow-sm">
+              <p className="font-medium">
+                Este horário pede pagamento pelo Pix, direto para {catalog.businessName}. Depois de
+                reservar, você recebe o código e envia o comprovante aqui.
+              </p>
+              {catalog.deposit?.policy ? (
+                <p className="mt-2 whitespace-pre-line text-muted-foreground">
+                  <span className="font-medium text-card-foreground">
+                    Política de cancelamento e devolução:{" "}
+                  </span>
+                  {catalog.deposit.policy}
+                </p>
+              ) : null}
+            </div>
+          ) : null}
           {state.discountCents > 0 ? (
             <p className="rounded-lg bg-card px-3 py-2 text-sm text-muted-foreground shadow-sm">
               Desconto do cupom: R$ {formatAmount(state.discountCents)}
@@ -818,7 +843,13 @@ export function BookingChat({
             onClick={confirm}
             className="h-12 rounded-lg bg-primary px-4 text-base font-medium text-primary-foreground shadow-sm hover:opacity-90 disabled:opacity-60"
           >
-            {pending ? "Confirmando…" : "Confirmar agendamento"}
+            {pending
+              ? "Confirmando…"
+              : needsDeposit && catalog.deposit?.policy
+                ? "Aceito a política e quero reservar"
+                : needsDeposit
+                  ? "Reservar e pagar pelo Pix"
+                  : "Confirmar agendamento"}
           </button>
           <ChatOption
             className="text-center"
@@ -841,31 +872,29 @@ export function BookingChat({
 
       {current === "done" && state.result ? (
         <>
-          {state.result.pix ? (
-            <ChatBubble from="system" time={clock} tail={false}>
-              <span className="flex flex-col items-center gap-2 py-1">
-                {/* eslint-disable-next-line @next/next/no-img-element -- generated Pix QR (data URL) */}
-                <img src={state.result.pix.qr} alt="QR code do Pix" width={220} height={220} />
-                <code className="w-full rounded-md bg-muted p-2 text-xs break-all">
-                  {state.result.pix.code}
-                </code>
-              </span>
-            </ChatBubble>
+          {state.result.pix &&
+          state.result.status === "awaiting_deposit" &&
+          state.result.depositExpiresAt ? (
+            <DepositPayment
+              token={state.result.cancelToken}
+              amount={state.result.vars.depositAmount ?? ""}
+              pix={state.result.pix}
+              expiresAt={state.result.depositExpiresAt}
+              businessName={catalog.businessName}
+              whatsapp={catalog.whatsapp}
+              onExpired={() =>
+                setState((s) => ({
+                  ...s,
+                  step: "time",
+                  startsAt: null,
+                  time: null,
+                  result: null,
+                  history: s.history.slice(0, s.history.indexOf("time")),
+                }))
+              }
+            />
           ) : null}
           <ChatOptions>
-            {state.result.pix ? (
-              <>
-                <ChatOption
-                  className="text-center text-primary"
-                  onClick={() => navigator.clipboard.writeText(state.result!.pix!.code)}
-                >
-                  Copiar Pix copia e cola
-                </ChatOption>
-                <a href={`/cancelar/${state.result.cancelToken}`} className={linkClass}>
-                  Já paguei
-                </a>
-              </>
-            ) : null}
             {state.result.status !== "awaiting_deposit" ? (
               <>
                 <p className="px-1 pt-1 text-sm text-muted-foreground">

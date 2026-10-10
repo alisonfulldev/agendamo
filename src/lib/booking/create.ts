@@ -4,6 +4,7 @@ import { formatInTimeZone } from "date-fns-tz";
 
 import { layoutBlock, pickProfessional } from "@/lib/availability";
 import type { AppointmentStatus } from "@/lib/db/types";
+import { baseDeposit, uniqueDepositAmount } from "@/lib/deposits/amount";
 import { getBookingAllowance } from "@/lib/plan-usage";
 import { getPlanFeatures } from "@/lib/plans";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -17,7 +18,7 @@ import {
   type Catalog,
   type Selection,
 } from "./data";
-import { chargedPrices, depositFor } from "./pricing";
+import { chargedPrices } from "./pricing";
 
 export type BookingError =
   | "conflict"
@@ -25,6 +26,8 @@ export type BookingError =
   | "invalid"
   | "unavailable"
   | "coupon_invalid"
+  /** A deposit applies and the policy was not accepted (the chat shows it first). */
+  | "policy_required"
   /** Grátis plan: the 10 chat bookings of the cycle are used (the chat hands off to WhatsApp). */
   | "limit";
 
@@ -49,6 +52,8 @@ export interface CreateBookingInput {
   referralCode?: string | null;
   /** Customer packages: use one session (Prompt 27). */
   customerPackageId?: string | null;
+  /** The customer accepted the deposit policy shown in the chat (required when a deposit applies). */
+  depositPolicyAccepted?: boolean;
   now?: Date;
 }
 
@@ -182,12 +187,23 @@ export async function createBooking(input: CreateBookingInput): Promise<CreateBo
   const features = getPlanFeatures(business, now);
   const { data: page } = await admin
     .from("page_settings")
-    .select("pix_key, deposit_deadline_minutes")
+    .select(
+      "pix_key, deposit_hold_minutes, deposit_min_cents, deposit_policy_text, deposit_policy_version",
+    )
     .eq("business_id", business.id)
     .maybeSingle();
+  // Deposit or full payment by Pix (Pro): before the unique cents.
   const deposit =
     features.deposits && page?.pix_key && !input.customerPackageId
-      ? depositFor(priced, charged, total - discount)
+      ? baseDeposit(
+          priced.map((p, i) => ({
+            depositType: p.depositType,
+            depositValue: p.depositValue,
+            chargedCents: charged[i]!,
+          })),
+          total - discount,
+          (page.deposit_min_cents as number) ?? 0,
+        )
       : 0;
 
   // 4. Status.
@@ -198,53 +214,94 @@ export async function createBooking(input: CreateBookingInput): Promise<CreateBo
     if (overNoShowLimit || business.booking_confirmation === "manual") status = "pending";
     else if (deposit > 0) status = "awaiting_deposit";
   }
+  const policyText = (page?.deposit_policy_text as string | null)?.trim() || null;
+  if (status === "awaiting_deposit" && policyText && !input.depositPolicyAccepted)
+    return { ok: false, error: "policy_required" };
+  // The time stays reserved while waiting for the receipt (20 minutes by default).
   const depositExpiresAt =
     status === "awaiting_deposit"
       ? new Date(
           Math.min(
-            now.getTime() + (page?.deposit_deadline_minutes as number) * 60_000,
+            now.getTime() + ((page?.deposit_hold_minutes as number) ?? 20) * 60_000,
             new Date(slot.startsAt).getTime(),
           ),
         ).toISOString()
       : null;
 
-  // 5. Atomic insert (appointment + services + resources).
+  // 5. Atomic insert (appointment + services + resources). With a deposit, the amount gets unique
+  // cents among the professional's pending payments (the database guarantees it: a clash retries).
   const block = layoutBlock(new Date(slot.startsAt), steps);
-  const { data: appointmentId, error } = await admin.rpc("book_appointment", {
-    p: {
-      business_id: business.id,
-      professional_id: professionalId,
-      customer_id: customer.id,
-      starts_at: block.start.toISOString(),
-      ends_at: block.end.toISOString(),
-      status,
-      source: input.source,
-      deposit_cents: status === "awaiting_deposit" ? deposit : 0,
-      deposit_status: status === "awaiting_deposit" ? "waiting" : "none",
-      deposit_expires_at: depositExpiresAt,
-      coupon_code: couponCode,
-      discount_cents: discount,
-      referral_code: referredBy ? input.referralCode : null,
-      package_id: input.customerPackageId ?? null,
-      services: services.map((service, i) => ({
-        service_id: service.id,
-        name: service.name,
-        duration_minutes: steps[i]!.durationMinutes,
-        price_cents: charged[i],
-      })),
-      resources: block.steps.flatMap((step) =>
-        step.resourceIds.map((resourceId) => ({
-          resource_id: resourceId,
-          starts_at: step.start.toISOString(),
-          ends_at: step.end.toISOString(),
+  const minimum = (page?.deposit_min_cents as number) ?? 0;
+  let appointmentId: unknown = null;
+  let depositCents = 0;
+  for (let attempt = 0; attempt < 5 && !appointmentId; attempt++) {
+    if (status === "awaiting_deposit") {
+      const { data: pending } = await admin
+        .from("appointments")
+        .select("deposit_cents")
+        .eq("professional_id", professionalId)
+        .in("deposit_status", ["waiting", "sent"])
+        .gt("deposit_cents", 0);
+      const taken = new Set((pending ?? []).map((r) => r.deposit_cents as number));
+      const amount = uniqueDepositAmount(deposit, minimum, taken);
+      if (amount === null) return { ok: false, error: "unavailable" };
+      depositCents = amount;
+    }
+    const { data, error } = await admin.rpc("book_appointment", {
+      p: {
+        business_id: business.id,
+        professional_id: professionalId,
+        customer_id: customer.id,
+        starts_at: block.start.toISOString(),
+        ends_at: block.end.toISOString(),
+        status,
+        source: input.source,
+        deposit_cents: status === "awaiting_deposit" ? depositCents : 0,
+        deposit_status: status === "awaiting_deposit" ? "waiting" : "none",
+        deposit_expires_at: depositExpiresAt,
+        coupon_code: couponCode,
+        discount_cents: discount,
+        referral_code: referredBy ? input.referralCode : null,
+        package_id: input.customerPackageId ?? null,
+        services: services.map((service, i) => ({
+          service_id: service.id,
+          name: service.name,
+          duration_minutes: steps[i]!.durationMinutes,
+          price_cents: charged[i],
         })),
-      ),
-    },
-  });
-  if (error) {
-    if (error.code === "23P01") return { ok: false, error: "conflict" };
-    if (error.message.includes("coupon_invalid")) return { ok: false, error: "coupon_invalid" };
-    throw new Error(`book_appointment failed: ${error.message}`);
+        resources: block.steps.flatMap((step) =>
+          step.resourceIds.map((resourceId) => ({
+            resource_id: resourceId,
+            starts_at: step.start.toISOString(),
+            ends_at: step.end.toISOString(),
+          })),
+        ),
+      },
+    });
+    if (error) {
+      if (error.code === "23505" && status === "awaiting_deposit") continue;
+      if (error.code === "23P01") return { ok: false, error: "conflict" };
+      if (error.message.includes("coupon_invalid")) return { ok: false, error: "coupon_invalid" };
+      throw new Error(`book_appointment failed: ${error.message}`);
+    }
+    appointmentId = data;
+  }
+  if (!appointmentId) return { ok: false, error: "unavailable" };
+  if (status === "awaiting_deposit") {
+    const id = appointmentId as string;
+    // Identifier of the booking in the Pix code (txid), and the policy the customer accepted.
+    await admin
+      .from("appointments")
+      .update({ deposit_reference: `MC${id.replace(/-/g, "").slice(0, 20)}` })
+      .eq("id", id);
+    if (policyText) {
+      await admin.from("deposit_policy_acceptances").insert({
+        business_id: business.id,
+        appointment_id: id,
+        policy_text: policyText,
+        policy_version: (page?.deposit_policy_version as number) ?? 1,
+      });
+    }
   }
 
   const { data: created } = await admin
@@ -278,7 +335,7 @@ export async function createBooking(input: CreateBookingInput): Promise<CreateBo
       endsAt: block.end.toISOString(),
       priceCents: total - discount,
       discountCents: discount,
-      depositCents: status === "awaiting_deposit" ? deposit : 0,
+      depositCents: status === "awaiting_deposit" ? depositCents : 0,
       depositExpiresAt,
       cancelToken: created?.cancel_token as string,
     },

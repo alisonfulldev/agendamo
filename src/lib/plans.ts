@@ -8,8 +8,8 @@ import { formatBRL } from "@/lib/money";
  *   external sites. Only the chat and the agenda (the rest is locked).
  * - Agenda: unlimited bookings, reminders, chat on the site and everything else.
  * Every plan shows "Agende também com o MeetChat" in the chat and on the profile.
- * - Pro: everything in Agenda + deposit / full payment by the customer (built in a separate step:
- *   off by DEPOSITS_ENABLED until then, shown as "em breve").
+ * - Pro: everything in Agenda + deposit / full payment by Pix with a mandatory receipt, checked
+ *   by the professional (lib/deposits). DEPOSITS_ENABLED is the switch.
  * 7-day trial of Agenda or Pro, once per account (no card). Stored values: plan "free" (also
  * during a trial: trial_plan says which), "agenda" or "pro" = subscribed ("team" is legacy = pro).
  */
@@ -17,8 +17,8 @@ export const TRIAL_DAYS = 7;
 export const FREE_BOOKINGS_PER_CYCLE = 10;
 export const FREE_CYCLE_DAYS = 30;
 
-/** Deposit / full payment by the customer (Pro): off until its own step is built. */
-export const DEPOSITS_ENABLED = false;
+/** Deposit / full payment by Pix with a receipt (Pro). */
+export const DEPOSITS_ENABLED = true;
 
 /** Professionals allowed while testing (so a team can try everything). */
 export const TRIAL_PROFESSIONALS = 10;
@@ -141,7 +141,8 @@ export type LockedFeature =
   | "stats"
   | "googleCalendar"
   | "embed"
-  | "anyProfessional";
+  | "anyProfessional"
+  | "deposits";
 
 export const PHOTO_LIMIT = 60;
 

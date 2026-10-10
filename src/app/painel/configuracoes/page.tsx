@@ -1,5 +1,6 @@
 import { formatInTimeZone } from "date-fns-tz";
 import type { Metadata } from "next";
+import Link from "next/link";
 
 import { GENERAL_NICHE } from "@/brands";
 import { brandUrl } from "@/brands/urls";
@@ -102,19 +103,19 @@ export default async function SettingsPage() {
 
       {getPlanFeatures(business).deposits ? (
         <Section
-          title="Pix do sinal"
-          description="Usado quando um serviço pede sinal para garantir o horário."
+          title="Sinal pelo Pix"
+          description="Quando um serviço pede sinal ou pagamento total, o cliente paga pelo Pix direto para você e envia o comprovante no chat. Você confere no banco e confirma."
         >
           <PixForm settings={settings.data as PageSettings | null} />
         </Section>
       ) : (
         <Section
-          title="Sinal no agendamento"
-          description="Em breve no plano Pro: o cliente paga o sinal ou o valor total ao agendar."
+          title="Sinal pelo Pix"
+          description="Disponível no plano Pro: o cliente paga o sinal ou o valor total pelo Pix ao agendar e envia o comprovante no chat."
         >
-          <p className="text-sm text-muted-foreground">
-            Enquanto isso, os lembretes automáticos ajudam a reduzir as faltas.
-          </p>
+          <Link href="/painel/plano" className="text-sm font-medium text-primary underline">
+            Ver o plano Pro
+          </Link>
         </Section>
       )}
     </div>

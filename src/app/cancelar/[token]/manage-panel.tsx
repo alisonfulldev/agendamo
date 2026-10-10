@@ -3,11 +3,11 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 
+import { DepositPayment } from "@/components/deposits/deposit-payment";
 import { Button } from "@/components/ui/button";
 
 import {
   cancelByTokenAction,
-  informDepositAction,
   rescheduleByTokenAction,
   rescheduleDaysAction,
   rescheduleSlotsAction,
@@ -16,18 +16,21 @@ import {
 export function ManagePanel({
   token,
   canChange,
-  awaitingDeposit,
-  depositInformed,
-  pix,
+  deposit,
   startRescheduling = false,
 }: {
   token: string;
   canChange: boolean;
   /** Opened from the reminder's "Preciso remarcar": go straight to the new times. */
   startRescheduling?: boolean;
-  awaitingDeposit: boolean;
-  depositInformed: boolean;
-  pix: { code: string; qr: string } | null;
+  /** Waiting for the Pix and its receipt (the same payment as in the chat). */
+  deposit: {
+    amount: string;
+    pix: { code: string; qr: string };
+    expiresAt: string;
+    businessName: string;
+    whatsapp: string | null;
+  } | null;
 }) {
   const router = useRouter();
   const [mode, setMode] = useState<"idle" | "cancel" | "reschedule">(
@@ -56,49 +59,7 @@ export function ManagePanel({
 
   return (
     <div className="flex flex-col gap-4">
-      {awaitingDeposit && pix ? (
-        <div className="flex flex-col items-center gap-2 rounded-xl border bg-card p-4">
-          <p className="font-medium">Pix do sinal</p>
-          {/* eslint-disable-next-line @next/next/no-img-element -- generated QR (data URL) */}
-          <img src={pix.qr} alt="QR code do Pix" width={220} height={220} />
-          <code className="w-full break-all rounded-lg bg-muted p-2 text-xs">{pix.code}</code>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => navigator.clipboard.writeText(pix.code)}
-          >
-            Copiar Pix copia e cola
-          </Button>
-          {depositInformed ? (
-            <p className="text-sm text-muted-foreground">
-              Você já avisou que pagou. Aguarde a confirmação.
-            </p>
-          ) : (
-            <Button
-              type="button"
-              className="h-11"
-              disabled={pending}
-              onClick={() =>
-                startTransition(async () => {
-                  const result = await informDepositAction(token);
-                  setMessage(
-                    result.ok
-                      ? {
-                          ok: true,
-                          text: "Avisamos que você pagou. Você recebe a confirmação por e-mail.",
-                        }
-                      : { ok: false, text: "Não foi possível avisar." },
-                  );
-                  router.refresh();
-                })
-              }
-            >
-              Já paguei
-            </Button>
-          )}
-        </div>
-      ) : null}
+      {deposit ? <DepositPayment token={token} {...deposit} /> : null}
 
       {canChange ? (
         mode === "idle" ? (

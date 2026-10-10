@@ -102,6 +102,13 @@ export default async function PanelHomePage({ searchParams }: PageProps<"/painel
   }
   const doneCount = steps.filter((s) => s.done).length;
   const allowance = await getBookingAllowance(business);
+  const { count: receiptsToCheck = 0 } = isOwner
+    ? await createAdminClient()
+        .from("appointments")
+        .select("id", { count: "exact", head: true })
+        .eq("business_id", business.id)
+        .eq("deposit_status", "sent")
+    : { count: 0 };
 
   // Free times left today: the fastest way to fill them is posting them right now. Only once the
   // day already has a booking: with an empty agenda (a new business) every time is free, and "only
@@ -142,6 +149,24 @@ export default async function PanelHomePage({ searchParams }: PageProps<"/painel
           ) : null
         }
       />
+      {(receiptsToCheck ?? 0) > 0 && isOwner ? (
+        <Link
+          href="/painel/sinais"
+          className="flex items-center justify-between gap-3 rounded-xl border-2 border-primary bg-primary/5 p-5"
+        >
+          <span>
+            <span className="block font-semibold">
+              {receiptsToCheck === 1
+                ? "1 comprovante de Pix para conferir"
+                : `${receiptsToCheck} comprovantes de Pix para conferir`}
+            </span>
+            <span className="block text-sm text-muted-foreground">
+              Confira no seu banco e confirme. Até lá, o horário fica pré-confirmado.
+            </span>
+          </span>
+          <span className="font-medium text-primary">Conferir</span>
+        </Link>
+      ) : null}
       {allowance.limited && isOwner ? (
         <section
           aria-labelledby="plano-gratis"

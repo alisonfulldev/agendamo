@@ -33,6 +33,13 @@ export const PANEL_NAV: NavItem[] = [
     hint: "Artes, cupons e pacotes",
     feature: "salesTools",
   },
+  {
+    href: "/painel/sinais",
+    label: "Sinais pelo Pix",
+    group: "business",
+    hint: "Comprovantes para conferir",
+    feature: "deposits",
+  },
   { href: "/painel/avaliacoes", label: "Avaliações", group: "business", feature: "reviews" },
   { href: "/painel/estatisticas", label: "Estatísticas", group: "business", feature: "stats" },
   { href: "/painel/radar", label: "Radar de demanda", group: "business", feature: "stats" },

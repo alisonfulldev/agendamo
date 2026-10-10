@@ -69,8 +69,11 @@ export const PLAN_CARDS: PlanCard[] = [
     period: "/mês",
     note: paidNote("pro"),
     tagline: "Tudo do Agenda, com pagamento no agendamento.",
-    includes: ["Tudo do Agenda"],
-    soon: ["Sinal ou pagamento total pelo cliente ao agendar (em breve)"],
+    includes: [
+      "Tudo do Agenda",
+      "Sinal ou valor total pelo Pix, direto na sua conta",
+      "Comprovante enviado no chat, com valor fácil de achar no extrato",
+    ],
     cta: `Testar ${TRIAL_DAYS} dias grátis`,
   },
 ];

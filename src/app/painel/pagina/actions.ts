@@ -140,7 +140,7 @@ const serviceSchema = z
       }
       return cents;
     }),
-    deposit_type: z.enum(["none", "fixed", "percent"]).default("none"),
+    deposit_type: z.enum(["none", "fixed", "percent", "full"]).default("none"),
     deposit_value: z.string().optional(),
     return_after_days: z.preprocess(
       emptyToNull,
@@ -171,6 +171,9 @@ export async function saveServiceAction(_prev: FormState, formData: FormData): P
   const { business } = await requireOwner();
   const parsed = serviceSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return invalid(parsed.error, formData);
+  // Deposit / full payment by Pix is part of the Pro plan (checked on the server, rule 6).
+  if (parsed.data.deposit_type !== "none" && !getPlanFeatures(business).deposits)
+    return { ok: false, message: "Sinal pelo Pix faz parte do plano Pro." };
   const { id, price, ...fields } = parsed.data;
   const row = { ...fields, price_cents: price, business_id: business.id };
 

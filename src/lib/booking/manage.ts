@@ -55,11 +55,23 @@ export async function approveAppointment(appointmentId: string): Promise<boolean
   return changed;
 }
 
+/**
+ * The professional confirms the deposit (after checking the bank): never automatic. Works while
+ * waiting for the receipt or with the receipt sent (pre-confirmed).
+ */
 export async function confirmDeposit(appointmentId: string): Promise<boolean> {
-  const changed = await transition(appointmentId, ["awaiting_deposit"], {
-    status: "confirmed",
-    deposit_status: "confirmed",
-  });
+  const { data } = await createAdminClient()
+    .from("appointments")
+    .update({
+      status: "confirmed",
+      deposit_status: "confirmed",
+      deposit_decided_at: new Date().toISOString(),
+    })
+    .eq("id", appointmentId)
+    .in("status", ["awaiting_deposit", "pending"])
+    .in("deposit_status", ["waiting", "sent"])
+    .select("id");
+  const changed = (data?.length ?? 0) > 0;
   if (changed) await notifyBookingConfirmed(appointmentId);
   return changed;
 }

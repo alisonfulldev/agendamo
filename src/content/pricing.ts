@@ -36,7 +36,7 @@ export const PRICING = {
       { label: "Clientes, financeiro e estatísticas", values: [false, true, true] },
       { label: "Vendas: artes, cupons, pacotes e lista de espera", values: [false, true, true] },
       { label: "Equipe e Google Agenda", values: [false, true, true] },
-      { label: "Sinal ou pagamento total no agendamento", values: [false, false, "Em breve"] },
+      { label: "Sinal ou pagamento total no agendamento", values: [false, false, true] },
     ] as { label: string; values: (string | boolean)[] }[],
   },
   extrasTitle: "Adicionais (opcionais)",

@@ -91,9 +91,20 @@ export default async function ManageAppointmentPage({
         token={token}
         canChange={changeable}
         startRescheduling={reschedule}
-        awaitingDeposit={appointment.status === "awaiting_deposit"}
-        depositInformed={appointment.deposit_status === "informed"}
-        pix={pix}
+        deposit={
+          pix &&
+          appointment.status === "awaiting_deposit" &&
+          appointment.deposit_status === "waiting" &&
+          appointment.deposit_expires_at
+            ? {
+                amount: priceText(appointment.deposit_cents),
+                pix,
+                expiresAt: appointment.deposit_expires_at,
+                businessName: business.name,
+                whatsapp: page?.whatsapp_number ?? null,
+              }
+            : null
+        }
       />
 
       {!changeable && ["confirmed", "pending", "awaiting_deposit"].includes(appointment.status) ? (

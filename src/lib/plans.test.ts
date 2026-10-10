@@ -95,9 +95,20 @@ describe("getPlanFeatures (Grátis, Agenda, Pro)", () => {
     });
   });
 
-  it("Pro: deposits stay off until their own step (DEPOSITS_ENABLED)", () => {
-    const f = getPlanFeatures({ plan: "pro", trial_ends_at: null }, NOW);
-    expect(f).toMatchObject({ tier: "pro", status: "subscribed", deposits: false });
+  it("deposit by Pix with receipt: only Pro (also during the Pro trial)", () => {
+    expect(getPlanFeatures({ plan: "pro", trial_ends_at: null }, NOW).deposits).toBe(true);
+    expect(getPlanFeatures({ plan: "agenda", trial_ends_at: null }, NOW).deposits).toBe(false);
+    expect(
+      getPlanFeatures(
+        {
+          plan: "free",
+          trial_plan: "pro",
+          trial_ends_at: new Date(NOW.getTime() + 3 * DAY).toISOString(),
+        },
+        NOW,
+      ).deposits,
+    ).toBe(true);
+    expect(getPlanFeatures({ plan: "free", trial_ends_at: null }, NOW).deposits).toBe(false);
   });
 
   it("subscribing during a trial applies right away (plan wins over the trial)", () => {

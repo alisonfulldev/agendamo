@@ -94,6 +94,8 @@ export function HeroChat({
   const [stage, setStage] = useState(0);
   const [started, setStarted] = useState<InlineStart | null>(null);
   const [expanded, setExpanded] = useState(false);
+  // Calls to action ask for the name field: focused right after the screen updates.
+  const [focusName, setFocusName] = useState(0);
   const [name, setName] = useState("");
   const arrivedAt = useRef(0);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -113,6 +115,10 @@ export function HeroChat({
     );
     return () => clearTimeout(timer);
   }, [stage, reduced]);
+
+  useEffect(() => {
+    if (focusName) inputRef.current?.focus({ preventScroll: true });
+  }, [focusName]);
 
   // Keep the newest balloon in view (inside the card only, never scrolling the page).
   useEffect(() => {
@@ -157,7 +163,7 @@ export function HeroChat({
       }
       setStage(LAST);
       setExpanded(true);
-      setTimeout(() => inputRef.current?.focus({ preventScroll: true }), 400);
+      setFocusName((n) => n + 1);
     });
     return () => registerInlineCreation(null);
   }, [started, begin]);

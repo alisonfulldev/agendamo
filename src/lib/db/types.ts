@@ -16,8 +16,20 @@ export const ACTIVE_APPOINTMENT_STATUSES: AppointmentStatus[] = [
   "pending",
   "awaiting_deposit",
 ];
-export type DepositType = "none" | "fixed" | "percent";
-export type DepositStatus = "none" | "waiting" | "informed" | "confirmed";
+/** "full": the whole price, paid when booking. */
+export type DepositType = "none" | "fixed" | "percent" | "full";
+/**
+ * waiting (aguardando pagamento) → sent (comprovante enviado, pré-confirmado) → confirmed |
+ * refused | expired; refunded (devolvido, recorded by the professional).
+ */
+export type DepositStatus =
+  | "none"
+  | "waiting"
+  | "sent"
+  | "confirmed"
+  | "refused"
+  | "expired"
+  | "refunded";
 
 export interface Business {
   id: string;
@@ -144,6 +156,13 @@ export interface Appointment {
   deposit_cents: number;
   deposit_status: DepositStatus;
   deposit_expires_at: string | null;
+  /** Identifier in the Pix code (txid). */
+  deposit_reference: string | null;
+  deposit_sent_at: string | null;
+  deposit_decided_at: string | null;
+  deposit_refused_reason: string | null;
+  deposit_refunded_at: string | null;
+  deposit_refunded_cents: number | null;
   coupon_code: string | null;
   discount_cents: number;
   referral_code: string | null;
@@ -178,7 +197,16 @@ export interface PageSettings {
   google_review_url: string | null;
   pix_key: string | null;
   pix_receiver_name: string | null;
+  /** Legacy (replaced by deposit_hold_minutes). */
   deposit_deadline_minutes: number;
+  pix_city: string | null;
+  deposit_min_cents: number;
+  /** How long the time stays reserved while waiting for the receipt. */
+  deposit_hold_minutes: number;
+  deposit_policy_text: string | null;
+  deposit_policy_version: number;
+  /** Reminders to the professional after a receipt arrives (hours). */
+  deposit_reminder_hours: number[];
   updated_at: string;
 }
 
@@ -363,4 +391,22 @@ export interface CustomDomain {
   domain: string;
   verified: boolean;
   created_at: string;
+}
+
+export interface DepositReceipt {
+  id: string;
+  business_id: string;
+  appointment_id: string;
+  object_key: string | null;
+  content_type: "image/jpeg" | "image/png" | "image/webp" | "application/pdf" | null;
+  size_bytes: number | null;
+  sha256: string | null;
+  status: "uploading" | "received" | "accepted" | "rejected" | "duplicate" | "invalid";
+  created_at: string;
+  uploaded_at: string | null;
+  decided_at: string | null;
+  deleted_at: string | null;
+  /** Prepared for a future reading engine (nothing is read in this version). */
+  extraction_status: "not_requested" | "pending" | "done" | "failed";
+  extracted: Record<string, unknown> | null;
 }

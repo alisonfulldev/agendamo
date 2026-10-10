@@ -50,7 +50,7 @@ export const nails = nicheBrand({
     {
       question: "Dá para cobrar sinal no alongamento?",
       answer:
-        "O sinal pago no agendamento chega em breve no plano Pro. Até lá, o lembrete automático ajuda a cliente a não faltar.",
+        "Dá, no plano Pro: o cliente paga o sinal pelo Pix direto para você e envia o comprovante no chat. Você confere no banco e confirma.",
     },
   ],
   testimonial: {

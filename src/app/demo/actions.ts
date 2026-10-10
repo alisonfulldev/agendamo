@@ -108,6 +108,16 @@ export async function demoSetPlanAction(formData: FormData): Promise<void> {
   } else {
     await db.query("delete from public.subscriptions where business_id = $1", [businessId]);
   }
+  // Back to the default: no deposit by Pix (the "Ligar sinal Pix" button turns it on again), so
+  // tests that change a plan start from the same state.
+  await db.query(
+    "update public.services set deposit_type = 'none', deposit_value = 0 where business_id = $1",
+    [businessId],
+  );
+  await db.query(
+    "update public.page_settings set deposit_policy_text = null where business_id = $1",
+    [businessId],
+  );
   if (row) invalidatePublicPage(row.slug);
   redirect("/demo?ok=plano#planos");
 }
@@ -147,6 +157,41 @@ export async function demoFillFreeCycleAction(formData: FormData): Promise<void>
   }
   invalidatePublicPage(row.slug);
   redirect("/demo?ok=ciclo#planos");
+}
+
+/** Pro deposit by Pix: Pix key, city, policy and a R$ 30 deposit on every service of the business. */
+export async function demoEnableDepositsAction(formData: FormData): Promise<void> {
+  guard();
+  const businessId = z.uuid().parse(formData.get("businessId"));
+  const db = await getDemoDb();
+  await db.query(
+    `update public.page_settings set pix_key = 'pix@demo.com.br', pix_receiver_name = 'NEGOCIO DEMO',
+       pix_city = 'SAO PAULO', deposit_hold_minutes = 20,
+       deposit_policy_text = 'Cancelamentos com mais de 24 horas devolvem o sinal. Faltas sem aviso não têm devolução.'
+     where business_id = $1`,
+    [businessId],
+  );
+  await db.query(
+    "update public.services set deposit_type = 'fixed', deposit_value = 3000 where business_id = $1",
+    [businessId],
+  );
+  const row = (
+    await db.query<{ slug: string }>("select slug from public.businesses where id = $1", [
+      businessId,
+    ])
+  ).rows[0];
+  if (row) invalidatePublicPage(row.slug);
+  redirect("/demo?ok=sinal#planos");
+}
+
+/** Makes every reservation waiting for a Pix receipt end now (then run "Sinais Pix vencidos"). */
+export async function demoExpireDepositHoldsAction(): Promise<void> {
+  guard();
+  const db = await getDemoDb();
+  await db.query(
+    "update public.appointments set deposit_expires_at = now() - interval '1 minute' where deposit_status = 'waiting'",
+  );
+  redirect("/demo?ok=vencer#tarefas");
 }
 
 /** Runs a scheduled job now, exactly as pg_cron would call it. */

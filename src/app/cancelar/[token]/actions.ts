@@ -135,7 +135,6 @@ export async function rescheduleByTokenAction(
   };
 }
 
-/** Prompt 26: the customer says the deposit was paid; the owner confirms in the panel. */
 export async function informDepositAction(token: string): Promise<{ ok: boolean }> {
   if (!(await rateLimitRequest("publicAction", "deposit"))) return { ok: false };
   const appointment = await byToken(token);

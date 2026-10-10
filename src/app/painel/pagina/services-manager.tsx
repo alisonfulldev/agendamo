@@ -80,7 +80,7 @@ function ServiceForm({
       </div>
       {depositsEnabled ? (
         <div className="grid gap-4 sm:grid-cols-2">
-          <FieldShell name="deposit_type" label="Sinal por Pix">
+          <FieldShell name="deposit_type" label="Pagamento pelo Pix ao agendar">
             <select
               id="deposit_type"
               name="deposit_type"
@@ -91,9 +91,10 @@ function ServiceForm({
               <option value="none">Sem sinal</option>
               <option value="fixed">Valor fixo</option>
               <option value="percent">Porcentagem do preço</option>
+              <option value="full">Pagamento total</option>
             </select>
           </FieldShell>
-          {depositType !== "none" ? (
+          {depositType === "fixed" || depositType === "percent" ? (
             <TextField
               name="deposit_value"
               label={depositType === "fixed" ? "Valor do sinal (R$)" : "Sinal (%)"}

@@ -8,7 +8,7 @@ import {
   WeeklyHoursEditor,
   type WorkingRangeDraft,
 } from "@/components/business/weekly-hours-editor";
-import { FieldShell, FormMessage, TextField } from "@/components/forms/field";
+import { FieldShell, FormMessage, TextAreaField, TextField } from "@/components/forms/field";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -321,32 +321,66 @@ export function PixForm({ settings }: { settings: PageSettings | null }) {
         name="pix_key"
         label="Chave Pix"
         defaultValue={settings?.pix_key ?? ""}
-        hint="O sinal cai direto na sua conta. A plataforma não recebe nada."
+        hint="CPF, CNPJ, e-mail, celular ou chave aleatória. O dinheiro cai direto na sua conta: o MeetChat não recebe nada."
         state={state}
       />
       <TextField
         name="pix_receiver_name"
-        label="Nome de quem recebe"
+        label="Nome do recebedor (como aparece no banco)"
         maxLength={25}
         defaultValue={settings?.pix_receiver_name ?? ""}
         state={state}
       />
-      <Select
-        name="deposit_deadline_minutes"
-        label="Prazo para pagar o sinal"
+      <TextField
+        name="pix_city"
+        label="Cidade"
+        maxLength={15}
+        defaultValue={settings?.pix_city ?? settings?.city ?? ""}
+        state={state}
+      />
+      <TextField
+        name="deposit_min_cents"
+        label="Sinal mínimo (R$)"
+        inputMode="decimal"
         defaultValue={
-          state.values?.deposit_deadline_minutes ?? settings?.deposit_deadline_minutes ?? 60
+          settings?.deposit_min_cents
+            ? (settings.deposit_min_cents / 100).toFixed(2).replace(".", ",")
+            : ""
         }
+        hint="Opcional. Sinais menores sobem para esse valor."
+        state={state}
+      />
+      <Select
+        name="deposit_hold_minutes"
+        label="Tempo de reserva enquanto espera o comprovante"
+        defaultValue={state.values?.deposit_hold_minutes ?? settings?.deposit_hold_minutes ?? 20}
         options={[
+          [10, "10 minutos"],
           [15, "15 minutos"],
+          [20, "20 minutos"],
           [30, "30 minutos"],
           [60, "1 hora"],
           [120, "2 horas"],
-          [360, "6 horas"],
-          [720, "12 horas"],
-          [1440, "24 horas"],
         ]}
       />
+      <TextField
+        name="deposit_reminder_hours"
+        label="Lembrar você de conferir após (horas)"
+        defaultValue={(settings?.deposit_reminder_hours ?? [2, 6]).join(", ")}
+        hint="Ex.: 2, 6"
+        state={state}
+      />
+      <div className="sm:col-span-2">
+        <TextAreaField
+          name="deposit_policy_text"
+          label="Política de cancelamento e devolução do sinal"
+          rows={4}
+          maxLength={2000}
+          defaultValue={settings?.deposit_policy_text ?? ""}
+          hint="O cliente vê e aceita antes de pagar. Guardamos o texto aceito, com a data."
+          state={state}
+        />
+      </div>
       <div className="flex flex-col gap-2 sm:col-span-2">
         <FormMessage state={state} />
         <SubmitButton className="self-start" pendingLabel="Salvando…">

@@ -49,6 +49,16 @@ export const LOCKED_FEATURES: Record<
     description: "Coloque o botão de agendar no seu site, com o chat abrindo por cima.",
     bullets: ["Funciona em qualquer site", "Mesmo chat do seu link"],
   },
+  deposits: {
+    title: "Sinal pelo Pix",
+    description:
+      "O cliente paga o sinal ou o valor total pelo Pix direto para você e envia o comprovante no chat. Você confere no banco e confirma.",
+    bullets: [
+      "Valor com centavos únicos, fácil de achar no extrato",
+      "Comprovante obrigatório antes de pré-confirmar",
+      "Horário reservado enquanto o cliente paga",
+    ],
+  },
   anyProfessional: {
     title: "Equipe",
     description: "Mais de um profissional, cada um com a própria agenda, e salas ou macas.",
@@ -58,6 +68,7 @@ export const LOCKED_FEATURES: Record<
 
 export const LOCK_TEXT = {
   badge: "Disponível no Agenda e no Pro",
+  proBadge: "Disponível no plano Pro",
   plans: "Ver planos",
   trial: "Testar 7 dias grátis",
   denied: "Esse recurso faz parte dos planos Agenda e Pro.",

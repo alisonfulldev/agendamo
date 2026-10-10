@@ -1,5 +1,9 @@
 "use server";
 
+import { getPlanFeatures } from "@/lib/plans";
+
+import { parseBRL } from "@/lib/money";
+
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
@@ -247,11 +251,50 @@ const pixSchema = z.object({
     return key.key;
   }),
   pix_receiver_name: z.string().transform((v) => pixText(v, 25) || null),
-  deposit_deadline_minutes: z.coerce.number().int().min(5).max(2880),
+  pix_city: z.string().transform((v) => pixText(v, 15) || null),
+  deposit_min_cents: z.string().transform((v, ctx) => {
+    if (!v.trim()) return 0;
+    const cents = parseBRL(v);
+    if (cents === null || cents < 0 || cents > 1_000_000) {
+      ctx.addIssue({ code: "custom", message: "Valor mínimo inválido" });
+      return z.NEVER;
+    }
+    return cents;
+  }),
+  deposit_hold_minutes: z.coerce.number().int().min(5).max(120),
+  deposit_policy_text: z
+    .string()
+    .max(2000, "Use até 2.000 caracteres")
+    .transform((v) => v.trim() || null),
+  deposit_reminder_hours: z.string().transform((v, ctx) => {
+    const hours = [
+      ...new Set(
+        v
+          .split(/[,\s]+/)
+          .filter(Boolean)
+          .map(Number),
+      ),
+    ].sort((a, b) => a - b);
+    if (
+      !hours.length ||
+      hours.length > 4 ||
+      hours.some((h) => !Number.isInteger(h) || h < 1 || h > 48)
+    ) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Use horas entre 1 e 48, separadas por vírgula (ex.: 2, 6)",
+      });
+      return z.NEVER;
+    }
+    return hours;
+  }),
 });
 
+/** Pix of the deposit (Pro): key, receiver, city, minimum, reservation time, policy, reminders. */
 export async function savePixAction(_prev: FormState, formData: FormData): Promise<FormState> {
   const { business } = await requireOwner();
+  if (!getPlanFeatures(business).deposits)
+    return { ok: false, message: "Sinal pelo Pix faz parte do plano Pro." };
   const parsed = pixSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return invalid(parsed.error, formData);
   if (parsed.data.pix_key && !parsed.data.pix_receiver_name) {
@@ -262,9 +305,21 @@ export async function savePixAction(_prev: FormState, formData: FormData): Promi
     };
   }
   const supabase = await createClient();
-  const { error } = await supabase
+  // A changed policy gets a new version (each acceptance keeps the text it accepted).
+  const { data: current } = await supabase
     .from("page_settings")
-    .upsert({ business_id: business.id, ...parsed.data, updated_at: new Date().toISOString() });
+    .select("deposit_policy_text, deposit_policy_version")
+    .eq("business_id", business.id)
+    .maybeSingle();
+  const version =
+    ((current?.deposit_policy_version as number | undefined) ?? 1) +
+    ((current?.deposit_policy_text ?? null) !== parsed.data.deposit_policy_text ? 1 : 0);
+  const { error } = await supabase.from("page_settings").upsert({
+    business_id: business.id,
+    ...parsed.data,
+    deposit_policy_version: version,
+    updated_at: new Date().toISOString(),
+  });
   if (error) return { ok: false, message: "Não foi possível salvar." };
   return { ok: true, message: "Dados do Pix salvos." };
 }

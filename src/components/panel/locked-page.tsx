@@ -19,7 +19,7 @@ export function LockedPage({
       <span className="flex size-14 items-center justify-center rounded-full bg-primary/10 text-primary">
         <Lock className="size-6" aria-hidden />
       </span>
-      <p className="text-sm font-medium text-primary">{LOCK_TEXT.badge}</p>
+      <p className="text-sm font-medium text-primary">{feature === "deposits" ? LOCK_TEXT.proBadge : LOCK_TEXT.badge}</p>
       <h1 className="text-2xl font-bold">{info.title}</h1>
       <p className="text-muted-foreground">{info.description}</p>
       <ul className="flex flex-col gap-1.5 text-left text-sm">

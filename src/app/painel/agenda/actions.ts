@@ -221,6 +221,7 @@ export async function createManualAppointmentAction(input: unknown): Promise<Man
       unavailable: "Horário indisponível.",
       coupon_invalid: "Cupom inválido.",
       limit: "Limite de agendamentos automáticos do plano Grátis atingido.",
+      policy_required: "Aceite da política do sinal pendente.",
     } as const;
     return { ok: false, message: messages[result.error] };
   }

@@ -151,7 +151,7 @@ export const aesthetics = {
     emailNote: "Enviamos a confirmação por e-mail.",
     successPending: "Recebemos seu pedido! {business} vai confirmar seu horário.",
     successDeposit:
-      "Para garantir seu horário, pague o sinal de R$ {depositAmount} pelo Pix abaixo até {deadline}.",
+      "Seu horário está reservado! Falta só o pagamento pelo Pix:",
     conflict: "Ops, esse horário acabou de ser ocupado. Veja os horários atualizados:",
     blocked:
       "No momento não conseguimos concluir seu agendamento por aqui. Fale direto com {business} pelo WhatsApp.",

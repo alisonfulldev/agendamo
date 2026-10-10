@@ -29,6 +29,7 @@ const LOCKABLE: LockedFeature[] = [
   "stats",
   "anyProfessional",
   "googleCalendar",
+  "deposits",
 ];
 
 /** Panel pages that work before the business exists. */

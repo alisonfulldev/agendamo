@@ -1,4 +1,4 @@
-import type { Business, PaidPlan, Subscription } from "@/lib/db/types";
+import type { Appointment, Business, PaidPlan, Subscription } from "@/lib/db/types";
 import { paidPlanOf, PLAN_PRICES, subscriptionPrice } from "@/lib/plans";
 
 /** Monthly recurring revenue (cents) of a subscription: plan normalized to a month + active add-ons. */
@@ -123,4 +123,45 @@ function conversion(
 /** ISO timestamp of days days ago (kept out of render functions). */
 export function daysAgoIso(days: number): string {
   return new Date(Date.now() - days * 86_400_000).toISOString();
+}
+
+export interface DepositMetrics {
+  withDeposit: number;
+  /** Share of deposit bookings whose receipt was sent (0 to 1). */
+  receiptRate: number;
+  /** Average minutes from the receipt to the professional's decision. */
+  avgMinutesToDecision: number | null;
+  confirmed: number;
+  refused: number;
+  expired: number;
+  duplicatesBlocked: number;
+}
+
+/** Deposits by Pix with receipts (Pro), for the admin page. */
+export function computeDepositMetrics(
+  appointments: Pick<Appointment, "deposit_status" | "deposit_sent_at" | "deposit_decided_at">[],
+  duplicateReceipts: number,
+): DepositMetrics {
+  const withDeposit = appointments.filter((a) => a.deposit_status !== "none");
+  const sent = withDeposit.filter((a) => a.deposit_sent_at);
+  const decidedAfterReceipt = sent.filter(
+    (a) => a.deposit_decided_at && ["confirmed", "refused", "refunded"].includes(a.deposit_status),
+  );
+  const minutes = decidedAfterReceipt.map(
+    (a) =>
+      (new Date(a.deposit_decided_at!).getTime() - new Date(a.deposit_sent_at!).getTime()) / 60_000,
+  );
+  return {
+    withDeposit: withDeposit.length,
+    receiptRate: withDeposit.length ? sent.length / withDeposit.length : 0,
+    avgMinutesToDecision: minutes.length
+      ? Math.round(minutes.reduce((sum, m) => sum + m, 0) / minutes.length)
+      : null,
+    confirmed: withDeposit.filter(
+      (a) => a.deposit_status === "confirmed" || a.deposit_status === "refunded",
+    ).length,
+    refused: withDeposit.filter((a) => a.deposit_status === "refused").length,
+    expired: withDeposit.filter((a) => a.deposit_status === "expired").length,
+    duplicatesBlocked: duplicateReceipts,
+  };
 }

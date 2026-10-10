@@ -4,6 +4,7 @@ import {
   CopyObjectCommand,
   DeleteObjectCommand,
   DeleteObjectsCommand,
+  GetObjectCommand,
   HeadObjectCommand,
   ListObjectsV2Command,
   PutObjectCommand,
@@ -76,6 +77,53 @@ export async function createUploadUrl(
       signableHeaders: new Set(["content-type", "content-length", "cache-control"]),
     },
   );
+}
+
+/**
+ * Presigned PUT for private files (Pix receipts): 5 minutes, never cached by browsers or CDNs.
+ * The key is random and is never shown; the file is only ever served by the panel's own route.
+ */
+export async function createPrivateUploadUrl(
+  key: string,
+  contentType: string,
+  contentLength: number,
+): Promise<string> {
+  if (isDemoMode()) return demoUploadUrl(key, contentType, contentLength);
+  const { client, bucket } = r2();
+  return getSignedUrl(
+    client,
+    new PutObjectCommand({
+      Bucket: bucket,
+      Key: key,
+      ContentType: contentType,
+      ContentLength: contentLength,
+      CacheControl: "private, no-store",
+    }),
+    {
+      expiresIn: 300,
+      signableHeaders: new Set(["content-type", "content-length", "cache-control"]),
+    },
+  );
+}
+
+/**
+ * Reads a whole object into memory (at most maxBytes; larger or missing gives null). Used only to
+ * check receipts (type and hash) and to serve them to their owner: nothing is written or logged.
+ */
+export async function readObject(key: string, maxBytes: number): Promise<Uint8Array | null> {
+  if (isDemoMode()) {
+    const body = readDemoObject(key);
+    return body && body.length <= maxBytes ? new Uint8Array(body) : null;
+  }
+  const { client, bucket } = r2();
+  try {
+    const object = await client.send(new GetObjectCommand({ Bucket: bucket, Key: key }));
+    if (!object.Body || (object.ContentLength ?? 0) > maxBytes) return null;
+    const bytes = await object.Body.transformToByteArray();
+    return bytes.length <= maxBytes ? bytes : null;
+  } catch {
+    return null;
+  }
 }
 
 /** Size of an uploaded object, or null when it does not exist. */

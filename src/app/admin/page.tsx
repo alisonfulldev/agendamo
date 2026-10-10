@@ -3,7 +3,12 @@ import Link from "next/link";
 
 import { BRANDS } from "@/brands";
 import { requireAdmin } from "@/lib/admin";
-import { computeMetrics, daysAgoIso, type BrandMetrics } from "@/lib/admin-metrics";
+import {
+  computeDepositMetrics,
+  computeMetrics,
+  daysAgoIso,
+  type BrandMetrics,
+} from "@/lib/admin-metrics";
 import type { Business, Subscription } from "@/lib/db/types";
 import { formatBRL } from "@/lib/money";
 import { getPlanFeatures, planLabel } from "@/lib/plans";
@@ -124,6 +129,21 @@ export default async function AdminPage({ searchParams }: PageProps<"/admin">) {
     db.from("page_stats_daily").select("business_id").limit(50000),
     db.from("audit_log").select("business_id").eq("action", "plan.upgraded").limit(50000),
   ]);
+  const [depositRows, duplicates] = await Promise.all([
+    db
+      .from("appointments")
+      .select("deposit_status, deposit_sent_at, deposit_decided_at")
+      .neq("deposit_status", "none")
+      .limit(50000),
+    db
+      .from("deposit_receipts")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "duplicate"),
+  ]);
+  const deposits = computeDepositMetrics(
+    (depositRows.data ?? []) as Parameters<typeof computeDepositMetrics>[0],
+    duplicates.count ?? 0,
+  );
   const upgradedIds = new Set((upgraded.data ?? []).map((r) => r.business_id as string));
   const allBusinesses = (businesses.data ?? []) as Business[];
   const allSubs = (subscriptions.data ?? []) as Subscription[];
@@ -164,6 +184,33 @@ export default async function AdminPage({ searchParams }: PageProps<"/admin">) {
           />
         ))}
       </div>
+
+      <section className="rounded-xl border bg-card p-4">
+        <h2 className="font-semibold">Sinais pelo Pix (Pro)</h2>
+        <dl className="mt-3 grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
+          {(
+            [
+              ["Agendamentos com sinal", String(deposits.withDeposit)],
+              ["Enviaram comprovante", `${Math.round(deposits.receiptRate * 100)}%`],
+              [
+                "Tempo até a confirmação",
+                deposits.avgMinutesToDecision === null
+                  ? "—"
+                  : `${deposits.avgMinutesToDecision} min`,
+              ],
+              ["Confirmados", String(deposits.confirmed)],
+              ["Recusados", String(deposits.refused)],
+              ["Expirados", String(deposits.expired)],
+              ["Comprovantes duplicados bloqueados", String(deposits.duplicatesBlocked)],
+            ] as const
+          ).map(([label, value]) => (
+            <div key={label}>
+              <dt className="text-muted-foreground">{label}</dt>
+              <dd className="text-lg font-bold">{value}</dd>
+            </div>
+          ))}
+        </dl>
+      </section>
 
       <section className="rounded-xl border bg-card p-4">
         <h2 className="mb-3 font-semibold">Cupons da plataforma</h2>

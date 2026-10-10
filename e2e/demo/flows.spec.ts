@@ -158,6 +158,7 @@ test("“Outro / Geral”: neutral chat and profile, and the owner can change th
 
 test("book through the chat: customer and owner get e-mails", async ({ page }) => {
   const email = `cliente-${unique()}@exemplo.com`;
+  await setPlan(page, "Studio Bela", "Pro");
   await page.goto("/studio-bela?brand=beauty");
   await page
     .getByRole("button", { name: /Manicure/ })

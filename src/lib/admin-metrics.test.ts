@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { computeMetrics, monthlyRevenue, weekOf } from "@/lib/admin-metrics";
+import { computeDepositMetrics, computeMetrics, monthlyRevenue, weekOf } from "@/lib/admin-metrics";
 
 describe("monthlyRevenue", () => {
   it("uses the plan's price, normalizes yearly plans and adds active add-ons", () => {
@@ -163,5 +163,42 @@ describe("computeMetrics", () => {
     });
     expect(metrics.fellToFree).toBe(2);
     expect(metrics.upgrades).toBe(1);
+  });
+});
+
+describe("computeDepositMetrics", () => {
+  it("counts deposits, the receipt rate, the time to decide and the outcomes", () => {
+    const sent = "2030-01-10T10:00:00Z";
+    const m = computeDepositMetrics(
+      [
+        {
+          deposit_status: "confirmed",
+          deposit_sent_at: sent,
+          deposit_decided_at: "2030-01-10T10:30:00Z",
+        },
+        {
+          deposit_status: "refused",
+          deposit_sent_at: sent,
+          deposit_decided_at: "2030-01-10T11:30:00Z",
+        },
+        {
+          deposit_status: "expired",
+          deposit_sent_at: null,
+          deposit_decided_at: "2030-01-10T10:20:00Z",
+        },
+        { deposit_status: "sent", deposit_sent_at: sent, deposit_decided_at: null },
+        { deposit_status: "none", deposit_sent_at: null, deposit_decided_at: null },
+      ],
+      2,
+    );
+    expect(m).toEqual({
+      withDeposit: 4,
+      receiptRate: 0.75,
+      avgMinutesToDecision: 60,
+      confirmed: 1,
+      refused: 1,
+      expired: 1,
+      duplicatesBlocked: 2,
+    });
   });
 });

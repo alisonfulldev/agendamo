@@ -8,7 +8,7 @@ import { requireUser } from "@/lib/auth/session";
 import { getBusinessContext } from "@/lib/business/context";
 import { invalid, type FormState } from "@/lib/forms";
 import { rateLimitRequest } from "@/lib/rate-limit";
-import { businessPrefix, deletePrefix } from "@/lib/storage/r2";
+import { businessPrefix, deleteObject, deletePrefix } from "@/lib/storage/r2";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -122,6 +122,15 @@ export async function deleteAccountAction(
       },
     });
     await deletePrefix(businessPrefix(business.id));
+    // Pix receipts live under random keys (outside the business folder): deleted one by one.
+    const { data: receipts } = await admin
+      .from("deposit_receipts")
+      .select("object_key")
+      .eq("business_id", business.id)
+      .not("object_key", "is", null);
+    await Promise.all(
+      (receipts ?? []).map((r) => deleteObject(r.object_key as string).catch(() => undefined)),
+    );
     const { error } = await admin.from("businesses").delete().eq("id", business.id);
     if (error) return { ok: false, message: "Não foi possível excluir agora. Tente de novo." };
   } else {

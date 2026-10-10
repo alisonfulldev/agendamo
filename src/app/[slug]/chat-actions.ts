@@ -73,6 +73,8 @@ export interface ChatCatalog {
     priceCents: number;
   }[];
   professionals: { id: string; name: string; photoUrl: string | null; serviceIds: string[] }[];
+  /** Pro: services that ask for a deposit (or the full price) by Pix, and the policy to accept. */
+  deposit: { serviceIds: string[]; policy: string | null } | null;
 }
 
 export async function getChatCatalogAction(slug: string): Promise<ChatCatalog | null> {
@@ -81,10 +83,18 @@ export async function getChatCatalogAction(slug: string): Promise<ChatCatalog | 
   const features = getPlanFeatures(catalog.business);
   const { data: page } = await createAdminClient()
     .from("page_settings")
-    .select("show_prices, whatsapp_number")
+    .select("show_prices, whatsapp_number, pix_key, deposit_policy_text")
     .eq("business_id", catalog.business.id)
     .maybeSingle();
+  const depositServices = catalog.services.filter((s) => s.deposit_type !== "none");
   return {
+    deposit:
+      features.deposits && page?.pix_key && depositServices.length
+        ? {
+            serviceIds: depositServices.map((s) => s.id),
+            policy: (page.deposit_policy_text as string | null)?.trim() || null,
+          }
+        : null,
     businessName: catalog.business.name,
     timezone: catalog.business.timezone,
     showPrices: (page?.show_prices as boolean | undefined) ?? true,
@@ -301,13 +311,22 @@ export type ConfirmResult =
       /** Who will attend (the next booking offered in the chat keeps the same person). */
       professionalId: string;
       pix: { code: string; qr: string } | null;
+      /** End of the reservation while waiting for the receipt. */
+      depositExpiresAt: string | null;
       whatsappSummary: string | null;
       /** Pre-filled Google Calendar link ("Salvar na minha agenda"). */
       googleCalendarUrl: string | null;
     }
   | {
       ok: false;
-      error: "conflict" | "blocked" | "invalid" | "coupon_invalid" | "rate_limited" | "limit";
+      error:
+        | "conflict"
+        | "blocked"
+        | "invalid"
+        | "coupon_invalid"
+        | "rate_limited"
+        | "limit"
+        | "policy_required";
     };
 
 export async function confirmChatBookingAction(input: unknown): Promise<ConfirmResult> {
@@ -316,6 +335,7 @@ export async function confirmChatBookingAction(input: unknown): Promise<ConfirmR
     .extend({
       startsAt: z.iso.datetime({ offset: true }),
       optIn: z.boolean().default(false),
+      depositPolicyAccepted: z.boolean().default(false),
       couponCode: z.string().trim().max(30).nullable().default(null),
       referralCode: z.string().trim().max(40).nullable().default(null),
       abandonedId: z.uuid().nullable().default(null),
@@ -345,6 +365,7 @@ export async function confirmChatBookingAction(input: unknown): Promise<ConfirmR
     customer: { name: data.name, phone: data.phone, email: data.email, marketingOptIn: false },
     source: "chat",
     couponCode: features.salesTools ? data.couponCode : null,
+    depositPolicyAccepted: data.depositPolicyAccepted,
     referralCode: data.referralCode,
   });
   if (!result.ok) {
@@ -407,6 +428,7 @@ export async function confirmChatBookingAction(input: unknown): Promise<ConfirmR
         })
       : null,
     pix: code ? { code, qr: await QRCode.toDataURL(code, { width: 320, margin: 1 }) } : null,
+    depositExpiresAt: result.booking.depositExpiresAt,
     whatsappSummary: page?.whatsapp_number
       ? `Olá, ${ctx.catalog.business.name}! Acabei de agendar ${serviceName} para ${vars.date} às ${vars.time}. Nome: ${data.name}.`
       : null,

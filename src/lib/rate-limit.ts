@@ -31,6 +31,8 @@ export const RATE_LIMITS = {
   accountCreate: { limit: 3, windowSeconds: 24 * 60 * 60 },
   /** Demonstrations of the creation conversation (home page). */
   demo: { limit: 10, windowSeconds: 60 * 60 },
+  /** Pix receipt uploads, per appointment and per IP. */
+  receipt: { limit: 10, windowSeconds: 60 * 60 },
 } as const satisfies Record<string, RateLimitRule>;
 
 export type RateLimitName = keyof typeof RATE_LIMITS;
