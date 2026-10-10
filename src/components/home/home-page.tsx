@@ -306,7 +306,7 @@ export function HomePage({
         </section>
 
         {/* Pricing */}
-        <section aria-labelledby="preco" className="below-fold border-y bg-muted/50">
+        <section aria-labelledby="preco" className="border-y bg-muted/50">
           <div className="mx-auto max-w-6xl px-5 py-16">
             <h2 id="preco" className="text-center text-3xl font-bold tracking-tight">
               {content.pricing.title}
@@ -329,7 +329,7 @@ export function HomePage({
         </section>
 
         {/* FAQ */}
-        <section aria-labelledby="faq" className="below-fold mx-auto max-w-3xl px-5 py-16">
+        <section aria-labelledby="faq" className="mx-auto max-w-3xl px-5 py-16">
           <h2 id="faq" className="text-center text-3xl font-bold tracking-tight">
             {content.faq.title}
           </h2>
@@ -367,7 +367,7 @@ export function HomePage({
         </section>
       </main>
 
-      <nav aria-labelledby="areas" className="below-fold mx-auto w-full max-w-6xl px-5 pb-10">
+      <nav aria-labelledby="areas" className="mx-auto w-full max-w-6xl px-5 pb-10">
         <h2 id="areas" className="text-sm font-semibold text-muted-foreground">
           Agendamento online por área
         </h2>

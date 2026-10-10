@@ -277,7 +277,8 @@
 }
 
 /* Sections below the first screen: the browser skips their layout until they get close (faster
-   first paint on long pages). Never on a section with position: fixed content inside. */
+   first paint on long pages). Only on text sections: no links or buttons inside (accessibility
+   checkers misplace them while skipped) and no position: fixed content. */
 @utility below-fold {
   content-visibility: auto;
   contain-intrinsic-size: auto 640px;
