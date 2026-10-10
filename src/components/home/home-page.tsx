@@ -352,7 +352,7 @@ export function HomePage({
         </section>
 
         {/* Closing */}
-        <section id="cta-final" className="below-fold mx-auto max-w-6xl px-5 pb-20">
+        <section id="cta-final" className="mx-auto max-w-6xl px-5 pb-20">
           <div className="site-cta-panel flex flex-col items-center gap-6 rounded-3xl px-6 py-14 text-center text-primary-foreground">
             <h2 className="max-w-xl text-3xl font-bold tracking-tight text-balance sm:text-4xl">
               {content.closing.title}
