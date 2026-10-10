@@ -5,7 +5,7 @@ import { getCurrentBrand } from "@/brands/server";
 import { readableOn } from "@/brands/theme";
 import { hasRealDomain } from "@/brands/urls";
 
-const SIZES = new Set([96, 180, 192, 512]);
+const SIZES = new Set([32, 48, 96, 180, 192, 512]);
 
 /**
  * App icon in the brand of the domain (PWA manifest, push notifications, Apple touch icon): the

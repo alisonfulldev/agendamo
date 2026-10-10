@@ -22,7 +22,16 @@ export async function generateMetadata(): Promise<Metadata> {
     description: brand.sales.subtitle,
     applicationName: brand.name,
     // One mark for the product on the shared domain (search engines show one icon per domain).
-    icons: { icon: hasRealDomain(brand) ? brand.favicon : PLATFORM.favicon, apple: "/icons/180" },
+    // SVG for modern browsers, PNG for Safari and search results (Google uses multiples of 48 px).
+    icons: {
+      icon: [
+        { url: hasRealDomain(brand) ? brand.favicon : PLATFORM.favicon, type: "image/svg+xml" },
+        { url: "/icons/48", sizes: "48x48", type: "image/png" },
+        { url: "/icons/32", sizes: "32x32", type: "image/png" },
+      ],
+      shortcut: "/favicon.ico",
+      apple: "/icons/180",
+    },
     manifest: "/manifest.webmanifest",
     // Google Search Console ownership (HTML tag method).
     verification: { google: "F1h9of9zXET4drI3F4vhOcGjlshY7ioggX5118YrHqg" },
