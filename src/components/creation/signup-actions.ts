@@ -9,6 +9,7 @@ import { getNiche } from "@/brands";
 import { brandUrl } from "@/brands/urls";
 import { TERMS } from "@/content/legal";
 import { audit } from "@/lib/audit";
+import { notifyAdminsOfSignup } from "@/lib/notifications/admin-signup";
 import { sendEmailCode, verifyEmailCode, type SendCodeResult } from "@/lib/auth/email-code";
 import { DEFAULT_HOURS } from "@/lib/business/schemas";
 import { checkSlug, isSlugAvailable } from "@/lib/business/slug-check";
@@ -188,6 +189,14 @@ export async function verifySignupCodeAction(input: unknown): Promise<VerifySign
   await admin.from("demos").delete().eq("id", demo.id);
 
   const pageUrl = brandUrl(niche, `/${slug}`);
+  await notifyAdminsOfSignup({
+    businessName: demo.name,
+    nicheName: niche.niche?.name ?? "Outro",
+    email: parsed.data.email,
+    whatsapp: normalizeBrPhone(parsed.data.whatsapp),
+    pageUrl,
+    via: "conversa",
+  });
   return {
     ok: true,
     outcome: "created",

@@ -146,7 +146,7 @@ export function nicheBrand<T extends NicheBrandInput>(input: T) {
           description: "Em 5 minutos, com valor, duração e os dias em que você atende.",
         },
         {
-          title: "Cole o link na bio",
+          title: "Divulgue seu link",
           description: "Instagram, status do WhatsApp, Google e onde mais quiser.",
         },
         {

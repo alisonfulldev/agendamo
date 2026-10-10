@@ -25,14 +25,14 @@ export const NICHE_SEO: Record<string, NicheSeo> = {
   beauty: {
     title: "Agenda online para salão de beleza | MeetChat",
     description:
-      "Sistema de agendamento para salão de beleza: a cliente marca corte, escova e unhas pelo link da bio, 24h, e você recebe o aviso no celular. 30 dias grátis.",
+      "Sistema de agendamento para salão de beleza: a cliente marca corte, escova e unhas pelo seu link, 24h, e você recebe o aviso no celular. 30 dias grátis.",
     h1: "Salão de agenda cheia, sem responder mensagem",
-    subtitle: "A cliente marca pelo link da bio, 24h. Você só atende.",
+    subtitle: "A cliente marca pelo seu link, 24h. Você só atende.",
     painsTitle: "Quanto tempo o seu salão perde respondendo “tem horário?”",
     intro: {
       title: "Um sistema de agendamento feito para salão de beleza",
       paragraphs: [
-        "No salão, cada mensagem respondida no meio de uma escova é um atendimento atrasado. Com o MeetChat, a cliente toca no link da bio do Instagram, escolhe o serviço e a profissional, vê só os horários realmente livres e já fica na agenda.",
+        "No salão, cada mensagem respondida no meio de uma escova é um atendimento atrasado. Com o MeetChat, a cliente toca no seu link, no Instagram ou no WhatsApp, escolhe o serviço e a profissional, vê só os horários realmente livres e já fica na agenda.",
         "Cada cabeleireira, manicure e designer tem a própria agenda, o tempo de cada serviço é respeitado e a cliente recebe a confirmação e o lembrete automaticamente. Para serviços longos, como mechas e progressiva, você pode pedir um sinal pelo Pix, que cai direto na sua conta.",
       ],
     },
@@ -50,7 +50,7 @@ export const NICHE_SEO: Record<string, NicheSeo> = {
       {
         question: "Como a cliente marca horário no salão pelo Instagram?",
         answer:
-          "Coloque o seu link do MeetChat na bio. A cliente toca, conversa com o chat, escolhe o serviço e o horário e pronto: o agendamento aparece na sua agenda.",
+          "Coloque o seu link do MeetChat no Instagram, no WhatsApp ou no seu site. A cliente toca, conversa com o chat, escolhe o serviço e o horário e pronto: o agendamento aparece na sua agenda.",
       },
     ],
     demo: [
@@ -65,7 +65,7 @@ export const NICHE_SEO: Record<string, NicheSeo> = {
   barber: {
     title: "Sistema de agendamento para barbearia | MeetChat",
     description:
-      "Agenda online para barbearia: o cliente marca corte e barba pelo link da bio, escolhe o barbeiro e o horário livre, 24h por dia. Teste grátis por 30 dias.",
+      "Agenda online para barbearia: o cliente marca corte e barba pelo seu link, escolhe o barbeiro e o horário livre, 24h por dia. Teste grátis por 30 dias.",
     h1: "Barbearia lotada sem largar a máquina",
     subtitle: "O cliente marca o corte pelo link, até de madrugada.",
     painsTitle: "Quantos cortes você perde parando para responder “tem horário hoje?”",
@@ -112,7 +112,7 @@ export const NICHE_SEO: Record<string, NicheSeo> = {
       title: "Agendamento pensado para estética",
       paragraphs: [
         "Na estética, um horário marcado na sala errada vira atraso para o dia inteiro. O MeetChat só oferece o horário quando a profissional e o recurso (sala, maca ou aparelho) estão livres ao mesmo tempo.",
-        "A cliente escolhe o procedimento pelo link da bio, recebe a confirmação e o lembrete, e você pode pedir sinal pelo Pix nos procedimentos mais longos. Pacotes de sessões ficam organizados, com o saldo de cada cliente.",
+        "A cliente escolhe o procedimento pelo seu link, recebe a confirmação e o lembrete, e você pode pedir sinal pelo Pix nos procedimentos mais longos. Pacotes de sessões ficam organizados, com o saldo de cada cliente.",
       ],
     },
     faq: [
@@ -146,11 +146,11 @@ export const NICHE_SEO: Record<string, NicheSeo> = {
     description:
       "Agendamento online para manicure, esmalteria e nail designer: a cliente marca unha, alongamento e manutenção pelo link, 24h. Teste grátis por 30 dias.",
     h1: "Unhas agendadas sem largar o esmalte",
-    subtitle: "A cliente marca pelo link da bio, 24h por dia.",
+    subtitle: "A cliente marca pelo seu link, 24h por dia.",
     intro: {
       title: "Agenda online para esmalteria e nail designer",
       paragraphs: [
-        "Quem trabalha com unhas sabe: dá para responder mensagem com a mão no esmalte? Com o MeetChat, a cliente escolhe o serviço pelo link da bio e só vê os horários livres, já com o tempo certo de cada serviço.",
+        "Quem trabalha com unhas sabe: dá para responder mensagem com a mão no esmalte? Com o MeetChat, a cliente escolhe o serviço pelo seu link e só vê os horários livres, já com o tempo certo de cada serviço.",
         "Alongamentos e manutenções podem ter sinal pelo Pix, e a lista de espera avisa quem queria um horário que vagou. Depois de agendar, o chat ainda oferece deixar a próxima manutenção marcada.",
       ],
     },
@@ -228,7 +228,7 @@ export const NICHE_SEO: Record<string, NicheSeo> = {
     intro: {
       title: "Agendamento feito para estúdio de tatuagem",
       paragraphs: [
-        "Sessão de tatuagem dura horas, e um cliente que some deixa o tatuador parado. Com o MeetChat, o cliente marca orçamento ou sessão pelo link da bio e confirma pagando o sinal pelo Pix, direto para o estúdio.",
+        "Sessão de tatuagem dura horas, e um cliente que some deixa o tatuador parado. Com o MeetChat, o cliente marca orçamento ou sessão pelo seu link e confirma pagando o sinal pelo Pix, direto para o estúdio.",
         "Cada tatuador tem a própria agenda, os horários respeitam a duração de cada sessão e o lembrete automático chega antes do dia marcado.",
       ],
     },
@@ -660,11 +660,11 @@ export const NICHE_SEO: Record<string, NicheSeo> = {
     description:
       "Sistema de agendamento para pilates: o aluno marca aula individual e experimental pelo link, com lembrete automático. Teste grátis por 30 dias.",
     h1: "Aula experimental de pilates marcada na hora",
-    subtitle: "Quem chega pelo Instagram agenda pelo link da bio.",
+    subtitle: "Quem chega pelo Instagram ou WhatsApp agenda na hora, pelo seu link.",
     intro: {
       title: "Agendamento para estúdio e instrutor de pilates",
       paragraphs: [
-        "Aula experimental que nunca é marcada é aluno perdido. Com o MeetChat, quem chega pelo Instagram agenda a experimental na hora, pelo link da bio.",
+        "Aula experimental que nunca é marcada é aluno perdido. Com o MeetChat, quem chega pelo Instagram agenda a experimental na hora, pelo seu link.",
         "Os aparelhos entram como recursos, os pacotes de aulas ficam organizados e o lembrete automático reduz os horários vazios.",
       ],
     },
@@ -689,7 +689,7 @@ export const NICHE_SEO: Record<string, NicheSeo> = {
     intro: {
       title: "Agendamento para professores e estúdios de yoga",
       paragraphs: [
-        "Com o MeetChat, quem quer começar marca a aula experimental na hora, pelo link da bio, sem esperar resposta.",
+        "Com o MeetChat, quem quer começar marca a aula experimental na hora, pelo seu link, sem esperar resposta.",
         "As aulas individuais ficam organizadas na agenda, com lembrete automático e remarcação pelo próprio aluno.",
       ],
     },
@@ -727,11 +727,11 @@ export const NICHE_SEO: Record<string, NicheSeo> = {
     description:
       "Agenda online para banho e tosa: o tutor marca banho, tosa e hidratação pelo link, 24h, com lembrete automático. Teste grátis por 30 dias.",
     h1: "Banho e tosa agendado sem atender telefone",
-    subtitle: "O tutor marca pelo link da bio, 24h por dia.",
+    subtitle: "O tutor marca pelo seu link, 24h por dia.",
     intro: {
       title: "Agendamento feito para pet shop",
       paragraphs: [
-        "No pet shop, o telefone toca o dia todo para marcar banho. Com o MeetChat, o tutor agenda pelo link da bio, escolhe o serviço do porte certo e vê só os horários livres.",
+        "No pet shop, o telefone toca o dia todo para marcar banho. Com o MeetChat, o tutor agenda pelo seu link, escolhe o serviço do porte certo e vê só os horários livres.",
         "Os serviços podem ter tempos e preços diferentes por porte, e o lembrete automático chega antes do horário, para o pet não perder a vez.",
       ],
     },
@@ -744,7 +744,7 @@ export const NICHE_SEO: Record<string, NicheSeo> = {
       {
         question: "O tutor pode marcar o banho pelo Instagram?",
         answer:
-          "Pode. Coloque o link do MeetChat na bio e o tutor agenda direto, sem precisar ligar.",
+          "Pode. Coloque o link do MeetChat no Instagram e no WhatsApp e o tutor agenda direto, sem precisar ligar.",
       },
     ],
   },
@@ -864,7 +864,7 @@ export const NICHE_SEO: Record<string, NicheSeo> = {
       title: "Reserva online feita para arenas e quadras",
       paragraphs: [
         "Reserva anotada em caderno vira duas turmas no mesmo horário. Com o MeetChat, cada quadra tem a própria agenda e o horário reservado some na hora para os outros.",
-        "O cliente reserva pelo link da bio, recebe a confirmação e o lembrete, e você pode pedir sinal pelo Pix nos horários mais disputados.",
+        "O cliente reserva pelo seu link, recebe a confirmação e o lembrete, e você pode pedir sinal pelo Pix nos horários mais disputados.",
       ],
     },
     faq: [

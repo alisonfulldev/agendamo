@@ -24,7 +24,7 @@ export const nails = nicheBrand({
     bodyFont: "poppins",
     radius: "1rem",
   },
-  title: "Suas clientes marcam as unhas sozinhas, direto pelo link da bio",
+  title: "Suas clientes marcam as unhas sozinhas, direto pelo seu link",
   subtitle:
     "Um chat de agendamento para manicures e nail designers. A cliente escolhe o serviço e um horário livre, e já fica na sua agenda.",
   demo: {

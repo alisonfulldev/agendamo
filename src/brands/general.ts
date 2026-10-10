@@ -21,7 +21,7 @@ export const general = nicheBrand({
     bodyFont: "inter",
     radius: "1rem",
   },
-  title: "Seus clientes agendam sozinhos, direto pelo link da bio",
+  title: "Seus clientes agendam sozinhos, direto pelo seu link",
   subtitle:
     "Um chat de agendamento para quem trabalha com hora marcada. O cliente escolhe o atendimento e um horário livre, e já fica na sua agenda.",
   demo: {

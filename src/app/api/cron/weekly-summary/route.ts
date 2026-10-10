@@ -59,7 +59,7 @@ export const POST = cronRoute(async () => {
       paragraphs.push(
         week.conversations > 0
           ? "Na semana passada, pessoas pediram horário pelo seu chat. Com o Pro, o horário é confirmado na hora, sem você precisar aprovar, até de madrugada."
-          : "Divulgue seu link de agendamento na bio do Instagram e no status para receber mais pedidos.",
+          : "Divulgue seu link de agendamento no WhatsApp, Instagram, Facebook e no seu site para receber mais pedidos.",
       );
     }
 

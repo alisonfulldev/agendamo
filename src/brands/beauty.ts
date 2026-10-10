@@ -32,7 +32,7 @@ export const beauty = {
     radius: "1rem",
   },
   sales: {
-    title: "Suas clientes agendam sozinhas, direto pelo link da bio",
+    title: "Suas clientes agendam sozinhas, direto pelo seu link",
     subtitle:
       "Um chat de agendamento com a cara do seu salão. A cliente toca no link, escolhe o serviço e o horário livre, e pronto: já está na sua agenda. Sem ficar respondendo no WhatsApp.",
     demo: {
@@ -80,7 +80,7 @@ export const beauty = {
         description: "Em 5 minutos, com preço, duração e seus dias de atendimento.",
       },
       {
-        title: "Cole o link na bio",
+        title: "Divulgue seu link",
         description: "Instagram, status do WhatsApp, Google e onde mais quiser.",
       },
       {

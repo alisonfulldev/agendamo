@@ -32,7 +32,7 @@ export const barber = {
     radius: "0.25rem",
   },
   sales: {
-    title: "Seus clientes marcam o corte sozinhos, direto pelo link da bio",
+    title: "Seus clientes marcam o corte sozinhos, direto pelo seu link",
     subtitle:
       "Um chat de agendamento com a cara da sua barbearia. O cliente toca no link, escolhe o serviço, o barbeiro e o horário livre, e já está na agenda. Sem ficar respondendo no WhatsApp.",
     demo: {
@@ -80,7 +80,7 @@ export const barber = {
         description: "Corte, barba, combo: preço, duração e seus dias de atendimento.",
       },
       {
-        title: "Cole o link na bio",
+        title: "Divulgue seu link",
         description: "Instagram, status do WhatsApp, Google e onde mais quiser.",
       },
       {

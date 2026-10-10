@@ -24,7 +24,7 @@ export const sportsCourt = nicheBrand({
     bodyFont: "inter",
     radius: "0.5rem",
   },
-  title: "Seus clientes reservam a quadra sozinhos, direto pelo link da bio",
+  title: "Seus clientes reservam a quadra sozinhos, direto pelo seu link",
   subtitle:
     "Um chat de reservas para quadras esportivas. O cliente escolhe a quadra e um horário livre, e a reserva já entra na agenda, sem conflito.",
   demo: {

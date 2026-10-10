@@ -24,7 +24,7 @@ export const autoDetailing = nicheBrand({
     bodyFont: "inter",
     radius: "0.25rem",
   },
-  title: "Seus clientes agendam a lavagem sozinhos, direto pelo link da bio",
+  title: "Seus clientes agendam a lavagem sozinhos, direto pelo seu link",
   subtitle:
     "Um chat de agendamento para estética automotiva. O cliente escolhe o serviço e um horário livre, e o carro já fica na agenda.",
   demo: {

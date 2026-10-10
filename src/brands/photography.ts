@@ -24,7 +24,7 @@ export const photography = nicheBrand({
     bodyFont: "inter",
     radius: "0.5rem",
   },
-  title: "Seus clientes agendam o ensaio sozinhos, direto pelo link da bio",
+  title: "Seus clientes agendam o ensaio sozinhos, direto pelo seu link",
   subtitle:
     "Um chat de agendamento para fotógrafos. O cliente escolhe o ensaio e um horário livre, e garante a data com sinal pelo Pix.",
   demo: {

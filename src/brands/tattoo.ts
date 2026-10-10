@@ -24,7 +24,7 @@ export const tattoo = nicheBrand({
     bodyFont: "inter",
     radius: "0.25rem",
   },
-  title: "Seus clientes marcam a sessão sozinhos, direto pelo link da bio",
+  title: "Seus clientes marcam a sessão sozinhos, direto pelo seu link",
   subtitle:
     "Um chat de agendamento para estúdios de tatuagem e piercing. O cliente escolhe o tatuador e um horário livre, e garante a sessão com sinal pelo Pix.",
   demo: {

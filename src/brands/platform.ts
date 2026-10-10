@@ -21,7 +21,7 @@ export const platform = nicheBrand({
     bodyFont: "inter",
     radius: "1rem",
   },
-  title: "Seus clientes agendam sozinhos, direto pelo link da bio",
+  title: "Seus clientes agendam sozinhos, direto pelo seu link",
   subtitle:
     "O MeetChat é um chat de agendamento para quem trabalha com hora marcada. O cliente toca no seu link, escolhe o serviço e um horário livre, e já fica na sua agenda. Sem ficar respondendo mensagem.",
   demo: {

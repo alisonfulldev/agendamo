@@ -24,7 +24,7 @@ export const petGrooming = nicheBrand({
     bodyFont: "nunito",
     radius: "1rem",
   },
-  title: "Os tutores agendam o banho e tosa sozinhos, direto pelo link da bio",
+  title: "Os tutores agendam o banho e tosa sozinhos, direto pelo seu link",
   subtitle:
     "Um chat de agendamento para pet shops. O tutor escolhe o serviço e um horário livre, e o pet já fica na agenda. Sem ficar respondendo mensagem.",
   demo: {

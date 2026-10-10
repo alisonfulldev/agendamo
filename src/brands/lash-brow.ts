@@ -24,7 +24,7 @@ export const lashBrow = nicheBrand({
     bodyFont: "nunito",
     radius: "1rem",
   },
-  title: "Suas clientes agendam cílios e sobrancelhas sozinhas, direto pelo link da bio",
+  title: "Suas clientes agendam cílios e sobrancelhas sozinhas, direto pelo seu link",
   subtitle:
     "Um chat de agendamento para lash e brow designers. A cliente escolhe o procedimento e um horário livre, e recebe a confirmação na hora.",
   demo: {

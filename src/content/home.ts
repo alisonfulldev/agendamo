@@ -55,12 +55,12 @@ export const HOME: HomeContent = {
   meta: {
     title: "MeetChat · Seus clientes agendam sozinhos",
     description:
-      "Coloque seu link na bio. O cliente escolhe o serviço e o horário, e já cai na sua agenda, 24 horas por dia.",
+      "Divulgue seu link no WhatsApp, Instagram ou no seu site. O cliente escolhe o serviço e o horário, e já cai na sua agenda, 24 horas por dia.",
   },
   hero: {
     badge: "Para quem trabalha com hora marcada",
     title: "Seus clientes agendam sozinhos. Você só atende.",
-    subtitle: "Um link na bio e o cliente marca pelo chat, 24h por dia.",
+    subtitle: "Seu link no WhatsApp, Instagram ou site, e o cliente marca pelo chat, 24h.",
     primaryCta: "Criar meu link grátis",
     secondaryCta: "Ver como fica o meu",
     note: `${TRIAL_DAYS} dias grátis · sem cartão · pronto em 1 minuto`,
@@ -77,7 +77,7 @@ export const HOME: HomeContent = {
     title: "Como funciona",
     items: [
       "Crie seu link em 1 minuto.",
-      "Coloque na bio do Instagram e no WhatsApp.",
+      "Divulgue no WhatsApp, Instagram, Facebook e no seu site.",
       "Os clientes agendam sozinhos e você recebe o aviso no celular.",
     ],
   },
@@ -132,7 +132,7 @@ export const HOME: HomeContent = {
       {
         question: "Funciona com WhatsApp?",
         answer:
-          "Sim. Coloque o link no status, na mensagem de ausência e na bio. O cliente toca, escolhe o horário e agenda, sem você precisar responder.",
+          "Sim. Coloque o link no status, na mensagem de ausência, no Instagram e no seu site. O cliente toca, escolhe o horário e agenda, sem você precisar responder.",
       },
       {
         question: "Posso cancelar quando quiser?",

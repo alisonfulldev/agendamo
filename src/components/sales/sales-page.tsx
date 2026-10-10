@@ -546,7 +546,7 @@ export function SalesPage({
             </Link>
             <p className="max-w-xs text-sm text-pretty text-muted-foreground">
               Chat de agendamento para quem trabalha com hora marcada. Seus clientes agendam
-              sozinhos, direto pelo link da bio.
+              sozinhos, direto pelo seu link.
             </p>
           </div>
           <nav aria-label="Produto" className="flex flex-col gap-2.5 text-sm">

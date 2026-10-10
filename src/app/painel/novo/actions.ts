@@ -6,6 +6,7 @@ import { requireUser } from "@/lib/auth/session";
 import { onboardingSchema } from "@/lib/business/schemas";
 import { checkSlug, isSlugAvailable, type SlugCheck } from "@/lib/business/slug-check";
 import { fieldErrors } from "@/lib/forms";
+import { notifyAdminsOfSignup } from "@/lib/notifications/admin-signup";
 import { rateLimitRequest } from "@/lib/rate-limit";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -78,6 +79,15 @@ export async function createBusinessAction(input: unknown): Promise<CreateBusine
     return { ok: false, message: "Não foi possível criar agora. Tente de novo em instantes." };
   }
 
+  const pageUrl = brandUrl(brand, `/${data.slug}`);
+  await notifyAdminsOfSignup({
+    businessName: data.name,
+    nicheName: brand.niche?.name ?? brand.name,
+    email: user.email,
+    whatsapp: data.whatsapp || null,
+    pageUrl,
+    via: "formulário",
+  });
   // No revalidatePath here: re-rendering the panel layout would redirect away from the success screen.
-  return { ok: true, slug: data.slug, pageUrl: brandUrl(brand, `/${data.slug}`) };
+  return { ok: true, slug: data.slug, pageUrl };
 }

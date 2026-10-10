@@ -32,7 +32,7 @@ export const aesthetics = {
     radius: "0.75rem",
   },
   sales: {
-    title: "Suas clientes agendam procedimentos sozinhas, direto pelo link da bio",
+    title: "Suas clientes agendam procedimentos sozinhas, direto pelo seu link",
     subtitle:
       "Um chat de agendamento com a cara da sua clínica. A cliente toca no link, escolhe o procedimento e o horário livre, e já está na agenda, respeitando sala e maca ocupadas.",
     demo: {
@@ -77,7 +77,7 @@ export const aesthetics = {
         description: "Duração, intervalo, preço e quais precisam de sala ou maca.",
       },
       {
-        title: "Cole o link na bio",
+        title: "Divulgue seu link",
         description: "Instagram, status do WhatsApp, Google e onde mais quiser.",
       },
       {
