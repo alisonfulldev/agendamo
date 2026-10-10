@@ -1,9 +1,9 @@
 import * as Sentry from "@sentry/nextjs";
 
 import { needsFullReloadForBrand } from "@/brands/host";
-import { getSentryDsn } from "@/lib/env";
+import { browserSentryDsn } from "@/lib/sentry-dsn";
 
-const dsn = getSentryDsn();
+const dsn = browserSentryDsn();
 
 Sentry.init({
   dsn,

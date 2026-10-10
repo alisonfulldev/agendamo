@@ -24,6 +24,8 @@ export async function generateMetadata(): Promise<Metadata> {
     // One mark for the product on the shared domain (search engines show one icon per domain).
     icons: { icon: hasRealDomain(brand) ? brand.favicon : PLATFORM.favicon, apple: "/icons/180" },
     manifest: "/manifest.webmanifest",
+    // Google Search Console ownership (HTML tag method).
+    verification: { google: "F1h9of9zXET4drI3F4vhOcGjlshY7ioggX5118YrHqg" },
     appleWebApp: { capable: true, title: brand.name, statusBarStyle: "default" },
     openGraph: {
       type: "website",

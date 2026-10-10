@@ -1,5 +1,6 @@
 import {
   Bell,
+  Check,
   CalendarCheck,
   CalendarX,
   ChevronDown,
@@ -15,16 +16,16 @@ import Link from "next/link";
 
 import { PLATFORM, type BrandConfig } from "@/brands";
 import { brandThemeStyle } from "@/brands/theme";
+import { HOME_DEMO, heroDemoFor } from "@/content/hero-demo";
 import { HOME, type HomeContent } from "@/content/home";
 import { PLAN_PRICES } from "@/lib/plans";
 import { siteUrl } from "@/lib/site-url";
 import { isStorageConfigured } from "@/lib/storage/r2";
 
-import { CreationChat } from "@/components/creation/creation-chat";
 import { OpenCreationLink } from "@/components/creation/open-creation";
 import { PlanCards } from "@/components/sales/plan-cards";
 
-import { PhoneDemo } from "./phone-demo";
+import { HeroChat } from "./hero-chat";
 import { StickyCta } from "./sticky-cta";
 
 const ICONS: Record<string, LucideIcon> = {
@@ -104,6 +105,7 @@ export function HomePage({
 } = {}) {
   const { hero } = content;
   const route = niche?.route;
+  const demo = niche ? heroDemoFor(brand) : HOME_DEMO;
   return (
     <div
       data-theme-scope=""
@@ -133,34 +135,35 @@ export function HomePage({
         {/* Top */}
         <section id="topo" className="relative isolate overflow-hidden">
           <div className="site-glow absolute inset-0 -z-10" aria-hidden />
-          <div className="mx-auto grid max-w-6xl items-center gap-12 px-5 pt-8 pb-16 md:pt-16 lg:grid-cols-[1.1fr_0.9fr]">
+          <div className="mx-auto grid max-w-6xl items-center gap-4 px-5 pt-1 pb-10 md:gap-12 md:pt-12 md:pb-16 lg:grid-cols-[1.1fr_0.9fr]">
             <div className="flex flex-col items-start gap-6">
-              <span className="rounded-full border bg-card px-3 py-1 text-sm font-medium">
+              <span className="hidden rounded-full border bg-card px-3 py-1 text-sm font-medium md:inline-flex">
                 {hero.badge}
               </span>
-              <h1 className="font-heading text-4xl leading-[1.08] font-bold tracking-tight text-balance sm:text-5xl lg:text-6xl">
+              <h1 className="font-heading text-2xl leading-tight font-bold tracking-tight text-balance md:text-5xl md:leading-[1.08] lg:text-6xl">
                 {hero.title}
               </h1>
-              <p className="max-w-xl text-lg leading-relaxed text-pretty text-muted-foreground">
-                {hero.subtitle}
+              <ul className="hidden flex-col gap-3 text-lg md:flex">
+                {hero.points.map((point) => (
+                  <li key={point} className="flex items-center gap-3">
+                    <Check className="size-5 shrink-0 text-primary" aria-hidden />
+                    {point}
+                  </li>
+                ))}
+              </ul>
+              <p className="hidden rounded-full bg-primary/10 px-4 py-1.5 text-sm font-semibold text-primary md:block">
+                {hero.note}
               </p>
-              <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
-                <OpenCreationLink
-                  niche={route}
-                  className="site-card-glow flex h-12 items-center justify-center rounded-xl bg-primary px-6 text-base font-semibold text-primary-foreground transition-opacity hover:opacity-90"
-                >
-                  {hero.primaryCta}
-                </OpenCreationLink>
-                <OpenCreationLink
-                  niche={route}
-                  className="flex h-12 items-center justify-center rounded-xl border bg-card px-6 text-base font-semibold transition-colors hover:bg-muted"
-                >
-                  {hero.secondaryCta}
-                </OpenCreationLink>
-              </div>
-              <p className="text-sm text-muted-foreground">{hero.note}</p>
             </div>
-            <PhoneDemo examples={content.demo} />
+            <div className="flex flex-col gap-2">
+              <HeroChat
+                demo={demo}
+                niche={route}
+                photos={isStorageConfigured()}
+                logo={PLATFORM.logo}
+              />
+              <p className="text-center text-sm text-muted-foreground md:hidden">{hero.note}</p>
+            </div>
           </div>
         </section>
 
@@ -343,7 +346,6 @@ export function HomePage({
           __html: JSON.stringify(jsonLd(content, niche)).replace(/</g, "\\u003c"),
         }}
       />
-      <CreationChat photos={isStorageConfigured()} />
     </div>
   );
 }

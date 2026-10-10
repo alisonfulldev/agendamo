@@ -72,7 +72,7 @@ test("sign up, confirm by the e-mail link and reach the business wizard", async 
   // Right after the wizard, the panel opens with its header and menu.
   await page.getByRole("button", { name: "Ir para o painel" }).click();
   await expect(page.getByRole("navigation", { name: "Painel" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Agenda" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Agenda", exact: true }).first()).toBeVisible();
   await page.goto(`/${slug}?brand=barber`);
   await expect(page.getByRole("heading", { name: /Agendar com Barbearia Teste/ })).toBeAttached();
 });

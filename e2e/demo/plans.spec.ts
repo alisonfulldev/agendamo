@@ -103,7 +103,7 @@ test("the 7-day trial is used only once per person, even after a reset", async (
   const name = `Barbearia Teste Único ${unique()}`;
   const email = `unico-${unique()}@gmail.com`;
   await page.goto("/?criar=1");
-  const dialog = page.getByRole("dialog");
+  const dialog = page.locator("[data-creation]");
   await dialog.getByLabel("Nome do negócio").fill(name);
   await page.waitForTimeout(1600);
   await dialog.getByRole("button", { name: "Enviar", exact: true }).click();

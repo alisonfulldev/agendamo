@@ -21,6 +21,8 @@ export interface HomeContent {
     primaryCta: string;
     secondaryCta: string;
     note: string;
+    /** Short points next to the chat (computer). */
+    points: readonly string[];
   };
   /** Unique text about the niche (niche pages), right after the top. */
   intro?: { title: string; paragraphs: readonly string[] };
@@ -52,11 +54,16 @@ export const HOME: HomeContent = {
   },
   hero: {
     badge: "Para quem trabalha com hora marcada",
-    title: "Seus clientes agendam sozinhos. Você só atende.",
+    title: "Seu cliente marca horário sozinho. Veja:",
     subtitle: "Seu link no WhatsApp, Instagram ou site, e o cliente marca pelo chat, 24h.",
     primaryCta: "Criar meu link grátis",
     secondaryCta: "Ver como fica o meu",
-    note: "Grátis para sempre · sem cartão · pronto em 1 minuto",
+    note: PRICE_TEXT.heroNote,
+    points: [
+      "Agenda 24h sem responder mensagem",
+      "Lembrete para o cliente não faltar",
+      "Funciona no Instagram, WhatsApp e site",
+    ],
   },
   pains: {
     title: "Quanto tempo você perde respondendo “tem horário?”",

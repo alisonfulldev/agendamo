@@ -99,7 +99,13 @@ export async function demoSetPlanAction(formData: FormData): Promise<void> {
   ).rows[0];
   // Without a subscription (trial / expired) the simulated Asaas subscription goes away too, so
   // the checkout starts fresh.
-  if (plan !== "agenda" && plan !== "pro") {
+  // A subscribed state also sets the simulated subscription's plan (no leftover from a test).
+  if (plan === "agenda" || plan === "pro") {
+    await db.query(
+      "update public.subscriptions set plan = $2, pending_plan = null where business_id = $1",
+      [businessId, plan],
+    );
+  } else {
     await db.query("delete from public.subscriptions where business_id = $1", [businessId]);
   }
   if (row) invalidatePublicPage(row.slug);

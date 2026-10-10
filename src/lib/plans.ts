@@ -88,6 +88,8 @@ export const PRICE_TEXT = {
   extraProfessional: `${reais(PLAN_PRICES.extraProfessional.monthly)}/mês`,
   free: `Grátis para sempre com ${FREE_BOOKINGS_PER_CYCLE} agendamentos por mês`,
   trial: `Teste o Agenda ou o Pro por ${TRIAL_DAYS} dias, sem cartão`,
+  /** Under the chat at the top of the site. */
+  heroNote: "Grátis · sem cartão · pronto em 1 minuto",
   /** "Preciso de cartão?" (FAQ of every brand). */
   noCard: `Não. O Grátis é para sempre, com ${FREE_BOOKINGS_PER_CYCLE} agendamentos por mês, sem cartão. Para testar o Agenda (${planText("agenda").monthly}) ou o Pro (${planText("pro").monthly}), são ${TRIAL_DAYS} dias grátis, também sem cartão.`,
 };

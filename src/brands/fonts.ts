@@ -3,12 +3,13 @@ import { Inter, Lora, Nunito, Oswald, Poppins } from "next/font/google";
 import type { FontKey } from "./schema";
 
 // Every FontKey in schema.ts must be loaded here with the matching CSS variable.
-// preload is off so one brand does not download another brand's fonts.
+// preload is off so one brand does not download another brand's fonts, except Poppins and Inter:
+// the site's own fonts (home) and the most used by the niches, preloaded so the title at the top
+// paints early (Lighthouse LCP).
 const poppins = Poppins({
   variable: "--font-poppins",
   weight: ["400", "500", "600", "700"],
   subsets: ["latin"],
-  preload: false,
 });
 
 const oswald = Oswald({
@@ -20,7 +21,6 @@ const oswald = Oswald({
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
-  preload: false,
 });
 
 const lora = Lora({

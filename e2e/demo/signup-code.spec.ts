@@ -40,7 +40,7 @@ const unique = () => Date.now().toString(36);
 
 async function startConversation(page: Page, name: string) {
   await page.goto("/?criar=1");
-  const dialog = page.getByRole("dialog");
+  const dialog = page.locator("[data-creation]");
   await dialog.getByLabel("Nome do negócio").fill(name);
   await page.waitForTimeout(1600);
   await dialog.getByRole("button", { name: "Enviar", exact: true }).click();
@@ -58,7 +58,8 @@ test("sign-up in the conversation: WhatsApp, e-mail fix, terms, code and the lin
   const dialog = await startConversation(page, name);
 
   await expect(dialog.getByText(/Qual o seu WhatsApp\?/)).toBeVisible();
-  await dialog.getByLabel("(11) 99999-8888").fill("11988887777");
+  // A new phone each run (one trial per person: a reused phone gets no new trial).
+  await dialog.getByLabel("(11) 99999-8888").fill(`119${Date.now().toString().slice(-8)}`);
   await dialog.getByRole("button", { name: "Enviar", exact: true }).click();
 
   // Typo in the domain: suggestion accepted.
@@ -146,7 +147,7 @@ test("the optional photo of the conversation becomes the profile photo", async (
   const name = `Barbearia Foto ${unique()}`;
   const email = `foto-${unique()}@exemplo.com`;
   await page.goto("/?criar=1");
-  const dialog = page.getByRole("dialog");
+  const dialog = page.locator("[data-creation]");
   await dialog.getByLabel("Nome do negócio").fill(name);
   await page.waitForTimeout(1600);
   await dialog.getByRole("button", { name: "Enviar", exact: true }).click();
@@ -163,7 +164,7 @@ test("the optional photo of the conversation becomes the profile photo", async (
     buffer: PHOTO,
   });
   await expect(dialog.getByRole("button", { name: "Trocar foto" })).toBeVisible();
-  await expect(dialog.getByRole("banner").locator("img")).toHaveAttribute("src", /demos\//);
+  await expect(dialog.locator("header").locator("img")).toHaveAttribute("src", /demos\//);
 
   await dialog.getByRole("button", { name: "Criar minha conta grátis" }).click();
   await dialog.getByRole("button", { name: "Depois" }).click();

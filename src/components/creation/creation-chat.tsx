@@ -18,7 +18,14 @@ import {
   saveDemoPhotoAction,
   signDemoPhotoAction,
 } from "./actions";
-import { closeCreation, creationParams, isCreationOpen, subscribeCreation } from "./creation-store";
+import { useVisibleArea } from "./visible-area";
+import {
+  CREATION_STORAGE_KEY,
+  closeCreation,
+  creationParams,
+  isCreationOpen,
+  subscribeCreation,
+} from "./creation-store";
 import type { SignupChoice } from "@/lib/db/types";
 
 import { sendSignupCodeAction, verifySignupCodeAction } from "./signup-actions";
@@ -94,7 +101,7 @@ interface CreationState {
   planChoice: SignupChoice | null;
 }
 
-const STORAGE_KEY = "lv_creation_v1";
+const STORAGE_KEY = CREATION_STORAGE_KEY;
 /** Minimum time of the "Estamos criando seu chat…" screen. */
 const BUILDING_MS = 2200;
 const TYPING_MS = 450;
@@ -216,29 +223,22 @@ export function CreationChat({ photos = false }: { photos?: boolean }) {
   return <Conversation photos={photos} />;
 }
 
-/** Height and top of the visible area (above the on-screen keyboard), on phones. */
-function useVisibleArea(): { height: number; top: number } | null {
-  const [area, setArea] = useState<{ height: number; top: number } | null>(null);
-  useEffect(() => {
-    const viewport = window.visualViewport;
-    if (!viewport) return;
-    const update = () =>
-      setArea(
-        window.innerWidth < 768 ? { height: viewport.height, top: viewport.offsetTop } : null,
-      );
-    update();
-    viewport.addEventListener("resize", update);
-    viewport.addEventListener("scroll", update);
-    return () => {
-      viewport.removeEventListener("resize", update);
-      viewport.removeEventListener("scroll", update);
-    };
-  }, []);
-  return area;
+/** The conversation inside the top of the page (instead of over it): how it starts. */
+export interface InlineStart {
+  /** Question already shown by the demo ("Qual o nome dele?"). */
+  ask: string;
+  /** Name typed in the demo's bar (submitted right away), or null. */
+  name: string | null;
+  /** Niche page route: the conversation skips the "o que você faz?" question. */
+  niche?: string;
+  /** When the visitor arrived (the server's anti-robot minimum time counts from it). */
+  startedAt: number;
 }
 
-function Conversation({ photos }: { photos: boolean }) {
-  const area = useVisibleArea();
+export function Conversation({ photos, inline }: { photos: boolean; inline?: InlineStart }) {
+  const visibleArea = useVisibleArea();
+  // Inside the top of the page, the container (HeroChat) handles the keyboard area itself.
+  const area = inline ? null : visibleArea;
   const [state, setState] = useState<CreationState>(() => {
     const saved = load();
     if (saved && saved.name && saved.phase !== "name") {
@@ -248,9 +248,17 @@ function Conversation({ photos }: { photos: boolean }) {
         log: [{ from: "system", text: fill(CREATION.resume, { nome: saved.name }) }],
       };
     }
+    if (inline) {
+      return {
+        ...fresh(),
+        startedAt: inline.startedAt,
+        log: [{ from: "system", text: inline.ask }],
+      };
+    }
     return fresh();
   });
-  const [revealed, setRevealed] = useState(0);
+  // The demo already showed the question: no "typing" pause for it.
+  const [revealed, setRevealed] = useState(() => (inline && state.phase === "name" ? 1 : 0));
   const [trap, setTrap] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const started = useRef(false);
@@ -273,8 +281,9 @@ function Conversation({ photos }: { photos: boolean }) {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [revealed, state.phase, area?.height]);
 
-  // Lock the page behind and close on Escape.
+  // Lock the page behind and close on Escape (over the site only).
   useEffect(() => {
+    if (inline) return;
     const previous = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && closeCreation();
@@ -283,7 +292,7 @@ function Conversation({ photos }: { photos: boolean }) {
       document.body.style.overflow = previous;
       window.removeEventListener("keydown", onKey);
     };
-  }, []);
+  }, [inline]);
 
   const typing = revealed < state.log.length;
   const visible = state.log.slice(0, revealed);
@@ -344,7 +353,7 @@ function Conversation({ photos }: { photos: boolean }) {
     const name = raw.trim().slice(0, 120);
     if (name.length < 2) return;
     const next = { ...current, name, log: [...current.log, user(name)] };
-    const preset = nicheFromParam(creationParams().niche);
+    const preset = nicheFromParam(creationParams().niche ?? inline?.niche ?? null);
     if (preset) {
       setState(next);
       void build(preset, null, next);
@@ -366,16 +375,18 @@ function Conversation({ photos }: { photos: boolean }) {
     }
   }
 
-  // Prospecting links (?nome= / ?ramo=) skip the questions they answer.
+  // Prospecting links (?nome= / ?ramo=) and the name typed in the demo skip the questions they
+  // answer.
   useEffect(() => {
-    const { name } = creationParams();
+    const name = creationParams().name ?? inline?.name ?? null;
     if (!name || started.current || state.phase !== "name") return;
     // After the welcome messages, and past the server's anti-robot minimum time. The flag is set
     // when it fires, so a re-run of the effect (React dev mode) does not lose it.
+    const wait = inline?.name ? Math.max(0, 1700 - (Date.now() - inline.startedAt)) : 1700;
     const timer = setTimeout(() => {
       started.current = true;
       submitName(name);
-    }, 1700);
+    }, wait);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- runs once, on open
   }, []);
@@ -497,6 +508,251 @@ function Conversation({ photos }: { photos: boolean }) {
   const signup = SIGNUP_PHASES.includes(state.phase);
   const composer = composerFor(state.phase);
 
+  const body = (
+    <div
+      data-creation=""
+      data-theme-scope=""
+      style={theme}
+      className={
+        inline
+          ? "flex h-full w-full flex-col overflow-hidden bg-background font-sans text-foreground transition-colors duration-500"
+          : "flex h-full w-full flex-col overflow-hidden bg-background font-sans text-foreground transition-colors duration-500 md:h-[min(780px,92vh)] md:w-[400px] md:rounded-[2.4rem] md:border-[10px] md:border-foreground md:shadow-2xl"
+      }
+    >
+      <header className="flex items-center gap-3 bg-primary px-4 py-3 text-primary-foreground">
+        {ownChat && state.photoUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element -- R2 public URL
+          <img
+            src={state.photoUrl}
+            alt=""
+            width={40}
+            height={40}
+            className="size-10 shrink-0 rounded-full object-cover"
+          />
+        ) : ownChat ? (
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary-foreground/20 font-semibold">
+            {initials || "M"}
+          </span>
+        ) : (
+          // eslint-disable-next-line @next/next/no-img-element -- small static SVG logo
+          <img
+            src={PLATFORM.logo}
+            alt=""
+            width={40}
+            height={40}
+            className="size-10 shrink-0 rounded-xl"
+          />
+        )}
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-lg font-semibold">{headerName}</span>
+          {ownChat && photos && state.demoId && !signup ? (
+            <AddPhoto
+              demoId={state.demoId}
+              hasPhoto={Boolean(state.photoUrl)}
+              onUploaded={(url) => update({ photoUrl: url })}
+            />
+          ) : (
+            <span className="block text-sm opacity-85">
+              {ownChat ? "Seu chat de agendamento" : "Monte seu link em 1 minuto"}
+            </span>
+          )}
+        </span>
+        {inline ? null : (
+          <button
+            type="button"
+            onClick={closeCreation}
+            aria-label="Fechar"
+            className="flex size-9 items-center justify-center rounded-full hover:bg-primary-foreground/15"
+          >
+            <X className="size-5" />
+          </button>
+        )}
+      </header>
+
+      {ownChat && !signup && state.phase !== "ready" ? (
+        <p className="bg-accent px-4 py-2 text-center text-[15px] font-medium text-accent-foreground">
+          {CREATION.banner}
+        </p>
+      ) : null}
+
+      {state.phase === "building" ? <BuildingScreen /> : null}
+      {state.phase === "ready" ? <ReadyScreen onSignup={claim} onPreview={preview} /> : null}
+
+      <div
+        ref={scrollRef}
+        className={`flex flex-1 flex-col gap-2 overflow-y-auto p-4 ${state.phase === "building" || state.phase === "ready" ? "hidden" : ""}`}
+      >
+        {visible.map((bubble, i) => (
+          <div
+            key={i}
+            className={`flex ${bubble.from === "user" ? "justify-end" : "justify-start"}`}
+          >
+            <p
+              className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-[17px] leading-snug shadow-sm motion-safe:animate-in motion-safe:fade-in ${
+                bubble.from === "user"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-card text-card-foreground"
+              }`}
+            >
+              {bubble.text}
+              {bubble.links?.length ? (
+                <span className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-sm">
+                  {bubble.links.map((link) => (
+                    <a
+                      key={link.href}
+                      href={link.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-medium text-primary underline underline-offset-2"
+                    >
+                      {link.label}
+                    </a>
+                  ))}
+                </span>
+              ) : null}
+            </p>
+          </div>
+        ))}
+        {typing ? (
+          <div className="flex">
+            <span className="rounded-2xl bg-card px-4 py-2.5 text-[15px] text-muted-foreground shadow-sm">
+              digitando…
+            </span>
+          </div>
+        ) : (
+          <Options
+            state={state}
+            days={days}
+            onResume={(resume) => {
+              const saved = load();
+              if (resume && saved) {
+                setRevealed(saved.log.length);
+                setState(saved);
+              } else restart();
+            }}
+            onConfirm={(yes) => {
+              if (yes && state.detected) {
+                update({}, [user(CREATION.confirmYes)]);
+                void build(state.detected, null, {
+                  ...state,
+                  log: [...state.log, user(CREATION.confirmYes)],
+                });
+              } else
+                update({ phase: "pick" }, [user(CREATION.confirmNo), system(CREATION.askNiche)]);
+            }}
+            onPick={(key, label) => {
+              if (key === "other")
+                update({ phase: "other" }, [user(label), system(CREATION.askOther)]);
+              else if (key === "all") update({ phase: "all" }, [user(label)]);
+              else {
+                update({}, [user(label)]);
+                void build(key, null);
+              }
+            }}
+            onService={(service) => {
+              const n = niche!;
+              update({ phase: "day", service }, [user(service), system(n.chatMessages.askDate)]);
+            }}
+            onDay={(label) => {
+              const n = niche!;
+              update({ phase: "time", dateLabel: label }, [
+                user(label),
+                system(
+                  fill(n.chatMessages.askTime, {
+                    date: label.replace(/^Hoje, /, "").toLowerCase(),
+                  }),
+                ),
+              ]);
+            }}
+            onTime={(time) => {
+              update({ phase: "done", time }, [
+                user(time),
+                system(CREATION.testDone),
+                system(CREATION.arrives),
+              ]);
+              if (state.demoId) void recordTestBookingAction(state.demoId);
+            }}
+            onClaim={claim}
+            onRestart={restart}
+            onWhatsappLater={() => submitWhatsapp(null)}
+            onEmailFix={(accept) => {
+              const email = accept ? state.emailFix! : state.email!;
+              askPlan(email, [user(accept ? SU.yes : SU.no)]);
+            }}
+            onAcceptTerms={() => void sendCode(state.email!, [user(SU.acceptTerms)])}
+            onPlan={choosePlan}
+            onResend={() => void sendCode(state.email!, [user(SU.resend)])}
+            onChangeEmail={() =>
+              update({ phase: "email", codeSentAt: null }, [
+                user(SU.changeEmail),
+                system(SU.askEmail),
+              ])
+            }
+          />
+        )}
+      </div>
+
+      {ownChat && state.phase !== "done" && state.phase !== "ready" && !signup ? (
+        <div className="border-t bg-card px-3 py-2">
+          <button
+            type="button"
+            onClick={claim}
+            className="h-10 w-full rounded-xl bg-primary text-sm font-semibold text-primary-foreground"
+          >
+            {CREATION.claim}
+          </button>
+        </div>
+      ) : null}
+
+      {!ownChat ? (
+        <div className="flex gap-2 overflow-x-auto border-t bg-card px-3 pt-2 pb-1">
+          <ShortcutChip
+            onClick={() =>
+              shortcut(CREATION.shortcuts.price.label, CREATION.shortcuts.price.answer)
+            }
+          >
+            {CREATION.shortcuts.price.label}
+          </ShortcutChip>
+          <ShortcutChip
+            onClick={() => shortcut(CREATION.shortcuts.app.label, CREATION.shortcuts.app.answer)}
+          >
+            {CREATION.shortcuts.app.label}
+          </ShortcutChip>
+          <a
+            href={CREATION.shortcuts.account.href}
+            className="shrink-0 rounded-full border px-3.5 py-2 text-sm font-medium whitespace-nowrap"
+          >
+            {CREATION.shortcuts.account.label}
+          </a>
+        </div>
+      ) : null}
+
+      {composer ? (
+        <Composer
+          key={state.phase}
+          enabled={!typing}
+          {...composer}
+          trap={trap}
+          onTrap={setTrap}
+          onSubmit={(text) => {
+            if (state.phase === "name") submitName(text);
+            else if (state.phase === "other" && text.trim().length >= 2) {
+              const description = text.trim().slice(0, 200);
+              update({}, [user(description)]);
+              void build("general", description, {
+                ...state,
+                log: [...state.log, user(description)],
+              });
+            } else if (state.phase === "whatsapp") submitWhatsapp(text.trim());
+            else if (state.phase === "email") submitEmail(text);
+            else if (state.phase === "code") void verify(text.replace(/\D/g, ""));
+          }}
+        />
+      ) : null}
+    </div>
+  );
+  if (inline) return body;
+
   return (
     <div
       className="fixed inset-x-0 top-0 z-50 flex h-dvh items-center justify-center bg-foreground/60 md:p-6"
@@ -506,240 +762,7 @@ function Conversation({ photos }: { photos: boolean }) {
       aria-label="Criar meu link de agendamento"
       onClick={(e) => e.target === e.currentTarget && closeCreation()}
     >
-      <div
-        data-theme-scope=""
-        style={theme}
-        className="flex h-full w-full flex-col overflow-hidden bg-background font-sans text-foreground transition-colors duration-500 md:h-[min(780px,92vh)] md:w-[400px] md:rounded-[2.4rem] md:border-[10px] md:border-foreground md:shadow-2xl"
-      >
-        <header className="flex items-center gap-3 bg-primary px-4 py-3 text-primary-foreground">
-          {ownChat && state.photoUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element -- R2 public URL
-            <img
-              src={state.photoUrl}
-              alt=""
-              width={40}
-              height={40}
-              className="size-10 shrink-0 rounded-full object-cover"
-            />
-          ) : ownChat ? (
-            <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary-foreground/20 font-semibold">
-              {initials || "M"}
-            </span>
-          ) : (
-            // eslint-disable-next-line @next/next/no-img-element -- small static SVG logo
-            <img
-              src={PLATFORM.logo}
-              alt=""
-              width={40}
-              height={40}
-              className="size-10 shrink-0 rounded-xl"
-            />
-          )}
-          <span className="min-w-0 flex-1">
-            <span className="block truncate text-lg font-semibold">{headerName}</span>
-            {ownChat && photos && state.demoId && !signup ? (
-              <AddPhoto
-                demoId={state.demoId}
-                hasPhoto={Boolean(state.photoUrl)}
-                onUploaded={(url) => update({ photoUrl: url })}
-              />
-            ) : (
-              <span className="block text-sm opacity-85">
-                {ownChat ? "Seu chat de agendamento" : "Monte seu link em 1 minuto"}
-              </span>
-            )}
-          </span>
-          <button
-            type="button"
-            onClick={closeCreation}
-            aria-label="Fechar"
-            className="flex size-9 items-center justify-center rounded-full hover:bg-primary-foreground/15"
-          >
-            <X className="size-5" />
-          </button>
-        </header>
-
-        {ownChat && !signup && state.phase !== "ready" ? (
-          <p className="bg-accent px-4 py-2 text-center text-[15px] font-medium text-accent-foreground">
-            {CREATION.banner}
-          </p>
-        ) : null}
-
-        {state.phase === "building" ? <BuildingScreen /> : null}
-        {state.phase === "ready" ? <ReadyScreen onSignup={claim} onPreview={preview} /> : null}
-
-        <div
-          ref={scrollRef}
-          className={`flex flex-1 flex-col gap-2 overflow-y-auto p-4 ${state.phase === "building" || state.phase === "ready" ? "hidden" : ""}`}
-        >
-          {visible.map((bubble, i) => (
-            <div
-              key={i}
-              className={`flex ${bubble.from === "user" ? "justify-end" : "justify-start"}`}
-            >
-              <p
-                className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-[17px] leading-snug shadow-sm motion-safe:animate-in motion-safe:fade-in ${
-                  bubble.from === "user"
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-card text-card-foreground"
-                }`}
-              >
-                {bubble.text}
-                {bubble.links?.length ? (
-                  <span className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-sm">
-                    {bubble.links.map((link) => (
-                      <a
-                        key={link.href}
-                        href={link.href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="font-medium text-primary underline underline-offset-2"
-                      >
-                        {link.label}
-                      </a>
-                    ))}
-                  </span>
-                ) : null}
-              </p>
-            </div>
-          ))}
-          {typing ? (
-            <div className="flex">
-              <span className="rounded-2xl bg-card px-4 py-2.5 text-[15px] text-muted-foreground shadow-sm">
-                digitando…
-              </span>
-            </div>
-          ) : (
-            <Options
-              state={state}
-              days={days}
-              onResume={(resume) => {
-                const saved = load();
-                if (resume && saved) {
-                  setRevealed(saved.log.length);
-                  setState(saved);
-                } else restart();
-              }}
-              onConfirm={(yes) => {
-                if (yes && state.detected) {
-                  update({}, [user(CREATION.confirmYes)]);
-                  void build(state.detected, null, {
-                    ...state,
-                    log: [...state.log, user(CREATION.confirmYes)],
-                  });
-                } else
-                  update({ phase: "pick" }, [user(CREATION.confirmNo), system(CREATION.askNiche)]);
-              }}
-              onPick={(key, label) => {
-                if (key === "other")
-                  update({ phase: "other" }, [user(label), system(CREATION.askOther)]);
-                else if (key === "all") update({ phase: "all" }, [user(label)]);
-                else {
-                  update({}, [user(label)]);
-                  void build(key, null);
-                }
-              }}
-              onService={(service) => {
-                const n = niche!;
-                update({ phase: "day", service }, [user(service), system(n.chatMessages.askDate)]);
-              }}
-              onDay={(label) => {
-                const n = niche!;
-                update({ phase: "time", dateLabel: label }, [
-                  user(label),
-                  system(
-                    fill(n.chatMessages.askTime, {
-                      date: label.replace(/^Hoje, /, "").toLowerCase(),
-                    }),
-                  ),
-                ]);
-              }}
-              onTime={(time) => {
-                update({ phase: "done", time }, [
-                  user(time),
-                  system(CREATION.testDone),
-                  system(CREATION.arrives),
-                ]);
-                if (state.demoId) void recordTestBookingAction(state.demoId);
-              }}
-              onClaim={claim}
-              onRestart={restart}
-              onWhatsappLater={() => submitWhatsapp(null)}
-              onEmailFix={(accept) => {
-                const email = accept ? state.emailFix! : state.email!;
-                askPlan(email, [user(accept ? SU.yes : SU.no)]);
-              }}
-              onAcceptTerms={() => void sendCode(state.email!, [user(SU.acceptTerms)])}
-              onPlan={choosePlan}
-              onResend={() => void sendCode(state.email!, [user(SU.resend)])}
-              onChangeEmail={() =>
-                update({ phase: "email", codeSentAt: null }, [
-                  user(SU.changeEmail),
-                  system(SU.askEmail),
-                ])
-              }
-            />
-          )}
-        </div>
-
-        {ownChat && state.phase !== "done" && state.phase !== "ready" && !signup ? (
-          <div className="border-t bg-card px-3 py-2">
-            <button
-              type="button"
-              onClick={claim}
-              className="h-10 w-full rounded-xl bg-primary text-sm font-semibold text-primary-foreground"
-            >
-              {CREATION.claim}
-            </button>
-          </div>
-        ) : null}
-
-        {!ownChat ? (
-          <div className="flex gap-2 overflow-x-auto border-t bg-card px-3 pt-2 pb-1">
-            <ShortcutChip
-              onClick={() =>
-                shortcut(CREATION.shortcuts.price.label, CREATION.shortcuts.price.answer)
-              }
-            >
-              {CREATION.shortcuts.price.label}
-            </ShortcutChip>
-            <ShortcutChip
-              onClick={() => shortcut(CREATION.shortcuts.app.label, CREATION.shortcuts.app.answer)}
-            >
-              {CREATION.shortcuts.app.label}
-            </ShortcutChip>
-            <a
-              href={CREATION.shortcuts.account.href}
-              className="shrink-0 rounded-full border px-3.5 py-2 text-sm font-medium whitespace-nowrap"
-            >
-              {CREATION.shortcuts.account.label}
-            </a>
-          </div>
-        ) : null}
-
-        {composer ? (
-          <Composer
-            key={state.phase}
-            enabled={!typing}
-            {...composer}
-            trap={trap}
-            onTrap={setTrap}
-            onSubmit={(text) => {
-              if (state.phase === "name") submitName(text);
-              else if (state.phase === "other" && text.trim().length >= 2) {
-                const description = text.trim().slice(0, 200);
-                update({}, [user(description)]);
-                void build("general", description, {
-                  ...state,
-                  log: [...state.log, user(description)],
-                });
-              } else if (state.phase === "whatsapp") submitWhatsapp(text.trim());
-              else if (state.phase === "email") submitEmail(text);
-              else if (state.phase === "code") void verify(text.replace(/\D/g, ""));
-            }}
-          />
-        ) : null}
-      </div>
+      {body}
     </div>
   );
 }

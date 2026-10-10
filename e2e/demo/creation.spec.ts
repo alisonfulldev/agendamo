@@ -3,7 +3,7 @@ import { expect, test, type Page } from "@playwright/test";
 /** Creation conversation of the home page (opens over the site). */
 
 async function typeName(page: Page, name: string) {
-  const dialog = page.getByRole("dialog");
+  const dialog = page.locator("[data-creation]");
   await dialog.getByLabel("Nome do negócio").fill(name);
   // The conversation takes a few seconds for people (anti-robot minimum time).
   await page.waitForTimeout(1600);
@@ -12,7 +12,7 @@ async function typeName(page: Page, name: string) {
 
 /** "Ver como meu cliente vai agendar": from the choice screen to the simulation. */
 async function openSimulation(page: Page) {
-  const dialog = page.getByRole("dialog");
+  const dialog = page.locator("[data-creation]");
   await dialog.getByRole("button", { name: "Ver como meu cliente vai agendar" }).click();
   await expect(
     dialog.getByText("Simulação: é assim que seu cliente vai agendar.", { exact: false }),
@@ -20,7 +20,7 @@ async function openSimulation(page: Page) {
 }
 
 async function testBooking(page: Page) {
-  const dialog = page.getByRole("dialog");
+  const dialog = page.locator("[data-creation]");
   await dialog.locator("button").filter({ hasText: /·/ }).first().click();
   await dialog.getByRole("button", { name: /^Hoje/ }).click();
   await dialog
@@ -32,23 +32,44 @@ async function testBooking(page: Page) {
   await expect(dialog.getByText("Novo agendamento")).toBeVisible();
 }
 
-test("CTA opens the conversation over the site; back closes it", async ({ page }) => {
+test("phone: the top chat plays the demo, asks the name and becomes the creation conversation", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
-  await page.getByRole("link", { name: "Criar meu link grátis" }).first().click();
-  await expect(page).toHaveURL(/\?criar=1/);
-  await expect(page.getByRole("dialog")).toBeVisible();
-  await expect(page.getByText("Oi! Vamos montar seu link de agendamento?")).toBeVisible();
-  await page.goBack();
-  await expect(page.getByRole("dialog")).toHaveCount(0);
-  // The site is still there behind it.
-  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  // Never empty: the first balloon comes from the server.
+  await expect(page.getByText(/Você está na agenda de Studio Lumi/)).toBeVisible();
+  // The short demo ends on the owner's notification, then the name question is ready.
+  await expect(page.getByText(/Novo agendamento: Ana, sábado 10h/)).toBeVisible();
+  await expect(page.getByText(/Qual o nome dele\?/)).toBeVisible();
+  const name = page.getByLabel("Nome do negócio");
+  await name.fill(`Barbearia Topo ${Date.now().toString(36)}`);
+  await page.waitForTimeout(1600);
+  await name.press("Enter");
+  // The conversation goes on inside the top (no overlay, no new address).
+  const chat = page.locator("[data-creation]");
+  await expect(chat.getByText(/você trabalha com barbearia, certo\?/)).toBeVisible();
+  await expect(page).not.toHaveURL(/criar=1/);
+  await page.getByRole("button", { name: "Recolher" }).click();
+  await expect(chat).toBeVisible();
+});
+
+test("calls to action of the page scroll to the top chat and activate the name field", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+  await page.getByRole("heading", { name: /Perguntas frequentes/ }).scrollIntoViewIfNeeded();
+  await page.getByRole("link", { name: "Criar meu link grátis" }).last().click();
+  await expect(page.getByLabel("Nome do negócio")).toBeFocused();
+  await expect(page.getByText(/Qual o nome dele\?/)).toBeVisible();
 });
 
 test("niche detected from the name, transformation, test booking and “Criar minha conta grátis”", async ({
   page,
 }) => {
   await page.goto("/?criar=1");
-  const dialog = page.getByRole("dialog");
+  const dialog = page.locator("[data-creation]");
   // Shortcuts answer and the conversation goes on.
   await dialog.getByRole("button", { name: "Quanto custa?" }).click();
   await expect(
@@ -65,7 +86,7 @@ test("niche detected from the name, transformation, test booking and “Criar mi
   await expect(
     dialog.getByText("Seu chat de agendamento está pronto para ser criado", { exact: false }),
   ).toBeVisible();
-  await expect(dialog.getByRole("banner")).toContainText(name);
+  await expect(dialog.locator("header")).toContainText(name);
   // The choice screen: no booking is started before she asks for the simulation.
   await expect(dialog.getByText(/Você está na agenda de/)).toHaveCount(0);
   await openSimulation(page);
@@ -80,7 +101,7 @@ test("niche detected from the name, transformation, test booking and “Criar mi
 
 test("name not recognized: chips, “Outro” and the neutral chat", async ({ page }) => {
   await page.goto("/?criar=1");
-  const dialog = page.getByRole("dialog");
+  const dialog = page.locator("[data-creation]");
   await typeName(page, "Ateliê Dona Rosa");
   await expect(dialog.getByText("O que você faz?")).toBeVisible();
   await expect(dialog.getByRole("button", { name: "Sobrancelha" })).toBeVisible();
@@ -95,7 +116,7 @@ test("name not recognized: chips, “Outro” and the neutral chat", async ({ pa
 
 test("“Ver todos” lists every niche", async ({ page }) => {
   await page.goto("/?criar=1");
-  const dialog = page.getByRole("dialog");
+  const dialog = page.locator("[data-creation]");
   await typeName(page, "Espaço Luz");
   await dialog.getByRole("button", { name: "Ver todos" }).click();
   await dialog.getByRole("button", { name: "Banho e tosa" }).click();
@@ -105,28 +126,29 @@ test("“Ver todos” lists every niche", async ({ page }) => {
 
 test("prospecting link ?nome=&ramo= skips the answered questions", async ({ page }) => {
   await page.goto("/?nome=Studio%20Ana%20Brow&ramo=cilios-e-sobrancelhas");
-  const dialog = page.getByRole("dialog");
+  const dialog = page.locator("[data-creation]");
   await expect(dialog).toBeVisible();
   await expect(
     dialog.getByText("Seu chat de agendamento está pronto para ser criado", { exact: false }),
   ).toBeVisible();
-  await expect(dialog.getByRole("banner")).toContainText("Studio Ana Brow");
+  await expect(dialog.locator("header")).toContainText("Studio Ana Brow");
   await expect(dialog.getByText("O que você faz?")).toHaveCount(0);
 });
 
 test("closing and reopening resumes where it stopped", async ({ page }) => {
   await page.goto("/?criar=1");
-  const dialog = page.getByRole("dialog");
+  const dialog = page.locator("[data-creation]");
   await typeName(page, "Barbearia Retomada");
   await dialog.getByRole("button", { name: "Isso mesmo" }).click();
   await expect(dialog.getByText("pronto para ser criado", { exact: false })).toBeVisible();
-  await dialog.getByRole("button", { name: "Fechar" }).click();
-  await expect(page.getByRole("dialog")).toHaveCount(0);
-
+  // Leaving and coming back (a new visit to the page).
+  await page.goto("/");
   await page.getByRole("link", { name: "Criar meu link grátis" }).first().click();
   await expect(page.getByText("Quer continuar de onde parou, Barbearia Retomada?")).toBeVisible();
   await page.getByRole("button", { name: "Continuar" }).click();
-  await expect(page.getByRole("dialog").getByRole("banner")).toContainText("Barbearia Retomada");
+  await expect(page.locator("[data-creation]").locator("header")).toContainText(
+    "Barbearia Retomada",
+  );
   await openSimulation(page);
   await testBooking(page);
 });

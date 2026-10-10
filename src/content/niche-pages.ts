@@ -36,6 +36,7 @@ export function nicheHomeContent(brand: BrandConfig): HomeContent {
       badge: `Agendamento por chat inteligente para ${niche.name.toLowerCase()}`,
       title: seo.h1 ?? brand.sales.title,
       subtitle: seo.subtitle ?? brand.sales.subtitle,
+      points: HOME.hero.points.map((point) => withCustomerTerm(point, brand)),
     },
     intro: seo.intro,
     pains: {
