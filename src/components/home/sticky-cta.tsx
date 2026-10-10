@@ -3,25 +3,41 @@
 import { OpenCreationLink } from "@/components/creation/open-creation";
 import { useEffect, useState } from "react";
 
-/** Phone only: the main call to action fixed at the bottom once the top of the page is gone. */
+/**
+ * Phone only: the main call to action fixed at the bottom once the top of the page is gone.
+ * It also hides while another call to action (the embedded chat, the closing button) is on screen,
+ * so it never covers them.
+ */
 export function StickyCta({
-  targetId,
+  hideOn,
   label,
   niche,
 }: {
-  targetId: string;
+  /** Ids of the elements that hide the bar while visible (the first one is the top button). */
+  hideOn: string[];
   label: string;
   niche?: string;
 }) {
   const [visible, setVisible] = useState(false);
+  const ids = hideOn.join(" ");
 
   useEffect(() => {
-    const target = document.getElementById(targetId);
-    if (!target) return;
-    const observer = new IntersectionObserver(([entry]) => setVisible(!entry!.isIntersecting));
-    observer.observe(target);
+    const targets = ids
+      .split(" ")
+      .map((id) => document.getElementById(id))
+      .filter((el): el is HTMLElement => el !== null);
+    if (targets.length === 0) return;
+    const onScreen = new Set<Element>();
+    const observer = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) onScreen.add(entry.target);
+        else onScreen.delete(entry.target);
+      }
+      setVisible(onScreen.size === 0);
+    });
+    for (const target of targets) observer.observe(target);
     return () => observer.disconnect();
-  }, [targetId]);
+  }, [ids]);
 
   return (
     <div

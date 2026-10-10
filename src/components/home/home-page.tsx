@@ -250,7 +250,7 @@ export function HomePage({
         ) : null}
 
         {/* Try it: the creation conversation embedded */}
-        <section aria-labelledby="teste" className="border-y bg-muted/40">
+        <section id="veja" aria-labelledby="teste" className="border-y bg-muted/40">
           <div className="mx-auto grid max-w-6xl items-center gap-8 px-5 py-16 md:grid-cols-2">
             <div className="text-center md:text-left">
               <h2 id="teste" className="text-3xl font-bold tracking-tight text-balance">
@@ -293,7 +293,10 @@ export function HomePage({
         </section>
 
         {/* Reminders */}
-        <section aria-labelledby="lembrete" className="below-fold mx-auto max-w-3xl px-5 pb-16 text-center">
+        <section
+          aria-labelledby="lembrete"
+          className="below-fold mx-auto max-w-3xl px-5 pb-16 text-center"
+        >
           <h2 id="lembrete" className="text-2xl font-bold tracking-tight text-balance sm:text-3xl">
             {content.reminders.title}
           </h2>
@@ -349,7 +352,7 @@ export function HomePage({
         </section>
 
         {/* Closing */}
-        <section className="below-fold mx-auto max-w-6xl px-5 pb-20">
+        <section id="cta-final" className="below-fold mx-auto max-w-6xl px-5 pb-20">
           <div className="site-cta-panel flex flex-col items-center gap-6 rounded-3xl px-6 py-14 text-center text-primary-foreground">
             <h2 className="max-w-xl text-3xl font-bold tracking-tight text-balance sm:text-4xl">
               {content.closing.title}
@@ -395,7 +398,7 @@ export function HomePage({
         </div>
       </footer>
 
-      <StickyCta targetId="cta-topo" label={hero.primaryCta} niche={route} />
+      <StickyCta hideOn={["cta-topo", "veja", "cta-final"]} label={hero.primaryCta} niche={route} />
       <LazyCreationChat photos={isStorageConfigured()} />
       <script
         type="application/ld+json"

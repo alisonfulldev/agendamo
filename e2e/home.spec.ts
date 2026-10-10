@@ -103,15 +103,18 @@ test("demo: in order, ending on the notification, without MeetChat balloons, emo
   await expect(phone.getByRole("button", { name: "Ver de novo" })).toBeVisible();
 });
 
-test("phone: the bottom bar shows up only after the top button leaves the screen", async ({
+test("phone: the bottom bar shows up only after the top button leaves the screen, never over the closing button", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
   const sticky = page.locator("div.fixed.bottom-0");
   await expect(sticky).toHaveAttribute("aria-hidden", "true");
-  await page.getByRole("heading", { name: HOME.faq.title }).scrollIntoViewIfNeeded();
+  await page.getByRole("heading", { name: HOME.pricing.title }).scrollIntoViewIfNeeded();
   await expect(sticky).toHaveAttribute("aria-hidden", "false");
+  // Never over the closing button.
+  await page.getByRole("heading", { name: HOME.closing.title }).scrollIntoViewIfNeeded();
+  await expect(sticky).toHaveAttribute("aria-hidden", "true");
 });
 
 test("reduced motion: the whole conversation and the notification, still", async ({ browser }) => {
