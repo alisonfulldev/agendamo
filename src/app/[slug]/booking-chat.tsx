@@ -18,7 +18,7 @@ import {
 } from "@/components/chat/chat-ui";
 import { Checkbox } from "@/components/ui/checkbox";
 import { formatAmount, formatDuration } from "@/lib/money";
-import { maskBrPhone, whatsappLink } from "@/lib/phone";
+import { maskBrPhone, normalizeBrPhone, whatsappLink } from "@/lib/phone";
 import { track } from "@/lib/tracking/client";
 
 import { NextBooking } from "./next-booking";
@@ -509,7 +509,9 @@ export function BookingChat({
         autoComplete="tel"
         initial={state.phone}
         mask={maskBrPhone}
-        validate={(v) => (v.replace(/\D/g, "").length >= 10 ? null : "Informe DDD + número")}
+        // Same rule as the server (valid DDD and number), so a wrong number is fixed here and
+        // never fails only at the confirmation.
+        validate={(v) => (normalizeBrPhone(v) ? null : "Confira o DDD e o número")}
         onSubmit={(phone) => go("email", { phone })}
       />
     );

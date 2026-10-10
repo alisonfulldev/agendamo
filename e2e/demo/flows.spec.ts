@@ -174,6 +174,10 @@ test("book through the chat: customer and owner get e-mails", async ({ page }) =
     .click();
   await page.getByLabel("Seu nome").fill("Cliente Demo");
   await page.getByRole("button", { name: "Enviar" }).click();
+  // A number with an invalid DDD is caught right here, not only at the confirmation.
+  await page.getByLabel("WhatsApp").fill("0155236484");
+  await page.getByRole("button", { name: "Enviar" }).click();
+  await expect(page.getByText("Confira o DDD e o número")).toBeVisible();
   await page.getByLabel("WhatsApp").fill(`119${Date.now().toString().slice(-8)}`);
   await page.getByRole("button", { name: "Enviar" }).click();
   await page.getByLabel("E-mail").fill(email);

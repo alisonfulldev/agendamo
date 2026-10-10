@@ -41,6 +41,7 @@ export const CREATION = {
       "Qual o seu WhatsApp? É por ele que seus clientes falam com você quando precisarem.",
     whatsappPlaceholder: "(11) 99999-8888",
     later: "Depois",
+    invalidWhatsapp: "Esse número não parece certo. Confere o DDD e manda de novo?",
     askEmail: "Seu link está quase pronto! Qual seu e-mail?",
     emailPlaceholder: "seu@email.com",
     invalidEmail: "Esse e-mail não parece certo. Confere e manda de novo?",

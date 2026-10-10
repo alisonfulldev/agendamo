@@ -10,7 +10,7 @@ import { CREATION, detectNiche } from "@/content/creation";
 import { EMAIL_PATTERN, suggestEmailFix } from "@/lib/email-typos";
 import { compressImage } from "@/lib/images/compress";
 import { formatDuration } from "@/lib/money";
-import { maskBrPhone } from "@/lib/phone";
+import { maskBrPhone, normalizeBrPhone } from "@/lib/phone";
 
 import {
   createDemoAction,
@@ -385,6 +385,10 @@ function Conversation({ photos }: { photos: boolean }) {
   }
 
   function submitWhatsapp(text: string | null) {
+    if (text && !normalizeBrPhone(text)) {
+      update({}, [user(text), system(SU.invalidWhatsapp)]);
+      return;
+    }
     update({ phase: "email", whatsapp: text }, [user(text ?? SU.later), system(SU.askEmail)]);
   }
 
