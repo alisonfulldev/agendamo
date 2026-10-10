@@ -317,7 +317,7 @@ export function HomePage({
             <p className="mt-4 text-center">
               <Link
                 href="/precos"
-                className="font-medium text-primary underline underline-offset-4"
+                className="inline-block py-2 font-medium text-primary underline underline-offset-4"
               >
                 Ver todos os detalhes dos preços
               </Link>
