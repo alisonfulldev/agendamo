@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { baseDeposit, uniqueDepositAmount } from "@/lib/deposits/amount";
+import { baseDeposit } from "@/lib/deposits/amount";
 import { sniffReceiptType } from "@/lib/deposits/receipt-file";
 
 describe("baseDeposit", () => {
@@ -32,44 +32,6 @@ describe("baseDeposit", () => {
     expect(baseDeposit([free("fixed", 3000)], 0, 0)).toBe(3000);
     expect(baseDeposit([free("percent", 30)], 0, 0)).toBe(0);
     expect(baseDeposit([free("full")], 0, 0)).toBe(0);
-  });
-});
-
-describe("uniqueDepositAmount (unique cents)", () => {
-  it("takes 1 to 99 cents off, so the customer never pays more", () => {
-    for (let i = 0; i < 200; i++) {
-      const amount = uniqueDepositAmount(3000, 0, new Set())!;
-      expect(amount).toBeGreaterThanOrEqual(2901);
-      expect(amount).toBeLessThanOrEqual(2999);
-    }
-  });
-
-  it("never repeats a pending amount of the same professional", () => {
-    const taken = new Set<number>();
-    for (let i = 0; i < 99; i++) {
-      const amount = uniqueDepositAmount(3000, 0, taken)!;
-      expect(taken.has(amount)).toBe(false);
-      taken.add(amount);
-    }
-    // All 99 below are taken: the cents are added instead (still unique).
-    const next = uniqueDepositAmount(3000, 0, taken)!;
-    expect(next).toBeGreaterThan(3000);
-    expect(taken.has(next)).toBe(false);
-  });
-
-  it("adds the cents when taking them off would go below the minimum", () => {
-    const amount = uniqueDepositAmount(3000, 3000, new Set())!;
-    expect(amount).toBeGreaterThan(3000);
-    expect(amount).toBeLessThanOrEqual(3099);
-  });
-
-  it("very small deposits never become zero", () => {
-    expect(uniqueDepositAmount(50, 0, new Set())).toBeGreaterThanOrEqual(1);
-  });
-
-  it("returns null when every candidate is taken", () => {
-    const taken = new Set([...Array(99)].flatMap((_, i) => [3000 - (i + 1), 3000 + (i + 1)]));
-    expect(uniqueDepositAmount(3000, 0, taken)).toBeNull();
   });
 });
 

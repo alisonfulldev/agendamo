@@ -4,7 +4,7 @@ import { formatInTimeZone } from "date-fns-tz";
 
 import { layoutBlock, pickProfessional } from "@/lib/availability";
 import type { AppointmentStatus } from "@/lib/db/types";
-import { baseDeposit, uniqueDepositAmount } from "@/lib/deposits/amount";
+import { baseDeposit } from "@/lib/deposits/amount";
 import { getPlanFeatures } from "@/lib/plans";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -191,7 +191,7 @@ export async function createBooking(input: CreateBookingInput): Promise<CreateBo
     )
     .eq("business_id", business.id)
     .maybeSingle();
-  // Deposit or full payment by Pix: before the unique cents.
+  // Deposit or full payment by Pix: the exact amount the customer pays.
   const deposit =
     features.deposits && page?.pix_key && !input.customerPackageId
       ? baseDeposit(
@@ -230,63 +230,44 @@ export async function createBooking(input: CreateBookingInput): Promise<CreateBo
         ).toISOString()
       : null;
 
-  // 5. Atomic insert (appointment + services + resources). With a deposit, the amount gets unique
-  // cents among the professional's pending payments (the database guarantees it: a clash retries).
+  // 5. Atomic insert (appointment + services + resources). The deposit is the exact amount.
   const block = layoutBlock(new Date(slot.startsAt), steps);
-  const minimum = (page?.deposit_min_cents as number) ?? 0;
-  let appointmentId: unknown = null;
-  let depositCents = 0;
-  for (let attempt = 0; attempt < 5 && !appointmentId; attempt++) {
-    if (status === "awaiting_deposit") {
-      const { data: pending } = await admin
-        .from("appointments")
-        .select("deposit_cents")
-        .eq("professional_id", professionalId)
-        .in("deposit_status", ["waiting", "sent"])
-        .gt("deposit_cents", 0);
-      const taken = new Set((pending ?? []).map((r) => r.deposit_cents as number));
-      const amount = uniqueDepositAmount(deposit, minimum, taken);
-      if (amount === null) return { ok: false, error: "unavailable" };
-      depositCents = amount;
-    }
-    const { data, error } = await admin.rpc("book_appointment", {
-      p: {
-        business_id: business.id,
-        professional_id: professionalId,
-        customer_id: customer.id,
-        starts_at: block.start.toISOString(),
-        ends_at: block.end.toISOString(),
-        status,
-        source: input.source,
-        deposit_cents: status === "awaiting_deposit" ? depositCents : 0,
-        deposit_status: status === "awaiting_deposit" ? "waiting" : "none",
-        deposit_expires_at: depositExpiresAt,
-        coupon_code: couponCode,
-        discount_cents: discount,
-        referral_code: referredBy ? input.referralCode : null,
-        package_id: input.customerPackageId ?? null,
-        services: services.map((service, i) => ({
-          service_id: service.id,
-          name: service.name,
-          duration_minutes: steps[i]!.durationMinutes,
-          price_cents: charged[i],
+  const depositCents = status === "awaiting_deposit" ? deposit : 0;
+  const { data: appointmentId, error } = await admin.rpc("book_appointment", {
+    p: {
+      business_id: business.id,
+      professional_id: professionalId,
+      customer_id: customer.id,
+      starts_at: block.start.toISOString(),
+      ends_at: block.end.toISOString(),
+      status,
+      source: input.source,
+      deposit_cents: depositCents,
+      deposit_status: status === "awaiting_deposit" ? "waiting" : "none",
+      deposit_expires_at: depositExpiresAt,
+      coupon_code: couponCode,
+      discount_cents: discount,
+      referral_code: referredBy ? input.referralCode : null,
+      package_id: input.customerPackageId ?? null,
+      services: services.map((service, i) => ({
+        service_id: service.id,
+        name: service.name,
+        duration_minutes: steps[i]!.durationMinutes,
+        price_cents: charged[i],
+      })),
+      resources: block.steps.flatMap((step) =>
+        step.resourceIds.map((resourceId) => ({
+          resource_id: resourceId,
+          starts_at: step.start.toISOString(),
+          ends_at: step.end.toISOString(),
         })),
-        resources: block.steps.flatMap((step) =>
-          step.resourceIds.map((resourceId) => ({
-            resource_id: resourceId,
-            starts_at: step.start.toISOString(),
-            ends_at: step.end.toISOString(),
-          })),
-        ),
-      },
-    });
-    if (error) {
-      if (error.code === "23505" && status === "awaiting_deposit") continue;
-      if (error.code === "23P01") return { ok: false, error: "conflict" };
-      if (error.message.includes("coupon_invalid")) return { ok: false, error: "coupon_invalid" };
-      throw new Error(`book_appointment failed: ${error.message}`);
-    }
-    appointmentId = data;
+      ),
+    },
+  });
+  if (error) {
+    if (error.code === "23P01") return { ok: false, error: "conflict" };
+    if (error.message.includes("coupon_invalid")) return { ok: false, error: "coupon_invalid" };
+    throw new Error(`book_appointment failed: ${error.message}`);
   }
   if (!appointmentId) return { ok: false, error: "unavailable" };
   if (status === "awaiting_deposit") {

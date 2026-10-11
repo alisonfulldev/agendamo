@@ -32,7 +32,7 @@ const STATUS: Record<string, string> = {
 };
 
 /**
- * Deposits by Pix: Pix to check (the expected amount, with its unique cents, in evidence; the
+ * Deposits by Pix: Pix to check (the expected amount and the payer's name in evidence; the
  * receipt when the customer attached one), the ones waiting for payment, and the month's report.
  * Decisions are always the professional's.
  */
@@ -56,8 +56,13 @@ export default async function DepositsPage() {
   }
 
   const toCheck = rows.filter((r) => r.deposit_status === "sent");
-  const nowMs = new Date().getTime();
   const waiting = rows.filter((r) => r.deposit_status === "waiting");
+  const nowMs = new Date().getTime();
+  // Same amount pending more than once: told apart by the payer's name in the bank statement.
+  const sameAmount = new Map<number, number>();
+  for (const r of [...toCheck, ...waiting]) {
+    sameAmount.set(r.deposit_cents, (sameAmount.get(r.deposit_cents) ?? 0) + 1);
+  }
   const thisMonth = (r: Row) =>
     r.deposit_decided_at && new Date(r.deposit_decided_at) >= monthStart;
   const decided = rows
@@ -77,7 +82,7 @@ export default async function DepositsPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Sinais pelo Pix"
-        description="O cliente paga direto na sua chave e avisa no chat (o comprovante é opcional). Procure no seu extrato o valor com centavos e confirme."
+        description="O cliente paga direto na sua chave e avisa no chat (o comprovante é opcional). Confira no seu extrato pelo valor e pelo nome de quem pagou, e confirme."
       />
 
       <dl className="grid grid-cols-3 gap-3 text-center">
@@ -123,9 +128,14 @@ export default async function DepositsPage() {
                     <p className="font-heading text-3xl font-bold text-primary">
                       R$ {formatAmount(r.deposit_cents)}
                     </p>
-                    <p className="font-medium">
-                      {r.customer?.name} · {services(r)}
-                    </p>
+                    <p className="text-lg font-semibold">{r.customer?.name}</p>
+                    <p className="text-sm">{services(r)}</p>
+                    {(sameAmount.get(r.deposit_cents) ?? 0) > 1 ? (
+                      <p className="text-sm font-medium text-destructive">
+                        Há {sameAmount.get(r.deposit_cents)} Pix de R${" "}
+                        {formatAmount(r.deposit_cents)} pendentes: confira pelo nome de quem pagou.
+                      </p>
+                    ) : null}
                     <p className="text-sm text-muted-foreground">Horário: {when(r.starts_at)}</p>
                     {r.deposit_sent_at ? (
                       <p className="text-sm text-muted-foreground">

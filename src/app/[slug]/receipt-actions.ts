@@ -18,7 +18,7 @@ export type ReceiptActionError =
   | "invalid_file"
   | "duplicate";
 
-/** "Já fiz o Pix": no receipt needed (the owner checks the unique-cents amount in the bank). */
+/** "Já fiz o Pix": no receipt needed (the owner checks the payment in the bank). */
 export async function declarePaidAction(
   input: unknown,
 ): Promise<{ ok: true } | { ok: false; error: ReceiptActionError }> {

@@ -1,7 +1,7 @@
 import type { DepositType } from "@/lib/db/types";
 
 /**
- * Deposit of a booking before the unique cents: the services' rules (fixed, percent or the full
+ * Deposit of a booking (the exact amount the customer pays): the services' rules (fixed, percent or the full
  * price), at least the business minimum, never more than the total. Services without a price
  * (R$ 0, "a combinar") can still ask for a fixed deposit: then there is no total to cap it.
  */
@@ -21,34 +21,4 @@ export function baseDeposit(
   const deposit = Math.max(sum, minimumCents);
   const priced = services.some((s) => s.chargedCents > 0);
   return priced ? Math.min(deposit, totalAfterDiscount) : deposit;
-}
-
-/**
- * Unique cents: the amount the customer pays, different from every pending payment of the same
- * professional, so it can be found in the bank statement. 1 to 99 cents are taken off (the
- * customer never pays more); only when that would go below the minimum (or zero) they are added.
- * Returns null when every candidate is taken (the caller asks for another time).
- */
-export function uniqueDepositAmount(
-  baseCents: number,
-  minimumCents: number,
-  taken: ReadonlySet<number>,
-  random: () => number = Math.random,
-): number | null {
-  if (baseCents <= 0) return null;
-  const floor = Math.max(minimumCents, 1);
-  const below = range(1, 99)
-    .map((cents) => baseCents - cents)
-    .filter((amount) => amount >= floor && !taken.has(amount));
-  const pool = below.length
-    ? below
-    : range(1, 99)
-        .map((cents) => baseCents + cents)
-        .filter((amount) => !taken.has(amount));
-  if (!pool.length) return null;
-  return pool[Math.floor(random() * pool.length)]!;
-}
-
-function range(from: number, to: number): number[] {
-  return Array.from({ length: to - from + 1 }, (_, i) => from + i);
 }

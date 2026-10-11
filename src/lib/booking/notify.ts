@@ -142,12 +142,12 @@ export async function notifyBookingCreated(appointmentId: string): Promise<void>
       {
         heading: "Garanta seu horário",
         paragraphs: [
-          `Faça o Pix de R$ ${priceText(d.appointment.deposit_cents)} (o valor exato, com os centavos) até ${deadline}. Sem o comprovante, o horário é liberado.`,
+          `Faça o Pix de R$ ${priceText(d.appointment.deposit_cents)} até ${deadline}. Sem o Pix, o horário é liberado.`,
           ...(code ? ["Pix copia e cola:", code] : []),
-          `O Pix vai direto para ${d.business.name}. Depois de pagar, envie o comprovante na página do agendamento: o horário fica pré-confirmado até a conferência.`,
+          `O Pix vai direto para ${d.business.name}. Depois de pagar, toque em “Já fiz o Pix” na página do agendamento: o horário fica reservado até a conferência.`,
         ],
         details: detailLines(d),
-        cta: { label: "Enviar comprovante", url: manageUrl(d) },
+        cta: { label: "Já fiz o Pix", url: manageUrl(d) },
       },
       attachments,
     );

@@ -42,19 +42,10 @@ async function waitingDeposit(cents: number, status = "waiting") {
 }
 
 describe("deposits by Pix with receipts", () => {
-  it("unique cents: two pending payments of the same professional never share an amount", async () => {
-    await waitingDeposit(2993);
-    await expect(waitingDeposit(2993)).rejects.toThrow();
-    await expect(waitingDeposit(2993, "sent")).rejects.toThrow();
-  });
-
-  it("the amount is free again once the payment is decided or expired", async () => {
-    const id = await waitingDeposit(2991);
-    await db.query(
-      "update public.appointments set status = 'cancelled', deposit_status = 'expired' where id = $1",
-      [id],
-    );
-    await expect(waitingDeposit(2991)).resolves.toBeTruthy();
+  it("exact amounts: two pending payments of the same professional may have the same amount", async () => {
+    await waitingDeposit(3000);
+    await expect(waitingDeposit(3000)).resolves.toBeTruthy();
+    await expect(waitingDeposit(3000, "sent")).resolves.toBeTruthy();
   });
 
   it("customers start without the receipt requirement (set after a “Não recebi”)", async () => {

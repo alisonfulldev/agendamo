@@ -86,9 +86,9 @@ test("phone: pay by Pix, attach the optional receipt, the owner confirms", async
   const customer = `Cliente Sinal ${unique()}`;
   await bookWithDeposit(page, customer, email);
   const payment = page.getByTestId("deposit-payment");
-  // Unique cents taken off a R$ 30 deposit: the customer never pays more.
+  // The exact amount set by the owner: R$ 30 is R$ 30,00 (no extra cents).
   await expect(
-    payment.getByText(/Para garantir seu horário, faça o Pix de R\$ 29,\d{2}/),
+    payment.getByText("Para garantir seu horário, faça o Pix de R$ 30,00.", { exact: false }),
   ).toBeVisible();
   await expect(payment.getByRole("img", { name: "QR code do Pix" })).toBeVisible();
   await expect(payment.getByText(/Horário reservado por/)).toBeVisible();
@@ -138,7 +138,7 @@ test("phone: pay by Pix, attach the optional receipt, the owner confirms", async
   await expect(owner.getByText(/\d+ Pix para conferir/)).toBeVisible();
   await owner.goto("/painel/sinais");
   const item = owner.locator("li", { hasText: customer });
-  await expect(item.getByText(/R\$ 29,\d{2}/).first()).toBeVisible();
+  await expect(item.getByText("R$ 30,00").first()).toBeVisible();
   await expect(item.getByRole("img", { name: "Comprovante enviado pelo cliente" })).toHaveCount(0);
   await expect(item.getByRole("link", { name: /Abrir comprovante/ })).toBeVisible();
   const before = emails(email).length;

@@ -111,7 +111,7 @@ export default async function SettingsPage() {
         <Section
           id="sinal"
           title="Sinal pelo Pix"
-          description="O cliente paga o sinal (ou o valor total) pelo Pix direto para você e avisa no chat (o comprovante é opcional). Você procura no extrato o valor com centavos e confirma."
+          description="O cliente paga o sinal (ou o valor total) pelo Pix direto para você e avisa no chat (o comprovante é opcional). Você confere no seu extrato e confirma."
         >
           <div className="flex flex-col gap-6">
             {setup.ready ? (

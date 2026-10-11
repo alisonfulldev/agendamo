@@ -45,7 +45,7 @@ export const NICHE_SEO: Record<string, NicheSeo> = {
       {
         question: "Dá para cobrar sinal em mechas, progressiva e outros serviços longos?",
         answer:
-          "Dá: o cliente paga o sinal pelo Pix direto para você e avisa no chat. Você confere no banco pelo valor com centavos e confirma.",
+          "Dá: o cliente paga o sinal pelo Pix direto para você e avisa no chat. Você confere no banco e confirma.",
       },
       {
         question: "Como a cliente marca horário no salão pelo Instagram?",
@@ -129,7 +129,7 @@ export const NICHE_SEO: Record<string, NicheSeo> = {
       {
         question: "Posso pedir sinal antes do procedimento?",
         answer:
-          "Dá: o cliente paga o sinal pelo Pix direto para você e avisa no chat. Você confere no banco pelo valor com centavos e confirma.",
+          "Dá: o cliente paga o sinal pelo Pix direto para você e avisa no chat. Você confere no banco e confirma.",
       },
     ],
     demo: [
@@ -202,7 +202,7 @@ export const NICHE_SEO: Record<string, NicheSeo> = {
       {
         question: "Posso cobrar sinal na extensão de cílios?",
         answer:
-          "Dá: o cliente paga o sinal pelo Pix direto para você e avisa no chat. Você confere no banco pelo valor com centavos e confirma.",
+          "Dá: o cliente paga o sinal pelo Pix direto para você e avisa no chat. Você confere no banco e confirma.",
       },
       {
         question: "Funciona para studio de sobrancelha com mais de uma profissional?",
@@ -236,7 +236,7 @@ export const NICHE_SEO: Record<string, NicheSeo> = {
       {
         question: "Dá para exigir sinal para garantir a sessão?",
         answer:
-          "Dá: o cliente paga o sinal pelo Pix direto para você e avisa no chat. Você confere no banco pelo valor com centavos e confirma.",
+          "Dá: o cliente paga o sinal pelo Pix direto para você e avisa no chat. Você confere no banco e confirma.",
       },
       {
         question: "Cada tatuador pode ter a própria agenda?",
@@ -808,7 +808,7 @@ export const NICHE_SEO: Record<string, NicheSeo> = {
       {
         question: "Dá para cobrar sinal para reservar a data do ensaio?",
         answer:
-          "Dá: o cliente paga o sinal pelo Pix direto para você e avisa no chat. Você confere no banco pelo valor com centavos e confirma.",
+          "Dá: o cliente paga o sinal pelo Pix direto para você e avisa no chat. Você confere no banco e confirma.",
       },
     ],
   },

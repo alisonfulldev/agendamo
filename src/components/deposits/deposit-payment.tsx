@@ -147,7 +147,7 @@ function mmss(ms: number): string {
 /**
  * Deposit / full payment by Pix. Shows the Pix (copy and paste + QR) and the reservation
  * countdown. "Já fiz o Pix" is the main action (the receipt is optional): the time stays reserved,
- * never confirmed, until the owner finds the unique-cents amount in the bank. A customer marked
+ * never confirmed, until the owner finds the payment in the bank. A customer marked
  * "Não recebi" before must attach the receipt instead.
  */
 export function DepositPayment({
@@ -161,7 +161,7 @@ export function DepositPayment({
 }: {
   /** The customer's secret link token. */
   token: string;
-  /** "29,93" (with the unique cents). */
+  /** "30,00" (the exact amount set by the owner). */
   amount: string;
   pix: { code: string; qr: string };
   expiresAt: string;

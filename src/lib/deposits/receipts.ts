@@ -65,7 +65,7 @@ function canAttach(appointment: Appointment, now: Date): ReceiptError | null {
 
 /**
  * "Já fiz o Pix" (the receipt is optional): the time stays reserved, never confirmed, until the
- * owner finds the unique-cents amount in the bank. A customer marked "Não recebi" before must
+ * owner finds the payment in the bank. A customer marked "Não recebi" before must
  * attach the receipt instead.
  */
 export async function declarePaid(input: {

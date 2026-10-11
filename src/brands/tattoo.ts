@@ -51,7 +51,7 @@ export const tattoo = nicheBrand({
     {
       question: "Consigo cobrar sinal para segurar a sessão?",
       answer:
-        "Dá: o cliente paga o sinal pelo Pix direto para você e avisa no chat. Você confere no banco pelo valor com centavos e confirma.",
+        "Dá: o cliente paga o sinal pelo Pix direto para você e avisa no chat. Você confere no banco e confirma.",
     },
   ],
   chat: { askProfessional: "Com qual tatuador você prefere?" },
