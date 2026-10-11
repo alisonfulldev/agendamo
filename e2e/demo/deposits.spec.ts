@@ -26,7 +26,7 @@ const unique = () => Date.now().toString(36);
 async function prepareStudio(page: Page) {
   await page.goto("/demo#planos");
   const row = page.locator("#planos form", { hasText: "Studio Bela" });
-  await row.getByRole("button", { name: "Pro", exact: true }).click();
+  await row.getByRole("button", { name: "Assinante", exact: true }).click();
   await page.waitForURL(/ok=plano/);
   await page
     .locator("#planos form", { hasText: "Studio Bela" })

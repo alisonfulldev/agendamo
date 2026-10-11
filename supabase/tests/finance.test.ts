@@ -47,8 +47,8 @@ async function appointment(status: string, discount = 0) {
   return id;
 }
 
-describe("three plans", () => {
-  it("a new business starts on Grátis, with no automatic trial", async () => {
+describe("single plan", () => {
+  it("a new business starts without a subscription; the trial is started by the sign-up", async () => {
     const { rows } = await db.query<{ plan: string; trial_ends_at: string | null }>(
       `insert into public.businesses (name, slug, brand_key, segment) values ('Novo', 'novo-teste', 'psychology', 'psychology')
        returning plan, trial_ends_at`,
@@ -56,13 +56,24 @@ describe("three plans", () => {
     expect(rows[0]).toEqual({ plan: "free", trial_ends_at: null });
   });
 
-  it("accepts the agenda and pro plans and only agenda / pro trials", async () => {
-    await db.query("update public.businesses set plan = 'agenda' where slug = 'novo-teste'");
-    await db.query("update public.businesses set plan = 'pro' where slug = 'novo-teste'");
-    await expect(
-      db.query("update public.businesses set trial_plan = 'free' where slug = 'novo-teste'"),
-    ).rejects.toThrow();
+  it("accepts only the free and complete plans", async () => {
+    await db.query("update public.businesses set plan = 'complete' where slug = 'novo-teste'");
+    for (const old of ["agenda", "pro", "team"]) {
+      await expect(
+        db.query(`update public.businesses set plan = '${old}' where slug = 'novo-teste'`),
+      ).rejects.toThrow();
+    }
     await db.query("update public.businesses set plan = 'free' where slug = 'novo-teste'");
+  });
+
+  it("counts the WhatsApp hand-off as an anonymous page event", async () => {
+    const { rows } = await db.query<{ id: string }>(
+      "select id from public.businesses where slug = 'novo-teste'",
+    );
+    await db.query(
+      "insert into public.page_events (business_id, type, session_id) values ($1, 'handoff_sent', gen_random_uuid())",
+      [rows[0]!.id],
+    );
   });
 
   it("one trial per person: the same e-mail hash cannot be claimed twice", async () => {

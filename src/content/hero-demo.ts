@@ -79,7 +79,4 @@ export const HERO_CHAT_TEXT = {
       ? `Novo agendamento: ${demo.customer}, sábado 10h`
       : `Novo agendamento: ${demo.service.split(" ")[0]!.toLowerCase()} sábado 10h`,
   replay: "Ver de novo",
-  placeholder: "Ex.: Studio Bella",
-  collapse: "Recolher",
-  send: "Enviar",
 };

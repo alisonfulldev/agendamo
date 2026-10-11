@@ -1,43 +1,15 @@
-import {
-  FREE_BOOKINGS_PER_CYCLE,
-  PLAN_PRICES,
-  PRICE_TEXT,
-  reais,
-  TRIAL_DAYS,
-  yearlySavings,
-} from "@/lib/plans";
+import { PLAN_NAME, PLAN_PRICES, PRICE_TEXT, reais, TRIAL_DAYS, yearlySavings } from "@/lib/plans";
 
 /** Texts of the /precos page. Prices always come from PLAN_PRICES / PRICE_TEXT. */
 export const PRICING = {
   meta: {
-    title: "Preços do MeetChat: grátis para sempre, Agenda e Pro",
-    description: `${PRICE_TEXT.free}. Agenda por ${PRICE_TEXT.agenda.monthly} e Pro por ${PRICE_TEXT.pro.monthly}, com ${TRIAL_DAYS} dias grátis sem cartão. Sem fidelidade.`,
+    title: `Preços do MeetChat: um plano só, ${TRIAL_DAYS} dias grátis`,
+    description: `Um plano só, o ${PLAN_NAME}: ${PRICE_TEXT.summary}, com tudo incluído. ${TRIAL_DAYS} dias grátis sem cartão. Sem fidelidade.`,
   },
   hero: {
-    title: "Comece grátis. Assine quando a agenda encher.",
-    subtitle: `${PRICE_TEXT.free}. Quer agendamentos ilimitados e lembretes? Teste o Agenda ou o Pro por ${TRIAL_DAYS} dias, sem cartão.`,
+    title: `Um plano só, com tudo. ${TRIAL_DAYS} dias grátis.`,
+    subtitle: `O ${PLAN_NAME} custa ${PRICE_TEXT.summary}: agendamentos ilimitados, lembretes, sinal pelo Pix e tudo mais. Teste ${TRIAL_DAYS} dias, sem cartão.`,
     cta: "Criar meu link grátis",
-  },
-  compareTitle: "Compare os planos",
-  compare: {
-    columns: ["Grátis", "Agenda", "Pro"],
-    rows: [
-      {
-        label: "Agendamentos automáticos pelo chat",
-        values: [`${FREE_BOOKINGS_PER_CYCLE} a cada 30 dias`, "Ilimitados", "Ilimitados"],
-      },
-      {
-        label: "Depois do limite",
-        values: ["Pedidos pelo seu WhatsApp", "—", "—"],
-      },
-      { label: "Agenda no celular", values: [true, true, true] },
-      { label: "Lembretes automáticos para o cliente", values: [false, true, true] },
-      { label: "Chat de agendamento no seu site", values: [false, true, true] },
-      { label: "Clientes, financeiro e estatísticas", values: [false, true, true] },
-      { label: "Vendas: artes, cupons, pacotes e lista de espera", values: [false, true, true] },
-      { label: "Equipe e Google Agenda", values: [false, true, true] },
-      { label: "Sinal ou pagamento total no agendamento", values: [false, false, true] },
-    ] as { label: string; values: (string | boolean)[] }[],
   },
   extrasTitle: "Adicionais (opcionais)",
   extras: [
@@ -45,7 +17,7 @@ export const PRICING = {
       name: "Profissional extra",
       price: `${PRICE_TEXT.extraProfessional} (${reais(PLAN_PRICES.extraProfessional.yearly)}/ano)`,
       description:
-        "No Agenda e no Pro, 1 profissional está incluso. Cada pessoa a mais na equipe ganha a própria agenda.",
+        "1 profissional está incluso. Cada pessoa a mais na equipe ganha a própria agenda.",
     },
     {
       name: "Destaque no portal",
@@ -57,12 +29,13 @@ export const PRICING = {
     title: "Perguntas sobre planos e pagamento",
     items: [
       {
-        question: "O plano Grátis é grátis mesmo?",
-        answer: `Sim, para sempre e sem cartão. São ${FREE_BOOKINGS_PER_CYCLE} agendamentos automáticos a cada 30 dias, contados a partir do dia do seu cadastro. Quando acabam, o chat continua: ele anota o serviço, o dia e o turno que a pessoa prefere e abre o seu WhatsApp com o pedido pronto, até o ciclo renovar.`,
+        question: `Como funciona o teste de ${TRIAL_DAYS} dias?`,
+        answer: `Você usa o ${PLAN_NAME} com tudo liberado, sem cartão, uma vez por conta. Avisamos por e-mail e no celular no 10º, no 13º e no 14º dia.`,
       },
       {
-        question: `Como funciona o teste de ${TRIAL_DAYS} dias?`,
-        answer: `Você testa o Agenda ou o Pro com tudo liberado, sem cartão, uma vez por conta. No 5º e no 6º dia avisamos por e-mail e no celular. Se não assinar, a conta passa sozinha para o Grátis: nada é apagado.`,
+        question: "E se eu não assinar depois do teste?",
+        answer:
+          "Seu link continua no ar: o chat anota o serviço, o dia e o turno que a pessoa prefere e abre o seu WhatsApp com o pedido pronto. O painel fica pausado, mas agenda, clientes e configurações ficam guardados, e os horários já marcados continuam valendo. Assinando, tudo volta na hora.",
       },
       {
         question: "Quais as formas de pagamento?",
@@ -74,23 +47,17 @@ export const PRICING = {
           "No dia em que você assina. O ciclo começa nessa data, sem cobrança proporcional. Ao assinar, tudo libera na hora.",
       },
       {
-        question: "Posso trocar de plano?",
-        answer:
-          "Sim. Do Agenda para o Pro, o Pro libera na hora e o novo valor vale a partir da próxima cobrança. Do Pro para o Agenda, a troca acontece no fim do período já pago.",
-      },
-      {
         question: "Tem fidelidade ou multa para cancelar?",
         answer:
-          "Não. Ao cancelar, o plano continua até o fim do período pago. Depois, a conta volta para o Grátis, sem perder nada.",
+          "Não. Ao cancelar, o plano continua até o fim do período pago. Depois, o link continua no ar com os pedidos indo para o seu WhatsApp, sem perder nada.",
       },
       {
         question: "Cobram taxa por agendamento?",
-        answer:
-          "Não. No Agenda e no Pro o preço é fixo, não importa quantos agendamentos você tenha.",
+        answer: "Não. O preço é fixo, não importa quantos agendamentos você tenha.",
       },
       {
         question: "Vale a pena o plano anual?",
-        answer: `No anual, o Agenda sai ${PRICE_TEXT.agenda.yearlyPerMonth} (economia de ${reais(yearlySavings("agenda"))} por ano) e o Pro sai ${PRICE_TEXT.pro.yearlyPerMonth} (economia de ${reais(yearlySavings("pro"))} por ano).`,
+        answer: `No anual, o ${PLAN_NAME} sai ${PRICE_TEXT.yearlyPerMonth} (${PRICE_TEXT.yearly}), uma economia de ${reais(yearlySavings())} por ano.`,
       },
     ],
   },

@@ -31,7 +31,7 @@ export default async function AgendaPage({ searchParams }: PageProps<"/painel/ag
         <UpgradeNotice
           features={features}
           title="Sua agenda, organizada sozinha"
-          description="Com o Pro, as clientes escolhem um horário livre pelo chat e tudo aparece aqui."
+          description="Com o Completo, as clientes escolhem um horário livre pelo chat e tudo aparece aqui."
           bullets={[
             "Visão de dia e semana",
             "Agendamento manual com horários livres calculados",

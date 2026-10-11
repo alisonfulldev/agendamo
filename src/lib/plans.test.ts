@@ -2,158 +2,125 @@ import { describe, expect, it } from "vitest";
 
 import {
   getPlanFeatures,
-  paidPlanOf,
   planLabel,
   PRICE_TEXT,
   subscriptionPrice,
+  TRIAL_DAYS,
   yearlySavings,
 } from "@/lib/plans";
 
 const NOW = new Date("2030-01-15T12:00:00Z");
 const DAY = 86_400_000;
 
-describe("getPlanFeatures (Grátis, Agenda, Pro)", () => {
-  it("Grátis (never tested): limited chat bookings, only chat and agenda, brand footer", () => {
-    const f = getPlanFeatures({ plan: "free", trial_plan: null, trial_ends_at: null }, NOW);
-    expect(f).toMatchObject({
-      tier: "free",
-      status: "free",
-      subscribed: false,
-      limitedBookings: true,
-      agenda: true,
-      reminders: false,
-      removeBranding: false,
-      embed: false,
-      customers: false,
-      finance: false,
-      salesTools: false,
-      googleCalendar: false,
-      anyProfessional: false,
-      deposits: false,
-      trialAvailable: true,
-      professionalLimit: 1,
-    });
-    expect(planLabel(f)).toBe("Grátis");
-  });
-
-  it("trial of Agenda: everything of Agenda, no limit, days counted", () => {
+describe("getPlanFeatures (Completo, 14-day trial, waiting mode)", () => {
+  it("trial: everything works, no brand footer, days counted, up to 10 professionals", () => {
     const f = getPlanFeatures(
       {
         plan: "free",
-        trial_plan: "agenda",
-        trial_started_at: new Date(NOW.getTime() - 2 * DAY).toISOString(),
-        trial_ends_at: new Date(NOW.getTime() + 5 * DAY).toISOString(),
+        trial_started_at: new Date(NOW.getTime() - 4 * DAY).toISOString(),
+        trial_ends_at: new Date(NOW.getTime() + 10 * DAY).toISOString(),
       },
       NOW,
     );
     expect(f).toMatchObject({
-      tier: "agenda",
       status: "trial",
+      active: true,
       trialActive: true,
-      limitedBookings: false,
+      subscribed: false,
+      trialDaysLeft: 10,
+      removeBranding: true,
       reminders: true,
       embed: true,
       finance: true,
-      removeBranding: false,
-      trialAvailable: false,
-      trialDaysLeft: 5,
+      deposits: true,
       professionalLimit: 10,
     });
-    expect(planLabel(f)).toBe("Teste do Agenda");
+    expect(planLabel(f)).toBe("Teste do Completo");
   });
 
-  it("trial ended without payment: back to Grátis (limited), trial no longer available", () => {
+  it("last day of the trial counts as 1 day left", () => {
     const f = getPlanFeatures(
       {
         plan: "free",
-        trial_plan: "pro",
-        trial_started_at: new Date(NOW.getTime() - 8 * DAY).toISOString(),
-        trial_ends_at: new Date(NOW.getTime() - DAY).toISOString(),
+        trial_started_at: new Date(NOW.getTime() - 13.5 * DAY).toISOString(),
+        trial_ends_at: new Date(NOW.getTime() + 0.5 * DAY).toISOString(),
       },
       NOW,
     );
-    expect(f).toMatchObject({
-      tier: "free",
-      status: "free",
-      trialActive: false,
-      trialAvailable: false,
-      limitedBookings: true,
-      finance: false,
-      trialDaysLeft: null,
-    });
+    expect(f.trialDaysLeft).toBe(1);
   });
 
-  it("subscribed to Agenda: unlimited, no counter, paid seats", () => {
-    const f = getPlanFeatures({ plan: "agenda", trial_ends_at: null, professional_seats: 3 }, NOW);
-    expect(f).toMatchObject({
-      tier: "agenda",
-      status: "subscribed",
-      limitedBookings: false,
-      removeBranding: false,
-      professionalLimit: 3,
-      deposits: false,
-    });
-  });
-
-  it("deposit by Pix with receipt: only Pro (also during the Pro trial)", () => {
-    expect(getPlanFeatures({ plan: "pro", trial_ends_at: null }, NOW).deposits).toBe(true);
-    expect(getPlanFeatures({ plan: "agenda", trial_ends_at: null }, NOW).deposits).toBe(false);
-    expect(
-      getPlanFeatures(
-        {
-          plan: "free",
-          trial_plan: "pro",
-          trial_ends_at: new Date(NOW.getTime() + 3 * DAY).toISOString(),
-        },
-        NOW,
-      ).deposits,
-    ).toBe(true);
-    expect(getPlanFeatures({ plan: "free", trial_ends_at: null }, NOW).deposits).toBe(false);
-  });
-
-  it("subscribing during a trial applies right away (plan wins over the trial)", () => {
+  it("waiting mode after the trial: nothing active, brand footer, 1 professional", () => {
     const f = getPlanFeatures(
       {
-        plan: "pro",
-        trial_plan: "agenda",
-        trial_ends_at: new Date(NOW.getTime() + 3 * DAY).toISOString(),
+        plan: "free",
+        trial_started_at: new Date(NOW.getTime() - 20 * DAY).toISOString(),
+        trial_ends_at: new Date(NOW.getTime() - 6 * DAY).toISOString(),
       },
       NOW,
     );
-    expect(f).toMatchObject({ tier: "pro", status: "subscribed", trialActive: false });
+    expect(f).toMatchObject({
+      status: "waiting",
+      active: false,
+      trialActive: false,
+      removeBranding: false,
+      reminders: false,
+      customers: false,
+      deposits: false,
+      professionalLimit: 1,
+      trialDaysLeft: null,
+    });
+    expect(planLabel(f)).toBe("Assinatura pendente");
   });
 
-  it("legacy team counts as Pro", () => {
-    expect(paidPlanOf("team")).toBe("pro");
-    const f = getPlanFeatures({ plan: "team", trial_ends_at: null, professional_seats: 5 }, NOW);
-    expect(f).toMatchObject({ tier: "pro", status: "subscribed", professionalLimit: 5 });
+  it("no trial at all (trial already used by this person) is waiting mode too", () => {
+    const f = getPlanFeatures({ plan: "free", trial_ends_at: null }, NOW);
+    expect(f.status).toBe("waiting");
+    expect(f.active).toBe(false);
+  });
+
+  it("subscribed: everything, paid seats, the trial no longer matters", () => {
+    const f = getPlanFeatures(
+      {
+        plan: "complete",
+        trial_ends_at: new Date(NOW.getTime() + 3 * DAY).toISOString(),
+        professional_seats: 3,
+      },
+      NOW,
+    );
+    expect(f).toMatchObject({
+      status: "subscribed",
+      active: true,
+      subscribed: true,
+      trialActive: false,
+      removeBranding: true,
+      professionalLimit: 3,
+    });
+    expect(planLabel(f)).toBe("Completo");
   });
 });
 
 describe("prices", () => {
-  it("Agenda R$ 19,90 or R$ 14,90/month yearly; Pro R$ 39,90 or R$ 29,90/month yearly", () => {
-    expect(subscriptionPrice("agenda", "monthly", 0)).toBe(1990);
-    expect(subscriptionPrice("agenda", "yearly", 0)).toBe(17880);
-    expect(subscriptionPrice("pro", "monthly", 0)).toBe(3990);
-    expect(subscriptionPrice("pro", "yearly", 0)).toBe(35880);
+  it("Completo: R$ 29,90/month or R$ 24,90/month on the yearly plan", () => {
+    expect(subscriptionPrice("monthly", 0)).toBe(2990);
+    expect(subscriptionPrice("yearly", 0)).toBe(29880);
+    expect(PRICE_TEXT.summary).toBe("R$ 29,90/mês ou R$ 24,90/mês no anual");
   });
 
-  it("R$ 9 (R$ 90/year) per extra professional, coupons in percent", () => {
-    expect(subscriptionPrice("agenda", "monthly", 2)).toBe(1990 + 1800);
-    expect(subscriptionPrice("pro", "yearly", 1)).toBe(35880 + 9000);
-    expect(subscriptionPrice("agenda", "monthly", 0, 50)).toBe(995);
+  it("extra professionals and coupons", () => {
+    expect(subscriptionPrice("monthly", 2)).toBe(2990 + 1800);
+    expect(subscriptionPrice("yearly", 1)).toBe(29880 + 9000);
+    expect(subscriptionPrice("monthly", 0, 50)).toBe(1495);
   });
 
-  it("yearly savings", () => {
-    expect(yearlySavings("agenda")).toBe(1990 * 12 - 17880);
-    expect(yearlySavings("pro")).toBe(3990 * 12 - 35880);
+  it("yearly savings shown on the site", () => {
+    expect(yearlySavings()).toBe(2990 * 12 - 29880);
+    expect(PRICE_TEXT.yearlySavings).toBe("economize R$ 60 por ano");
   });
 
-  it("copy prices come from the price table", () => {
-    expect(PRICE_TEXT.agenda.monthly).toBe("R$ 19,90/mês");
-    expect(PRICE_TEXT.agenda.yearlyPerMonth).toBe("R$ 14,90/mês");
-    expect(PRICE_TEXT.pro.yearlyPerMonth).toBe("R$ 29,90/mês");
-    expect(PRICE_TEXT.extraProfessional).toBe("R$ 9/mês");
-    expect(PRICE_TEXT.free).toBe("Grátis para sempre com 10 agendamentos por mês");
+  it("trial copy uses the 14 days", () => {
+    expect(TRIAL_DAYS).toBe(14);
+    expect(PRICE_TEXT.trial).toBe("14 dias grátis, sem cartão");
+    expect(PRICE_TEXT.noCard).toContain("14 dias");
   });
 });

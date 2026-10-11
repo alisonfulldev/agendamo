@@ -46,7 +46,11 @@ export default async function EmbeddedBookingPage({
       businessName={page.business.name}
       avatarUrl={publicUrl(page.page?.avatar_key)}
       embedded={embed === "1"}
-      branding={<MeetChatBadge href={brandUrl(brand, "/")} logo={PLATFORM.logo} />}
+      branding={
+        features.removeBranding ? null : (
+          <MeetChatBadge href={brandUrl(brand, "/")} logo={PLATFORM.logo} />
+        )
+      }
     />
   );
 }

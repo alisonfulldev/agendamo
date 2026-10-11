@@ -173,7 +173,7 @@ export async function saveServiceAction(_prev: FormState, formData: FormData): P
   if (!parsed.success) return invalid(parsed.error, formData);
   // Deposit / full payment by Pix is part of the Pro plan (checked on the server, rule 6).
   if (parsed.data.deposit_type !== "none" && !getPlanFeatures(business).deposits)
-    return { ok: false, message: "Sinal pelo Pix faz parte do plano Pro." };
+    return { ok: false, message: "Sinal pelo Pix faz parte do plano Completo." };
   const { id, price, ...fields } = parsed.data;
   const row = { ...fields, price_cents: price, business_id: business.id };
 
@@ -268,7 +268,7 @@ const comboSchema = z.object({
 export async function saveComboAction(input: unknown): Promise<{ ok: boolean; error?: string }> {
   const { business } = await requireOwner();
   if (!getPlanFeatures(business).packagesAndCombos)
-    return { ok: false, error: "Combos fazem parte dos planos Agenda e Pro." };
+    return { ok: false, error: "Combos fazem parte do plano Completo." };
   const parsed = comboSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]!.message };
   const price = parseBRL(parsed.data.price);

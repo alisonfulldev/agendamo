@@ -61,8 +61,8 @@ export default async function PrivacyPage() {
         30 dias; eventos de estatística brutos, após 180 dias. Comprovantes de Pix enviados pelo
         cliente ficam em armazenamento privado, só o profissional que recebeu consegue ver, e o
         arquivo é apagado 30 dias depois que ele confirma ou recusa o pagamento (guardamos apenas
-        uma impressão digital do arquivo, para recusar o mesmo comprovante em outro agendamento).
-        O MeetChat não lê o conteúdo dos comprovantes nem recebe o dinheiro.
+        uma impressão digital do arquivo, para recusar o mesmo comprovante em outro agendamento). O
+        MeetChat não lê o conteúdo dos comprovantes nem recebe o dinheiro.
       </p>
       <h2>7. Contato do encarregado</h2>
       <p>{contact}</p>

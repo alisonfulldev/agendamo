@@ -3,9 +3,9 @@ import "server-only";
 import { formatInTimeZone } from "date-fns-tz";
 
 import { PLATFORM } from "@/brands";
-import type { SignupChoice } from "@/lib/db/types";
 import { sendEmail } from "@/lib/email/send";
 import { getServerEnv } from "@/lib/env";
+import { PLAN_NAME, TRIAL_DAYS } from "@/lib/plans";
 import { siteUrl } from "@/lib/site-url";
 
 export interface NewSignup {
@@ -15,14 +15,9 @@ export interface NewSignup {
   whatsapp: string | null;
   pageUrl: string;
   via: "conversa" | "formulário";
-  choice?: SignupChoice;
+  /** "used": this person already had a trial, so the account started in waiting mode. */
+  trial: "started" | "used";
 }
-
-const CHOICES: Record<SignupChoice, string> = {
-  free: "Grátis",
-  trial_agenda: "Teste do Agenda (7 dias)",
-  trial_pro: "Teste do Pro (7 dias)",
-};
 
 /**
  * Tells the platform admins (ADMIN_EMAILS) about each new business, so they know who signed up.
@@ -49,7 +44,13 @@ export async function notifyAdminsOfSignup(signup: NewSignup): Promise<void> {
           { label: "Link", value: signup.pageUrl },
           { label: "Quando", value: when },
           { label: "Por onde", value: signup.via },
-          { label: "Escolha", value: signup.choice ? CHOICES[signup.choice] : "Grátis" },
+          {
+            label: "Teste",
+            value:
+              signup.trial === "started"
+                ? `${TRIAL_DAYS} dias do ${PLAN_NAME}`
+                : "Já usou o teste antes (sem teste)",
+          },
         ],
         cta: { label: "Abrir o admin", url: siteUrl("/admin") },
       },

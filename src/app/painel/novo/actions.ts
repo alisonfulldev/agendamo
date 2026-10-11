@@ -81,23 +81,19 @@ export async function createBusinessAction(input: unknown): Promise<CreateBusine
     return { ok: false, message: "Não foi possível criar agora. Tente de novo em instantes." };
   }
 
-  // How the account starts: Grátis, or a 7-day trial (once per person: e-mail and phone).
+  // Every account starts with the 14-day trial of Completo (once per person: e-mail and phone).
   const admin = createAdminClient();
   const { data: created } = await admin
     .from("businesses")
     .select("*")
     .eq("slug", data.slug)
     .single();
-  await admin.from("businesses").update({ signup_choice: data.planChoice }).eq("id", created!.id);
-  if (data.planChoice !== "free") {
-    await startTrial({
-      business: created as Business,
-      plan: data.planChoice === "trial_pro" ? "pro" : "agenda",
-      identity: { email: user.email, phone: data.whatsapp },
-      userId: user.id,
-      via: "signup",
-    });
-  }
+  const started = await startTrial({
+    business: created as Business,
+    identity: { email: user.email, phone: data.whatsapp },
+    userId: user.id,
+    via: "signup",
+  });
   const pageUrl = brandUrl(brand, `/${data.slug}`);
   await notifyAdminsOfSignup({
     businessName: data.name,
@@ -106,7 +102,7 @@ export async function createBusinessAction(input: unknown): Promise<CreateBusine
     whatsapp: data.whatsapp || null,
     pageUrl,
     via: "formulário",
-    choice: data.planChoice,
+    trial: started.ok ? "started" : "used",
   });
   // No revalidatePath here: re-rendering the panel layout would redirect away from the success screen.
   return { ok: true, slug: data.slug, pageUrl };

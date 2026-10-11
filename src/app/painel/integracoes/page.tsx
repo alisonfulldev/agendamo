@@ -60,7 +60,7 @@ export default async function IntegrationsPage({ searchParams }: PageProps<"/pai
           <UpgradeNotice
             features={features}
             title="Conecte o Google Agenda"
-            description="Disponível no Pro e no Equipe."
+            description="Disponível no plano Completo."
           />
         ) : !isGoogleConfigured() ? (
           <p className="text-sm text-muted-foreground">Integração ainda não configurada.</p>

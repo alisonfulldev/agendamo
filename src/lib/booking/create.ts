@@ -5,7 +5,6 @@ import { formatInTimeZone } from "date-fns-tz";
 import { layoutBlock, pickProfessional } from "@/lib/availability";
 import type { AppointmentStatus } from "@/lib/db/types";
 import { baseDeposit, uniqueDepositAmount } from "@/lib/deposits/amount";
-import { getBookingAllowance } from "@/lib/plan-usage";
 import { getPlanFeatures } from "@/lib/plans";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -87,10 +86,10 @@ export async function createBooking(input: CreateBookingInput): Promise<CreateBo
   if (!resolved) return { ok: false, error: "invalid" };
   const { services, combo } = resolved;
 
-  // 0. Grátis plan: 10 automatic (chat) bookings per cycle, checked on the server (rule 6).
-  if (input.source === "chat") {
-    const allowance = await getBookingAllowance(business, now);
-    if (allowance.limited && allowance.remaining <= 0) return { ok: false, error: "limit" };
+  // 0. Waiting mode (no trial, no subscription): the chat books nothing, checked on the server
+  // (rule 6). The page shows the WhatsApp hand-off instead.
+  if (input.source === "chat" && !getPlanFeatures(business, now).active) {
+    return { ok: false, error: "limit" };
   }
 
   // 1. The start must be offered by the engine, for this professional (or anyone, for "any").
@@ -192,7 +191,7 @@ export async function createBooking(input: CreateBookingInput): Promise<CreateBo
     )
     .eq("business_id", business.id)
     .maybeSingle();
-  // Deposit or full payment by Pix (Pro): before the unique cents.
+  // Deposit or full payment by Pix: before the unique cents.
   const deposit =
     features.deposits && page?.pix_key && !input.customerPackageId
       ? baseDeposit(

@@ -1,7 +1,5 @@
 "use server";
 
-import { requireFeature } from "@/lib/business/context";
-
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -33,7 +31,6 @@ const rowSchema = z.object({
  * skipped and existing customers only get empty fields filled. Never touches marketing opt-in.
  */
 export async function importCustomersAction(input: unknown): Promise<ImportReport> {
-  await requireFeature("customers");
   const { business } = await requireOwner();
   const rows = z.array(rowSchema).max(2000).parse(input);
   const report: ImportReport = { created: 0, updated: 0, duplicatesInFile: 0, errors: [] };
@@ -112,7 +109,6 @@ const notesSchema = z.object({
 });
 
 export async function saveCustomerNotesAction(input: unknown): Promise<{ ok: boolean }> {
-  await requireFeature("customers");
   await requireBusiness();
   const parsed = notesSchema.safeParse(input);
   if (!parsed.success) return { ok: false };
@@ -130,7 +126,6 @@ export async function setBlockedAction(
   customerId: string,
   blocked: boolean,
 ): Promise<{ ok: boolean }> {
-  await requireFeature("customers");
   const { business, user } = await requireOwner();
   const id = z.uuid().parse(customerId);
   const supabase = await createClient();
@@ -152,7 +147,6 @@ export async function setBlockedAction(
 
 /** LGPD request from the customer, handled by the owner: deletes the customer and their history. */
 export async function deleteCustomerAction(customerId: string): Promise<void> {
-  await requireFeature("customers");
   const { business, user } = await requireOwner();
   const id = z.uuid().parse(customerId);
   const admin = createAdminClient();
@@ -195,7 +189,6 @@ export async function sellPackageAction(
   customerId: string,
   packageId: string,
 ): Promise<{ ok: boolean; message: string }> {
-  await requireFeature("customers");
   const { business } = await requireOwner();
   const admin = createAdminClient();
   const { data: pack } = await admin

@@ -32,7 +32,7 @@ export default async function BusinessChatPage({ params, searchParams }: PagePro
   if (brand.key !== domainBrand.key) redirect(brandUrl(brand, `/${data.business.slug}`));
 
   const { business, page } = data;
-  // Grátis past its 10 bookings of the cycle: the chat collects the request for WhatsApp.
+  // Waiting mode (no trial, no subscription): the chat collects the request for WhatsApp.
   const mode = automaticBooking ? "chat" : "handoff";
   const override = themeOverride(loaded);
   const param = (name: string) =>
@@ -61,7 +61,12 @@ export default async function BusinessChatPage({ params, searchParams }: PagePro
         initialServiceId={initialServiceId}
         initialDate={initialDate}
         openProfile={param("perfil") === "1"}
-        branding={<MeetChatBadge href={brandUrl(brand, "/")} logo={PLATFORM.logo} />}
+        branding={
+          // Only in waiting mode (trial and subscription have no brand footer).
+          loaded.features.removeBranding ? null : (
+            <MeetChatBadge href={brandUrl(brand, "/")} logo={PLATFORM.logo} />
+          )
+        }
         profile={
           <ProfileView
             loaded={loaded}

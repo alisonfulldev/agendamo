@@ -19,7 +19,7 @@ import { NICHES, PLATFORM, type BrandConfig } from "@/brands";
 import { brandThemeStyle } from "@/brands/theme";
 import { HOME_DEMO, heroDemoFor } from "@/content/hero-demo";
 import { HOME, type HomeContent } from "@/content/home";
-import { PLAN_PRICES } from "@/lib/plans";
+import { PLAN_NAME, PLAN_PRICES } from "@/lib/plans";
 import { siteUrl } from "@/lib/site-url";
 import { isStorageConfigured } from "@/lib/storage/r2";
 
@@ -29,7 +29,6 @@ import { PlanCards } from "@/components/sales/plan-cards";
 
 import { PhoneDemo } from "./phone-demo";
 import { StickyCta } from "./sticky-cta";
-import { TryChat } from "./try-chat";
 
 const ICONS: Record<string, LucideIcon> = {
   moon: Moon,
@@ -64,17 +63,10 @@ function jsonLd(content: HomeContent, niche?: { route: string; name: string }) {
       url: page,
       description: content.meta.description,
       offers: [
-        { "@type": "Offer", name: "Grátis", price: "0.00", priceCurrency: "BRL" },
         {
           "@type": "Offer",
-          name: "Agenda",
-          price: (PLAN_PRICES.agenda.monthly / 100).toFixed(2),
-          priceCurrency: "BRL",
-        },
-        {
-          "@type": "Offer",
-          name: "Pro",
-          price: (PLAN_PRICES.pro.monthly / 100).toFixed(2),
+          name: PLAN_NAME,
+          price: (PLAN_PRICES.complete.monthly / 100).toFixed(2),
           priceCurrency: "BRL",
         },
       ],
@@ -249,26 +241,6 @@ export function HomePage({
           </section>
         ) : null}
 
-        {/* Try it: the creation conversation embedded */}
-        <section id="veja" aria-labelledby="teste" className="border-y bg-muted/40">
-          <div className="mx-auto grid max-w-6xl items-center gap-8 px-5 py-16 md:grid-cols-2">
-            <div className="text-center md:text-left">
-              <h2 id="teste" className="text-3xl font-bold tracking-tight text-balance">
-                {content.tryIt.title}
-              </h2>
-              <p className="mt-3 text-lg text-pretty text-muted-foreground">
-                {content.tryIt.subtitle}
-              </p>
-            </div>
-            <TryChat
-              ask={content.tryIt.ask}
-              niche={route}
-              photos={isStorageConfigured()}
-              logo={PLATFORM.logo}
-            />
-          </div>
-        </section>
-
         {/* Gains */}
         <section aria-labelledby="ganhos" className="below-fold mx-auto max-w-6xl px-5 py-16">
           <h2 id="ganhos" className="text-center text-3xl font-bold tracking-tight text-balance">
@@ -398,7 +370,7 @@ export function HomePage({
         </div>
       </footer>
 
-      <StickyCta hideOn={["cta-topo", "veja", "cta-final"]} label={hero.primaryCta} niche={route} />
+      <StickyCta hideOn={["cta-topo", "cta-final"]} label={hero.primaryCta} niche={route} />
       <LazyCreationChat photos={isStorageConfigured()} />
       <script
         type="application/ld+json"

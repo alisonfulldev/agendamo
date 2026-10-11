@@ -87,8 +87,8 @@ export type VerifySignupResult =
       slug: string;
       pageUrl: string;
       qr: string;
-      /** A trial was chosen but this person already used one: the account starts on Grátis. */
-      trial?: "started" | "used";
+      /** "used": this person already had a trial, so the account starts in waiting mode. */
+      trial: "started" | "used";
     }
   | { ok: true; outcome: "has_business" }
   | { ok: false; error: "expired" | "too_many" | "wrong" | "invalid" | "rate_limited" | "failed" };
@@ -105,7 +105,6 @@ export async function verifySignupCodeAction(input: unknown): Promise<VerifySign
       email,
       code: z.string().regex(/^\d{4}$/),
       whatsapp: z.string().max(30).nullable().default(null),
-      planChoice: z.enum(["free", "trial_agenda", "trial_pro"]).default("free"),
     })
     .safeParse(input);
   if (!parsed.success) return { ok: false, error: "invalid" };
@@ -200,25 +199,19 @@ export async function verifySignupCodeAction(input: unknown): Promise<VerifySign
   });
   await admin.from("demos").delete().eq("id", demo.id);
 
-  // How the account starts: Grátis, or a 7-day trial (once per person: e-mail and phone).
-  const choice = parsed.data.planChoice;
-  await admin.from("businesses").update({ signup_choice: choice }).eq("id", businessId);
-  let trial: "started" | "used" | undefined;
-  if (choice !== "free") {
-    const { data: created } = await admin
-      .from("businesses")
-      .select("*")
-      .eq("id", businessId)
-      .single();
-    const started = await startTrial({
-      business: created as Business,
-      plan: choice === "trial_pro" ? "pro" : "agenda",
-      identity: { email: parsed.data.email, phone: parsed.data.whatsapp },
-      userId: verified.userId,
-      via: "signup",
-    });
-    trial = started.ok ? "started" : "used";
-  }
+  // Every account starts with the 14-day trial of Completo (once per person: e-mail and phone).
+  const { data: created } = await admin
+    .from("businesses")
+    .select("*")
+    .eq("id", businessId)
+    .single();
+  const started = await startTrial({
+    business: created as Business,
+    identity: { email: parsed.data.email, phone: parsed.data.whatsapp },
+    userId: verified.userId,
+    via: "signup",
+  });
+  const trial = started.ok ? "started" : "used";
 
   const pageUrl = brandUrl(niche, `/${slug}`);
   await notifyAdminsOfSignup({
@@ -228,7 +221,7 @@ export async function verifySignupCodeAction(input: unknown): Promise<VerifySign
     whatsapp: normalizeBrPhone(parsed.data.whatsapp),
     pageUrl,
     via: "conversa",
-    choice,
+    trial,
   });
   return {
     ok: true,

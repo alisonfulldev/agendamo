@@ -26,7 +26,7 @@ import { createClient } from "@/lib/supabase/server";
 async function requireAgenda(): Promise<BusinessContext> {
   const context = await requireBusiness();
   if (!getPlanFeatures(context.business).agenda)
-    throw new Error("Agenda disponível no Pro e no Equipe.");
+    throw new Error("Agenda disponível no plano Completo.");
   return context;
 }
 
@@ -220,7 +220,7 @@ export async function createManualAppointmentAction(input: unknown): Promise<Man
       blocked: "Cliente bloqueada.",
       unavailable: "Horário indisponível.",
       coupon_invalid: "Cupom inválido.",
-      limit: "Limite de agendamentos automáticos do plano Grátis atingido.",
+      limit: "Assinatura inativa: assine o Completo para agendar pelo chat.",
       policy_required: "Aceite da política do sinal pendente.",
     } as const;
     return { ok: false, message: messages[result.error] };

@@ -21,16 +21,19 @@ export function PageHeader({
 }
 
 export function Section({
+  id,
   title,
   description,
   children,
 }: {
+  /** Anchor (e.g. "#assinar"). */
+  id?: string;
   title: string;
   description?: ReactNode;
   children: ReactNode;
 }) {
   return (
-    <section className="rounded-xl border bg-card p-5 text-card-foreground">
+    <section id={id} className="scroll-mt-20 rounded-xl border bg-card p-5 text-card-foreground">
       <h2 className="text-lg font-semibold">{title}</h2>
       {description ? <p className="mt-1 text-sm text-muted-foreground">{description}</p> : null}
       <div className="mt-4">{children}</div>

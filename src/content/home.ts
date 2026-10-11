@@ -29,8 +29,6 @@ export interface HomeContent {
   /** Unique text about the niche (niche pages), after "Como funciona". */
   intro?: { title: string; paragraphs: readonly string[] };
   steps: { title: string; items: readonly string[] };
-  /** "Veja como fica o seu link": the creation conversation embedded in the page. */
-  tryIt: { title: string; subtitle: string; ask: string };
   gains: { title: string; items: readonly { icon: Icon; text: string }[] };
   reminders: { title: string; text: string };
   audience: { title: string; chips: readonly { label: string; href: string }[] };
@@ -81,11 +79,6 @@ export const HOME: HomeContent = {
       "Os clientes agendam sozinhos e você recebe o aviso no celular.",
     ],
   },
-  tryIt: {
-    title: "Veja como fica o seu link",
-    subtitle: "Digite o nome do seu negócio e teste como seu cliente vai agendar.",
-    ask: "Qual o nome do seu negócio?",
-  },
   gains: {
     title: "Agendamento pelo Instagram e WhatsApp",
     items: [
@@ -115,7 +108,7 @@ export const HOME: HomeContent = {
   },
   pricing: {
     title: "Preços",
-    tagline: `${PRICE_TEXT.free}. ${PRICE_TEXT.trial}.`,
+    tagline: `Um plano só, com tudo incluído. ${PRICE_TEXT.trial}.`,
   },
   faq: {
     title: "Perguntas frequentes",

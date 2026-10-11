@@ -8,6 +8,7 @@ import { readableOn } from "@/brands/theme";
 import { HOME_DEMO, heroDemoFor } from "@/content/hero-demo";
 import { HOME } from "@/content/home";
 import { nicheHomeContent } from "@/content/niche-pages";
+import { PRICE_TEXT } from "@/lib/plans";
 
 const FONT_DIR = join(process.cwd(), "assets/fonts");
 const FONTS = Promise.all(
@@ -73,7 +74,7 @@ export async function GET(request: Request) {
           {content.hero.title}
         </div>
         <div style={{ fontSize: 26, marginTop: 18, color: theme.muted }}>
-          Grátis · sem cartão · pronto em 1 minuto
+          {PRICE_TEXT.heroNote}
         </div>
         <div
           style={{

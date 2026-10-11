@@ -1,4 +1,4 @@
-import { FREE_BOOKINGS_PER_CYCLE, PRICE_TEXT, TRIAL_DAYS } from "@/lib/plans";
+import { PLAN_NAME, PRICE_TEXT, TRIAL_DAYS } from "@/lib/plans";
 
 /** Texts of the creation conversation (opens over the site from the home page). */
 export const CREATION = {
@@ -22,7 +22,7 @@ export const CREATION = {
   /** After the loading screen: sign up now or first see the simulation. */
   ready: {
     title: "Seu chat de agendamento está pronto para ser criado ✨",
-    subtitle: "Falta só criar sua conta grátis (1 minuto, sem cartão).",
+    subtitle: `Falta só criar sua conta: ${TRIAL_DAYS} dias grátis, sem cartão (leva 1 minuto).`,
     preview: "Ver como meu cliente vai agendar",
   },
   banner: "Simulação: é assim que seu cliente vai agendar. Seu link ainda não foi criado.",
@@ -48,14 +48,8 @@ export const CREATION = {
     didYouMean: "Você quis dizer {sugestao}?",
     yes: "Sim",
     no: "Não",
-    askPlan: "Como você quer começar? Tudo sem cartão.",
-    planOptions: {
-      free: `Começar grátis (${FREE_BOOKINGS_PER_CYCLE} agendamentos por mês)`,
-      trial_agenda: `Testar o Agenda por ${TRIAL_DAYS} dias`,
-      trial_pro: `Testar o Pro por ${TRIAL_DAYS} dias`,
-    },
     trialUsed:
-      "O teste grátis já foi usado com este e-mail ou telefone, então sua conta começou no Grátis. Você pode assinar quando quiser no painel.",
+      "O teste grátis já foi usado com este e-mail ou telefone. Seu link já está no ar, com os pedidos indo para o seu WhatsApp. Assine no painel para os clientes marcarem sozinhos.",
     terms: "Para criar sua conta, você aceita os Termos de uso e a Política de privacidade?",
     termsLinks: [
       { label: "Termos de uso", href: "/termos" },
@@ -87,7 +81,7 @@ export const CREATION = {
   shortcuts: {
     price: {
       label: "Quanto custa?",
-      answer: `${PRICE_TEXT.free}. Agenda: ${PRICE_TEXT.agenda.summary}. Pro: ${PRICE_TEXT.pro.summary}. ${PRICE_TEXT.trial}.`,
+      answer: `${PRICE_TEXT.trial}. Depois, o ${PLAN_NAME} custa ${PRICE_TEXT.summary}, com tudo incluído.`,
     },
     app: {
       label: "Meu cliente precisa baixar app?",

@@ -26,7 +26,6 @@ import {
   isCreationOpen,
   subscribeCreation,
 } from "./creation-store";
-import type { SignupChoice } from "@/lib/db/types";
 
 import { sendSignupCodeAction, verifySignupCodeAction } from "./signup-actions";
 
@@ -47,7 +46,6 @@ type Phase =
   | "whatsapp"
   | "email"
   | "email-fix"
-  | "plan"
   | "terms"
   | "sending"
   | "code"
@@ -59,7 +57,6 @@ const SIGNUP_PHASES: Phase[] = [
   "whatsapp",
   "email",
   "email-fix",
-  "plan",
   "terms",
   "sending",
   "code",
@@ -98,7 +95,6 @@ interface CreationState {
   /** Photo added in the conversation (optional; it can also be added later in the panel). */
   photoUrl: string | null;
   /** How the account starts: Grátis, or a 7-day trial of Agenda or Pro. */
-  planChoice: SignupChoice | null;
 }
 
 const STORAGE_KEY = CREATION_STORAGE_KEY;
@@ -129,14 +125,16 @@ function fresh(): CreationState {
     codeSentAt: null,
     created: null,
     photoUrl: null,
-    planChoice: null,
   };
 }
 
 function load(): CreationState | null {
   try {
     const raw = sessionStorage.getItem(STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as CreationState) : null;
+    if (!raw) return null;
+    const saved = JSON.parse(raw) as CreationState;
+    // A conversation saved at the old plan question (removed) goes on to the terms.
+    return (saved.phase as string) === "plan" ? { ...saved, phase: "terms" } : saved;
   } catch {
     return null;
   }
@@ -224,22 +222,8 @@ export function CreationChat({ photos = false }: { photos?: boolean }) {
   return <Conversation photos={photos} />;
 }
 
-/** The conversation inside the top of the page (instead of over it): how it starts. */
-export interface InlineStart {
-  /** Question already shown by the demo ("Qual o nome dele?"). */
-  ask: string;
-  /** Name typed in the demo's bar (submitted right away), or null. */
-  name: string | null;
-  /** Niche page route: the conversation skips the "o que você faz?" question. */
-  niche?: string;
-  /** When the visitor arrived (the server's anti-robot minimum time counts from it). */
-  startedAt: number;
-}
-
-export function Conversation({ photos, inline }: { photos: boolean; inline?: InlineStart }) {
-  const visibleArea = useVisibleArea();
-  // Inside the top of the page, the container (HeroChat) handles the keyboard area itself.
-  const area = inline ? null : visibleArea;
+export function Conversation({ photos }: { photos: boolean }) {
+  const area = useVisibleArea();
   const [state, setState] = useState<CreationState>(() => {
     const saved = load();
     if (saved && saved.name && saved.phase !== "name") {
@@ -249,17 +233,9 @@ export function Conversation({ photos, inline }: { photos: boolean; inline?: Inl
         log: [{ from: "system", text: fill(CREATION.resume, { nome: saved.name }) }],
       };
     }
-    if (inline) {
-      return {
-        ...fresh(),
-        startedAt: inline.startedAt,
-        log: [{ from: "system", text: inline.ask }],
-      };
-    }
     return fresh();
   });
-  // The demo already showed the question: no "typing" pause for it.
-  const [revealed, setRevealed] = useState(() => (inline && state.phase === "name" ? 1 : 0));
+  const [revealed, setRevealed] = useState(0);
   const [trap, setTrap] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const started = useRef(false);
@@ -282,9 +258,8 @@ export function Conversation({ photos, inline }: { photos: boolean; inline?: Inl
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [revealed, state.phase, area?.height]);
 
-  // Lock the page behind and close on Escape (over the site only).
+  // Lock the page behind and close on Escape.
   useEffect(() => {
-    if (inline) return;
     const previous = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && closeCreation();
@@ -293,7 +268,7 @@ export function Conversation({ photos, inline }: { photos: boolean; inline?: Inl
       document.body.style.overflow = previous;
       window.removeEventListener("keydown", onKey);
     };
-  }, [inline]);
+  }, []);
 
   const typing = revealed < state.log.length;
   const visible = state.log.slice(0, revealed);
@@ -354,7 +329,7 @@ export function Conversation({ photos, inline }: { photos: boolean; inline?: Inl
     const name = raw.trim().slice(0, 120);
     if (name.length < 2) return;
     const next = { ...current, name, log: [...current.log, user(name)] };
-    const preset = nicheFromParam(creationParams().niche ?? inline?.niche ?? null);
+    const preset = nicheFromParam(creationParams().niche);
     if (preset) {
       setState(next);
       void build(preset, null, next);
@@ -376,18 +351,16 @@ export function Conversation({ photos, inline }: { photos: boolean; inline?: Inl
     }
   }
 
-  // Prospecting links (?nome= / ?ramo=) and the name typed in the demo skip the questions they
-  // answer.
+  // Prospecting links (?nome= / ?ramo=) skip the questions they answer.
   useEffect(() => {
-    const name = creationParams().name ?? inline?.name ?? null;
+    const name = creationParams().name;
     if (!name || started.current || state.phase !== "name") return;
     // After the welcome messages, and past the server's anti-robot minimum time. The flag is set
     // when it fires, so a re-run of the effect (React dev mode) does not lose it.
-    const wait = inline?.name ? Math.max(0, 1700 - (Date.now() - inline.startedAt)) : 1700;
     const timer = setTimeout(() => {
       started.current = true;
       submitName(name);
-    }, wait);
+    }, 1700);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- runs once, on open
   }, []);
@@ -425,20 +398,12 @@ export function Conversation({ photos, inline }: { photos: boolean; inline?: Inl
       ]);
       return;
     }
-    askPlan(email, [user(email)]);
+    askTerms(email, [user(email)]);
   }
 
-  /** End of the conversation: Grátis or a 7-day trial (no card). */
-  function askPlan(email: string, before: Bubble[]) {
-    update({ phase: "plan", email, emailFix: null }, [...before, system(SU.askPlan)]);
-  }
-
-  function choosePlan(choice: SignupChoice) {
-    askTerms(state.email!, [user(SU.planOptions[choice])], choice);
-  }
-
-  function askTerms(email: string, before: Bubble[], planChoice = state.planChoice) {
-    update({ phase: "terms", email, emailFix: null, planChoice }, [
+  /** End of the conversation: every account starts with the 14-day trial (no card). */
+  function askTerms(email: string, before: Bubble[]) {
+    update({ phase: "terms", email, emailFix: null }, [
       ...before,
       { from: "system", text: SU.terms, links: SU.termsLinks },
     ]);
@@ -471,7 +436,6 @@ export function Conversation({ photos, inline }: { photos: boolean; inline?: Inl
       email: state.email,
       code,
       whatsapp: state.whatsapp,
-      planChoice: state.planChoice ?? "free",
     }).catch(() => ({ ok: false as const, error: "failed" as const }));
     if (result.ok && result.outcome === "created") {
       update({ phase: "created", created: result }, [
@@ -515,9 +479,7 @@ export function Conversation({ photos, inline }: { photos: boolean; inline?: Inl
       data-theme-scope=""
       style={theme}
       className={
-        inline
-          ? "flex h-full w-full flex-col overflow-hidden bg-background font-sans text-foreground transition-colors duration-500"
-          : "flex h-full w-full flex-col overflow-hidden bg-background font-sans text-foreground transition-colors duration-500 md:h-[min(780px,92vh)] md:w-[400px] md:rounded-[2.4rem] md:border-[10px] md:border-foreground md:shadow-2xl"
+        "flex h-full w-full flex-col overflow-hidden bg-background font-sans text-foreground transition-colors duration-500 md:h-[min(780px,92vh)] md:w-[400px] md:rounded-[2.4rem] md:border-[10px] md:border-foreground md:shadow-2xl"
       }
     >
       <header className="flex items-center gap-3 bg-primary px-4 py-3 text-primary-foreground">
@@ -558,16 +520,14 @@ export function Conversation({ photos, inline }: { photos: boolean; inline?: Inl
             </span>
           )}
         </span>
-        {inline ? null : (
-          <button
-            type="button"
-            onClick={closeCreation}
-            aria-label="Fechar"
-            className="flex size-9 items-center justify-center rounded-full hover:bg-primary-foreground/15"
-          >
-            <X className="size-5" />
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={closeCreation}
+          aria-label="Fechar"
+          className="flex size-9 items-center justify-center rounded-full hover:bg-primary-foreground/15"
+        >
+          <X className="size-5" />
+        </button>
       </header>
 
       {ownChat && !signup && state.phase !== "ready" ? (
@@ -678,10 +638,9 @@ export function Conversation({ photos, inline }: { photos: boolean; inline?: Inl
             onWhatsappLater={() => submitWhatsapp(null)}
             onEmailFix={(accept) => {
               const email = accept ? state.emailFix! : state.email!;
-              askPlan(email, [user(accept ? SU.yes : SU.no)]);
+              askTerms(email, [user(accept ? SU.yes : SU.no)]);
             }}
             onAcceptTerms={() => void sendCode(state.email!, [user(SU.acceptTerms)])}
-            onPlan={choosePlan}
             onResend={() => void sendCode(state.email!, [user(SU.resend)])}
             onChangeEmail={() =>
               update({ phase: "email", codeSentAt: null }, [
@@ -752,8 +711,6 @@ export function Conversation({ photos, inline }: { photos: boolean; inline?: Inl
       ) : null}
     </div>
   );
-  if (inline) return body;
-
   return (
     <div
       className="fixed inset-x-0 top-0 z-50 flex h-dvh items-center justify-center bg-foreground/60 md:p-6"
@@ -979,7 +936,6 @@ function Options({
   onWhatsappLater,
   onEmailFix,
   onAcceptTerms,
-  onPlan,
   onResend,
   onChangeEmail,
 }: {
@@ -996,7 +952,6 @@ function Options({
   onWhatsappLater: () => void;
   onEmailFix: (accept: boolean) => void;
   onAcceptTerms: () => void;
-  onPlan: (choice: SignupChoice) => void;
   onResend: () => void;
   onChangeEmail: () => void;
 }) {
@@ -1149,25 +1104,6 @@ function Options({
           </button>
         </>,
         2,
-      );
-    case "plan":
-      return wrap(
-        <>
-          {(["free", "trial_agenda", "trial_pro"] as const).map((choice) => (
-            <button
-              key={choice}
-              type="button"
-              onClick={() => onPlan(choice)}
-              className={
-                choice === "free"
-                  ? "h-12 rounded-xl bg-primary text-base font-semibold text-primary-foreground"
-                  : `${OPTION} text-center`
-              }
-            >
-              {SU.planOptions[choice]}
-            </button>
-          ))}
-        </>,
       );
     case "terms":
       return wrap(

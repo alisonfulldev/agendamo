@@ -111,10 +111,10 @@ export default async function SettingsPage() {
       ) : (
         <Section
           title="Sinal pelo Pix"
-          description="Disponível no plano Pro: o cliente paga o sinal ou o valor total pelo Pix ao agendar e envia o comprovante no chat."
+          description="Disponível no plano Completo: o cliente paga o sinal ou o valor total pelo Pix ao agendar e envia o comprovante no chat."
         >
           <Link href="/painel/plano" className="text-sm font-medium text-primary underline">
-            Ver o plano Pro
+            Assinar o Completo
           </Link>
         </Section>
       )}

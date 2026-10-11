@@ -290,11 +290,11 @@ const pixSchema = z.object({
   }),
 });
 
-/** Pix of the deposit (Pro): key, receiver, city, minimum, reservation time, policy, reminders. */
+/** Pix of the deposit: key, receiver, city, minimum, reservation time, policy, reminders. */
 export async function savePixAction(_prev: FormState, formData: FormData): Promise<FormState> {
   const { business } = await requireOwner();
   if (!getPlanFeatures(business).deposits)
-    return { ok: false, message: "Sinal pelo Pix faz parte do plano Pro." };
+    return { ok: false, message: "Sinal pelo Pix faz parte do plano Completo." };
   const parsed = pixSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return invalid(parsed.error, formData);
   if (parsed.data.pix_key && !parsed.data.pix_receiver_name) {

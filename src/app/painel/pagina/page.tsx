@@ -85,7 +85,7 @@ export default async function PageEditorPage() {
         <Section
           title="Combos"
           description={
-            features.packagesAndCombos ? undefined : "Disponível nos planos Agenda e Pro."
+            features.packagesAndCombos ? undefined : "Disponível no plano Completo."
           }
         >
           {features.packagesAndCombos ? (

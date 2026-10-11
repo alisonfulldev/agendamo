@@ -11,7 +11,7 @@ import { brandUrl, isProductionDeployment } from "@/brands/urls";
 import { Button } from "@/components/ui/button";
 import { requireUser } from "@/lib/auth/session";
 import { getBusinessContext } from "@/lib/business/context";
-import { getPlanFeatures, type LockedFeature } from "@/lib/plans";
+import { getPlanFeatures } from "@/lib/plans";
 import { trialCounter } from "@/lib/plan-text";
 
 import { MobileNav } from "./mobile-nav";
@@ -19,18 +19,6 @@ import { PanelNav } from "./panel-nav";
 import { PanelTour } from "./tour";
 
 export const metadata: Metadata = { title: "Painel", robots: { index: false } };
-
-/** Paid features with an item in the menu. */
-const LOCKABLE: LockedFeature[] = [
-  "customers",
-  "finance",
-  "salesTools",
-  "reviews",
-  "stats",
-  "anyProfessional",
-  "googleCalendar",
-  "deposits",
-];
 
 /** Panel pages that work before the business exists. */
 const WITHOUT_BUSINESS = ["/painel/novo", "/painel/conta"];
@@ -51,9 +39,13 @@ export default async function PanelLayout({ children }: LayoutProps<"/painel">) 
   }
   if (path === "/painel/novo") redirect("/painel");
 
-  // Grátis plan: paid items of the menu show a lock (pages and actions check it themselves).
+  // Waiting mode: the pages close themselves (requireBusiness); here only the reduced menu.
   const features = getPlanFeatures(context.business);
-  const locked = LOCKABLE.filter((feature) => !features[feature]);
+  const nav = {
+    isOwner: context.isOwner,
+    waiting: !features.active,
+    deposits: features.deposits,
+  };
   const customers = context.brand.terms.customer.plural;
   const customersLabel = customers.charAt(0).toUpperCase() + customers.slice(1);
 
@@ -102,23 +94,13 @@ export default async function PanelLayout({ children }: LayoutProps<"/painel">) 
       <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-4 pt-4 pb-28 md:flex-row md:py-6">
         <aside className="md:w-52 md:shrink-0">
           <div className="hidden md:block">
-            <PanelNav
-              locked={locked}
-              trialAvailable={features.trialAvailable}
-              isOwner={context.isOwner}
-              customersLabel={customersLabel}
-            />
+            <PanelNav {...nav} customersLabel={customersLabel} />
           </div>
         </aside>
         <main className="min-w-0 flex-1">{children}</main>
       </div>
-      <MobileNav
-        locked={locked}
-        trialAvailable={features.trialAvailable}
-        isOwner={context.isOwner}
-        customersLabel={customersLabel}
-      />
-      {context.isOwner ? (
+      <MobileNav {...nav} customersLabel={customersLabel} />
+      {context.isOwner && features.active ? (
         <Suspense>
           <PanelTour />
         </Suspense>

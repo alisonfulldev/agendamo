@@ -53,35 +53,20 @@ function MetricsCard({ title, metrics }: { title: string; metrics: BrandMetrics 
           <dd className="text-lg font-bold">{formatBRL(metrics.mrrCents)}</dd>
         </div>
         <div>
-          <dt className="text-muted-foreground">Cadastros: Grátis / teste Agenda / teste Pro</dt>
+          <dt className="text-muted-foreground">Teste → assinante</dt>
           <dd className="text-lg font-bold">
-            {metrics.signupsByChoice.free} / {metrics.signupsByChoice.trialAgenda} /{" "}
-            {metrics.signupsByChoice.trialPro}
+            {metrics.trialConversion.finished
+              ? Math.round((metrics.trialConversion.paid / metrics.trialConversion.finished) * 100)
+              : 0}
+            %{" "}
+            <span className="text-sm font-normal text-muted-foreground">
+              {metrics.trialConversion.paid} de {metrics.trialConversion.finished}
+            </span>
           </dd>
         </div>
-        {(["agenda", "pro"] as const).map((plan) => {
-          const c = metrics.trialConversion[plan];
-          return (
-            <div key={plan}>
-              <dt className="text-muted-foreground">
-                Teste → pago ({plan === "agenda" ? "Agenda" : "Pro"})
-              </dt>
-              <dd className="text-lg font-bold">
-                {c.finished ? Math.round((c.paid / c.finished) * 100) : 0}%{" "}
-                <span className="text-sm font-normal text-muted-foreground">
-                  {c.paid} de {c.finished}
-                </span>
-              </dd>
-            </div>
-          );
-        })}
         <div>
-          <dt className="text-muted-foreground">Caíram no Grátis</dt>
-          <dd className="text-lg font-bold">{metrics.fellToFree}</dd>
-        </div>
-        <div>
-          <dt className="text-muted-foreground">Upgrades (Agenda → Pro)</dt>
-          <dd className="text-lg font-bold">{metrics.upgrades}</dd>
+          <dt className="text-muted-foreground">Em modo de espera</dt>
+          <dd className="text-lg font-bold">{metrics.waiting}</dd>
         </div>
       </dl>
       <div className="mt-4">
@@ -116,7 +101,7 @@ export default async function AdminPage({ searchParams }: PageProps<"/admin">) {
   const db = createAdminClient();
   const weekAgo = daysAgoIso(7);
 
-  const [businesses, subscriptions, views, appointments, activated, upgraded] = await Promise.all([
+  const [businesses, subscriptions, views, appointments, activated] = await Promise.all([
     db.from("businesses").select("*").order("created_at", { ascending: false }).limit(1000),
     db.from("subscriptions").select("*"),
     db
@@ -127,7 +112,6 @@ export default async function AdminPage({ searchParams }: PageProps<"/admin">) {
       .limit(50000),
     db.from("appointments").select("business_id").gte("created_at", weekAgo).limit(50000),
     db.from("page_stats_daily").select("business_id").limit(50000),
-    db.from("audit_log").select("business_id").eq("action", "plan.upgraded").limit(50000),
   ]);
   const [depositRows, duplicates, signupsAudit] = await Promise.all([
     db
@@ -151,7 +135,6 @@ export default async function AdminPage({ searchParams }: PageProps<"/admin">) {
     (depositRows.data ?? []) as Parameters<typeof computeDepositMetrics>[0],
     duplicates.count ?? 0,
   );
-  const upgradedIds = new Set((upgraded.data ?? []).map((r) => r.business_id as string));
   const allBusinesses = (businesses.data ?? []) as Business[];
   const allSubs = (subscriptions.data ?? []) as Subscription[];
   const activatedIds = new Set((activated.data ?? []).map((r) => r.business_id as string));
@@ -174,7 +157,7 @@ export default async function AdminPage({ searchParams }: PageProps<"/admin">) {
       <div className="grid gap-4 lg:grid-cols-2">
         <MetricsCard
           title="Total"
-          metrics={computeMetrics(allBusinesses, allSubs, activatedIds, new Date(), 8, upgradedIds)}
+          metrics={computeMetrics(allBusinesses, allSubs, activatedIds, new Date())}
         />
         {BRANDS.map((brand) => (
           <MetricsCard
@@ -185,8 +168,6 @@ export default async function AdminPage({ searchParams }: PageProps<"/admin">) {
               allSubs,
               activatedIds,
               new Date(),
-              8,
-              upgradedIds,
             )}
           />
         ))}
@@ -201,7 +182,7 @@ export default async function AdminPage({ searchParams }: PageProps<"/admin">) {
       </section>
 
       <section className="rounded-xl border bg-card p-4">
-        <h2 className="font-semibold">Sinais pelo Pix (Pro)</h2>
+        <h2 className="font-semibold">Sinais pelo Pix</h2>
         <dl className="mt-3 grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
           {(
             [

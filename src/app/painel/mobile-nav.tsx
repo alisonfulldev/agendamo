@@ -4,7 +4,6 @@ import {
   CalendarDays,
   ChevronRight,
   Home,
-  Lock,
   LogOut,
   type LucideIcon,
   Menu,
@@ -17,10 +16,15 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 
 import { signOutAction } from "@/app/(auth)/actions";
-import { LockedModal } from "@/components/panel/locked-modal";
-import type { LockedFeature } from "@/lib/plans";
 
-import { isActive, NAV_GROUP_LABELS, navTourId, visibleNav, type NavItem } from "./nav";
+import {
+  isActive,
+  NAV_GROUP_LABELS,
+  navTourId,
+  visibleNav,
+  type NavItem,
+  type NavOptions,
+} from "./nav";
 
 const TAB_ICONS: Record<string, LucideIcon> = {
   "/painel": Home,
@@ -31,39 +35,25 @@ const TAB_ICONS: Record<string, LucideIcon> = {
 
 /**
  * Phone menu, like an app: the main pages as bottom tabs and the rest in "Mais", grouped.
- * Hidden on the computer, where the side menu shows everything. On the Grátis plan, paid items
- * show a lock and open the subscription modal.
+ * Hidden on the computer, where the side menu shows everything. In waiting mode only the
+ * subscription and the account are listed.
  */
 export function MobileNav({
-  isOwner,
   customersLabel,
-  locked,
-  trialAvailable,
-}: {
-  isOwner: boolean;
+  ...options
+}: NavOptions & {
   customersLabel: string;
-  locked: LockedFeature[];
-  trialAvailable: boolean;
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
-  const [modal, setModal] = useState<LockedFeature | null>(null);
-  const items = visibleNav(isOwner);
+  const items = visibleNav(options);
   const tabs = items.filter((item) => item.group === "main");
   const more = items.filter((item) => item.group !== "main");
   const label = (item: NavItem) => (item.href === "/painel/clientes" ? customersLabel : item.label);
-  const isLocked = (item: NavItem) => Boolean(item.feature && locked.includes(item.feature));
   const moreActive = more.some((item) => isActive(pathname, item.href));
 
   return (
     <div className="md:hidden">
-      {modal ? (
-        <LockedModal
-          feature={modal}
-          trialAvailable={trialAvailable}
-          onClose={() => setModal(null)}
-        />
-      ) : null}
       {open ? (
         <div className="fixed inset-0 z-40 flex flex-col justify-end">
           <button
@@ -107,39 +97,21 @@ export function MobileNav({
                               </span>
                             ) : null}
                           </span>
-                          {isLocked(item) ? (
-                            <Lock className="size-4 text-muted-foreground" aria-label="Bloqueado" />
-                          ) : (
-                            <ChevronRight className="size-4 text-muted-foreground" aria-hidden />
-                          )}
+                          <ChevronRight className="size-4 text-muted-foreground" aria-hidden />
                         </>
                       );
                       const row = "flex min-h-14 w-full items-center gap-3 px-4 py-2.5 text-left";
                       return (
                         <li key={item.href}>
-                          {isLocked(item) ? (
-                            <button
-                              type="button"
-                              data-tour={navTourId(item.href)}
-                              className={row}
-                              onClick={() => {
-                                setOpen(false);
-                                setModal(item.feature!);
-                              }}
-                            >
-                              {content}
-                            </button>
-                          ) : (
-                            <Link
-                              href={item.href}
-                              data-tour={navTourId(item.href)}
-                              aria-current={isActive(pathname, item.href) ? "page" : undefined}
-                              onClick={() => setOpen(false)}
-                              className={row}
-                            >
-                              {content}
-                            </Link>
-                          )}
+                          <Link
+                            href={item.href}
+                            data-tour={navTourId(item.href)}
+                            aria-current={isActive(pathname, item.href) ? "page" : undefined}
+                            onClick={() => setOpen(false)}
+                            className={row}
+                          >
+                            {content}
+                          </Link>
                         </li>
                       );
                     })}
@@ -166,7 +138,7 @@ export function MobileNav({
       >
         <ul className="flex">
           {tabs.map((item) => {
-            const Icon = isLocked(item) ? Lock : (TAB_ICONS[item.href] ?? Menu);
+            const Icon = TAB_ICONS[item.href] ?? Menu;
             const active = isActive(pathname, item.href) && !open;
             const tab = `flex h-16 w-full flex-col items-center justify-center gap-0.5 text-xs font-medium ${
               active ? "text-primary" : "text-muted-foreground"
@@ -179,26 +151,15 @@ export function MobileNav({
             );
             return (
               <li key={item.href} className="flex-1">
-                {isLocked(item) ? (
-                  <button
-                    type="button"
-                    data-tour={navTourId(item.href)}
-                    className={tab}
-                    onClick={() => setModal(item.feature!)}
-                  >
-                    {content}
-                  </button>
-                ) : (
-                  <Link
-                    href={item.href}
-                    data-tour={navTourId(item.href)}
-                    aria-current={active ? "page" : undefined}
-                    onClick={() => setOpen(false)}
-                    className={tab}
-                  >
-                    {content}
-                  </Link>
-                )}
+                <Link
+                  href={item.href}
+                  data-tour={navTourId(item.href)}
+                  aria-current={active ? "page" : undefined}
+                  onClick={() => setOpen(false)}
+                  className={tab}
+                >
+                  {content}
+                </Link>
               </li>
             );
           })}

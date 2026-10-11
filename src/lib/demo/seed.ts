@@ -22,22 +22,22 @@ export interface DemoPersona {
 export const DEMO_PERSONAS: DemoPersona[] = [
   {
     email: "dona.beleza@demo.com",
-    label: "Studio Bela (Beleza · Pro)",
+    label: "Studio Bela (Beleza · Completo)",
     description: "Agenda cheia, financeiro, cupons, pacotes e estatísticas.",
     brandKey: "beauty",
     slug: "studio-bela",
   },
   {
     email: "dono.barbearia@demo.com",
-    label: "Barbearia Navalha (Barbearia · teste encerrado, no Grátis)",
+    label: "Barbearia Navalha (Barbearia · teste encerrado, modo de espera)",
     description:
-      "Grátis: 10 agendamentos por ciclo, depois o chat termina no WhatsApp; funções pagas com cadeado.",
+      "Modo de espera: o chat termina no WhatsApp e o painel abre só a tela de assinatura.",
     brandKey: "barber",
     slug: "barbearia-navalha",
   },
   {
     email: "dona.estetica@demo.com",
-    label: "Clínica Pele (Estética · Pro, 3 profissionais)",
+    label: "Clínica Pele (Estética · Completo, 3 profissionais)",
     description: "3 profissionais, maca compartilhada, “qualquer profissional”.",
     brandKey: "aesthetics",
     slug: "clinica-pele",
@@ -51,21 +51,21 @@ export const DEMO_PERSONAS: DemoPersona[] = [
   },
   {
     email: "psi@demo.com",
-    label: "Espaço Escuta (Psicologia · teste do Agenda)",
-    description: "Teste do Agenda em andamento (faltam 5 dias).",
+    label: "Espaço Escuta (Psicologia · teste do Completo)",
+    description: "Teste do Completo em andamento (faltam 5 dias).",
     brandKey: "psychology",
     slug: "espaco-escuta",
   },
   {
     email: "fisio@demo.com",
-    label: "Movimento Fisio (Fisioterapia · Agenda anual)",
+    label: "Movimento Fisio (Fisioterapia · Completo anual)",
     description: "Pacotes de sessões e lembretes.",
     brandKey: "physio",
     slug: "movimento-fisio",
   },
   {
     email: "geral@demo.com",
-    label: "Ateliê Restaura (Outro / Geral · Pro)",
+    label: "Ateliê Restaura (Outro / Geral · Completo)",
     description: "Negócio fora dos ramos da lista: textos e serviços neutros.",
     brandKey: "general",
     slug: "atelie-restaura",
@@ -99,10 +99,10 @@ interface BusinessSeed {
   name: string;
   slug: string;
   brand: string;
-  plan: "free" | "agenda" | "pro";
-  /** 7-day trial: days left (negative = ended) and the plan tested. Omitted: never tested. */
+  /** "complete" = subscribed; "free" = 14-day trial (trialDaysLeft) or waiting mode (ended). */
+  plan: "free" | "complete";
+  /** Days left of the 14-day trial (negative = ended: waiting mode). */
   trialDaysLeft?: number;
-  trialPlan?: "agenda" | "pro";
   /** Paid professionals (subscribed businesses). */
   seats?: number;
   yearly?: boolean;
@@ -125,7 +125,7 @@ const BUSINESSES: BusinessSeed[] = [
     name: "Studio Bela",
     slug: "studio-bela",
     brand: "beauty",
-    plan: "pro",
+    plan: "complete",
     bio: "Unhas, cabelo e sobrancelhas com carinho e hora marcada. Atendimento sem atraso em Moema.",
     city: "São Paulo",
     neighborhood: "Moema",
@@ -148,7 +148,6 @@ const BUSINESSES: BusinessSeed[] = [
     brand: "barber",
     plan: "free",
     trialDaysLeft: -5,
-    trialPlan: "pro",
     bio: "Corte clássico, degradê e barba na toalha quente. Cerveja gelada enquanto espera.",
     city: "São Paulo",
     neighborhood: "Pinheiros",
@@ -166,7 +165,7 @@ const BUSINESSES: BusinessSeed[] = [
     name: "Clínica Pele",
     slug: "clinica-pele",
     brand: "aesthetics",
-    plan: "pro",
+    plan: "complete",
     seats: 3,
     bio: "Limpeza de pele, drenagem e tratamentos faciais com equipe especializada.",
     city: "Campinas",
@@ -190,7 +189,6 @@ const BUSINESSES: BusinessSeed[] = [
     brand: "psychology",
     plan: "free",
     trialDaysLeft: 5,
-    trialPlan: "agenda",
     bio: "Psicoterapia para adultos, presencial e online, com sessões semanais de 50 minutos.",
     city: "Belo Horizonte",
     neighborhood: "Savassi",
@@ -208,7 +206,7 @@ const BUSINESSES: BusinessSeed[] = [
     name: "Movimento Fisio",
     slug: "movimento-fisio",
     brand: "physio",
-    plan: "agenda",
+    plan: "complete",
     yearly: true,
     bio: "Fisioterapia ortopédica, pilates clínico e reabilitação pós-cirúrgica.",
     city: "Curitiba",
@@ -227,7 +225,7 @@ const BUSINESSES: BusinessSeed[] = [
     name: "Ateliê Restaura",
     slug: "atelie-restaura",
     brand: "general",
-    plan: "pro",
+    plan: "complete",
     bio: "Restauro de móveis antigos e cadeiras de palhinha, com orçamento no ateliê.",
     city: "Porto Alegre",
     neighborhood: "Moinhos de Vento",
@@ -246,6 +244,7 @@ const BUSINESSES: BusinessSeed[] = [
     slug: "salao-aurora",
     brand: "beauty",
     plan: "free",
+    trialDaysLeft: 10,
     bio: "Cortes, coloração e manicure num espaço tranquilo pertinho do metrô.",
     city: "São Paulo",
     neighborhood: "Moema",
@@ -263,6 +262,7 @@ const BUSINESSES: BusinessSeed[] = [
     slug: "esmalteria-flor",
     brand: "beauty",
     plan: "free",
+    trialDaysLeft: 10,
     bio: "Esmalteria com mais de 200 cores, alongamento em gel e spa dos pés.",
     city: "São Paulo",
     neighborhood: "Vila Mariana",
@@ -367,11 +367,10 @@ async function seedBusiness(db: PGlite, seed: BusinessSeed, userIds: Map<string,
 
   await db.query(
     `update public.businesses set plan = $2, min_notice_minutes = 60, professional_seats = $4::int,
-       trial_plan = $5,
-       trial_started_at = case when $3::int is null then null else now() - make_interval(days => 7 - $3::int) end,
+       trial_started_at = case when $3::int is null then null else now() - make_interval(days => 14 - $3::int) end,
        trial_ends_at = case when $3::int is null then null else now() + make_interval(days => $3::int) end
      where id = $1`,
-    [businessId, seed.plan, seed.trialDaysLeft ?? null, seed.seats ?? 1, seed.trialPlan ?? null],
+    [businessId, seed.plan, seed.trialDaysLeft ?? null, seed.seats ?? 1],
   );
   for (const service of seed.services.filter((s) => s.returnDays)) {
     await db.query(

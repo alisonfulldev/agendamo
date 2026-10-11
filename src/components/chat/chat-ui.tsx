@@ -31,7 +31,7 @@ export function ChatWindow({
   onClose?: () => void;
   /** Tapping the photo or name opens the business profile. */
   onProfile?: () => void;
-  /** "Agende também com o MeetChat" under the composer (every plan). */
+  /** "Agende também com o MeetChat" under the composer (waiting mode only). */
   branding?: ReactNode;
   footer?: ReactNode;
   children: ReactNode;

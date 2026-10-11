@@ -1,8 +1,7 @@
 import { formatInTimeZone } from "date-fns-tz";
 import type { Metadata } from "next";
-import Link from "next/link";
+import { notFound } from "next/navigation";
 
-import { LockedPage } from "@/components/panel/locked-page";
 import { PageHeader, Section } from "@/components/panel/page-header";
 import { requireOwner } from "@/lib/business/context";
 import type { Appointment, DepositReceipt } from "@/lib/db/types";
@@ -52,7 +51,7 @@ export default async function DepositsPage() {
     .limit(500);
   const rows = (data ?? []) as Row[];
   if (!features.deposits && rows.length === 0) {
-    return <LockedPage feature="deposits" trialAvailable={features.trialAvailable} />;
+    notFound();
   }
 
   const toCheck = rows.filter((r) => r.deposit_status === "sent");
@@ -207,15 +206,6 @@ export default async function DepositsPage() {
           </ul>
         )}
       </Section>
-
-      {!features.deposits ? (
-        <p className="text-sm text-muted-foreground">
-          Seu plano não pede sinal em agendamentos novos. Os que já existem continuam valendo.{" "}
-          <Link href="/painel/plano" className="text-primary underline">
-            Ver o plano Pro
-          </Link>
-        </p>
-      ) : null}
     </div>
   );
 }

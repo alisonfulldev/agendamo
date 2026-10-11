@@ -4,8 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { cache } from "react";
 
 import { type BrandConfig, getNiche } from "@/brands";
-import { LOCK_TEXT } from "@/content/plan-locks";
-import { getPlanFeatures, type LockedFeature } from "@/lib/plans";
+import { getPlanFeatures } from "@/lib/plans";
 import { requireUser, type SessionUser } from "@/lib/auth/session";
 import type { Business, Member } from "@/lib/db/types";
 import { createClient } from "@/lib/supabase/server";
@@ -46,32 +45,28 @@ export const getBusinessContext = cache(async (): Promise<BusinessContext | null
   };
 });
 
+export interface RequireOptions {
+  /** Pages and actions that stay open in waiting mode (subscription and account). */
+  allowWaiting?: boolean;
+}
+
 /**
- * Business context, sending users without a business to onboarding. The panel always opens: on
- * the Grátis plan, paid pages show a lock (lockedFeature / LockedPage) and paid actions refuse on
- * the server (hasFeature).
+ * Business context, sending users without a business to onboarding. In waiting mode (no trial and
+ * no active subscription) everything except the subscription screen and the account is closed:
+ * checked by each page and action on the server (rule 6), so it also holds on client navigation.
  */
-export async function requireBusiness(): Promise<BusinessContext> {
+export async function requireBusiness(options: RequireOptions = {}): Promise<BusinessContext> {
   const context = await getBusinessContext();
   if (!context) redirect("/painel/novo");
-  return context;
-}
-
-/** True when the business's plan includes the feature (checked on the server, rule 6). */
-export function hasFeature(business: Business, feature: LockedFeature): boolean {
-  return getPlanFeatures(business)[feature];
-}
-
-/** Server actions and routes of a paid feature: refused on the Grátis plan (rule 6). */
-export async function requireFeature(feature: LockedFeature): Promise<BusinessContext> {
-  const context = await requireBusiness();
-  if (!hasFeature(context.business, feature)) throw new Error(LOCK_TEXT.denied);
+  if (!options.allowWaiting && !getPlanFeatures(context.business).active) {
+    redirect(context.isOwner ? "/painel/plano" : "/painel/conta");
+  }
   return context;
 }
 
 /** Owner-only pages and actions. Staff get a 404. */
-export async function requireOwner(): Promise<BusinessContext> {
-  const context = await requireBusiness();
+export async function requireOwner(options: RequireOptions = {}): Promise<BusinessContext> {
+  const context = await requireBusiness(options);
   if (!context.isOwner) notFound();
   return context;
 }

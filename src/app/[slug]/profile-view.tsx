@@ -280,9 +280,11 @@ export function ProfileView({
         </Card>
       ) : null}
 
-      <div className="flex justify-center pt-2">
-        <MeetChatBadge href={brandUrl(brand, "/")} logo={PLATFORM.logo} />
-      </div>
+      {loaded.features.removeBranding ? null : (
+        <div className="flex justify-center pt-2">
+          <MeetChatBadge href={brandUrl(brand, "/")} logo={PLATFORM.logo} />
+        </div>
+      )}
     </div>
   );
 }

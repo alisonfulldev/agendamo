@@ -1,4 +1,4 @@
-import { Check, ChevronDown, Minus } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -9,7 +9,7 @@ import { OpenCreationLink } from "@/components/creation/open-creation";
 import { PlanCards } from "@/components/sales/plan-cards";
 import { HOME } from "@/content/home";
 import { PRICING } from "@/content/pricing";
-import { PLAN_PRICES } from "@/lib/plans";
+import { PLAN_NAME, PLAN_PRICES } from "@/lib/plans";
 import { siteUrl } from "@/lib/site-url";
 import { isStorageConfigured } from "@/lib/storage/r2";
 
@@ -37,17 +37,10 @@ const jsonLd = [
     description: PRICING.meta.description,
     url: siteUrl("/precos"),
     offers: [
-      { "@type": "Offer", name: "Grátis", price: "0.00", priceCurrency: "BRL" },
       {
         "@type": "Offer",
-        name: "Agenda",
-        price: (PLAN_PRICES.agenda.monthly / 100).toFixed(2),
-        priceCurrency: "BRL",
-      },
-      {
-        "@type": "Offer",
-        name: "Pro",
-        price: (PLAN_PRICES.pro.monthly / 100).toFixed(2),
+        name: PLAN_NAME,
+        price: (PLAN_PRICES.complete.monthly / 100).toFixed(2),
         priceCurrency: "BRL",
       },
     ],
@@ -110,49 +103,8 @@ export default function PricingPage() {
           </div>
         </section>
 
-        <section aria-label="Planos" className="mx-auto max-w-6xl px-5">
+        <section aria-label="Plano" className="mx-auto max-w-6xl px-5 pb-14">
           <PlanCards />
-        </section>
-
-        <section aria-labelledby="comparar" className="mx-auto max-w-4xl px-5 py-14">
-          <h2 id="comparar" className="text-center text-3xl font-bold tracking-tight">
-            {PRICING.compareTitle}
-          </h2>
-          <div className="mt-8 overflow-x-auto rounded-3xl border bg-card">
-            <table className="w-full min-w-[34rem] text-sm">
-              <thead>
-                <tr className="border-b">
-                  <th className="p-4 text-left font-medium text-muted-foreground">Recurso</th>
-                  {PRICING.compare.columns.map((column) => (
-                    <th key={column} className="p-4 text-center font-semibold">
-                      {column}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {PRICING.compare.rows.map((row) => (
-                  <tr key={row.label}>
-                    <td className="p-4">{row.label}</td>
-                    {row.values.map((value, i) => (
-                      <td key={i} className="p-4 text-center">
-                        {value === true ? (
-                          <Check className="mx-auto size-5 text-primary" aria-label="Sim" />
-                        ) : value === false ? (
-                          <Minus
-                            className="mx-auto size-5 text-muted-foreground"
-                            aria-label="Não"
-                          />
-                        ) : (
-                          value
-                        )}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
         </section>
 
         <section aria-labelledby="adicionais" className="mx-auto max-w-4xl px-5 pb-14">

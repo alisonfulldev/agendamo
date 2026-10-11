@@ -63,7 +63,7 @@ export const barber = {
       },
       {
         title: "Sinal no agendamento",
-        description: "No plano Pro: sinal ou valor total pelo Pix, com comprovante no chat.",
+        description: "Sinal ou valor total pelo Pix, com comprovante no chat.",
       },
       {
         title: "Financeiro simples",
@@ -159,8 +159,7 @@ export const barber = {
     successConfirmed: "Fechado, {customerName}! Seu horário está confirmado. 💈",
     emailNote: "A confirmação foi pro seu e-mail.",
     successPending: "Pedido recebido! {business} vai confirmar seu horário.",
-    successDeposit:
-      "Seu horário está reservado! Falta só o pagamento pelo Pix:",
+    successDeposit: "Seu horário está reservado! Falta só o pagamento pelo Pix:",
     conflict: "Ops, esse horário acabou de ser ocupado. Veja os horários atualizados:",
     blocked:
       "No momento não conseguimos concluir seu agendamento por aqui. Fale direto com {business} pelo WhatsApp.",

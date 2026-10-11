@@ -17,7 +17,6 @@ test("home page: SEO texts, sections in order, current prices and one main butto
   const order = [
     HOME.audience.title,
     "Como funciona o agendamento online",
-    HOME.tryIt.title,
     "Agendamento pelo Instagram e WhatsApp",
     "Lembrete automático para o cliente não faltar",
     "Preços",
@@ -26,16 +25,16 @@ test("home page: SEO texts, sections in order, current prices and one main butto
   expect(order.every((i) => i >= 0)).toBe(true);
   expect([...order].sort((a, b) => a - b)).toEqual(order);
   await expect(page.getByText("Quanto tempo você perde")).toHaveCount(0);
-  for (const price of ["R$ 0", "R$ 19,90", "R$ 39,90"]) {
-    await expect(page.getByText(price, { exact: true }).first()).toBeVisible();
-  }
+  await expect(page.getByText("R$ 29,90", { exact: true }).first()).toBeVisible();
+  await expect(page.getByText(/R\$ 24,90\/mês no anual/).first()).toBeVisible();
+  await expect(page.getByText("R$ 19,90")).toHaveCount(0);
   await expect(page.getByText("30 dias grátis")).toHaveCount(0);
   // Every niche page is linked from the home.
   await expect(page.locator('a[href="/barbearia"]').first()).toBeAttached();
   await expect(page.locator('a[href="/terapia-ocupacional"]')).toBeAttached();
 });
 
-test("structured data: Organization, SoftwareApplication with the plans and FAQPage", async ({
+test("structured data: Organization, SoftwareApplication with the plan and FAQPage", async ({
   page,
 }) => {
   await page.goto("/");
@@ -45,11 +44,7 @@ test("structured data: Organization, SoftwareApplication with the plans and FAQP
   expect(types).toEqual(expect.arrayContaining(["Organization", "SoftwareApplication", "FAQPage"]));
   const app = items.find((i) => i["@type"] === "SoftwareApplication")!;
   expect(app.applicationCategory).toBe("BusinessApplication");
-  expect((app.offers as { price: string }[]).map((o) => o.price)).toEqual([
-    "0.00",
-    "19.90",
-    "39.90",
-  ]);
+  expect((app.offers as { price: string }[]).map((o) => o.price)).toEqual(["29.90"]);
   const faq = items.find((i) => i["@type"] === "FAQPage")!;
   expect((faq.mainEntity as unknown[]).length).toBe(HOME.faq.items.length);
 });

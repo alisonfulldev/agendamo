@@ -14,7 +14,6 @@ import { invalidatePublicPage } from "@/lib/cache";
 import { resetDemoDb, getDemoDb } from "@/lib/demo/db";
 import { clearDemoEmails } from "@/lib/demo/mailbox";
 import { CRON_JOBS } from "@/lib/demo/cron-jobs";
-import { FREE_BOOKINGS_PER_CYCLE } from "@/lib/plans";
 import { DEMO_DATA_DIR, DEMO_SESSION_COOKIE, isDemoMode } from "@/lib/demo/mode";
 import { DEMO_PERSONAS } from "@/lib/demo/seed";
 import { encodeDemoSession } from "@/lib/demo/session";
@@ -66,12 +65,12 @@ export async function demoStartSignUpAction(formData: FormData): Promise<void> {
 
 const planSchema = z.object({
   businessId: z.uuid(),
-  plan: z.enum(["free", "trial_agenda", "trial_pro", "agenda", "pro", "ended"]),
+  plan: z.enum(["trial", "complete", "ended"]),
 });
 
 /**
- * Switches a business between Grátis (never tested), a 7-day trial of Agenda or Pro, Agenda,
- * Pro and "trial ended" (Grátis after a trial) directly (no billing).
+ * Switches a business between the 14-day trial, subscribed (Completo) and "trial ended"
+ * (waiting mode) directly (no billing).
  */
 export async function demoSetPlanAction(formData: FormData): Promise<void> {
   guard();
@@ -80,19 +79,13 @@ export async function demoSetPlanAction(formData: FormData): Promise<void> {
   const row = (
     await db.query<{ slug: string }>(
       `update public.businesses set
-         plan = case when $2 in ('agenda', 'pro') then $2 else 'free' end,
-         trial_plan = case
-           when $2 = 'trial_agenda' then 'agenda'
-           when $2 in ('trial_pro', 'ended') then 'pro'
-           else null end,
+         plan = case when $2 = 'complete' then 'complete' else 'free' end,
          trial_started_at = case
-           when $2 like 'trial_%' then now()
-           when $2 = 'ended' then now() - interval '12 days'
-           else null end,
+           when $2 = 'ended' then now() - interval '19 days'
+           else now() end,
          trial_ends_at = case
-           when $2 like 'trial_%' then now() + interval '7 days'
            when $2 = 'ended' then now() - interval '5 days'
-           else null end
+           else now() + interval '14 days' end
        where id = $1 returning slug`,
       [businessId, plan],
     )
@@ -100,10 +93,10 @@ export async function demoSetPlanAction(formData: FormData): Promise<void> {
   // Without a subscription (trial / expired) the simulated Asaas subscription goes away too, so
   // the checkout starts fresh.
   // A subscribed state also sets the simulated subscription's plan (no leftover from a test).
-  if (plan === "agenda" || plan === "pro") {
+  if (plan === "complete") {
     await db.query(
-      "update public.subscriptions set plan = $2, pending_plan = null where business_id = $1",
-      [businessId, plan],
+      "update public.subscriptions set plan = 'complete', pending_plan = null where business_id = $1",
+      [businessId],
     );
   } else {
     await db.query("delete from public.subscriptions where business_id = $1", [businessId]);
@@ -122,44 +115,7 @@ export async function demoSetPlanAction(formData: FormData): Promise<void> {
   redirect("/demo?ok=plano#planos");
 }
 
-/**
- * Grátis plan: uses the 10 automatic bookings of the current cycle at once (10 chat bookings
- * created now, completed in the past so they never block a time and can be repeated), so the
- * WhatsApp hand-off can be tested.
- */
-export async function demoFillFreeCycleAction(formData: FormData): Promise<void> {
-  guard();
-  const businessId = z.uuid().parse(formData.get("businessId"));
-  const db = await getDemoDb();
-  const row = (
-    await db.query<{ slug: string; professional_id: string }>(
-      `select b.slug, p.id as professional_id from public.businesses b
-       join public.professionals p on p.business_id = b.id
-       where b.id = $1 order by p.position limit 1`,
-      [businessId],
-    )
-  ).rows[0];
-  if (!row) redirect("/demo#planos");
-  const customer = (
-    await db.query<{ id: string }>(
-      `insert into public.customers (business_id, name, phone) values ($1, 'Cliente do ciclo', null)
-       returning id`,
-      [businessId],
-    )
-  ).rows[0]!;
-  for (let i = 0; i < FREE_BOOKINGS_PER_CYCLE; i++) {
-    await db.query(
-      `insert into public.appointments (business_id, professional_id, customer_id, starts_at, ends_at, status, source)
-       values ($1, $2, $3, now() - interval '400 days' + make_interval(hours => $4::int),
-         now() - interval '400 days' + make_interval(hours => $4::int, mins => 30), 'completed', 'chat')`,
-      [businessId, row.professional_id, customer.id, i * 2],
-    );
-  }
-  invalidatePublicPage(row.slug);
-  redirect("/demo?ok=ciclo#planos");
-}
-
-/** Pro deposit by Pix: Pix key, city, policy and a R$ 30 deposit on every service of the business. */
+/** Deposit by Pix: Pix key, city, policy and a R$ 30 deposit on every service of the business. */
 export async function demoEnableDepositsAction(formData: FormData): Promise<void> {
   guard();
   const businessId = z.uuid().parse(formData.get("businessId"));

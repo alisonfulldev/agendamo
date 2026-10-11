@@ -6,18 +6,6 @@ const EVENT = "lv:creation";
 /** sessionStorage key of the conversation in progress. */
 export const CREATION_STORAGE_KEY = "lv_creation_v1";
 
-/** A conversation was started and not finished (it offers to continue where it stopped). */
-export function hasSavedCreation(): boolean {
-  try {
-    const saved = JSON.parse(sessionStorage.getItem(CREATION_STORAGE_KEY) ?? "null") as {
-      name?: string;
-      phase?: string;
-    } | null;
-    return Boolean(saved?.name && saved.phase !== "name");
-  } catch {
-    return false;
-  }
-}
 const PARAMS = ["criar", "nome", "ramo"] as const;
 
 export function subscribeCreation(onChange: () => void): () => void {
@@ -34,27 +22,11 @@ export function isCreationOpen(): boolean {
   return PARAMS.some((p) => params.has(p));
 }
 
-/** Pages whose top is the chat (home, niche pages) take the calls to action there. */
-let inlineHandler: (() => void) | null = null;
-
-export function registerInlineCreation(handler: (() => void) | null): void {
-  inlineHandler = handler;
-}
-
-export function hasInlineCreation(): boolean {
-  return inlineHandler !== null;
-}
-
 /**
- * Opens the conversation: on pages whose top is the chat, scrolls there and activates the name
- * field; elsewhere over the site (a history entry, so "back" closes it). `niche`: the niche
+ * Opens the conversation over the site (a history entry, so "back" closes it). `niche`: the niche
  * page's route, so the conversation skips the "o que você faz?" question.
  */
 export function openCreation(niche?: string): void {
-  if (inlineHandler) {
-    inlineHandler();
-    return;
-  }
   if (isCreationOpen()) return;
   const url = new URL(window.location.href);
   url.searchParams.set("criar", "1");

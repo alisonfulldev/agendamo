@@ -73,7 +73,7 @@ export interface ChatCatalog {
     priceCents: number;
   }[];
   professionals: { id: string; name: string; photoUrl: string | null; serviceIds: string[] }[];
-  /** Pro: services that ask for a deposit (or the full price) by Pix, and the policy to accept. */
+  /** Services that ask for a deposit (or the full price) by Pix, and the policy to accept. */
   deposit: { serviceIds: string[]; policy: string | null } | null;
 }
 

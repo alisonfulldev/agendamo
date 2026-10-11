@@ -2,7 +2,7 @@ import { addDaysToDate } from "@/lib/availability";
 import { cronRoute } from "@/lib/cron";
 import type { Business } from "@/lib/db/types";
 import { claimNotification, notifyTeam } from "@/lib/notifications/owner";
-import { getPlanFeatures } from "@/lib/plans";
+import { getPlanFeatures, PLAN_NAME } from "@/lib/plans";
 import { getDemandBlock } from "@/lib/portal/demand";
 import { displayCount, sumWeek, weekStart, type DailyStats } from "@/lib/stats";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -72,8 +72,8 @@ export const POST = cronRoute(async () => {
         heading: "Resumo da semana",
         paragraphs,
         details,
-        cta: features.limitedBookings
-          ? { label: "Agendamentos ilimitados no Agenda", url: "/painel/plano" }
+        cta: !features.active
+          ? { label: `Assinar o ${PLAN_NAME}`, url: "/painel/plano" }
           : { label: "Ver estatísticas", url: "/painel/estatisticas" },
         footnote:
           "Números abaixo de 5 aparecem como “menos de 5”, para proteger a privacidade de quem visita.",

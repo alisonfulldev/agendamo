@@ -43,24 +43,6 @@ test("phone: the top button opens the creation conversation at the business name
   await expect(dialog.getByLabel("Nome do negócio")).toBeVisible();
 });
 
-test("“Veja como fica o seu link”: the embedded chat takes the name and goes on in full screen", async ({
-  page,
-}) => {
-  await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/");
-  await page.getByRole("heading", { name: "Veja como fica o seu link" }).scrollIntoViewIfNeeded();
-  const name = page.locator("#try-name");
-  await name.fill(`Barbearia Teste ${Date.now().toString(36)}`);
-  await page.waitForTimeout(1600);
-  await name.press("Enter");
-  // The conversation goes on right there (no overlay, no new address).
-  const chat = page.locator("[data-creation]");
-  await expect(chat.getByText(/você trabalha com barbearia, certo\?/)).toBeVisible();
-  await expect(page).not.toHaveURL(/criar=1/);
-  await page.getByRole("button", { name: "Recolher" }).click();
-  await expect(chat).toBeVisible();
-});
-
 test("the bottom button of the page opens the creation conversation too", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
@@ -79,7 +61,7 @@ test("niche detected from the name, transformation, test booking and “Criar mi
   // Shortcuts answer and the conversation goes on.
   await dialog.getByRole("button", { name: "Quanto custa?" }).click();
   await expect(
-    dialog.getByText(/Grátis para sempre com 10 agendamentos por mês\. Agenda: R\$ 19,90\/mês/),
+    dialog.getByText(/14 dias grátis, sem cartão\. Depois, o Completo custa R\$ 29,90\/mês/),
   ).toBeVisible();
 
   const name = `Barbearia Navalha Teste ${Date.now().toString(36)}`;

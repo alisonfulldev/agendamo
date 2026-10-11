@@ -1,11 +1,11 @@
 import "server-only";
 
-import type { BrandConfig } from "@/brands";
+import { getNiche, type BrandConfig } from "@/brands";
 import { audit } from "@/lib/audit";
 import { invalidatePublicPage } from "@/lib/cache";
-import type { Business, PaidPlan, Subscription } from "@/lib/db/types";
+import type { Business, Subscription } from "@/lib/db/types";
 import { claimNotification, notifyTeam } from "@/lib/notifications/owner";
-import { PLAN_NAMES, PLAN_PRICES, paidPlanOf, subscriptionPrice, type Cycle } from "@/lib/plans";
+import { PLAN_NAME, PLAN_PRICES, subscriptionPrice, type Cycle } from "@/lib/plans";
 import { recordTrialClaims } from "@/lib/trial";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -97,17 +97,16 @@ async function pixOfPendingPayment(subscriptionId: string): Promise<PixCharge | 
 }
 
 /**
- * Own checkout (Asaas behind the scenes). Subscribes to Agenda or Pro paying by Pix (returns the
- * QR code of the first charge) or card (tokenized at Asaas, charged right away); the billing cycle
- * starts on that day, with no proportional charge. The webhook activates the plan on payment.
- * On an active subscription: Agenda → Pro applies right away (Pro price from the next charge),
- * Pro → Agenda is scheduled for the end of the paid period, and cycle / extra professionals change.
+ * Own checkout (Asaas behind the scenes). Subscribes to the Completo plan paying by Pix (returns
+ * the QR code of the first charge) or card (tokenized at Asaas, charged right away); the billing
+ * cycle starts on that day, with no proportional charge. The webhook activates the plan on
+ * payment. On an active subscription, cycle and extra professionals change (new value from the
+ * next charge).
  */
 export async function subscribePlan(input: {
   business: Business;
   brand: BrandConfig;
   userId: string;
-  plan: PaidPlan;
   cycle: Cycle;
   extraProfessionals: number;
   payer: { name: string; cpfCnpj: string; email: string };
@@ -120,7 +119,7 @@ export async function subscribePlan(input: {
   const existing = await loadSubscription(input.business.id);
   const extras = Math.max(0, Math.min(49, Math.floor(input.extraProfessionals)));
   const seats = extras + 1;
-  const description = `${input.brand.name} ${PLAN_NAMES[input.plan]} · ${
+  const description = `${input.brand.name} ${PLAN_NAME} · ${
     input.cycle === "yearly" ? "anual" : "mensal"
   }${extras > 0 ? ` · ${seats} profissionais` : ""}`;
 
@@ -133,7 +132,7 @@ export async function subscribePlan(input: {
     if (data === null || data === undefined) throw new Error("coupon_invalid");
     discount = data as number;
   }
-  const value = subscriptionPrice(input.plan, input.cycle, extras, discount);
+  const value = subscriptionPrice(input.cycle, extras, discount);
   // The CPF/CNPJ informed here also counts for the one-trial-per-person rule.
   await recordTrialClaims(input.business.id, {
     email: input.payer.email,
@@ -145,9 +144,6 @@ export async function subscribePlan(input: {
     existing?.provider_subscription_id &&
     (existing.status === "active" || existing.status === "overdue")
   ) {
-    const current = paidPlanOf(existing.plan) ?? "agenda";
-    const upgrade = current === "agenda" && input.plan === "pro";
-    const downgrade = current === "pro" && input.plan === "agenda";
     // The new value applies from the next charge (no proportional charge now).
     await updateSubscription(existing.provider_subscription_id, {
       valueCents: value,
@@ -157,9 +153,6 @@ export async function subscribePlan(input: {
     await admin
       .from("subscriptions")
       .update({
-        // A downgrade keeps Pro until the paid period ends (applied by the webhook / billing job).
-        plan: downgrade ? current : input.plan,
-        pending_plan: downgrade ? input.plan : null,
         billing_cycle: input.cycle,
         extra_professionals: extras,
         needs_reprice: false,
@@ -170,22 +163,12 @@ export async function subscribePlan(input: {
       p_business_id: input.business.id,
       p_seats: seats,
     });
-    if (upgrade) {
-      await admin.from("businesses").update({ plan: "pro" }).eq("id", input.business.id);
-    }
     invalidatePublicPage(input.business.slug);
     await audit({
       businessId: input.business.id,
       userId: input.userId,
-      action: upgrade ? "plan.upgraded" : downgrade ? "plan.downgrade_scheduled" : "plan.changed",
-      details: {
-        from: current,
-        to: input.plan,
-        cycle: input.cycle,
-        seats,
-        value_cents: value,
-        until: downgrade ? existing.current_period_end : undefined,
-      },
+      action: "plan.changed",
+      details: { cycle: input.cycle, seats, value_cents: value },
     });
     return { kind: "changed" };
   }
@@ -229,8 +212,7 @@ export async function subscribePlan(input: {
       provider: "asaas",
       provider_customer_id: customerId,
       provider_subscription_id: subscription.id,
-      plan: input.plan,
-      pending_plan: null,
+      plan: "complete",
       needs_reprice: false,
       billing_cycle: input.cycle,
       extra_professionals: extras,
@@ -249,7 +231,7 @@ export async function subscribePlan(input: {
     userId: input.userId,
     action: "subscription.created",
     details: {
-      plan: input.plan,
+      plan: "complete",
       cycle: input.cycle,
       seats,
       value_cents: value,
@@ -541,14 +523,12 @@ export async function handleAsaasEvent(event: AsaasEvent): Promise<string> {
       );
       return "addon active";
     }
-    // A downgrade scheduled for the end of the period takes effect with the next period's payment.
-    const plan = row.pending_plan ?? paidPlanOf(row.plan) ?? "agenda";
+    const plan = "complete";
     await admin
       .from("subscriptions")
       .update({
         status: "active",
         plan,
-        pending_plan: null,
         current_period_end: paidUntil,
         updated_at: new Date().toISOString(),
       })
@@ -570,8 +550,8 @@ export async function handleAsaasEvent(event: AsaasEvent): Promise<string> {
           from: business.plan,
           to: plan,
           via: "payment",
-          // Admin metrics: a paid plan right after (or during) a trial.
-          trial_plan: business.trial_plan,
+          // Admin metrics: a subscription right after (or during) the trial.
+          after_trial: business.trial_ends_at !== null,
         },
       });
       invalidatePublicPage(business.slug);
@@ -655,12 +635,12 @@ export async function handleAsaasEvent(event: AsaasEvent): Promise<string> {
   return `ignored: ${event.event}`;
 }
 
-/** Subscription ended without payment: same state as an ended trial (data kept). */
+/** Subscription ended without payment: waiting mode, same as an ended trial (data kept). */
 export async function downgradeToFree(businessId: string, reason: string): Promise<void> {
   const business = await businessOf(businessId);
   if (!business || business.plan === "free") return;
   // Nothing is hidden or deleted: the chat switches to the WhatsApp hand-off and the panel
-  // shows only the plan screen until a new subscription is paid.
+  // shows only the subscription screen until a new subscription is paid.
   await createAdminClient().from("businesses").update({ plan: "free" }).eq("id", businessId);
   invalidatePublicPage(business.slug);
   await audit({
@@ -672,43 +652,17 @@ export async function downgradeToFree(businessId: string, reason: string): Promi
 }
 
 /**
- * Daily billing job: plans cancelled whose period ended (or overdue for more than 5 days) go back
- * to Grátis, downgrades scheduled for a period that ended are applied, and subscriptions marked
- * with a new price get their Asaas value updated (from the next charge). Idempotent.
+ * Daily billing job: plans cancelled whose period ended (or overdue for more than 5 days) go to
+ * waiting mode, and subscriptions marked with a new price get their Asaas value updated (from the
+ * next charge). Idempotent.
  */
 export async function processBillingExpirations(): Promise<{
   downgraded: number;
-  planChanges: number;
   repriced: number;
 }> {
   const downgraded = await expireSubscriptions();
   const admin = createAdminClient();
   const now = new Date().toISOString();
-
-  let planChanges = 0;
-  const { data: pending } = await admin
-    .from("subscriptions")
-    .select("*")
-    .not("pending_plan", "is", null)
-    .lt("current_period_end", now);
-  for (const row of (pending ?? []) as Subscription[]) {
-    await admin
-      .from("subscriptions")
-      .update({ plan: row.pending_plan, pending_plan: null, updated_at: now })
-      .eq("id", row.id);
-    const business = await businessOf(row.business_id);
-    if (business && paidPlanOf(business.plan)) {
-      await admin.from("businesses").update({ plan: row.pending_plan }).eq("id", business.id);
-      invalidatePublicPage(business.slug);
-      await audit({
-        businessId: business.id,
-        userId: null,
-        action: "plan.changed",
-        details: { from: business.plan, to: row.pending_plan, reason: "scheduled downgrade" },
-      });
-    }
-    planChanges++;
-  }
 
   let repriced = 0;
   const { data: stale } = await admin
@@ -718,9 +672,12 @@ export async function processBillingExpirations(): Promise<{
     .in("status", ["pending", "active", "overdue"]);
   for (const row of (stale ?? []) as Subscription[]) {
     if (!row.provider_subscription_id) continue;
-    const plan = paidPlanOf(row.plan) ?? "agenda";
+    const business = await businessOf(row.business_id);
     await updateSubscription(row.provider_subscription_id, {
-      valueCents: subscriptionPrice(plan, row.billing_cycle, row.extra_professionals ?? 0),
+      valueCents: subscriptionPrice(row.billing_cycle, row.extra_professionals ?? 0),
+      description: `${getNiche(business?.brand_key).name} ${PLAN_NAME} · ${
+        row.billing_cycle === "yearly" ? "anual" : "mensal"
+      }`,
     });
     await admin
       .from("subscriptions")
@@ -728,7 +685,7 @@ export async function processBillingExpirations(): Promise<{
       .eq("id", row.id);
     repriced++;
   }
-  return { downgraded, planChanges, repriced };
+  return { downgraded, repriced };
 }
 
 async function expireSubscriptions(): Promise<number> {

@@ -51,7 +51,7 @@ export const tattoo = nicheBrand({
     {
       question: "Consigo cobrar sinal para segurar a sessão?",
       answer:
-        "Dá, no plano Pro: o cliente paga o sinal pelo Pix direto para você e envia o comprovante no chat. Você confere no banco e confirma.",
+        "Dá: o cliente paga o sinal pelo Pix direto para você e envia o comprovante no chat. Você confere no banco e confirma.",
     },
   ],
   chat: { askProfessional: "Com qual tatuador você prefere?" },

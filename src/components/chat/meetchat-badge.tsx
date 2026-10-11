@@ -1,6 +1,6 @@
 /**
- * "Agende também com o MeetChat": shown on every plan, in the chat (and on external sites) and on
- * the profile. Links to the MeetChat site, where anyone can create their own chat.
+ * "Agende também com o MeetChat": shown only in waiting mode, in the chat (and on external sites)
+ * and on the profile. Links to the MeetChat site, where anyone can create their own chat.
  */
 export function MeetChatBadge({ href, logo }: { href: string; logo: string }) {
   return (

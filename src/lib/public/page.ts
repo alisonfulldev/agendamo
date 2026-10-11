@@ -28,7 +28,6 @@ export interface PublicPage {
     | "plan"
     | "trial_started_at"
     | "trial_ends_at"
-    | "trial_plan"
     | "created_at"
     | "slot_interval_minutes"
     | "min_notice_minutes"
@@ -70,16 +69,13 @@ async function fetchPublicPage(slug: string): Promise<PublicPage | null> {
   return (data as PublicPage | null) ?? null;
 }
 
-type LivePlan = Pick<
-  Business,
-  "plan" | "trial_plan" | "trial_started_at" | "trial_ends_at" | "created_at"
->;
+type LivePlan = Pick<Business, "plan" | "trial_started_at" | "trial_ends_at" | "created_at">;
 
 /** Plan fields read fresh on every request, so trial/plan changes apply at once (rule 6). */
 async function fetchLivePlan(slug: string): Promise<LivePlan | null> {
   const { data, error } = await createAdminClient()
     .from("businesses")
-    .select("plan, trial_plan, trial_started_at, trial_ends_at, created_at")
+    .select("plan, trial_started_at, trial_ends_at, created_at")
     .eq("slug", slug.toLowerCase())
     .is("suspended_at", null)
     .maybeSingle();

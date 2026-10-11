@@ -10,22 +10,13 @@ import {
 import { requireOwner } from "@/lib/business/context";
 import type { Subscription } from "@/lib/db/types";
 import { formatBRL } from "@/lib/money";
-import { getBookingAllowance } from "@/lib/plan-usage";
-import { allowanceText, renewsText, trialCounter } from "@/lib/plan-text";
-import {
-  FREE_BOOKINGS_PER_CYCLE,
-  getPlanFeatures,
-  paidPlanOf,
-  PLAN_NAMES,
-  PLAN_PRICES,
-  planLabel,
-  TRIAL_DAYS,
-} from "@/lib/plans";
+import { handoffsThisMonth } from "@/lib/handoffs";
+import { trialCounter } from "@/lib/plan-text";
+import { getPlanFeatures, PLAN_NAME, PLAN_PRICES, planLabel, PRICE_TEXT } from "@/lib/plans";
 import { createClient } from "@/lib/supabase/server";
 
 import { CancelAddonButton, CancelPlanButton, PlanCheckout } from "./checkout";
 import { PaymentMethodSection, PendingPixButton } from "./payment";
-import { TrialStarter } from "./trial";
 
 export const metadata: Metadata = { title: "Assinatura" };
 
@@ -45,9 +36,10 @@ const PAYMENT_STATUS: Record<string, string> = {
 };
 
 export default async function PlanPage() {
-  const { business } = await requireOwner();
+  // Open in waiting mode: it is the only panel screen then.
+  const { business } = await requireOwner({ allowWaiting: true });
   const features = getPlanFeatures(business);
-  const allowance = await getBookingAllowance(business);
+  const handoffs = features.active ? 0 : await handoffsThisMonth(business);
   const supabase = await createClient();
   const { data } = await supabase
     .from("subscriptions")
@@ -84,33 +76,38 @@ export default async function PlanPage() {
         <p role="status" className="rounded-lg bg-accent px-3 py-2 text-sm text-accent-foreground">
           {trialCounter(features)} (até{" "}
           {formatInTimeZone(features.trialEndsAt, business.timezone, "dd/MM/yyyy")}). Assine quando
-          quiser: libera na hora. Sem assinatura, a conta passa para o Grátis e nada é apagado.
+          quiser: libera na hora e o teste continua valendo até o fim.
         </p>
       ) : null}
 
-      {allowance.limited ? (
-        <Section title="Plano Grátis">
-          <p className="text-sm">
-            {allowanceText(allowance)} ({renewsText(allowance)}). Depois dos{" "}
-            {FREE_BOOKINGS_PER_CYCLE}, o chat passa os pedidos para o seu WhatsApp até o limite
-            renovar.
+      {!features.active ? (
+        <section
+          aria-labelledby="espera"
+          className="rounded-2xl border-2 border-primary bg-card p-5 text-card-foreground"
+        >
+          <h2 id="espera" className="text-xl font-bold tracking-tight">
+            {subscription
+              ? "Sua assinatura não está ativa"
+              : features.trialEndsAt
+                ? "Seu teste terminou"
+                : "O teste grátis já foi usado"}
+          </h2>
+          <p className="mt-2 text-lg font-medium text-pretty">
+            {handoffs > 0
+              ? `Este mês, ${handoffs} ${handoffs === 1 ? "cliente pediu" : "clientes pediram"} horário pelo seu link e ${handoffs === 1 ? "foi" : "foram"} para o seu WhatsApp. Com o ${PLAN_NAME}, ${handoffs === 1 ? "ele marcaria sozinho" : "eles marcariam sozinhos"}.`
+              : `Seus clientes ainda pedem horário pelo seu link, mas o pedido vai para o seu WhatsApp. Com o ${PLAN_NAME}, eles marcam sozinhos.`}
           </p>
-          <div id="teste" className="mt-4 scroll-mt-20">
-            {features.trialAvailable ? (
-              <>
-                <p className="mb-3 text-sm text-muted-foreground">
-                  Teste o Agenda ou o Pro por {TRIAL_DAYS} dias, sem cartão. O teste vale uma vez
-                  por conta.
-                </p>
-                <TrialStarter />
-              </>
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                Você já usou o teste grátis. Assine abaixo para liberar tudo na hora.
-              </p>
-            )}
-          </div>
-        </Section>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Agenda, clientes e configurações estão guardados, e os horários já marcados continuam
+            valendo. Assinando, tudo volta na hora: {PRICE_TEXT.summary}.
+          </p>
+          <a
+            href="#assinar"
+            className="mt-4 inline-flex min-h-12 items-center justify-center rounded-xl bg-primary px-6 font-semibold text-primary-foreground"
+          >
+            Assinar o {PLAN_NAME}
+          </a>
+        </section>
       ) : null}
 
       {subscription ? (
@@ -118,22 +115,12 @@ export default async function PlanPage() {
           <dl className="grid grid-cols-[10rem_1fr] gap-y-2 text-sm">
             <dt className="text-muted-foreground">Plano</dt>
             <dd>
-              {PLAN_NAMES[paidPlanOf(subscription.plan) ?? "agenda"]} ·{" "}
-              {subscription.billing_cycle === "yearly" ? "Anual" : "Mensal"} ·{" "}
+              {PLAN_NAME} · {subscription.billing_cycle === "yearly" ? "Anual" : "Mensal"} ·{" "}
               {(subscription.extra_professionals ?? 0) + 1} profissiona
               {(subscription.extra_professionals ?? 0) + 1 === 1 ? "l" : "is"}
             </dd>
             <dt className="text-muted-foreground">Status</dt>
             <dd>{SUBSCRIPTION_STATUS[subscription.status]}</dd>
-            {subscription.pending_plan && subscription.current_period_end ? (
-              <>
-                <dt className="text-muted-foreground">Troca agendada</dt>
-                <dd>
-                  Para o {PLAN_NAMES[subscription.pending_plan]} em{" "}
-                  {date(subscription.current_period_end)}
-                </dd>
-              </>
-            ) : null}
             {subscription.current_period_end ? (
               <>
                 <dt className="text-muted-foreground">
@@ -256,13 +243,8 @@ export default async function PlanPage() {
         </Section>
       ) : null}
 
-      <Section title={active ? "Alterar assinatura" : "Assinar"}>
+      <Section id="assinar" title={active ? "Alterar assinatura" : `Assinar o ${PLAN_NAME}`}>
         <PlanCheckout
-          initialPlan={
-            (active && subscription ? paidPlanOf(subscription.plan) : null) ??
-            features.trialPlan ??
-            "agenda"
-          }
           initialCycle={subscription?.billing_cycle ?? "monthly"}
           initialExtras={active ? (subscription?.extra_professionals ?? 0) : 0}
           activeProfessionals={activeProfessionals ?? 1}

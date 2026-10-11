@@ -23,7 +23,7 @@ export async function EmbedSection() {
         <UpgradeNotice
           features={features}
           title="Agende dentro do seu site"
-          description="Disponível no Pro e no Equipe."
+          description="Disponível no plano Completo."
         />
       ) : (
         <div className="flex flex-col gap-4 text-sm">

@@ -12,7 +12,7 @@ export default async function TermsPage() {
   const brand = await getCurrentBrand();
   const contact = brand.emailFrom.address;
   return (
-    <LegalPage title="Termos de Uso" brandName={brand.name} updatedAt="02/10/2026">
+    <LegalPage title="Termos de Uso" brandName={brand.name} updatedAt="12/10/2026">
       <p>
         Estes Termos regulam o uso do {brand.name}, plataforma de página de apresentação, agenda e
         ferramentas de venda para negócios de serviço com horário marcado. Ao criar uma conta, você
@@ -35,23 +35,22 @@ export default async function TermsPage() {
       <h2>2. Planos e pagamentos</h2>
       <ul>
         <li>
-          O plano Grátis não tem cobrança. Os planos pagos são cobrados de forma recorrente (mensal
-          ou anual) até o cancelamento.
+          Há um único plano, cobrado de forma recorrente (mensal ou anual) até o cancelamento.
         </li>
         <li>
-          O plano Grátis permite 10 agendamentos automáticos a cada 30 dias, contados a partir do
-          cadastro; depois do limite, os pedidos são encaminhados ao WhatsApp do profissional até o
-          ciclo renovar. O teste dos planos Agenda e Pro dura 7 dias, não exige cartão e pode ser
-          usado uma vez por pessoa (e-mail, telefone e CPF/CNPJ). Sem pagamento ao fim do teste, a
-          conta passa para o Grátis, sem perda de dados.
+          Todo cadastro começa com um teste de 14 dias, sem cartão, que pode ser usado uma vez por
+          pessoa (e-mail, telefone e CPF/CNPJ). Sem pagamento ao fim do teste, a conta entra em modo
+          de espera: o link continua no ar e os pedidos dos clientes são encaminhados ao WhatsApp do
+          profissional, sem reserva de horário; o painel fica restrito à assinatura e à conta. Nada é
+          apagado, e os horários já marcados continuam valendo.
         </li>
         <li>
           O cancelamento interrompe as próximas cobranças; o plano continua até o fim do período já
-          pago.
+          pago e, depois, a conta entra em modo de espera.
         </li>
         <li>
-          Pagamentos em atraso por mais de 5 dias fazem a conta voltar ao plano Grátis, sem perda de
-          dados.
+          Pagamentos em atraso por mais de 5 dias fazem a conta entrar em modo de espera, sem perda
+          de dados.
         </li>
       </ul>
       <h2>3. Sinal por Pix</h2>

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { PLATFORM } from "@/brands";
 import { brandThemeStyle } from "@/brands/theme";
 import { NICHE_ICONS, nichesByGroup } from "@/components/sales/niche-cards";
+import { TRIAL_DAYS } from "@/lib/plans";
 
 export const metadata: Metadata = {
   title: { absolute: "Comece grátis · MeetChat" },
@@ -70,7 +71,7 @@ export default function StartPage() {
         ))}
       </div>
       <ul className="mt-10 flex flex-wrap justify-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
-        {["Grátis para sempre", "Sem cartão de crédito", "Cancele quando quiser"].map((item) => (
+        {[`${TRIAL_DAYS} dias grátis`, "Sem cartão de crédito", "Cancele quando quiser"].map((item) => (
           <li key={item} className="flex items-center gap-1.5">
             <CircleCheck className="size-4 text-primary" aria-hidden />
             {item}

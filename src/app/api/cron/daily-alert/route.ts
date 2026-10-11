@@ -4,7 +4,7 @@ import { addDaysToDate } from "@/lib/availability";
 import { cronRoute } from "@/lib/cron";
 import type { Business } from "@/lib/db/types";
 import { claimNotification, notifyTeam } from "@/lib/notifications/owner";
-import { getPlanFeatures } from "@/lib/plans";
+import { getPlanFeatures, PLAN_NAME } from "@/lib/plans";
 import { displayCount } from "@/lib/stats";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -44,11 +44,11 @@ export const POST = cronRoute(async () => {
         heading: "Quiseram agendar fora do horário",
         paragraphs: [
           `${people} clicaram para agendar ontem enquanto você estava fora do horário de atendimento.`,
-          features.limitedBookings
-            ? "No Agenda, os agendamentos automáticos são ilimitados: ninguém fica sem horário, mesmo com você fechada."
+          !features.active
+            ? `Com o ${PLAN_NAME}, elas escolhem um horário livre sozinhas, mesmo com você fechada.`
             : "Com o chat de agendamento, elas puderam escolher um horário livre sozinhas.",
         ],
-        cta: !features.limitedBookings
+        cta: features.active
           ? { label: "Ver agenda", url: "/painel/agenda" }
           : { label: "Assinar", url: "/painel/plano" },
       },

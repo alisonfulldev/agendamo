@@ -41,7 +41,6 @@ export function nicheHomeContent(brand: BrandConfig): HomeContent {
     },
     intro: seo.intro,
     steps: HOME.steps,
-    tryIt: HOME.tryIt,
     reminders: {
       title: HOME.reminders.title,
       text: withCustomerTerm(HOME.reminders.text, brand),

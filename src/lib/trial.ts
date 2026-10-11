@@ -3,8 +3,7 @@ import "server-only";
 import { createHash } from "node:crypto";
 
 import { audit } from "@/lib/audit";
-import { invalidatePublicPage } from "@/lib/cache";
-import type { Business, PaidPlan } from "@/lib/db/types";
+import type { Business } from "@/lib/db/types";
 import { normalizeBrPhone } from "@/lib/phone";
 import { getPlanFeatures, TRIAL_DAYS } from "@/lib/plans";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -65,27 +64,25 @@ export async function recordTrialClaims(businessId: string, identity: TrialIdent
 }
 
 export type StartTrialResult =
-  | { ok: true; endsAt: string }
-  | { ok: false; error: "used" | "subscribed" };
+  { ok: true; endsAt: string } | { ok: false; error: "used" | "subscribed" };
 
 /**
- * Starts the 7-day trial of Agenda or Pro: only once per account and per person (e-mail, phone
- * and CPF/CNPJ when informed). No card. When it ends without payment the account is on Grátis.
+ * Starts the 14-day trial of Completo: only once per account and per person (e-mail, phone and
+ * CPF/CNPJ when informed). No card. When it ends without payment the account is in waiting mode.
  */
 export async function startTrial(input: {
-  business: Pick<Business, "id" | "slug" | "plan" | "trial_started_at" | "trial_ends_at"> & {
-    trial_plan?: Business["trial_plan"];
-  };
-  plan: PaidPlan;
+  business: Pick<Business, "id" | "slug" | "plan" | "trial_started_at" | "trial_ends_at">;
   identity: TrialIdentity;
   userId: string | null;
-  via: "signup" | "panel";
+  via: "signup";
   now?: Date;
 }): Promise<StartTrialResult> {
   const now = input.now ?? new Date();
   const features = getPlanFeatures(input.business, now);
   if (features.subscribed) return { ok: false, error: "subscribed" };
-  if (!features.trialAvailable) return { ok: false, error: "used" };
+  if (input.business.trial_started_at || input.business.trial_ends_at) {
+    return { ok: false, error: "used" };
+  }
   if (await trialAlreadyUsed(input.identity)) return { ok: false, error: "used" };
 
   const endsAt = new Date(now.getTime() + TRIAL_DAYS * 86_400_000).toISOString();
@@ -93,20 +90,21 @@ export async function startTrial(input: {
   // Only an account that never had a trial (checked again in the update itself).
   const { data, error } = await admin
     .from("businesses")
-    .update({ trial_plan: input.plan, trial_started_at: now.toISOString(), trial_ends_at: endsAt })
+    .update({ trial_started_at: now.toISOString(), trial_ends_at: endsAt })
     .eq("id", input.business.id)
     .is("trial_started_at", null)
     .select("id");
   if (error) throw new Error(`start trial failed: ${error.message}`);
   if (!data?.length) return { ok: false, error: "used" };
 
+  // No cache invalidation: the public page reads the plan fields fresh on every request, and a
+  // revalidation here would re-render the panel in the middle of the sign-up.
   await recordTrialClaims(input.business.id, input.identity);
-  invalidatePublicPage(input.business.slug);
   await audit({
     businessId: input.business.id,
     userId: input.userId,
     action: "plan.trial_started",
-    details: { plan: input.plan, via: input.via, ends_at: endsAt },
+    details: { via: input.via, ends_at: endsAt },
   });
   return { ok: true, endsAt };
 }

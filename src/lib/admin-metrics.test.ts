@@ -4,29 +4,18 @@ import { computeDepositMetrics, computeMetrics, monthlyRevenue, weekOf } from "@
 
 describe("monthlyRevenue", () => {
   it("uses the plan's price, normalizes yearly plans and adds active add-ons", () => {
+    const sub = {
+      plan: "complete" as const,
+      billing_cycle: "monthly" as const,
+      status: "active" as const,
+      addons: {},
+      extra_professionals: 0,
+    };
+    expect(monthlyRevenue(sub)).toBe(2990);
+    expect(monthlyRevenue({ ...sub, billing_cycle: "yearly" })).toBe(2490);
     expect(
       monthlyRevenue({
-        plan: "agenda",
-        billing_cycle: "monthly",
-        status: "active",
-        addons: {},
-        extra_professionals: 0,
-      }),
-    ).toBe(1990);
-    expect(
-      monthlyRevenue({
-        plan: "pro",
-        billing_cycle: "yearly",
-        status: "active",
-        addons: {},
-        extra_professionals: 0,
-      }),
-    ).toBe(2990);
-    expect(
-      monthlyRevenue({
-        plan: "agenda",
-        billing_cycle: "monthly",
-        status: "active",
+        ...sub,
         extra_professionals: 2,
         addons: {
           featured: [
@@ -35,26 +24,20 @@ describe("monthlyRevenue", () => {
           ],
         },
       }),
-    ).toBe(1990 + 2 * 900 + 4900);
-    expect(
-      monthlyRevenue({
-        plan: "agenda",
-        billing_cycle: "monthly",
-        status: "cancelled",
-        addons: {},
-        extra_professionals: 0,
-      }),
-    ).toBe(0);
+    ).toBe(2990 + 2 * 900 + 4900);
+    expect(monthlyRevenue({ ...sub, status: "cancelled" })).toBe(0);
   });
 });
 
 describe("computeMetrics", () => {
   const now = new Date("2030-01-16T12:00:00Z"); // Wednesday
-  const base = {
-    trial_plan: null,
-    trial_started_at: null,
-    trial_ends_at: null,
-    signup_choice: null,
+  const base = { trial_started_at: null, trial_ends_at: null };
+  const activeSub = {
+    plan: "complete" as const,
+    billing_cycle: "monthly" as const,
+    status: "active" as const,
+    addons: {},
+    extra_professionals: 0,
   };
 
   it("counts signups per week, trials, subscribers and MRR", () => {
@@ -65,29 +48,12 @@ describe("computeMetrics", () => {
           id: "a",
           plan: "free",
           created_at: "2030-01-14T10:00:00Z",
-          trial_plan: "agenda",
           trial_started_at: "2030-01-14T10:00:00Z",
-          trial_ends_at: "2030-01-21T10:00:00Z",
-          signup_choice: "trial_agenda",
+          trial_ends_at: "2030-01-28T10:00:00Z",
         },
-        {
-          ...base,
-          id: "b",
-          plan: "agenda",
-          created_at: "2030-01-08T10:00:00Z",
-          signup_choice: "free",
-        },
+        { ...base, id: "b", plan: "complete", created_at: "2030-01-08T10:00:00Z" },
       ],
-      [
-        {
-          business_id: "b",
-          plan: "agenda",
-          billing_cycle: "monthly",
-          status: "active",
-          addons: {},
-          extra_professionals: 0,
-        },
-      ],
+      [{ ...activeSub, business_id: "b" }],
       new Set(["a"]),
       now,
       2,
@@ -103,66 +69,50 @@ describe("computeMetrics", () => {
       trials: 1,
       activeTrials: 1,
       subscribers: 1,
-      mrrCents: 1990,
-      signupsByChoice: { free: 1, trialAgenda: 1, trialPro: 0 },
+      mrrCents: 2990,
+      waiting: 0,
     });
   });
 
-  it("trial conversion per plan, accounts that fell to Grátis and upgrades", () => {
-    const ended = "2030-01-10T00:00:00Z";
+  it("trial conversion and accounts in waiting mode", () => {
+    const started = "2029-12-20T00:00:00Z";
+    const ended = "2030-01-03T00:00:00Z";
     const metrics = computeMetrics(
       [
-        // Pro trial ended without paying: fell to Grátis.
+        // Trial ended without paying: waiting mode.
         {
-          ...base,
           id: "a",
           plan: "free",
-          created_at: ended,
-          trial_plan: "pro",
+          created_at: started,
+          trial_started_at: started,
           trial_ends_at: ended,
         },
-        // Pro trial converted.
+        // Trial converted.
         {
-          ...base,
           id: "b",
-          plan: "pro",
-          created_at: ended,
-          trial_plan: "pro",
+          plan: "complete",
+          created_at: started,
+          trial_started_at: started,
           trial_ends_at: ended,
         },
-        // Agenda trial still running: not finished yet.
+        // Trial still running: not finished yet.
         {
-          ...base,
           id: "c",
           plan: "free",
-          created_at: ended,
-          trial_plan: "agenda",
-          trial_ends_at: "2030-01-20T00:00:00Z",
+          created_at: started,
+          trial_started_at: "2030-01-10T00:00:00Z",
+          trial_ends_at: "2030-01-24T00:00:00Z",
         },
-        // Cancelled subscription, back on Grátis.
-        { ...base, id: "d", plan: "free", created_at: ended },
+        // Subscription ended without payment (no trial): waiting mode too.
+        { ...base, id: "d", plan: "free", created_at: started },
       ],
-      [
-        {
-          business_id: "d",
-          plan: "agenda",
-          billing_cycle: "monthly",
-          status: "cancelled",
-          addons: {},
-          extra_professionals: 0,
-        },
-      ],
+      [{ ...activeSub, business_id: "d", status: "cancelled" }],
       new Set(),
       now,
       2,
-      new Set(["b"]),
     );
-    expect(metrics.trialConversion).toEqual({
-      agenda: { finished: 0, paid: 0 },
-      pro: { finished: 2, paid: 1 },
-    });
-    expect(metrics.fellToFree).toBe(2);
-    expect(metrics.upgrades).toBe(1);
+    expect(metrics.trialConversion).toEqual({ finished: 2, paid: 1 });
+    expect(metrics.waiting).toBe(2);
   });
 });
 

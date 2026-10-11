@@ -30,13 +30,8 @@ const PANEL_PATHS = [
   "/painel/conta",
 ];
 
-const OWNERS = [
-  "dona.beleza@demo.com",
-  "dono.barbearia@demo.com",
-  "dona.estetica@demo.com",
-  "psi@demo.com",
-  "fisio@demo.com",
-];
+// Barbearia Navalha is in waiting mode (its own test below).
+const OWNERS = ["dona.beleza@demo.com", "dona.estetica@demo.com", "psi@demo.com", "fisio@demo.com"];
 
 function watchErrors(page: Page): string[] {
   const errors: string[] = [];
@@ -82,6 +77,13 @@ test("staff member sees the panel", async ({ page }) => {
   for (const path of ["/painel", "/painel/agenda", "/painel/clientes", "/painel/conta"]) {
     await visit(page, path, errors);
   }
+});
+
+test("waiting mode: only the subscription and the account open", async ({ page }) => {
+  const errors = watchErrors(page);
+  await signInAs(page, "dono.barbearia@demo.com");
+  await expect(page).toHaveURL(/\/painel\/plano/);
+  for (const path of ["/painel/plano", "/painel/conta"]) await visit(page, path, errors);
 });
 
 test("admin and new account", async ({ page }) => {

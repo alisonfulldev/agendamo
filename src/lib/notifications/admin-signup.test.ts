@@ -16,6 +16,7 @@ const signup = {
   whatsapp: null,
   pageUrl: "https://meetchat.com.br/barbearia-do-ze",
   via: "conversa" as const,
+  trial: "started" as const,
 };
 
 describe("notifyAdminsOfSignup", () => {
@@ -36,6 +37,7 @@ describe("notifyAdminsOfSignup", () => {
         { label: "E-mail", value: "ze@gmail.com" },
         { label: "WhatsApp", value: "Não informado" },
         { label: "Link", value: signup.pageUrl },
+        { label: "Teste", value: "14 dias do Completo" },
       ]),
     );
   });

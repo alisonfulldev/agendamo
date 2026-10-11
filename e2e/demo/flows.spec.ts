@@ -27,7 +27,7 @@ const unique = () => Date.now().toString(36);
 async function setPlan(
   page: Page,
   business: string,
-  label: "Grátis" | "Teste do Agenda" | "Teste do Pro" | "Agenda" | "Pro" | "Teste encerrado",
+  label: "Teste do Completo" | "Assinante" | "Modo de espera",
 ) {
   await page.goto("/demo#planos");
   await page
@@ -59,7 +59,8 @@ test("sign up, confirm by the e-mail link and reach the business wizard", async 
   await page.getByLabel("Seu link").fill(slug);
   await expect(page.getByText("Disponível!")).toBeVisible();
   await page.getByRole("button", { name: "Continuar" }).click();
-  await page.getByLabel("WhatsApp").fill("11999998888");
+  // A new phone each run (one trial per person).
+  await page.getByLabel("WhatsApp").fill(`119${Date.now().toString().slice(-8)}`);
   await page.getByLabel("Cidade").fill("São Paulo");
   await page.getByRole("button", { name: "Continuar" }).click();
   await page.locator("button", { hasText: /^\+ / }).first().click();
@@ -158,7 +159,7 @@ test("“Outro / Geral”: neutral chat and profile, and the owner can change th
 
 test("book through the chat: customer and owner get e-mails", async ({ page }) => {
   const email = `cliente-${unique()}@exemplo.com`;
-  await setPlan(page, "Studio Bela", "Pro");
+  await setPlan(page, "Studio Bela", "Assinante");
   await page.goto("/studio-bela?brand=beauty");
   await page
     .getByRole("button", { name: /Manicure/ })
@@ -210,7 +211,7 @@ test("book through the chat: customer and owner get e-mails", async ({ page }) =
 test("right after booking, the chat offers to book the next visit in two taps", async ({
   page,
 }) => {
-  await setPlan(page, "Studio Bela", "Pro");
+  await setPlan(page, "Studio Bela", "Assinante");
   await page.goto("/studio-bela?brand=beauty");
   await page
     .getByRole("button", { name: /Manicure/ })
@@ -254,7 +255,7 @@ test("right after booking, the chat offers to book the next visit in two taps", 
 test("owner reschedules: the panel offers a ready WhatsApp message to tell the customer", async ({
   page,
 }) => {
-  await setPlan(page, "Studio Bela", "Pro");
+  await setPlan(page, "Studio Bela", "Assinante");
   const customer = `Remarcar ${unique()}`;
   await page.goto("/studio-bela?brand=beauty");
   await page
@@ -322,15 +323,8 @@ test("owner reschedules: the panel offers a ready WhatsApp message to tell the c
   );
 });
 
-test("Grátis past its 10 bookings: the chat collects service, day and period for WhatsApp", async ({
-  page,
-}) => {
-  await setPlan(page, "Barbearia Navalha", "Teste encerrado");
-  await page
-    .locator("#planos form", { hasText: "Barbearia Navalha" })
-    .getByRole("button", { name: "Usar os 10 do Grátis" })
-    .click();
-  await page.waitForURL(/ok=ciclo/);
+test("waiting mode: the chat collects service, day and period for WhatsApp", async ({ page }) => {
+  await setPlan(page, "Barbearia Navalha", "Modo de espera");
   await page.goto("/barbearia-navalha?brand=barber");
   await page.getByRole("button", { name: "Corte", exact: true }).click();
   await page
@@ -345,7 +339,7 @@ test("Grátis past its 10 bookings: the chat collects service, day and period fo
   await page.getByRole("button", { name: "Sem recado" }).click();
   const send = page.getByRole("link", { name: "Enviar pelo WhatsApp" });
   await expect(send).toHaveAttribute("href", /wa\.me\/55\d+\?text=.*Corte.*Turno.*Tarde/);
-  // Every plan shows the MeetChat badge under the chat.
+  // Waiting mode shows the MeetChat badge under the chat.
   await expect(
     page.getByRole("link", { name: /Agende também com o MeetChat/ }).first(),
   ).toBeVisible();
@@ -354,15 +348,16 @@ test("Grátis past its 10 bookings: the chat collects service, day and period fo
 test("own checkout: Pix QR inside the panel, the payment activates the subscription", async ({
   page,
 }) => {
-  await setPlan(page, "Barbearia Navalha", "Teste encerrado");
+  await setPlan(page, "Barbearia Navalha", "Modo de espera");
   await page.goto("/demo");
   await page
     .locator("form", { hasText: "dono.barbearia@demo.com" })
     .getByRole("button", { name: "Entrar" })
     .click();
-  // On Grátis the panel stays open; the plan screen is one tap away.
-  await page.waitForURL(/\/painel/);
-  await page.goto("/painel/plano");
+  // Waiting mode: the panel opens only the subscription screen.
+  await page.waitForURL(/\/painel\/plano/);
+  await page.goto("/painel/agenda");
+  await expect(page).toHaveURL(/\/painel\/plano/);
   await page.getByLabel(/Nome ou razão social/).fill("Barbearia Navalha LTDA");
   await page.getByLabel("CPF ou CNPJ").fill("529.982.247-25");
   await page.getByRole("button", { name: /^Gerar Pix de/ }).click();

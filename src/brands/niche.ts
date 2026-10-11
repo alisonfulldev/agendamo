@@ -87,8 +87,7 @@ export function nicheBrand<T extends NicheBrandInput>(input: T) {
       : "Obrigado, {customerName}! Seu horário está confirmado.",
     emailNote: "A confirmação foi enviada por e-mail.",
     successPending: "Recebemos seu pedido. {business} vai confirmar seu horário.",
-    successDeposit:
-      "Seu horário está reservado! Falta só o pagamento pelo Pix:",
+    successDeposit: "Seu horário está reservado! Falta só o pagamento pelo Pix:",
     conflict: "Esse horário acabou de ser ocupado. Veja os horários atualizados:",
     blocked:
       "No momento não conseguimos concluir o agendamento por aqui. Fale direto com {business} pelo WhatsApp.",
@@ -128,7 +127,7 @@ export function nicheBrand<T extends NicheBrandInput>(input: T) {
         },
         {
           title: "Sinal no agendamento",
-          description: "No plano Pro: sinal ou valor total pelo Pix, com comprovante no chat.",
+          description: "Sinal ou valor total pelo Pix, com comprovante no chat.",
         },
         {
           title: "Financeiro simples",

@@ -8,13 +8,11 @@ import { CopyTextButton } from "@/components/panel/copy-text-button";
 import { InstallGuide } from "@/components/panel/install-guide";
 import { PageHeader } from "@/components/panel/page-header";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import { localToUtc, todayIn } from "@/lib/availability";
 import { loadCatalog } from "@/lib/booking/data";
 import { freeTimesOn } from "@/lib/booking/free-times";
 import { requireBusiness } from "@/lib/business/context";
-import { getBookingAllowance } from "@/lib/plan-usage";
-import { allowanceText, renewsText, trialCounter } from "@/lib/plan-text";
+import { trialCounter } from "@/lib/plan-text";
 import { getPlanFeatures, planLabel } from "@/lib/plans";
 import { freeSlotsMessage, listTimes } from "@/lib/sales/free-slots";
 import { TOUR_TEXT } from "@/content/tour";
@@ -101,7 +99,6 @@ export default async function PanelHomePage({ searchParams }: PageProps<"/painel
     ];
   }
   const doneCount = steps.filter((s) => s.done).length;
-  const allowance = await getBookingAllowance(business);
   const { count: receiptsToCheck = 0 } = isOwner
     ? await createAdminClient()
         .from("appointments")
@@ -166,37 +163,6 @@ export default async function PanelHomePage({ searchParams }: PageProps<"/painel
           </span>
           <span className="font-medium text-primary">Conferir</span>
         </Link>
-      ) : null}
-      {allowance.limited && isOwner ? (
-        <section
-          aria-labelledby="plano-gratis"
-          className="flex flex-col gap-3 rounded-xl border bg-card p-5"
-        >
-          <div>
-            <h2 id="plano-gratis" className="font-semibold">
-              Plano Grátis: {allowanceText(allowance)}
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              {allowance.remaining > 0
-                ? `O limite ${renewsText(allowance)}. Depois dos ${allowance.limit}, os pedidos chegam pelo seu WhatsApp.`
-                : `Limite atingido: até o limite renovar (${renewsText(allowance).replace("renova em ", "")}), seu chat passa os pedidos para o seu WhatsApp.`}
-            </p>
-          </div>
-          <Progress
-            value={(allowance.used / allowance.limit) * 100}
-            aria-label="Uso do plano Grátis"
-          />
-          <div className="flex flex-wrap gap-2">
-            <Button asChild>
-              <Link href="/painel/plano">Agendamentos ilimitados</Link>
-            </Button>
-            {features.trialAvailable ? (
-              <Button asChild variant="outline">
-                <Link href="/painel/plano#teste">Testar 7 dias grátis</Link>
-              </Button>
-            ) : null}
-          </div>
-        </section>
       ) : null}
       {senha === "alterada" ? (
         <p role="status" className="rounded-lg bg-accent px-3 py-2 text-sm text-accent-foreground">

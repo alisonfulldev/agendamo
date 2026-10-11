@@ -1,5 +1,3 @@
-import type { LockedFeature } from "@/lib/plans";
-
 export type NavGroup = "main" | "business" | "setup" | "account";
 
 export interface NavItem {
@@ -11,15 +9,17 @@ export interface NavItem {
   group: NavGroup;
   /** Short note in the phone's "Mais" list. */
   hint?: string;
-  /** Paid feature: on the Grátis plan the item shows a lock and opens the subscription modal. */
-  feature?: LockedFeature;
+  /** Shown only while the Pix deposit is on (DEPOSITS_ENABLED). */
+  deposits?: boolean;
+  /** Stays in the menu in waiting mode (subscription and account). */
+  waiting?: boolean;
 }
 
 export const PANEL_NAV: NavItem[] = [
   { href: "/painel", label: "Início", group: "main" },
   { href: "/painel/agenda", label: "Agenda", staff: true, group: "main" },
-  { href: "/painel/clientes", label: "Clientes", staff: true, group: "main", feature: "customers" },
-  { href: "/painel/financeiro", label: "Financeiro", group: "main", feature: "finance" },
+  { href: "/painel/clientes", label: "Clientes", staff: true, group: "main" },
+  { href: "/painel/financeiro", label: "Financeiro", group: "main" },
   {
     href: "/painel/pagina",
     label: "Meu perfil",
@@ -31,35 +31,33 @@ export const PANEL_NAV: NavItem[] = [
     label: "Vendas",
     group: "business",
     hint: "Artes, cupons e pacotes",
-    feature: "salesTools",
   },
   {
     href: "/painel/sinais",
     label: "Sinais pelo Pix",
     group: "business",
     hint: "Comprovantes para conferir",
-    feature: "deposits",
+    deposits: true,
   },
-  { href: "/painel/avaliacoes", label: "Avaliações", group: "business", feature: "reviews" },
-  { href: "/painel/estatisticas", label: "Estatísticas", group: "business", feature: "stats" },
-  { href: "/painel/radar", label: "Radar de demanda", group: "business", feature: "stats" },
+  { href: "/painel/avaliacoes", label: "Avaliações", group: "business" },
+  { href: "/painel/estatisticas", label: "Estatísticas", group: "business" },
+  { href: "/painel/radar", label: "Radar de demanda", group: "business" },
   {
     href: "/painel/configuracoes",
     label: "Configurações",
     group: "setup",
     hint: "Horários de atendimento e regras",
   },
-  { href: "/painel/equipe", label: "Equipe", group: "setup", feature: "anyProfessional" },
+  { href: "/painel/equipe", label: "Equipe", group: "setup" },
   {
     href: "/painel/integracoes",
     label: "Integrações",
     group: "setup",
     hint: "Google Agenda",
-    feature: "googleCalendar",
   },
   { href: "/painel/notificacoes", label: "Notificações", staff: true, group: "setup" },
-  { href: "/painel/plano", label: "Assinatura", group: "account" },
-  { href: "/painel/conta", label: "Conta", staff: true, group: "account" },
+  { href: "/painel/plano", label: "Assinatura", group: "account", waiting: true },
+  { href: "/painel/conta", label: "Conta", staff: true, group: "account", waiting: true },
 ];
 
 export const NAV_GROUP_LABELS: Record<Exclude<NavGroup, "main">, string> = {
@@ -68,9 +66,18 @@ export const NAV_GROUP_LABELS: Record<Exclude<NavGroup, "main">, string> = {
   account: "Conta",
 };
 
+export interface NavOptions {
+  isOwner: boolean;
+  /** Waiting mode: only the subscription and the account. */
+  waiting: boolean;
+  deposits: boolean;
+}
+
 /** Menu items for this person: staff see fewer (owner-only items are hidden). */
-export function visibleNav(isOwner: boolean): NavItem[] {
-  return PANEL_NAV.filter((item) => isOwner || item.staff);
+export function visibleNav({ isOwner, waiting, deposits }: NavOptions): NavItem[] {
+  return PANEL_NAV.filter(
+    (item) => (isOwner || item.staff) && (!waiting || item.waiting) && (deposits || !item.deposits),
+  );
 }
 
 /** Tutorial target of a menu item: "nav-agenda", "nav-configuracoes"… ("nav-inicio" for /painel). */

@@ -10,6 +10,8 @@ export const PAGE_EVENT_TYPES = [
   "request_sent",
   "booking_started",
   "booking_confirmed",
+  /** Waiting mode: the chat sent the customer to the owner's WhatsApp with the request. */
+  "handoff_sent",
 ] as const;
 
 export type PageEventType = (typeof PAGE_EVENT_TYPES)[number];

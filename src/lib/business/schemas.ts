@@ -81,8 +81,6 @@ export const onboardingSchema = z.object({
   neighborhood: optionalText(80),
   services: z.array(serviceDraftSchema).min(1, "Cadastre pelo menos 1 serviço").max(30),
   hours: weeklyHoursSchema,
-  /** How the account starts: Grátis, or a 7-day trial of Agenda or Pro. */
-  planChoice: z.enum(["free", "trial_agenda", "trial_pro"]).default("free"),
 });
 
 export type OnboardingInput = z.input<typeof onboardingSchema>;

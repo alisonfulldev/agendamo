@@ -430,7 +430,7 @@ export function BookingChat({
       } else if (result.error === "blocked") {
         setState((s) => ({ ...s, step: "blocked" }));
       } else if (result.error === "limit") {
-        // Grátis plan out of bookings for this cycle: reopen in the WhatsApp hand-off mode.
+        // The trial or subscription ended meanwhile: reopen in the WhatsApp hand-off mode.
         window.location.reload();
       } else if (result.error === "coupon_invalid") {
         setState((s) => ({ ...s, couponCode: null, discountCents: 0 }));

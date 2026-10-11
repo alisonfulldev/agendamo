@@ -368,7 +368,10 @@ export async function notifyReceiptReceived(appointmentId: string): Promise<void
 }
 
 /** Still not checked after N hours: reminder to the team (once per N). */
-export async function notifyReceiptReminder(appointmentId: string, hours: number): Promise<boolean> {
+export async function notifyReceiptReminder(
+  appointmentId: string,
+  hours: number,
+): Promise<boolean> {
   const d = await loadAppointmentDetails(appointmentId);
   if (!d || d.appointment.deposit_status !== "sent") return false;
   if (!(await claimNotification(d.business.id, `deposit_reminder_${hours}h`, d.appointment.id)))

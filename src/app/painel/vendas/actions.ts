@@ -13,7 +13,7 @@ type Result = { ok: boolean; message?: string };
 async function requireSales(): Promise<BusinessContext> {
   const context = await requireOwner();
   if (!getPlanFeatures(context.business).salesTools)
-    throw new Error("Ferramentas de venda estão no Pro e no Equipe.");
+    throw new Error("Ferramentas de venda estão no plano Completo.");
   return context;
 }
 

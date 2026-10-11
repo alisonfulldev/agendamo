@@ -247,7 +247,7 @@ export function HandoffChat({
                       )}
                       target="_blank"
                       rel="noopener noreferrer"
-                      data-track="click_whatsapp"
+                      data-track="handoff_sent"
                       className={linkClass}
                     >
                       <MessageCircle className="size-4" /> Combinar pelo WhatsApp
@@ -315,7 +315,7 @@ export function HandoffChat({
                     href={whatsappLink(whatsapp!, whatsappText)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    data-track="click_whatsapp"
+                    data-track="handoff_sent"
                     onClick={() => {
                       setHistory((h) => [...h, "send"]);
                       setSent(true);
