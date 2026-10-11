@@ -345,6 +345,60 @@ function receiptLine(d: AppointmentDetails): string {
   return `${d.customer.name.split(" ")[0]} enviou comprovante de R$ ${priceText(d.appointment.deposit_cents)} para ${serviceNames(d)} em ${formatDateLong(d.appointment.starts_at, d.business.timezone)} às ${formatTime(d.appointment.starts_at, d.business.timezone)}. Confira no seu banco.`;
 }
 
+/** "Procure R$ {valor} no seu extrato: Pix de {cliente} para {serviço} em {data} às {hora}." */
+function pixLine(d: AppointmentDetails): string {
+  return `Procure R$ ${priceText(d.appointment.deposit_cents)} no seu extrato: Pix de ${d.customer.name.split(" ")[0]} para ${serviceNames(d)} em ${formatDateLong(d.appointment.starts_at, d.business.timezone)} às ${formatTime(d.appointment.starts_at, d.business.timezone)}.`;
+}
+
+/** "Já fiz o Pix" (no receipt): e-mail and push to the team, with the exact amount to look for. */
+export async function notifyPixDeclared(appointmentId: string): Promise<void> {
+  const d = await loadAppointmentDetails(appointmentId);
+  if (!d) return;
+  await notifyTeam({
+    businessId: d.business.id,
+    type: "deposit_informed",
+    professionalId: d.professional.id,
+    subject: `Pix de R$ ${priceText(d.appointment.deposit_cents)} para conferir`,
+    content: {
+      heading: `${d.customer.name.split(" ")[0]} avisou que fez o Pix`,
+      paragraphs: [
+        pixLine(d),
+        "O horário fica reservado até você conferir. Marque “Recebi” ou “Não recebi” no painel.",
+      ],
+      details: detailLines(d),
+      cta: { label: "Conferir Pix", url: "/painel/sinais" },
+    },
+    push: { title: "Pix para conferir", body: pixLine(d), url: "/painel/sinais" },
+  });
+}
+
+/** Less than 2 hours to the appointment and the Pix is still not checked (once). */
+export async function notifyPixDueSoon(appointmentId: string): Promise<boolean> {
+  const d = await loadAppointmentDetails(appointmentId);
+  if (!d || d.appointment.deposit_status !== "sent") return false;
+  if (!(await claimNotification(d.business.id, "deposit_due_soon", d.appointment.id))) return false;
+  await notifyTeam({
+    businessId: d.business.id,
+    type: "deposit_informed",
+    professionalId: d.professional.id,
+    subject: "Atendimento em menos de 2 horas com Pix sem conferir",
+    content: {
+      heading: "Confira o Pix antes do atendimento",
+      paragraphs: [
+        pixLine(d),
+        "O horário continua marcado. Se não achar o Pix, combine com o cliente ou marque “Não recebi” no painel.",
+      ],
+      cta: { label: "Conferir agora", url: "/painel/sinais" },
+    },
+    push: {
+      title: "Pix sem conferir: atendimento em breve",
+      body: pixLine(d),
+      url: "/painel/sinais",
+    },
+  });
+  return true;
+}
+
 /** A valid receipt arrived: e-mail and push to the team (the time stays pre-confirmed). */
 export async function notifyReceiptReceived(appointmentId: string): Promise<void> {
   const d = await loadAppointmentDetails(appointmentId);
@@ -380,18 +434,18 @@ export async function notifyReceiptReminder(
     businessId: d.business.id,
     type: "deposit_informed",
     professionalId: d.professional.id,
-    subject: `Comprovante esperando conferência há ${hours} horas`,
+    subject: `Pix esperando conferência há ${hours} horas`,
     content: {
-      heading: "Tem um comprovante esperando você",
+      heading: "Tem um Pix esperando você conferir",
       paragraphs: [
-        receiptLine(d),
-        "Enquanto você não confere, o horário continua pré-confirmado e bloqueado.",
+        pixLine(d),
+        "Enquanto você não confere, o horário continua reservado e bloqueado.",
       ],
       cta: { label: "Conferir agora", url: "/painel/sinais" },
     },
     push: {
-      title: "Comprovante esperando conferência",
-      body: receiptLine(d),
+      title: "Pix esperando conferência",
+      body: pixLine(d),
       url: "/painel/sinais",
     },
   });

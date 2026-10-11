@@ -3,7 +3,12 @@ import "server-only";
 import { createHash, randomBytes } from "node:crypto";
 
 import { cancelAppointment, confirmDeposit } from "@/lib/booking/manage";
-import { notifyReceiptReceived, notifyReceiptReminder } from "@/lib/booking/notify";
+import {
+  notifyPixDeclared,
+  notifyPixDueSoon,
+  notifyReceiptReceived,
+  notifyReceiptReminder,
+} from "@/lib/booking/notify";
 import type { Appointment, DepositReceipt } from "@/lib/db/types";
 import { rateLimit } from "@/lib/rate-limit";
 import { createPrivateUploadUrl, deleteObject, readObject } from "@/lib/storage/r2";
@@ -23,6 +28,7 @@ export const RECEIPT_MAX_ATTEMPTS = 5;
 export const RECEIPT_KEEP_DAYS = 30;
 
 type ReceiptError =
+  | "receipt_required"
   | "invalid"
   | "expired"
   | "not_waiting"
@@ -51,8 +57,49 @@ function stillWaiting(appointment: Appointment, now: Date): ReceiptError | null 
   return null;
 }
 
+/** A receipt can be attached while waiting, or after "Já fiz o Pix" until the owner decides. */
+function canAttach(appointment: Appointment, now: Date): ReceiptError | null {
+  if (appointment.status === "pending" && appointment.deposit_status === "sent") return null;
+  return stillWaiting(appointment, now);
+}
+
 /**
- * Step 1 ("Já paguei, enviar comprovante"): a presigned PUT (5 minutes) for a random key
+ * "Já fiz o Pix" (the receipt is optional): the time stays reserved, never confirmed, until the
+ * owner finds the unique-cents amount in the bank. A customer marked "Não recebi" before must
+ * attach the receipt instead.
+ */
+export async function declarePaid(input: {
+  token: string;
+  now?: Date;
+}): Promise<{ ok: true } | { ok: false; error: ReceiptError }> {
+  const now = input.now ?? new Date();
+  const appointment = await appointmentByToken(input.token);
+  if (!appointment) return { ok: false, error: "invalid" };
+  const waiting = stillWaiting(appointment, now);
+  if (waiting) return { ok: false, error: waiting };
+  const admin = createAdminClient();
+  if (appointment.customer_id) {
+    const { data: customer } = await admin
+      .from("customers")
+      .select("deposit_receipt_required")
+      .eq("id", appointment.customer_id)
+      .maybeSingle();
+    if (customer?.deposit_receipt_required) return { ok: false, error: "receipt_required" };
+  }
+  const { data: moved } = await admin
+    .from("appointments")
+    .update({ status: "pending", deposit_status: "sent", deposit_sent_at: now.toISOString() })
+    .eq("id", appointment.id)
+    .eq("status", "awaiting_deposit")
+    .eq("deposit_status", "waiting")
+    .select("id");
+  if (!moved?.length) return { ok: false, error: "not_waiting" };
+  await notifyPixDeclared(appointment.id);
+  return { ok: true };
+}
+
+/**
+ * Receipt step 1 ("Anexar comprovante", optional): a presigned PUT (5 minutes) for a random key
  * receipts/<128-bit hex>.<ext>. Nothing about the business or the appointment is in the key.
  */
 export async function signReceiptUpload(input: {
@@ -68,7 +115,7 @@ export async function signReceiptUpload(input: {
     return { ok: false, error: "invalid_file" };
   const appointment = await appointmentByToken(input.token);
   if (!appointment) return { ok: false, error: "invalid" };
-  const waiting = stillWaiting(appointment, now);
+  const waiting = canAttach(appointment, now);
   if (waiting) return { ok: false, error: waiting };
   if (!(await rateLimit("receipt", `appt:${appointment.id}`, input.ipKey)))
     return { ok: false, error: "rate_limited" };
@@ -129,7 +176,7 @@ export async function confirmReceipt(input: {
       .eq("id", receipt.id);
   };
 
-  const waiting = stillWaiting(appointment, now);
+  const waiting = canAttach(appointment, now);
   if (waiting) {
     await discard("invalid");
     return { ok: false, error: waiting };
@@ -160,6 +207,12 @@ export async function confirmReceipt(input: {
     throw new Error("receipt update failed");
   }
 
+  // Attached after "Já fiz o Pix": the time is already reserved; the owner gets the file.
+  if (appointment.deposit_status === "sent") {
+    await notifyReceiptReceived(appointment.id);
+    return { ok: true };
+  }
+
   // Pre-confirmed: the time stays blocked until the professional decides (never automatic).
   const { data: moved } = await admin
     .from("appointments")
@@ -185,7 +238,7 @@ export async function decideDeposit(input: {
   const admin = createAdminClient();
   const { data } = await admin
     .from("appointments")
-    .select("id, business_id, deposit_status")
+    .select("id, business_id, customer_id, deposit_status")
     .eq("id", input.appointmentId)
     .eq("business_id", input.businessId)
     .maybeSingle();
@@ -202,6 +255,14 @@ export async function decideDeposit(input: {
   }
 
   const reason = input.reason?.trim().slice(0, 300) || "Pagamento não identificado";
+  // From now on this customer attaches the receipt ("Já fiz o Pix" alone is no longer enough).
+  if (data.customer_id) {
+    await admin
+      .from("customers")
+      .update({ deposit_receipt_required: true })
+      .eq("id", data.customer_id as string)
+      .eq("business_id", input.businessId);
+  }
   await admin
     .from("appointments")
     .update({ deposit_status: "refused", deposit_refused_reason: reason, deposit_decided_at: now })
@@ -272,15 +333,23 @@ export async function expireDepositHolds(now: Date = new Date()): Promise<number
   return expired;
 }
 
-/** Hourly: receipts still not checked get reminders to the team after the configured hours. */
+/**
+ * Hourly: Pix still not checked get reminders to the team after the configured hours, and once
+ * more when the appointment is less than 2 hours away (it stays booked: the owner decides).
+ */
 export async function remindPendingReceipts(now: Date = new Date()): Promise<number> {
   const admin = createAdminClient();
   const { data } = await admin
     .from("appointments")
-    .select("id, business_id, deposit_sent_at")
+    .select("id, business_id, deposit_sent_at, starts_at")
     .eq("deposit_status", "sent")
     .not("deposit_sent_at", "is", null);
-  const rows = (data ?? []) as { id: string; business_id: string; deposit_sent_at: string }[];
+  const rows = (data ?? []) as {
+    id: string;
+    business_id: string;
+    deposit_sent_at: string;
+    starts_at: string;
+  }[];
   if (!rows.length) return 0;
   const { data: settings } = await admin
     .from("page_settings")
@@ -301,6 +370,8 @@ export async function remindPendingReceipts(now: Date = new Date()): Promise<num
     for (const hours of hoursOf.get(row.business_id) ?? [2, 6]) {
       if (waitedHours >= hours && (await notifyReceiptReminder(row.id, hours))) sent++;
     }
+    const untilStart = new Date(row.starts_at).getTime() - now.getTime();
+    if (untilStart > 0 && untilStart <= 2 * 3_600_000 && (await notifyPixDueSoon(row.id))) sent++;
   }
   return sent;
 }

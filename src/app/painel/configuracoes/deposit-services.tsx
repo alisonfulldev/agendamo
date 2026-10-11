@@ -65,8 +65,8 @@ export function DepositServicesForm({ services }: { services: DepositServiceRow[
         <span>
           <span className="block font-medium">Pedir sinal pelo Pix ao agendar</span>
           <span className="block text-sm text-muted-foreground">
-            O cliente paga, envia o comprovante no chat e o horário fica reservado até você
-            confirmar.
+            O cliente paga, toca em “Já fiz o Pix” (o comprovante é opcional) e o horário fica
+            reservado até você conferir no banco.
           </span>
         </span>
         <Switch

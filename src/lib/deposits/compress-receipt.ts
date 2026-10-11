@@ -13,9 +13,10 @@ function toWebp(canvas: HTMLCanvasElement, quality: number): Promise<Blob | null
 }
 
 /**
- * Prepares the receipt in the browser (rule 7): JPG/PNG photos are resized and turned into WebP
- * (the original is kept when the browser cannot); PDFs go as they are. Empty, too big or other
- * files are refused here (and again on the server, by their bytes).
+ * Prepares the receipt in the browser (rule 7): any photo the browser can open (JPG, PNG, WebP,
+ * HEIC on iPhones…) is resized and turned into WebP (a JPG/PNG/WebP original is kept when the
+ * browser cannot); PDFs go as they are. Empty, too big or other files are refused here (and again
+ * on the server, by their bytes).
  */
 export async function prepareReceipt(
   file: File,
@@ -26,8 +27,8 @@ export async function prepareReceipt(
       throw new ReceiptFileError("O PDF passa de 5 MB. Envie uma foto ou um print do comprovante.");
     return { blob: file, contentType: "application/pdf" };
   }
-  if (file.type !== "image/jpeg" && file.type !== "image/png")
-    throw new ReceiptFileError("Envie uma foto (JPG ou PNG) ou um PDF do comprovante.");
+  if (!file.type.startsWith("image/"))
+    throw new ReceiptFileError("Envie uma foto ou um print (ou um PDF) do comprovante.");
   if (file.size > 15 * 1024 * 1024)
     throw new ReceiptFileError("A imagem passa de 15 MB. Envie um print do comprovante.");
 
@@ -52,8 +53,11 @@ export async function prepareReceipt(
       if (blob.size <= TARGET_BYTES) return { blob, contentType: "image/webp" };
     }
   }
-  // No WebP in this browser: the original photo, if it is small enough.
-  if (file.size <= RECEIPT_MAX_BYTES)
+  // No WebP in this browser: the original photo, if it is a type we keep and small enough.
+  const keepable = ["image/jpeg", "image/png", "image/webp"].includes(file.type);
+  if (keepable && file.size <= RECEIPT_MAX_BYTES)
     return { blob: file, contentType: file.type as ReceiptContentType };
+  if (!keepable)
+    throw new ReceiptFileError("Não conseguimos usar essa imagem. Envie um print do comprovante.");
   throw new ReceiptFileError("A imagem ficou grande demais. Envie um print do comprovante.");
 }

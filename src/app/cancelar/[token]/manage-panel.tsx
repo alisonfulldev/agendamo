@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 
-import { DepositPayment } from "@/components/deposits/deposit-payment";
+import { DepositPayment, ReceiptAttach } from "@/components/deposits/deposit-payment";
 import { Button } from "@/components/ui/button";
 
 import {
@@ -17,6 +17,7 @@ export function ManagePanel({
   token,
   canChange,
   deposit,
+  attachReceipt,
   startRescheduling = false,
 }: {
   token: string;
@@ -31,6 +32,8 @@ export function ManagePanel({
     businessName: string;
     whatsapp: string | null;
   } | null;
+  /** "Já fiz o Pix" without a receipt: the optional receipt can still be attached. */
+  attachReceipt?: { businessName: string } | null;
 }) {
   const router = useRouter();
   const [mode, setMode] = useState<"idle" | "cancel" | "reschedule">(
@@ -44,6 +47,7 @@ export function ManagePanel({
   } | null>(null);
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
   const [pending, startTransition] = useTransition();
+  const [receiptSent, setReceiptSent] = useState(false);
 
   useEffect(() => {
     if (mode !== "reschedule" || days !== null) return;
@@ -60,6 +64,30 @@ export function ManagePanel({
   return (
     <div className="flex flex-col gap-4">
       {deposit ? <DepositPayment token={token} {...deposit} /> : null}
+      {attachReceipt ? (
+        receiptSent ? (
+          <p
+            role="status"
+            className="rounded-xl bg-accent px-3 py-2 text-sm text-accent-foreground"
+          >
+            Recebemos seu comprovante! Você recebe a confirmação assim que{" "}
+            {attachReceipt.businessName} conferir.
+          </p>
+        ) : (
+          <div className="rounded-xl border p-3">
+            <p className="text-sm text-muted-foreground">
+              Você avisou que fez o Pix. Quer agilizar a confirmação?
+            </p>
+            <ReceiptAttach
+              token={token}
+              businessName={attachReceipt.businessName}
+              primary={false}
+              label="Anexar comprovante (opcional)"
+              onSent={() => setReceiptSent(true)}
+            />
+          </div>
+        )
+      ) : null}
 
       {canChange ? (
         mode === "idle" ? (

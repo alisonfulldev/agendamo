@@ -126,6 +126,8 @@ export interface Customer {
   marketing_opt_in: boolean;
   blocked: boolean;
   no_show_count: number;
+  /** Marked "Não recebi" once: must attach the receipt of the deposit by Pix from then on. */
+  deposit_receipt_required: boolean;
   referral_code: string;
   referred_by_customer_id: string | null;
   created_at: string;

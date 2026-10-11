@@ -57,6 +57,13 @@ describe("deposits by Pix with receipts", () => {
     await expect(waitingDeposit(2991)).resolves.toBeTruthy();
   });
 
+  it("customers start without the receipt requirement (set after a “Não recebi”)", async () => {
+    const { rows } = await db.query<{ deposit_receipt_required: boolean }>(
+      "select deposit_receipt_required from public.customers limit 1",
+    );
+    expect(rows[0]?.deposit_receipt_required ?? false).toBe(false);
+  });
+
   it("only the known payment statuses and deposit types are accepted", async () => {
     const id = await waitingDeposit(2989);
     await expect(

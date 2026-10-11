@@ -127,7 +127,7 @@ export function nicheBrand<T extends NicheBrandInput>(input: T) {
         },
         {
           title: "Sinal no agendamento",
-          description: "Sinal ou valor total pelo Pix, com comprovante no chat.",
+          description: "Sinal ou valor total pelo Pix, direto na sua conta.",
         },
         {
           title: "Financeiro simples",

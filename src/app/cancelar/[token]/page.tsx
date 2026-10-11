@@ -54,6 +54,16 @@ export default async function ManageAppointmentPage({
   const changeable = await canChange(appointment, business.min_notice_minutes);
   const code = appointment.status === "awaiting_deposit" ? depositBrCode(details) : null;
   const pix = code ? { code, qr: await QRCode.toDataURL(code, { width: 320, margin: 1 }) } : null;
+  // "Já fiz o Pix" without a receipt: it can still be attached here, until the owner decides.
+  let canAttachReceipt = false;
+  if (appointment.status === "pending" && appointment.deposit_status === "sent") {
+    const { count } = await createAdminClient()
+      .from("deposit_receipts")
+      .select("id", { count: "exact", head: true })
+      .eq("appointment_id", appointment.id)
+      .in("status", ["received", "accepted"]);
+    canAttachReceipt = (count ?? 0) === 0;
+  }
 
   return (
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-5 px-5 py-10">
@@ -105,6 +115,7 @@ export default async function ManageAppointmentPage({
               }
             : null
         }
+        attachReceipt={canAttachReceipt ? { businessName: business.name } : null}
       />
 
       {!changeable && ["confirmed", "pending", "awaiting_deposit"].includes(appointment.status) ? (

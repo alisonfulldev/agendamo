@@ -22,7 +22,7 @@ export const PLAN_CARD: PlanCard = {
   includes: [
     "Agendamentos ilimitados pelo chat, 24h",
     "Lembretes automáticos para o cliente não faltar",
-    "Sinal ou valor total pelo Pix, direto na sua conta, com comprovante",
+    "Sinal ou valor total pelo Pix, direto na sua conta",
     "Chat de agendamento no seu site e no Instagram",
     "Clientes, financeiro, vendas e estatísticas",
     "Equipe e Google Agenda",

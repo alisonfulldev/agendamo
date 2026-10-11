@@ -2,12 +2,13 @@
 
 import { z } from "zod";
 
-import { confirmReceipt, signReceiptUpload } from "@/lib/deposits/receipts";
+import { confirmReceipt, declarePaid, signReceiptUpload } from "@/lib/deposits/receipts";
 import { hashedClientIp, rateLimitRequest } from "@/lib/rate-limit";
 
 const token = z.string().regex(/^[A-Za-z0-9_-]{16,64}$/);
 
 export type ReceiptActionError =
+  | "receipt_required"
   | "invalid"
   | "expired"
   | "not_waiting"
@@ -17,7 +18,17 @@ export type ReceiptActionError =
   | "invalid_file"
   | "duplicate";
 
-/** "Já paguei, enviar comprovante": a 5-minute URL to upload the receipt straight to storage. */
+/** "Já fiz o Pix": no receipt needed (the owner checks the unique-cents amount in the bank). */
+export async function declarePaidAction(
+  input: unknown,
+): Promise<{ ok: true } | { ok: false; error: ReceiptActionError }> {
+  const parsed = z.object({ token }).safeParse(input);
+  if (!parsed.success) return { ok: false, error: "invalid" };
+  if (!(await rateLimitRequest("receipt"))) return { ok: false, error: "rate_limited" };
+  return declarePaid(parsed.data);
+}
+
+/** "Anexar comprovante" (optional, or required after a "Não recebi"): a 5-minute URL to upload the receipt straight to storage. */
 export async function signReceiptAction(
   input: unknown,
 ): Promise<

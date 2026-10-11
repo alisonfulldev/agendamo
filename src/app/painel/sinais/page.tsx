@@ -32,8 +32,9 @@ const STATUS: Record<string, string> = {
 };
 
 /**
- * Deposits by Pix: receipts to check (expected amount, with its unique cents, in evidence), the
- * ones waiting for payment, and the month's report. Decisions are always the professional's.
+ * Deposits by Pix: Pix to check (the expected amount, with its unique cents, in evidence; the
+ * receipt when the customer attached one), the ones waiting for payment, and the month's report.
+ * Decisions are always the professional's.
  */
 export default async function DepositsPage() {
   const { business } = await requireOwner();
@@ -55,6 +56,7 @@ export default async function DepositsPage() {
   }
 
   const toCheck = rows.filter((r) => r.deposit_status === "sent");
+  const nowMs = new Date().getTime();
   const waiting = rows.filter((r) => r.deposit_status === "waiting");
   const thisMonth = (r: Row) =>
     r.deposit_decided_at && new Date(r.deposit_decided_at) >= monthStart;
@@ -75,7 +77,7 @@ export default async function DepositsPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Sinais pelo Pix"
-        description="O cliente paga direto na sua chave e envia o comprovante. Confira no seu banco pelo valor com centavos e confirme."
+        description="O cliente paga direto na sua chave e avisa no chat (o comprovante é opcional). Procure no seu extrato o valor com centavos e confirme."
       />
 
       <dl className="grid grid-cols-3 gap-3 text-center">
@@ -96,21 +98,28 @@ export default async function DepositsPage() {
         </div>
       </dl>
 
-      <Section title="Comprovantes para conferir">
+      <Section title="Pix para conferir">
         {toCheck.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Nenhum comprovante esperando você.</p>
+          <p className="text-sm text-muted-foreground">Nenhum Pix esperando você.</p>
         ) : (
           <ul className="flex flex-col gap-4">
             {toCheck.map((r) => {
               const receipt = receiptOf(r);
               const url = receipt?.object_key ? `/painel/sinais/comprovante/${receipt.id}` : null;
+              const untilStart = new Date(r.starts_at).getTime() - nowMs;
+              const soon = untilStart > 0 && untilStart <= 2 * 3_600_000;
               return (
                 <li
                   key={r.id}
                   className="grid gap-4 rounded-xl border p-4 sm:grid-cols-[1fr_220px]"
                 >
                   <div className="flex flex-col gap-2">
-                    <p className="text-sm text-muted-foreground">Valor esperado</p>
+                    {soon ? (
+                      <p className="self-start rounded-full bg-destructive/10 px-3 py-1 text-sm font-medium text-destructive">
+                        Atendimento em menos de 2 h: confira agora ou no balcão
+                      </p>
+                    ) : null}
+                    <p className="text-sm text-muted-foreground">Procure no seu extrato</p>
                     <p className="font-heading text-3xl font-bold text-primary">
                       R$ {formatAmount(r.deposit_cents)}
                     </p>
@@ -120,7 +129,13 @@ export default async function DepositsPage() {
                     <p className="text-sm text-muted-foreground">Horário: {when(r.starts_at)}</p>
                     {r.deposit_sent_at ? (
                       <p className="text-sm text-muted-foreground">
-                        Comprovante enviado em {when(r.deposit_sent_at)}
+                        {receipt ? "Comprovante enviado" : "Avisou que fez o Pix"} em{" "}
+                        {when(r.deposit_sent_at)}
+                      </p>
+                    ) : null}
+                    {!receipt ? (
+                      <p className="text-sm text-muted-foreground">
+                        Sem comprovante: o cliente tocou em “Já fiz o Pix”.
                       </p>
                     ) : null}
                     <DepositDecision appointmentId={r.id} />

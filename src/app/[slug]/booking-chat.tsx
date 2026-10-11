@@ -820,7 +820,7 @@ export function BookingChat({
             <div className="rounded-lg bg-card px-3 py-2 text-sm text-card-foreground shadow-sm">
               <p className="font-medium">
                 Este horário pede pagamento pelo Pix, direto para {catalog.businessName}. Depois de
-                reservar, você recebe o código e envia o comprovante aqui.
+                reservar, você recebe o código, paga e toca em “Já fiz o Pix”.
               </p>
               {catalog.deposit?.policy ? (
                 <p className="mt-2 whitespace-pre-line text-muted-foreground">

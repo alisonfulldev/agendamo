@@ -173,11 +173,11 @@ export default async function PanelHomePage({ searchParams }: PageProps<"/painel
           <span>
             <span className="block font-semibold">
               {receiptsToCheck === 1
-                ? "1 comprovante de Pix para conferir"
-                : `${receiptsToCheck} comprovantes de Pix para conferir`}
+                ? "1 Pix para conferir"
+                : `${receiptsToCheck} Pix para conferir`}
             </span>
             <span className="block text-sm text-muted-foreground">
-              Confira no seu banco e confirme. Até lá, o horário fica pré-confirmado.
+              Procure o valor no seu extrato e confirme. Até lá, o horário fica reservado.
             </span>
           </span>
           <span className="font-medium text-primary">Conferir</span>

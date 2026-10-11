@@ -111,7 +111,7 @@ export default async function SettingsPage() {
         <Section
           id="sinal"
           title="Sinal pelo Pix"
-          description="O cliente paga o sinal (ou o valor total) pelo Pix direto para você e envia o comprovante no chat. Você confere no banco e confirma."
+          description="O cliente paga o sinal (ou o valor total) pelo Pix direto para você e avisa no chat (o comprovante é opcional). Você procura no extrato o valor com centavos e confirma."
         >
           <div className="flex flex-col gap-6">
             {setup.ready ? (
@@ -152,7 +152,7 @@ export default async function SettingsPage() {
       ) : (
         <Section
           title="Sinal pelo Pix"
-          description="Disponível no plano Completo: o cliente paga o sinal ou o valor total pelo Pix ao agendar e envia o comprovante no chat."
+          description="Disponível no plano Completo: o cliente paga o sinal ou o valor total pelo Pix ao agendar e avisa no chat."
         >
           <Link href="/painel/plano" className="text-sm font-medium text-primary underline">
             Assinar o Completo

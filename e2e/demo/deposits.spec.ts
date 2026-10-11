@@ -36,7 +36,12 @@ async function prepareStudio(page: Page) {
 }
 
 /** Books through the chat up to the Pix (the policy is accepted before booking). */
-async function bookWithDeposit(page: Page, name: string, email: string) {
+async function bookWithDeposit(
+  page: Page,
+  name: string,
+  email: string,
+  phone = `1198${Date.now().toString().slice(-7)}`,
+) {
   await page.goto("/studio-bela?brand=beauty");
   await page
     .getByRole("button", { name: /Manicure/ })
@@ -53,7 +58,7 @@ async function bookWithDeposit(page: Page, name: string, email: string) {
     .click();
   await page.getByLabel("Seu nome").fill(name);
   await page.getByRole("button", { name: "Enviar" }).click();
-  await page.getByLabel("WhatsApp").fill(`1198${Date.now().toString().slice(-7)}`);
+  await page.getByLabel("WhatsApp").fill(phone);
   await page.getByRole("button", { name: "Enviar" }).click();
   await page.getByLabel("E-mail").fill(email);
   await page.getByRole("button", { name: "Enviar" }).click();
@@ -71,9 +76,7 @@ function receiptPdf(): Buffer {
   );
 }
 
-test("phone: pay by Pix, send the receipt (no way to only say “já paguei”), the owner confirms", async ({
-  browser,
-}) => {
+test("phone: pay by Pix, attach the optional receipt, the owner confirms", async ({ browser }) => {
   const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
   const page = await context.newPage();
   await prepareStudio(page);
@@ -89,8 +92,11 @@ test("phone: pay by Pix, send the receipt (no way to only say “já paguei”),
   ).toBeVisible();
   await expect(payment.getByRole("img", { name: "QR code do Pix" })).toBeVisible();
   await expect(payment.getByText(/Horário reservado por/)).toBeVisible();
-  await expect(page.getByRole("button", { name: "Já paguei", exact: true })).toHaveCount(0);
-  await expect(page.getByRole("link", { name: "Já paguei", exact: true })).toHaveCount(0);
+  // "Já fiz o Pix" is the main action; the receipt is optional (here the customer attaches one).
+  await expect(payment.getByRole("button", { name: "Já fiz o Pix" })).toBeVisible();
+  await expect(
+    payment.getByRole("button", { name: "Anexar comprovante (opcional)" }),
+  ).toBeVisible();
 
   await page.getByLabel("Comprovante do Pix").setInputFiles({
     name: "comprovante.pdf",
@@ -129,7 +135,7 @@ test("phone: pay by Pix, send the receipt (no way to only say “já paguei”),
     .getByRole("button", { name: "Entrar" })
     .click();
   await owner.waitForURL(/\/painel/);
-  await expect(owner.getByText(/comprovantes? de Pix para conferir/)).toBeVisible();
+  await expect(owner.getByText(/\d+ Pix para conferir/)).toBeVisible();
   await owner.goto("/painel/sinais");
   const item = owner.locator("li", { hasText: customer });
   await expect(item.getByText(/R\$ 29,\d{2}/).first()).toBeVisible();
@@ -309,4 +315,53 @@ test("a service without a price: a percent is refused, a fixed R$ 1 makes the ch
     chat.getByTestId("deposit-payment").getByText(/faça o Pix de R\$ \d+,\d{2}/),
   ).toBeVisible();
   await visitor.close();
+});
+
+test("“Já fiz o Pix” without a receipt; after a “Não recebi” the same customer must attach it", async ({
+  browser,
+}) => {
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const page = await context.newPage();
+  await prepareStudio(page);
+  const email = `semcomprovante-${unique()}@exemplo.com`;
+  const phone = `1195${Date.now().toString().slice(-7)}`;
+  const customer = `Cliente Sem Comprovante ${unique()}`;
+
+  // One tap: the time stays reserved (never confirmed) until the owner checks the bank.
+  await bookWithDeposit(page, customer, email, phone);
+  await page.getByRole("button", { name: "Já fiz o Pix" }).click();
+  await expect(page.getByText(/Pronto! Avisamos Studio Bela/)).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Quer agilizar? Anexar comprovante (opcional)" }),
+  ).toBeVisible();
+
+  // The owner sees the exact amount to look for, without a receipt, and marks "Não recebi".
+  const owner = await context.newPage();
+  await owner.goto("/demo");
+  await owner
+    .locator("form", { hasText: "dona.beleza@demo.com" })
+    .getByRole("button", { name: "Entrar" })
+    .click();
+  await owner.waitForURL(/\/painel/);
+  await owner.goto("/painel/sinais");
+  const item = owner.locator("li", { hasText: customer });
+  await expect(item.getByText("Procure no seu extrato")).toBeVisible();
+  await expect(item.getByText(/Sem comprovante: o cliente tocou em “Já fiz o Pix”/)).toBeVisible();
+  await item.getByRole("button", { name: "Não recebi", exact: true }).click();
+  await item.getByRole("button", { name: "Não recebi: liberar o horário" }).click();
+  await expect(owner.locator("li", { hasText: customer }).getByText(/Recusado/)).toBeVisible();
+
+  // Next booking of the same customer: "Já fiz o Pix" is not enough anymore.
+  const again = await context.newPage();
+  await bookWithDeposit(again, customer, email, phone);
+  await again.getByRole("button", { name: "Já fiz o Pix" }).click();
+  await expect(again.getByText("Para este agendamento, envie o comprovante do Pix.")).toBeVisible();
+  await expect(again.getByRole("button", { name: "Enviar comprovante" })).toBeVisible();
+  await again.getByLabel("Comprovante do Pix").setInputFiles({
+    name: "comprovante.pdf",
+    mimeType: "application/pdf",
+    buffer: receiptPdf(),
+  });
+  await expect(again.getByText(/Recebemos seu comprovante!/)).toBeVisible();
+  await context.close();
 });

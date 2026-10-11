@@ -1,9 +1,13 @@
 "use client";
 
-import { Copy, FileUp, LifeBuoy, Timer } from "lucide-react";
+import { CircleCheck, Copy, FileUp, LifeBuoy, Timer } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
-import { confirmReceiptAction, signReceiptAction } from "@/app/[slug]/receipt-actions";
+import {
+  confirmReceiptAction,
+  declarePaidAction,
+  signReceiptAction,
+} from "@/app/[slug]/receipt-actions";
 import { prepareReceipt, ReceiptFileError } from "@/lib/deposits/compress-receipt";
 import { whatsappLink } from "@/lib/phone";
 
@@ -16,7 +20,124 @@ const ERRORS: Record<string, string> = {
   rate_limited: "Foram muitas tentativas. Espere um pouco ou fale com {business} pelo WhatsApp.",
   not_waiting: "Esse horário não está mais aguardando pagamento.",
   invalid: "Não conseguimos enviar agora. Tente de novo.",
+  receipt_required: "Para este agendamento, envie o comprovante do Pix.",
 };
+
+function errorText(failure: unknown, businessName: string): string {
+  const message =
+    failure instanceof ReceiptFileError
+      ? failure.message
+      : (ERRORS[failure instanceof Error ? failure.message : "invalid"] ?? ERRORS.invalid!);
+  return message.replace("{business}", businessName);
+}
+
+/** Uploads a receipt: compressed in the browser, sent straight to storage, checked on the server. */
+async function uploadReceipt(token: string, file: File): Promise<void> {
+  const prepared = await prepareReceipt(file);
+  const signed = await signReceiptAction({
+    token,
+    contentType: prepared.contentType,
+    size: prepared.blob.size,
+  });
+  if (!signed.ok) throw new Error(signed.error);
+  const put = await fetch(signed.url, {
+    method: "PUT",
+    body: prepared.blob,
+    headers: { "Content-Type": prepared.contentType, "Cache-Control": "private, no-store" },
+  });
+  if (!put.ok) throw new Error("missing");
+  const confirmed = await confirmReceiptAction({ token, receiptId: signed.receiptId });
+  if (!confirmed.ok) throw new Error(confirmed.error);
+}
+
+/**
+ * "Anexar comprovante": the button opens the photo gallery (where the bank app's screenshot is);
+ * a PDF goes through the small link. `primary` when the receipt is required.
+ */
+export function ReceiptAttach({
+  token,
+  businessName,
+  primary,
+  label,
+  onSent,
+}: {
+  token: string;
+  businessName: string;
+  primary: boolean;
+  label: string;
+  onSent: () => void;
+}) {
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const imageRef = useRef<HTMLInputElement>(null);
+  const pdfRef = useRef<HTMLInputElement>(null);
+
+  async function send(file: File) {
+    setError(null);
+    setSending(true);
+    try {
+      await uploadReceipt(token, file);
+      onSent();
+    } catch (failure) {
+      setError(errorText(failure, businessName));
+    } finally {
+      setSending(false);
+    }
+  }
+
+  const pick = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (file) void send(file);
+  };
+
+  return (
+    <div className="flex flex-col gap-1">
+      <button
+        type="button"
+        disabled={sending}
+        onClick={() => imageRef.current?.click()}
+        className={
+          primary
+            ? "flex h-12 items-center justify-center gap-2 rounded-xl bg-primary font-semibold text-primary-foreground disabled:opacity-60"
+            : "flex h-11 items-center justify-center gap-2 rounded-xl text-sm font-medium text-primary underline-offset-4 hover:underline disabled:opacity-60"
+        }
+      >
+        <FileUp className="size-4" aria-hidden />
+        {sending ? "Enviando comprovante…" : label}
+      </button>
+      <button
+        type="button"
+        disabled={sending}
+        onClick={() => pdfRef.current?.click()}
+        className="self-center text-xs text-muted-foreground underline underline-offset-4"
+      >
+        O comprovante é um PDF? Enviar PDF
+      </button>
+      <input
+        ref={imageRef}
+        type="file"
+        accept="image/*"
+        className="sr-only"
+        aria-label="Comprovante do Pix"
+        onChange={pick}
+      />
+      <input
+        ref={pdfRef}
+        type="file"
+        accept="application/pdf"
+        className="sr-only"
+        aria-label="Comprovante em PDF"
+        onChange={pick}
+      />
+      {error ? (
+        <p role="alert" className="px-1 text-sm text-destructive">
+          {error}
+        </p>
+      ) : null}
+    </div>
+  );
+}
 
 function mmss(ms: number): string {
   const total = Math.max(0, Math.ceil(ms / 1000));
@@ -24,10 +145,10 @@ function mmss(ms: number): string {
 }
 
 /**
- * Deposit / full payment by Pix with a mandatory receipt. Shows the Pix (copy and paste + QR),
- * the reservation countdown and the three actions. "Já paguei, enviar comprovante" opens the file
- * picker right away: there is no way to only say "já paguei". The time is pre-confirmed only after
- * the server checked a valid file.
+ * Deposit / full payment by Pix. Shows the Pix (copy and paste + QR) and the reservation
+ * countdown. "Já fiz o Pix" is the main action (the receipt is optional): the time stays reserved,
+ * never confirmed, until the owner finds the unique-cents amount in the bank. A customer marked
+ * "Não recebi" before must attach the receipt instead.
  */
 export function DepositPayment({
   token,
@@ -50,48 +171,35 @@ export function DepositPayment({
   onExpired?: () => void;
 }) {
   const [now, setNow] = useState(() => Date.now());
-  const [state, setState] = useState<"waiting" | "sending" | "sent">("waiting");
+  const [state, setState] = useState<"waiting" | "declaring" | "declared" | "sent">("waiting");
+  const [receiptRequired, setReceiptRequired] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
   const left = new Date(expiresAt).getTime() - now;
-  const expired = state !== "sent" && left <= 0;
+  const done = state === "declared" || state === "sent";
+  const expired = !done && left <= 0;
 
   useEffect(() => {
-    if (state === "sent" || expired) return;
+    if (done || expired) return;
     const timer = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(timer);
-  }, [state, expired]);
+  }, [done, expired]);
 
-  async function send(file: File) {
+  async function declare() {
     setError(null);
-    setState("sending");
-    try {
-      const prepared = await prepareReceipt(file);
-      const signed = await signReceiptAction({
-        token,
-        contentType: prepared.contentType,
-        size: prepared.blob.size,
-      });
-      if (!signed.ok) throw new Error(signed.error);
-      const put = await fetch(signed.url, {
-        method: "PUT",
-        body: prepared.blob,
-        headers: { "Content-Type": prepared.contentType, "Cache-Control": "private, no-store" },
-      });
-      if (!put.ok) throw new Error("missing");
-      const confirmed = await confirmReceiptAction({ token, receiptId: signed.receiptId });
-      if (!confirmed.ok) throw new Error(confirmed.error);
-      setState("sent");
-    } catch (failure) {
-      setState("waiting");
-      const message =
-        failure instanceof ReceiptFileError
-          ? failure.message
-          : (ERRORS[failure instanceof Error ? failure.message : "invalid"] ?? ERRORS.invalid!);
-      setError(message.replace("{business}", businessName));
-      if (failure instanceof Error && failure.message === "expired") setNow(Date.now() + left);
+    setState("declaring");
+    const result = await declarePaidAction({ token }).catch(() => ({
+      ok: false as const,
+      error: "invalid" as const,
+    }));
+    if (result.ok) {
+      setState("declared");
+      return;
     }
+    setState("waiting");
+    if (result.error === "receipt_required") setReceiptRequired(true);
+    if (result.error === "expired") setNow(Date.now() + left);
+    setError(errorText(new Error(result.error), businessName));
   }
 
   if (state === "sent") {
@@ -100,6 +208,24 @@ export function DepositPayment({
         Recebemos seu comprovante! Seu horário está pré-confirmado. Você recebe a confirmação assim
         que {businessName} conferir.
       </p>
+    );
+  }
+
+  if (state === "declared") {
+    return (
+      <div className="flex flex-col gap-2">
+        <p role="status" className="rounded-2xl bg-card px-4 py-3 text-card-foreground shadow-sm">
+          Pronto! Avisamos {businessName}. Seu horário fica reservado e você recebe a confirmação
+          assim que o Pix for conferido.
+        </p>
+        <ReceiptAttach
+          token={token}
+          businessName={businessName}
+          primary={false}
+          label="Quer agilizar? Anexar comprovante (opcional)"
+          onSent={() => setState("sent")}
+        />
+      </div>
     );
   }
 
@@ -146,27 +272,34 @@ export function DepositPayment({
       >
         <Copy className="size-4" aria-hidden /> {copied ? "Código copiado!" : "Copiar código Pix"}
       </button>
-      <button
-        type="button"
-        disabled={state === "sending"}
-        onClick={() => inputRef.current?.click()}
-        className="flex h-12 items-center justify-center gap-2 rounded-xl bg-primary font-semibold text-primary-foreground disabled:opacity-60"
-      >
-        <FileUp className="size-4" aria-hidden />
-        {state === "sending" ? "Enviando comprovante…" : "Já paguei, enviar comprovante"}
-      </button>
-      <input
-        ref={inputRef}
-        type="file"
-        accept="image/jpeg,image/png,application/pdf"
-        className="sr-only"
-        aria-label="Comprovante do Pix"
-        onChange={(e) => {
-          const file = e.target.files?.[0];
-          e.target.value = "";
-          if (file) void send(file);
-        }}
-      />
+      {receiptRequired ? (
+        <ReceiptAttach
+          token={token}
+          businessName={businessName}
+          primary
+          label="Enviar comprovante"
+          onSent={() => setState("sent")}
+        />
+      ) : (
+        <>
+          <button
+            type="button"
+            disabled={state === "declaring"}
+            onClick={() => void declare()}
+            className="flex h-12 items-center justify-center gap-2 rounded-xl bg-primary font-semibold text-primary-foreground disabled:opacity-60"
+          >
+            <CircleCheck className="size-4" aria-hidden />
+            {state === "declaring" ? "Avisando…" : "Já fiz o Pix"}
+          </button>
+          <ReceiptAttach
+            token={token}
+            businessName={businessName}
+            primary={false}
+            label="Anexar comprovante (opcional)"
+            onSent={() => setState("sent")}
+          />
+        </>
+      )}
       {whatsapp ? (
         <a
           href={whatsappLink(
