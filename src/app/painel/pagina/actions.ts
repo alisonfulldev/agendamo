@@ -164,6 +164,14 @@ const serviceSchema = z
         ctx.addIssue({ code: "custom", path: ["deposit_value"], message: "Use de 1 a 100%" });
       }
     }
+    // The deposit never goes above the price: at R$ 0 it would be zero and the chat asks nothing.
+    if (v.deposit_type !== "none" && v.price <= 0) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["deposit_type"],
+        message: "Defina o preço do serviço: com preço R$ 0 o sinal sairia R$ 0.",
+      });
+    }
     return { ...v, deposit_value: deposit };
   });
 
@@ -171,7 +179,7 @@ export async function saveServiceAction(_prev: FormState, formData: FormData): P
   const { business } = await requireOwner();
   const parsed = serviceSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return invalid(parsed.error, formData);
-  // Deposit / full payment by Pix is part of the Pro plan (checked on the server, rule 6).
+  // Deposit / full payment by Pix (checked on the server, rule 6).
   if (parsed.data.deposit_type !== "none" && !getPlanFeatures(business).deposits)
     return { ok: false, message: "Sinal pelo Pix faz parte do plano Completo." };
   const { id, price, ...fields } = parsed.data;

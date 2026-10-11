@@ -1,6 +1,7 @@
 "use client";
 
 import { ChevronDown, ChevronUp, Pencil, Plus, Trash2 } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useActionState, useEffect, useState, useTransition } from "react";
 
@@ -21,10 +22,13 @@ const selectClass = "h-10 rounded-lg border border-input bg-transparent px-2 tex
 function ServiceForm({
   service,
   depositsEnabled,
+  pixReady,
   onDone,
 }: {
   service: Service | null;
   depositsEnabled: boolean;
+  /** The Pix key is filled in (without it the chat asks for no deposit). */
+  pixReady: boolean;
   onDone: () => void;
 }) {
   const [state, action] = useActionState(saveServiceAction, initialFormState);
@@ -80,7 +84,24 @@ function ServiceForm({
       </div>
       {depositsEnabled ? (
         <div className="grid gap-4 sm:grid-cols-2">
-          <FieldShell name="deposit_type" label="Pagamento pelo Pix ao agendar">
+          {!pixReady && depositType !== "none" ? (
+            <p className="rounded-lg border border-primary/40 p-3 text-sm sm:col-span-2">
+              Para o chat pedir o sinal, cadastre sua chave Pix em{" "}
+              <Link
+                href="/painel/configuracoes#sinal"
+                className="font-medium text-primary underline"
+              >
+                Configurações › Sinal pelo Pix
+              </Link>
+              .
+            </p>
+          ) : null}
+          <FieldShell
+            name="deposit_type"
+            label="Pagamento pelo Pix ao agendar"
+            hint="Para configurar todos os serviços de uma vez: Configurações › Sinal pelo Pix."
+            error={state.errors?.deposit_type}
+          >
             <select
               id="deposit_type"
               name="deposit_type"
@@ -135,9 +156,11 @@ function ServiceForm({
 export function ServicesManager({
   services,
   depositsEnabled,
+  pixReady,
 }: {
   services: Service[];
   depositsEnabled: boolean;
+  pixReady: boolean;
 }) {
   const router = useRouter();
   const [editing, setEditing] = useState<Service | "new" | null>(null);
@@ -238,6 +261,7 @@ export function ServicesManager({
               key={editing === "new" ? "new" : editing.id}
               service={editing === "new" ? null : editing}
               depositsEnabled={depositsEnabled}
+              pixReady={pixReady}
               onDone={() => {
                 setEditing(null);
                 router.refresh();

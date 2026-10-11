@@ -210,8 +210,11 @@ export async function createBooking(input: CreateBookingInput): Promise<CreateBo
   if (input.source === "chat") {
     const overNoShowLimit =
       business.no_show_limit !== null && customer.no_show_count >= business.no_show_limit;
-    if (overNoShowLimit || business.booking_confirmation === "manual") status = "pending";
+    // With a deposit, the receipt the owner confirms is the approval: "Eu aprovo cada um" does not
+    // turn the deposit off (only services without a deposit wait as "pending").
+    if (overNoShowLimit) status = "pending";
     else if (deposit > 0) status = "awaiting_deposit";
+    else if (business.booking_confirmation === "manual") status = "pending";
   }
   const policyText = (page?.deposit_policy_text as string | null)?.trim() || null;
   if (status === "awaiting_deposit" && policyText && !input.depositPolicyAccepted)

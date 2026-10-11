@@ -162,3 +162,111 @@ test("a reservation without receipt expires and frees the time", async ({ page }
   await page.goto("/painel/sinais");
   await expect(page.locator("li", { hasText: name }).getByText(/Expirado/)).toBeVisible();
 });
+
+test("setup in one place: from the Pix key to the chat asking for the receipt, even with manual approval", async ({
+  page,
+}) => {
+  // Subscribed, no service asking for a deposit (the demo plan switch clears them).
+  await page.goto("/demo#planos");
+  await page
+    .locator("#planos form", { hasText: "Studio Bela" })
+    .getByRole("button", { name: "Assinante", exact: true })
+    .click();
+  await page.waitForURL(/ok=plano/);
+  await page.goto("/demo");
+  await page
+    .locator("form", { hasText: "dona.beleza@demo.com" })
+    .getByRole("button", { name: "Entrar" })
+    .click();
+  await page.waitForURL(/\/painel/);
+
+  // 1. The Pix key: the status says what is still missing, and so does Início.
+  await page.goto("/painel/configuracoes");
+  const section = page.locator("#sinal");
+  await section.getByLabel("Chave Pix").fill("pix@studiobela.com.br");
+  await section.getByLabel(/Nome do recebedor/).fill("STUDIO BELA");
+  await section.getByLabel("Cidade").fill("SAO PAULO");
+  await section.getByRole("button", { name: "Salvar Pix" }).click();
+  await expect(section.getByText("Dados do Pix salvos.")).toBeVisible();
+  await expect(section.getByText("Escolha pelo menos um serviço que pede sinal.")).toBeVisible();
+  await page.goto("/painel");
+  await expect(page.getByText("Sinal pelo Pix: falta 1 passo")).toBeVisible();
+  await page.getByRole("link", { name: /Sinal pelo Pix: falta 1 passo/ }).click();
+  await expect(page).toHaveURL(/\/painel\/configuracoes#sinal/);
+
+  // 2. The services: switch on, R$ 30 for all, saved; the status turns ready.
+  await section.getByRole("switch", { name: "Pedir sinal pelo Pix ao agendar" }).click();
+  await section.getByLabel("Tipo de sinal para todos").selectOption("fixed");
+  await section.getByLabel("Valor do sinal (R$)").fill("30");
+  await section.getByRole("button", { name: "Aplicar a todos" }).click();
+  await section.getByRole("button", { name: "Salvar sinais" }).click();
+  await expect(section.getByText("Sinais salvos.")).toBeVisible();
+  await expect(
+    section.getByText(/Pronto: o chat pede o comprovante em \d+ serviços?\./),
+  ).toBeVisible();
+
+  // "Eu aprovo cada um" no longer turns the deposit off: the receipt is the approval.
+  await page.getByLabel("Confirmação dos agendamentos").selectOption("manual");
+  await page
+    .locator("form", { has: page.getByLabel("Confirmação dos agendamentos") })
+    .getByRole("button", { name: "Salvar", exact: true })
+    .click();
+  await expect(page.getByLabel("Confirmação dos agendamentos")).toHaveValue("manual");
+  try {
+    const visitor = await page.context().browser()!.newContext();
+    const chat = await visitor.newPage();
+    await chat.goto("/studio-bela?brand=beauty");
+    await chat
+      .getByRole("button", { name: /Manicure/ })
+      .first()
+      .click();
+    await chat
+      .getByRole("button", { name: /, \d{1,2} de [a-zç]+$/i })
+      .first()
+      .click();
+    await chat
+      .locator("button")
+      .filter({ hasText: /^\d{2}:\d{2}$/ })
+      .last()
+      .click();
+    await chat.getByLabel("Seu nome").fill(`Cliente Manual ${unique()}`);
+    await chat.getByRole("button", { name: "Enviar" }).click();
+    await chat.getByLabel("WhatsApp").fill(`1197${Date.now().toString().slice(-7)}`);
+    await chat.getByRole("button", { name: "Enviar" }).click();
+    await chat.getByLabel("E-mail").fill(`manual-${unique()}@exemplo.com`);
+    await chat.getByRole("button", { name: "Enviar" }).click();
+    const noCoupon = chat.getByRole("button", { name: "Não tenho" });
+    if (await noCoupon.isVisible().catch(() => false)) await noCoupon.click();
+    await chat.getByRole("button", { name: "Reservar e pagar pelo Pix" }).click();
+    await expect(chat.getByTestId("deposit-payment")).toBeVisible();
+    await visitor.close();
+  } finally {
+    // Back to automatic confirmation (other tests book Studio Bela).
+    await page.goto("/painel/configuracoes");
+    await page.getByLabel("Confirmação dos agendamentos").selectOption("auto");
+    await page
+      .locator("form", { has: page.getByLabel("Confirmação dos agendamentos") })
+      .getByRole("button", { name: "Salvar", exact: true })
+      .click();
+    await expect(page.getByLabel("Confirmação dos agendamentos")).toHaveValue("auto");
+  }
+});
+
+test("a service at R$ 0 cannot ask for a deposit (it would come out as zero)", async ({ page }) => {
+  await page.goto("/demo");
+  await page
+    .locator("form", { hasText: "dona.beleza@demo.com" })
+    .getByRole("button", { name: "Entrar" })
+    .click();
+  await page.waitForURL(/\/painel/);
+  await page.goto("/painel/pagina");
+  await page.getByRole("button", { name: "Novo serviço" }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByLabel("Nome", { exact: true }).fill(`Avaliação ${unique()}`);
+  await dialog.getByLabel("Pagamento pelo Pix ao agendar").selectOption("fixed");
+  await dialog.getByLabel("Valor do sinal (R$)").fill("10");
+  await dialog.getByRole("button", { name: "Salvar serviço" }).click();
+  await expect(
+    dialog.getByText("Defina o preço do serviço: com preço R$ 0 o sinal sairia R$ 0."),
+  ).toBeVisible();
+});

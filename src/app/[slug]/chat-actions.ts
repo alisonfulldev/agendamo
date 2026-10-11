@@ -86,7 +86,10 @@ export async function getChatCatalogAction(slug: string): Promise<ChatCatalog | 
     .select("show_prices, whatsapp_number, pix_key, deposit_policy_text")
     .eq("business_id", catalog.business.id)
     .maybeSingle();
-  const depositServices = catalog.services.filter((s) => s.deposit_type !== "none");
+  // A service at R$ 0 never asks for a deposit (it would come out as zero).
+  const depositServices = catalog.services.filter(
+    (s) => s.deposit_type !== "none" && s.price_cents > 0,
+  );
   return {
     deposit:
       features.deposits && page?.pix_key && depositServices.length

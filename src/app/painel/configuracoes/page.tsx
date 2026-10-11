@@ -8,10 +8,12 @@ import { CopyLink } from "@/components/panel/copy-link";
 import { nichesByGroup } from "@/components/sales/niche-cards";
 import { PageHeader, Section } from "@/components/panel/page-header";
 import { requireOwner } from "@/lib/business/context";
-import type { PageSettings, Professional, TimeOff, WorkingHours } from "@/lib/db/types";
+import type { PageSettings, Professional, Service, TimeOff, WorkingHours } from "@/lib/db/types";
+import { depositReadyText, depositSetup } from "@/lib/deposits/setup";
 import { getPlanFeatures } from "@/lib/plans";
 import { createClient } from "@/lib/supabase/server";
 
+import { DepositServicesForm } from "./deposit-services";
 import { BusinessSettingsForm, HoursForm, PixForm, TimeOffForm } from "./forms";
 import { NicheForm, type NicheOption } from "./niche-form";
 
@@ -20,7 +22,7 @@ export const metadata: Metadata = { title: "Configurações" };
 export default async function SettingsPage() {
   const { business, brand } = await requireOwner();
   const supabase = await createClient();
-  const [professionals, hours, timeOff, settings] = await Promise.all([
+  const [professionals, hours, timeOff, settings, servicesResult] = await Promise.all([
     supabase
       .from("professionals")
       .select("*")
@@ -35,7 +37,11 @@ export default async function SettingsPage() {
       .gte("ends_at", new Date().toISOString())
       .order("starts_at"),
     supabase.from("page_settings").select("*").eq("business_id", business.id).maybeSingle(),
+    supabase.from("services").select("*").eq("business_id", business.id).order("position"),
   ]);
+  const services = ((servicesResult.data ?? []) as Service[]).filter((s) => s.active);
+  const pageSettings = settings.data as PageSettings | null;
+  const setup = depositSetup(pageSettings?.pix_key ?? null, services);
 
   const pros = (professionals.data ?? []) as Professional[];
   const toOption = (niche: typeof brand, label: string): NicheOption => ({
@@ -103,10 +109,45 @@ export default async function SettingsPage() {
 
       {getPlanFeatures(business).deposits ? (
         <Section
+          id="sinal"
           title="Sinal pelo Pix"
-          description="Quando um serviço pede sinal ou pagamento total, o cliente paga pelo Pix direto para você e envia o comprovante no chat. Você confere no banco e confirma."
+          description="O cliente paga o sinal (ou o valor total) pelo Pix direto para você e envia o comprovante no chat. Você confere no banco e confirma."
         >
-          <PixForm settings={settings.data as PageSettings | null} />
+          <div className="flex flex-col gap-6">
+            {setup.ready ? (
+              <p
+                role="status"
+                className="rounded-lg bg-accent px-3 py-2 text-sm font-medium text-accent-foreground"
+              >
+                ✅ {depositReadyText(setup)}
+              </p>
+            ) : (
+              <div role="status" className="rounded-lg border border-primary/40 p-3 text-sm">
+                <p className="font-medium">Para o chat pedir o comprovante, falta:</p>
+                <ol className="mt-1 list-decimal pl-5">
+                  {setup.missing.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ol>
+              </div>
+            )}
+            <div>
+              <h3 className="mb-3 font-semibold">1. Sua chave Pix</h3>
+              <PixForm settings={pageSettings} />
+            </div>
+            <div>
+              <h3 className="mb-3 font-semibold">2. Serviços que pedem sinal</h3>
+              <DepositServicesForm
+                services={services.map((s) => ({
+                  id: s.id,
+                  name: s.name,
+                  price_cents: s.price_cents,
+                  deposit_type: s.deposit_type,
+                  deposit_value: s.deposit_value,
+                }))}
+              />
+            </div>
+          </div>
         </Section>
       ) : (
         <Section

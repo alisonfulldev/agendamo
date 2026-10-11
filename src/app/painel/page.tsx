@@ -17,6 +17,7 @@ import { getPlanFeatures, planLabel } from "@/lib/plans";
 import { freeSlotsMessage, listTimes } from "@/lib/sales/free-slots";
 import { TOUR_TEXT } from "@/content/tour";
 import { ACTIVE_APPOINTMENT_STATUSES } from "@/lib/db/types";
+import { depositSetup, type DepositSetupService } from "@/lib/deposits/setup";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export const metadata: Metadata = { title: "Início" };
@@ -107,6 +108,24 @@ export default async function PanelHomePage({ searchParams }: PageProps<"/painel
         .eq("deposit_status", "sent")
     : { count: 0 };
 
+  // Deposit by Pix started but incomplete (key without services, or the other way round).
+  let depositMissing: string[] = [];
+  if (isOwner && features.deposits) {
+    const admin = createAdminClient();
+    const [{ data: pix }, { data: services }] = await Promise.all([
+      admin.from("page_settings").select("pix_key").eq("business_id", business.id).maybeSingle(),
+      admin
+        .from("services")
+        .select("name, active, price_cents, deposit_type")
+        .eq("business_id", business.id),
+    ]);
+    const setup = depositSetup(
+      (pix?.pix_key as string | null) ?? null,
+      (services ?? []) as DepositSetupService[],
+    );
+    if (setup.started && (!setup.ready || setup.zeroPrice.length)) depositMissing = setup.missing;
+  }
+
   // Free times left today: the fastest way to fill them is posting them right now. Only once the
   // day already has a booking: with an empty agenda (a new business) every time is free, and "only
   // N left" would read as an almost full agenda.
@@ -162,6 +181,23 @@ export default async function PanelHomePage({ searchParams }: PageProps<"/painel
             </span>
           </span>
           <span className="font-medium text-primary">Conferir</span>
+        </Link>
+      ) : null}
+      {depositMissing.length ? (
+        <Link
+          href="/painel/configuracoes#sinal"
+          className="flex items-center justify-between gap-3 rounded-xl border-2 border-primary/50 p-5"
+        >
+          <span>
+            <span className="block font-semibold">
+              Sinal pelo Pix:{" "}
+              {depositMissing.length === 1
+                ? "falta 1 passo"
+                : `faltam ${depositMissing.length} passos`}
+            </span>
+            <span className="block text-sm text-muted-foreground">{depositMissing[0]}</span>
+          </span>
+          <span className="font-medium text-primary">Configurar</span>
         </Link>
       ) : null}
       {senha === "alterada" ? (

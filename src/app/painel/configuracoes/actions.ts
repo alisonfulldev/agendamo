@@ -321,5 +321,85 @@ export async function savePixAction(_prev: FormState, formData: FormData): Promi
     updated_at: new Date().toISOString(),
   });
   if (error) return { ok: false, message: "Não foi possível salvar." };
+  revalidatePath("/painel/configuracoes");
+  revalidatePath("/painel");
   return { ok: true, message: "Dados do Pix salvos." };
+}
+
+const serviceDepositsSchema = z
+  .array(
+    z.object({
+      id: z.uuid(),
+      deposit_type: z.enum(["none", "fixed", "percent", "full"]),
+      deposit_value: z.string().max(20).default(""),
+    }),
+  )
+  .max(200);
+
+export interface ServiceDepositsState {
+  ok: boolean;
+  message?: string;
+  /** Problem per service id (shown next to the service). */
+  errors?: Record<string, string>;
+}
+
+/**
+ * The deposit rule of every service at once (Configurações › Sinal pelo Pix). A service at R$ 0
+ * cannot ask for a deposit: it would come out as zero and the chat would ask for nothing.
+ */
+export async function saveServiceDepositsAction(rows: unknown): Promise<ServiceDepositsState> {
+  const { business } = await requireOwner();
+  if (!getPlanFeatures(business).deposits)
+    return { ok: false, message: "Sinal pelo Pix faz parte do plano Completo." };
+  const parsed = serviceDepositsSchema.safeParse(rows);
+  if (!parsed.success) return { ok: false, message: "Dados inválidos. Recarregue a página." };
+
+  const supabase = await createClient();
+  const { data: services } = await supabase
+    .from("services")
+    .select("id, name, price_cents")
+    .eq("business_id", business.id);
+  const byId = new Map((services ?? []).map((s) => [s.id as string, s]));
+
+  const errors: Record<string, string> = {};
+  const updates: { id: string; deposit_type: string; deposit_value: number }[] = [];
+  for (const row of parsed.data) {
+    const service = byId.get(row.id);
+    if (!service) continue;
+    let value = 0;
+    if (row.deposit_type !== "none" && (service.price_cents as number) <= 0) {
+      errors[row.id] = "Defina o preço do serviço: com preço R$ 0 o sinal sairia R$ 0.";
+      continue;
+    }
+    if (row.deposit_type === "fixed") {
+      value = parseBRL(row.deposit_value) ?? 0;
+      if (value <= 0) {
+        errors[row.id] = "Informe o valor do sinal.";
+        continue;
+      }
+    } else if (row.deposit_type === "percent") {
+      value = Number(row.deposit_value.replace("%", "").trim());
+      if (!Number.isInteger(value) || value < 1 || value > 100) {
+        errors[row.id] = "Use de 1 a 100%.";
+        continue;
+      }
+    }
+    updates.push({ id: row.id, deposit_type: row.deposit_type, deposit_value: value });
+  }
+  if (Object.keys(errors).length) {
+    return { ok: false, message: "Confira os serviços marcados.", errors };
+  }
+  for (const update of updates) {
+    const { error } = await supabase
+      .from("services")
+      .update({ deposit_type: update.deposit_type, deposit_value: update.deposit_value })
+      .eq("id", update.id)
+      .eq("business_id", business.id);
+    if (error) return { ok: false, message: "Não foi possível salvar." };
+  }
+  invalidatePublicPage(business.slug);
+  revalidatePath("/painel/configuracoes");
+  revalidatePath("/painel/pagina");
+  revalidatePath("/painel");
+  return { ok: true, message: "Sinais salvos." };
 }

@@ -79,14 +79,13 @@ export default async function PageEditorPage() {
           <ServicesManager
             services={(services.data ?? []) as Service[]}
             depositsEnabled={features.deposits}
+            pixReady={Boolean(page?.pix_key)}
           />
         </Section>
 
         <Section
           title="Combos"
-          description={
-            features.packagesAndCombos ? undefined : "Disponível no plano Completo."
-          }
+          description={features.packagesAndCombos ? undefined : "Disponível no plano Completo."}
         >
           {features.packagesAndCombos ? (
             <CombosEditor

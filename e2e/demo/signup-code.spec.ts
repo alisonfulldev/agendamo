@@ -96,7 +96,7 @@ test("sign-up in the conversation: WhatsApp, e-mail fix, terms, code and the lin
   // Signed in, with the business ready; the first-access tutorial can be skipped.
   await dialog.getByRole("button", { name: "Entrar no meu painel" }).click();
   await expect(page).toHaveURL(/\/painel/);
-  await expect(page.getByRole("navigation", { name: "Painel" })).toBeVisible();
+  await expect(page.getByRole("navigation", { name: "Painel" }).first()).toBeVisible();
   await page.getByRole("button", { name: "Pular tutorial" }).click();
   await expect(page.getByTestId("tour")).toHaveCount(0);
   // The 14-day trial of Completo: counter in the panel, everything unlocked.
