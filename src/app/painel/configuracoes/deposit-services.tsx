@@ -55,7 +55,8 @@ export function DepositServicesForm({ services }: { services: DepositServiceRow[
         list.map((r) => ({ id: r.id, deposit_type: r.deposit_type, deposit_value: r.value })),
       ).catch(() => ({ ok: false, message: "Não foi possível salvar." }) as ServiceDepositsState);
       setResult(response);
-      if (response.ok) router.refresh();
+      // Valid services are saved even when another one has a problem: refresh the status.
+      router.refresh();
     });
 
   return (
@@ -132,7 +133,9 @@ export function DepositServicesForm({ services }: { services: DepositServiceRow[
 
           <ul className="divide-y rounded-xl border">
             {rows.map((row) => {
-              const zeroPrice = row.price_cents <= 0 && row.deposit_type !== "none";
+              const zeroPrice =
+                row.price_cents <= 0 &&
+                (row.deposit_type === "percent" || row.deposit_type === "full");
               const error = result?.errors?.[row.id];
               return (
                 <li key={row.id} className="flex flex-col gap-2 p-3 sm:flex-row sm:items-center">
@@ -175,7 +178,7 @@ export function DepositServicesForm({ services }: { services: DepositServiceRow[
                   {zeroPrice || error ? (
                     <p className="text-sm text-destructive sm:basis-full">
                       {error ??
-                        "Defina o preço do serviço em Meu perfil › Serviços: com preço R$ 0 o sinal sairia R$ 0."}
+                        "Porcentagem e pagamento total precisam do preço do serviço. Use “Valor fixo” ou defina o preço em Meu perfil › Serviços."}
                     </p>
                   ) : null}
                 </li>

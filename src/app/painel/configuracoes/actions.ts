@@ -344,8 +344,9 @@ export interface ServiceDepositsState {
 }
 
 /**
- * The deposit rule of every service at once (Configurações › Sinal pelo Pix). A service at R$ 0
- * cannot ask for a deposit: it would come out as zero and the chat would ask for nothing.
+ * The deposit rule of every service at once (Configurações › Sinal pelo Pix). Valid rows are saved
+ * even when another one has a problem. A service at R$ 0 can ask for a fixed value, never for a
+ * percent or the full price (it would come out as zero).
  */
 export async function saveServiceDepositsAction(rows: unknown): Promise<ServiceDepositsState> {
   const { business } = await requireOwner();
@@ -367,8 +368,12 @@ export async function saveServiceDepositsAction(rows: unknown): Promise<ServiceD
     const service = byId.get(row.id);
     if (!service) continue;
     let value = 0;
-    if (row.deposit_type !== "none" && (service.price_cents as number) <= 0) {
-      errors[row.id] = "Defina o preço do serviço: com preço R$ 0 o sinal sairia R$ 0.";
+    if (
+      (row.deposit_type === "percent" || row.deposit_type === "full") &&
+      (service.price_cents as number) <= 0
+    ) {
+      errors[row.id] =
+        "Porcentagem e pagamento total precisam do preço do serviço. Use “Valor fixo” ou defina o preço em Meu perfil › Serviços.";
       continue;
     }
     if (row.deposit_type === "fixed") {
@@ -386,9 +391,6 @@ export async function saveServiceDepositsAction(rows: unknown): Promise<ServiceD
     }
     updates.push({ id: row.id, deposit_type: row.deposit_type, deposit_value: value });
   }
-  if (Object.keys(errors).length) {
-    return { ok: false, message: "Confira os serviços marcados.", errors };
-  }
   for (const update of updates) {
     const { error } = await supabase
       .from("services")
@@ -401,5 +403,16 @@ export async function saveServiceDepositsAction(rows: unknown): Promise<ServiceD
   revalidatePath("/painel/configuracoes");
   revalidatePath("/painel/pagina");
   revalidatePath("/painel");
+  const failed = Object.keys(errors).length;
+  if (failed) {
+    return {
+      ok: false,
+      message:
+        updates.length > 0
+          ? `Salvamos os outros serviços. ${failed === 1 ? "Confira o serviço marcado." : `Confira os ${failed} serviços marcados.`}`
+          : "Confira os serviços marcados.",
+      errors,
+    };
+  }
   return { ok: true, message: "Sinais salvos." };
 }

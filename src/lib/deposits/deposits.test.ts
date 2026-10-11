@@ -21,6 +21,18 @@ describe("baseDeposit", () => {
     expect(baseDeposit([service("percent", 10)], 10000, 2500)).toBe(2500);
     expect(baseDeposit([service("full")], 8000, 0)).toBe(8000);
   });
+
+  it("services without a price: a fixed deposit still applies; percent and full give nothing", () => {
+    const free = (depositType: "fixed" | "percent" | "full", depositValue = 0) => ({
+      depositType,
+      depositValue,
+      chargedCents: 0,
+    });
+    expect(baseDeposit([free("fixed", 100)], 0, 100)).toBe(100);
+    expect(baseDeposit([free("fixed", 3000)], 0, 0)).toBe(3000);
+    expect(baseDeposit([free("percent", 30)], 0, 0)).toBe(0);
+    expect(baseDeposit([free("full")], 0, 0)).toBe(0);
+  });
 });
 
 describe("uniqueDepositAmount (unique cents)", () => {

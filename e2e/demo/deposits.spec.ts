@@ -252,7 +252,12 @@ test("setup in one place: from the Pix key to the chat asking for the receipt, e
   }
 });
 
-test("a service at R$ 0 cannot ask for a deposit (it would come out as zero)", async ({ page }) => {
+test("a service without a price: a percent is refused, a fixed R$ 1 makes the chat ask for the Pix", async ({
+  page,
+  browser,
+}) => {
+  // Studio Bela with the Pix key (demo helper), then a new service at R$ 0.
+  await prepareStudio(page);
   await page.goto("/demo");
   await page
     .locator("form", { hasText: "dona.beleza@demo.com" })
@@ -262,11 +267,46 @@ test("a service at R$ 0 cannot ask for a deposit (it would come out as zero)", a
   await page.goto("/painel/pagina");
   await page.getByRole("button", { name: "Novo serviço" }).click();
   const dialog = page.getByRole("dialog");
-  await dialog.getByLabel("Nome", { exact: true }).fill(`Avaliação ${unique()}`);
-  await dialog.getByLabel("Pagamento pelo Pix ao agendar").selectOption("fixed");
-  await dialog.getByLabel("Valor do sinal (R$)").fill("10");
+  const name = `Avaliação ${unique()}`;
+  await dialog.getByLabel("Nome", { exact: true }).fill(name);
+  await dialog.getByLabel("Pagamento pelo Pix ao agendar").selectOption("percent");
+  await dialog.getByLabel("Sinal (%)").fill("30");
   await dialog.getByRole("button", { name: "Salvar serviço" }).click();
+  await expect(dialog.getByText(/Porcentagem e pagamento total precisam do preço/)).toBeVisible();
+  await dialog.getByLabel("Pagamento pelo Pix ao agendar").selectOption("fixed");
+  await dialog.getByLabel("Valor do sinal (R$)").fill("1");
+  await dialog.getByRole("button", { name: "Salvar serviço" }).click();
+  await expect(dialog).toHaveCount(0);
+
+  // A customer books that service: the chat asks for the Pix.
+  const visitor = await browser.newContext();
+  const chat = await visitor.newPage();
+  await chat.goto("/studio-bela?brand=beauty");
+  await chat
+    .getByRole("button", { name: new RegExp(name) })
+    .first()
+    .click();
+  await chat
+    .getByRole("button", { name: /, \d{1,2} de [a-zç]+$/i })
+    .first()
+    .click();
+  await chat
+    .locator("button")
+    .filter({ hasText: /^\d{2}:\d{2}$/ })
+    .last()
+    .click();
+  await chat.getByLabel("Seu nome").fill(`Cliente Avaliação ${unique()}`);
+  await chat.getByRole("button", { name: "Enviar" }).click();
+  await chat.getByLabel("WhatsApp").fill(`1196${Date.now().toString().slice(-7)}`);
+  await chat.getByRole("button", { name: "Enviar" }).click();
+  await chat.getByLabel("E-mail").fill(`avaliacao-${unique()}@exemplo.com`);
+  await chat.getByRole("button", { name: "Enviar" }).click();
+  const noCoupon = chat.getByRole("button", { name: "Não tenho" });
+  if (await noCoupon.isVisible().catch(() => false)) await noCoupon.click();
+  await chat.getByRole("button", { name: "Aceito a política e quero reservar" }).click();
+  await expect(chat.getByTestId("deposit-payment")).toBeVisible();
   await expect(
-    dialog.getByText("Defina o preço do serviço: com preço R$ 0 o sinal sairia R$ 0."),
+    chat.getByTestId("deposit-payment").getByText(/faça o Pix de R\$ \d+,\d{2}/),
   ).toBeVisible();
+  await visitor.close();
 });

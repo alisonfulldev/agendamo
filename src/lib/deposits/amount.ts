@@ -2,7 +2,8 @@ import type { DepositType } from "@/lib/db/types";
 
 /**
  * Deposit of a booking before the unique cents: the services' rules (fixed, percent or the full
- * price), at least the business minimum, never more than the total.
+ * price), at least the business minimum, never more than the total. Services without a price
+ * (R$ 0, "a combinar") can still ask for a fixed deposit: then there is no total to cap it.
  */
 export function baseDeposit(
   services: { depositType: DepositType; depositValue: number; chargedCents: number }[],
@@ -17,7 +18,9 @@ export function baseDeposit(
     return acc;
   }, 0);
   if (sum <= 0) return 0;
-  return Math.min(Math.max(sum, minimumCents), totalAfterDiscount);
+  const deposit = Math.max(sum, minimumCents);
+  const priced = services.some((s) => s.chargedCents > 0);
+  return priced ? Math.min(deposit, totalAfterDiscount) : deposit;
 }
 
 /**

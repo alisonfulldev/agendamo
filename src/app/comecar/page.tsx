@@ -71,12 +71,14 @@ export default function StartPage() {
         ))}
       </div>
       <ul className="mt-10 flex flex-wrap justify-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
-        {[`${TRIAL_DAYS} dias grátis`, "Sem cartão de crédito", "Cancele quando quiser"].map((item) => (
-          <li key={item} className="flex items-center gap-1.5">
-            <CircleCheck className="size-4 text-primary" aria-hidden />
-            {item}
-          </li>
-        ))}
+        {[`${TRIAL_DAYS} dias grátis`, "Sem cartão de crédito", "Cancele quando quiser"].map(
+          (item) => (
+            <li key={item} className="flex items-center gap-1.5">
+              <CircleCheck className="size-4 text-primary" aria-hidden />
+              {item}
+            </li>
+          ),
+        )}
       </ul>
       <p className="mt-6 text-sm text-muted-foreground">
         Já tem conta?{" "}

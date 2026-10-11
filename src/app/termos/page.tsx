@@ -41,8 +41,8 @@ export default async function TermsPage() {
           Todo cadastro começa com um teste de 14 dias, sem cartão, que pode ser usado uma vez por
           pessoa (e-mail, telefone e CPF/CNPJ). Sem pagamento ao fim do teste, a conta entra em modo
           de espera: o link continua no ar e os pedidos dos clientes são encaminhados ao WhatsApp do
-          profissional, sem reserva de horário; o painel fica restrito à assinatura e à conta. Nada é
-          apagado, e os horários já marcados continuam valendo.
+          profissional, sem reserva de horário; o painel fica restrito à assinatura e à conta. Nada
+          é apagado, e os horários já marcados continuam valendo.
         </li>
         <li>
           O cancelamento interrompe as próximas cobranças; o plano continua até o fim do período já

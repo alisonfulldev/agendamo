@@ -73,9 +73,7 @@ export async function GET(request: Request) {
         <div style={{ fontSize: 56, fontWeight: 800, lineHeight: 1.1, marginTop: 18 }}>
           {content.hero.title}
         </div>
-        <div style={{ fontSize: 26, marginTop: 18, color: theme.muted }}>
-          {PRICE_TEXT.heroNote}
-        </div>
+        <div style={{ fontSize: 26, marginTop: 18, color: theme.muted }}>{PRICE_TEXT.heroNote}</div>
         <div
           style={{
             display: "flex",

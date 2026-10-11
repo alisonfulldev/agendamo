@@ -164,12 +164,13 @@ const serviceSchema = z
         ctx.addIssue({ code: "custom", path: ["deposit_value"], message: "Use de 1 a 100%" });
       }
     }
-    // The deposit never goes above the price: at R$ 0 it would be zero and the chat asks nothing.
-    if (v.deposit_type !== "none" && v.price <= 0) {
+    // A percent or the full price of a service at R$ 0 would be zero (a fixed value works).
+    if ((v.deposit_type === "percent" || v.deposit_type === "full") && v.price <= 0) {
       ctx.addIssue({
         code: "custom",
         path: ["deposit_type"],
-        message: "Defina o preço do serviço: com preço R$ 0 o sinal sairia R$ 0.",
+        message:
+          "Porcentagem e pagamento total precisam do preço. Informe o preço ou use “Valor fixo”.",
       });
     }
     return { ...v, deposit_value: deposit };

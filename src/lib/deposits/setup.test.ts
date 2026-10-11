@@ -32,15 +32,17 @@ describe("depositSetup", () => {
     expect(s.missing).toEqual(["Cadastre sua chave Pix."]);
   });
 
-  it("services at R$ 0 never count (the deposit would be zero)", () => {
+  it("services at R$ 0: percent and full need the price, a fixed value works", () => {
     const s = depositSetup("pix@exemplo.com", [
       service({ name: "Limpeza", price_cents: 0, deposit_type: "percent" }),
     ]);
     expect(s.ready).toBe(false);
     expect(s.zeroPrice).toEqual(["Limpeza"]);
-    expect(s.missing).toContain(
-      "“Limpeza” está sem preço: o sinal sairia R$ 0. Defina o preço do serviço.",
-    );
+    expect(s.missing[1]).toMatch(/“Limpeza” está sem preço: porcentagem e pagamento total/);
+    const fixed = depositSetup("pix@exemplo.com", [
+      service({ name: "Limpeza", price_cents: 0, deposit_type: "fixed" }),
+    ]);
+    expect(fixed).toMatchObject({ ready: true, withDeposit: 1, zeroPrice: [] });
   });
 
   it("ready with a key and priced services asking for it; inactive ones are ignored", () => {
