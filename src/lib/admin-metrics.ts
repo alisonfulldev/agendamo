@@ -139,3 +139,94 @@ export function computeDepositMetrics(
     duplicatesBlocked: duplicateReceipts,
   };
 }
+
+// ---------------------------------------------------------------------------
+// Admin panel (overview, businesses).
+
+export type AdminStatus = "trial" | "subscribed" | "waiting" | "suspended";
+
+export const ADMIN_STATUS_LABEL: Record<AdminStatus, string> = {
+  trial: "Em teste",
+  subscribed: "Assinante",
+  waiting: "Modo de espera",
+  suspended: "Suspenso",
+};
+
+/** Where a business stands for the admin (suspension first, then the plan). */
+export function adminStatus(
+  business: Pick<Business, "plan" | "trial_ends_at" | "suspended_at">,
+  now = new Date(),
+): AdminStatus {
+  if (business.suspended_at) return "suspended";
+  if (business.plan === "complete") return "subscribed";
+  if (business.trial_ends_at && new Date(business.trial_ends_at) > now) return "trial";
+  return "waiting";
+}
+
+/** Counts per day for the last `days` days (oldest first), by the given day key ("YYYY-MM-DD"). */
+export function dailyCounts(
+  dayKeys: string[],
+  days: number,
+  today: string,
+): { day: string; count: number }[] {
+  const counts = new Map<string, number>();
+  for (const key of dayKeys) counts.set(key, (counts.get(key) ?? 0) + 1);
+  const end = new Date(`${today}T12:00:00Z`);
+  return Array.from({ length: days }, (_, i) => {
+    const d = new Date(end);
+    d.setUTCDate(d.getUTCDate() - (days - 1 - i));
+    const day = d.toISOString().slice(0, 10);
+    return { day, count: counts.get(day) ?? 0 };
+  });
+}
+
+export interface AdminOverview {
+  mrrCents: number;
+  arrCents: number;
+  /** Average monthly revenue per paying business. */
+  arpaCents: number;
+  byStatus: Record<AdminStatus, number>;
+  signups7: number;
+  signups30: number;
+  /** Paid subscriptions cancelled in the last 30 days (share of the paying base). */
+  churn30: { cancelled: number; rate: number };
+  trialConversion: { finished: number; paid: number };
+}
+
+export function computeOverview(
+  businesses: Pick<
+    Business,
+    "id" | "created_at" | "plan" | "trial_started_at" | "trial_ends_at" | "suspended_at"
+  >[],
+  subscriptions: (Pick<
+    Subscription,
+    "business_id" | "plan" | "billing_cycle" | "status" | "addons" | "extra_professionals"
+  > & { updated_at?: string | null })[],
+  now = new Date(),
+): AdminOverview {
+  const since = (days: number) => now.getTime() - days * 86_400_000;
+  const byStatus: Record<AdminStatus, number> = {
+    trial: 0,
+    subscribed: 0,
+    waiting: 0,
+    suspended: 0,
+  };
+  for (const b of businesses) byStatus[adminStatus(b, now)]++;
+  const paying = subscriptions.filter((s) => s.status === "active" || s.status === "overdue");
+  const mrrCents = paying.reduce((sum, s) => sum + monthlyRevenue(s), 0);
+  const cancelled = subscriptions.filter(
+    (s) =>
+      s.status === "cancelled" && s.updated_at && new Date(s.updated_at).getTime() >= since(30),
+  ).length;
+  const base = paying.length + cancelled;
+  return {
+    mrrCents,
+    arrCents: mrrCents * 12,
+    arpaCents: paying.length ? Math.round(mrrCents / paying.length) : 0,
+    byStatus,
+    signups7: businesses.filter((b) => new Date(b.created_at).getTime() >= since(7)).length,
+    signups30: businesses.filter((b) => new Date(b.created_at).getTime() >= since(30)).length,
+    churn30: { cancelled, rate: base ? cancelled / base : 0 },
+    trialConversion: conversion(businesses, now),
+  };
+}

@@ -43,7 +43,7 @@ export async function extendTrialAction(
     details: { days: parsed.data.days, ends_at: ends, by: admin.email },
   });
   invalidatePublicPage(business.slug as string);
-  revalidatePath("/admin");
+  revalidatePath("/admin", "layout");
   return {
     ok: true,
     message: `Teste estendido até ${ends.slice(0, 10).split("-").reverse().join("/")}.`,
@@ -70,7 +70,7 @@ export async function setSuspendedAction(
     details: { by: admin.email },
   });
   if (data) invalidatePublicPage(data.slug as string);
-  revalidatePath("/admin");
+  revalidatePath("/admin", "layout");
   return { ok: true };
 }
 
@@ -112,6 +112,6 @@ export async function createCouponAction(
     action: "admin.coupon_created",
     details: { ...parsed.data, by: admin.email },
   });
-  revalidatePath("/admin");
+  revalidatePath("/admin", "layout");
   return { ok: true, message: `Cupom ${parsed.data.code} criado.` };
 }

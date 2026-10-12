@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 
-import { computeDepositMetrics, computeMetrics, monthlyRevenue, weekOf } from "@/lib/admin-metrics";
+import {
+  adminStatus,
+  computeDepositMetrics,
+  computeMetrics,
+  computeOverview,
+  dailyCounts,
+  monthlyRevenue,
+  weekOf,
+} from "@/lib/admin-metrics";
 
 describe("monthlyRevenue", () => {
   it("uses the plan's price, normalizes yearly plans and adds active add-ons", () => {
@@ -149,6 +157,85 @@ describe("computeDepositMetrics", () => {
       refused: 1,
       expired: 1,
       duplicatesBlocked: 2,
+    });
+  });
+});
+
+describe("admin panel helpers", () => {
+  const now = new Date("2030-01-16T12:00:00Z");
+  const business = (over: Partial<Parameters<typeof adminStatus>[0]> = {}) => ({
+    plan: "free" as const,
+    trial_ends_at: null,
+    suspended_at: null,
+    ...over,
+  });
+
+  it("adminStatus: suspended first, then subscribed, trial and waiting mode", () => {
+    expect(
+      adminStatus(business({ suspended_at: "2030-01-01T00:00:00Z", plan: "complete" }), now),
+    ).toBe("suspended");
+    expect(adminStatus(business({ plan: "complete" }), now)).toBe("subscribed");
+    expect(adminStatus(business({ trial_ends_at: "2030-01-20T00:00:00Z" }), now)).toBe("trial");
+    expect(adminStatus(business({ trial_ends_at: "2030-01-10T00:00:00Z" }), now)).toBe("waiting");
+    expect(adminStatus(business(), now)).toBe("waiting");
+  });
+
+  it("dailyCounts: one bucket per day, oldest first, zeros included", () => {
+    expect(dailyCounts(["2030-01-16", "2030-01-16", "2030-01-14"], 3, "2030-01-16")).toEqual([
+      { day: "2030-01-14", count: 1 },
+      { day: "2030-01-15", count: 0 },
+      { day: "2030-01-16", count: 2 },
+    ]);
+  });
+
+  it("computeOverview: MRR, ARR, ticket, situations, sign-ups and churn", () => {
+    const sub = {
+      plan: "complete" as const,
+      billing_cycle: "monthly" as const,
+      addons: {},
+      extra_professionals: 0,
+    };
+    const overview = computeOverview(
+      [
+        {
+          id: "a",
+          created_at: "2030-01-15T00:00:00Z",
+          plan: "complete",
+          trial_started_at: null,
+          trial_ends_at: null,
+          suspended_at: null,
+        },
+        {
+          id: "b",
+          created_at: "2030-01-01T00:00:00Z",
+          plan: "free",
+          trial_started_at: "2030-01-01T00:00:00Z",
+          trial_ends_at: "2030-01-20T00:00:00Z",
+          suspended_at: null,
+        },
+        {
+          id: "c",
+          created_at: "2029-11-01T00:00:00Z",
+          plan: "free",
+          trial_started_at: null,
+          trial_ends_at: null,
+          suspended_at: null,
+        },
+      ],
+      [
+        { ...sub, business_id: "a", status: "active" },
+        { ...sub, business_id: "c", status: "cancelled", updated_at: "2030-01-10T00:00:00Z" },
+      ],
+      now,
+    );
+    expect(overview).toMatchObject({
+      mrrCents: 2990,
+      arrCents: 2990 * 12,
+      arpaCents: 2990,
+      byStatus: { subscribed: 1, trial: 1, waiting: 1, suspended: 0 },
+      signups7: 1,
+      signups30: 2,
+      churn30: { cancelled: 1, rate: 0.5 },
     });
   });
 });

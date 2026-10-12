@@ -89,7 +89,17 @@ test("waiting mode: only the subscription and the account open", async ({ page }
 test("admin and new account", async ({ page }) => {
   const errors = watchErrors(page);
   await signInAs(page, "admin@demo.com");
-  await visit(page, "/admin", errors);
+  for (const path of [
+    "/admin",
+    "/admin/negocios",
+    "/admin/receita",
+    "/admin/uso",
+    "/admin/cupons",
+  ]) {
+    await visit(page, path, errors);
+  }
+  await page.goto("/admin/negocios?situacao=trial");
+  await expect(page.getByRole("heading", { name: "Negócios", level: 1 })).toBeVisible();
   await signInAs(page, "nova@demo.com");
   await expect(page).toHaveURL(/\/painel\/novo/);
   expect(errors).toEqual([]);

@@ -7,24 +7,35 @@ import { Input } from "@/components/ui/input";
 
 import { createCouponAction, extendTrialAction, setSuspendedAction } from "./actions";
 
-export function BusinessActions({ id, suspended }: { id: string; suspended: boolean }) {
+export function BusinessActions({
+  id,
+  suspended,
+  canExtendTrial = true,
+}: {
+  id: string;
+  suspended: boolean;
+  /** Subscribers have no trial to extend. */
+  canExtendTrial?: boolean;
+}) {
   const [pending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
   return (
-    <div className="flex flex-wrap items-center gap-1">
-      <Button
-        type="button"
-        size="sm"
-        variant="outline"
-        disabled={pending}
-        onClick={() => {
-          const days = Number(window.prompt("Estender o teste em quantos dias?", "7"));
-          if (!days) return;
-          startTransition(async () => setMessage((await extendTrialAction(id, days)).message));
-        }}
-      >
-        Estender teste
-      </Button>
+    <div className="flex items-center gap-1 whitespace-nowrap">
+      {canExtendTrial ? (
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          disabled={pending}
+          onClick={() => {
+            const days = Number(window.prompt("Estender o teste em quantos dias?", "7"));
+            if (!days) return;
+            startTransition(async () => setMessage((await extendTrialAction(id, days)).message));
+          }}
+        >
+          Estender teste
+        </Button>
+      ) : null}
       <Button
         type="button"
         size="sm"
