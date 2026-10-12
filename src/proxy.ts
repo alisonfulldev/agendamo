@@ -20,6 +20,8 @@ const ONE_MONTH_SECONDS = 60 * 60 * 24 * 30;
 
 /** Routes that need a signed-in user. */
 const PROTECTED_PREFIXES = ["/painel", "/admin"];
+/** Inside the protected prefixes, but open (the admin's own sign-in). */
+const OPEN_PATHS = ["/admin/entrar"];
 /** Auth screens: signed-in users go straight to the panel. */
 const AUTH_PAGES = ["/entrar", "/cadastro"];
 /** Routes where the Supabase session is refreshed. Public pages skip it to stay fast. */
@@ -108,8 +110,8 @@ export async function proxy(request: NextRequest) {
     return redirect;
   };
 
-  if (!userId && matches(path, PROTECTED_PREFIXES)) {
-    const target = new URL("/entrar", request.url);
+  if (!userId && matches(path, PROTECTED_PREFIXES) && !OPEN_PATHS.includes(path)) {
+    const target = new URL(matches(path, ["/admin"]) ? "/admin/entrar" : "/entrar", request.url);
     target.searchParams.set("next", `${path}${request.nextUrl.search}`);
     response = redirectTo(target);
   }

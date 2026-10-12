@@ -33,6 +33,7 @@ export type AuditAction =
   | "calendar.connected"
   | "calendar.disconnected"
   | "admin.coupon_created"
+  | "admin.signed_in"
   | "finance.entry_deleted";
 
 export async function audit(entry: {
