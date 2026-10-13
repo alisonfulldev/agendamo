@@ -8,7 +8,6 @@ import { readableOn } from "@/brands/theme";
 import { HOME_DEMO, heroDemoFor } from "@/content/hero-demo";
 import { HOME } from "@/content/home";
 import { nicheHomeContent } from "@/content/niche-pages";
-import { PRICE_TEXT } from "@/lib/plans";
 
 const FONT_DIR = join(process.cwd(), "assets/fonts");
 const FONTS = Promise.all(
@@ -73,7 +72,9 @@ export async function GET(request: Request) {
         <div style={{ fontSize: 56, fontWeight: 800, lineHeight: 1.1, marginTop: 18 }}>
           {content.hero.title}
         </div>
-        <div style={{ fontSize: 26, marginTop: 18, color: theme.muted }}>{PRICE_TEXT.heroNote}</div>
+        <div style={{ fontSize: 26, marginTop: 18, color: theme.muted }}>
+          Sem cartão · pronto em 1 minuto
+        </div>
         <div
           style={{
             display: "flex",

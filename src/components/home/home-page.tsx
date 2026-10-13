@@ -19,13 +19,11 @@ import { NICHES, PLATFORM, type BrandConfig } from "@/brands";
 import { brandThemeStyle } from "@/brands/theme";
 import { HOME_DEMO, heroDemoFor } from "@/content/hero-demo";
 import { HOME, type HomeContent } from "@/content/home";
-import { PLAN_NAME, PLAN_PRICES } from "@/lib/plans";
 import { siteUrl } from "@/lib/site-url";
 import { isStorageConfigured } from "@/lib/storage/r2";
 
 import { LazyCreationChat } from "@/components/creation/lazy-creation-chat";
 import { OpenCreationLink } from "@/components/creation/open-creation";
-import { PlanCards } from "@/components/sales/plan-cards";
 
 import { PhoneDemo } from "./phone-demo";
 import { StickyCta } from "./sticky-cta";
@@ -62,14 +60,6 @@ function jsonLd(content: HomeContent, niche?: { route: string; name: string }) {
       operatingSystem: "Web",
       url: page,
       description: content.meta.description,
-      offers: [
-        {
-          "@type": "Offer",
-          name: PLAN_NAME,
-          price: (PLAN_PRICES.complete.monthly / 100).toFixed(2),
-          priceCurrency: "BRL",
-        },
-      ],
     },
     {
       "@context": "https://schema.org",
@@ -275,29 +265,6 @@ export function HomePage({
           <p className="mt-4 text-lg leading-relaxed text-pretty text-muted-foreground">
             {content.reminders.text}
           </p>
-        </section>
-
-        {/* Pricing */}
-        <section aria-labelledby="preco" className="border-y bg-muted/50">
-          <div className="mx-auto max-w-6xl px-5 py-16">
-            <h2 id="preco" className="text-center text-3xl font-bold tracking-tight">
-              {content.pricing.title}
-            </h2>
-            <p className="mt-3 text-center text-lg text-muted-foreground">
-              {content.pricing.tagline}
-            </p>
-            <div className="mt-10">
-              <PlanCards niche={route} />
-            </div>
-            <p className="mt-4 text-center">
-              <Link
-                href="/precos"
-                className="inline-block py-2 font-medium text-primary underline underline-offset-4"
-              >
-                Ver todos os detalhes dos preços
-              </Link>
-            </p>
-          </div>
         </section>
 
         {/* FAQ */}

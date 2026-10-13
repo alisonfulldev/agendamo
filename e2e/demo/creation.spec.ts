@@ -58,11 +58,10 @@ test("niche detected from the name, transformation, test booking and “Criar mi
 }) => {
   await page.goto("/?criar=1");
   const dialog = page.locator("[data-creation]");
-  // Shortcuts answer and the conversation goes on.
-  await dialog.getByRole("button", { name: "Quanto custa?" }).click();
-  await expect(
-    dialog.getByText(/14 dias grátis, sem cartão\. Depois, o Completo custa R\$ 29,90\/mês/),
-  ).toBeVisible();
+  // Shortcuts answer and the conversation goes on (no price question: prices are in the panel).
+  await expect(dialog.getByRole("button", { name: "Quanto custa?" })).toHaveCount(0);
+  await dialog.getByRole("button", { name: "Meu cliente precisa baixar app?" }).click();
+  await expect(dialog.getByText(/O link abre direto no navegador do celular/)).toBeVisible();
 
   const name = `Barbearia Navalha Teste ${Date.now().toString(36)}`;
   await typeName(page, name);

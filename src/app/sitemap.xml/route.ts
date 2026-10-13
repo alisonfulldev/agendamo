@@ -35,7 +35,6 @@ export async function GET() {
           priority: "0.9",
           lastmod: SITE_UPDATED,
         }))),
-    ...(ownDomain ? [] : [{ loc: base("/precos"), priority: "0.8", lastmod: SITE_UPDATED }]),
     { loc: base("/termos"), priority: "0.2" },
     { loc: base("/privacidade"), priority: "0.2" },
     ...portal.map((path) => ({ loc: base(path), priority: "0.7" })),

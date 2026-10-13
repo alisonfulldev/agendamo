@@ -12,7 +12,7 @@ export interface PlanCard {
   cta: string;
 }
 
-/** The single plan as shown on the site (home, niche pages, /precos) and in the panel. */
+/** The single plan as shown in the panel (Assinatura); prices are not on the public pages. */
 export const PLAN_CARD: PlanCard = {
   name: PLAN_NAME,
   price: reais(PLAN_PRICES.complete.monthly),
@@ -30,5 +30,3 @@ export const PLAN_CARD: PlanCard = {
   ],
   cta: `Testar ${TRIAL_DAYS} dias grátis`,
 };
-
-export const PLANS_NOTE = `${TRIAL_DAYS} dias grátis, sem cartão, uma vez por conta. Sem fidelidade. 1 profissional incluso; cada extra ${PRICE_TEXT.extraProfessional}. Se não assinar, seu link continua no ar e os pedidos chegam no seu WhatsApp.`;

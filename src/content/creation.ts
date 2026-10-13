@@ -1,5 +1,3 @@
-import { PLAN_NAME, PRICE_TEXT, TRIAL_DAYS } from "@/lib/plans";
-
 /** Texts of the creation conversation (opens over the site from the home page). */
 export const CREATION = {
   intro: "Oi! Vamos montar seu link de agendamento? Leva 1 minuto.",
@@ -22,7 +20,7 @@ export const CREATION = {
   /** After the loading screen: sign up now or first see the simulation. */
   ready: {
     title: "Seu chat de agendamento está pronto para ser criado ✨",
-    subtitle: `Falta só criar sua conta: ${TRIAL_DAYS} dias grátis, sem cartão (leva 1 minuto).`,
+    subtitle: "Falta só criar sua conta (sem cartão, leva 1 minuto).",
     preview: "Ver como meu cliente vai agendar",
   },
   banner: "Simulação: é assim que seu cliente vai agendar. Seu link ainda não foi criado.",
@@ -79,10 +77,6 @@ export const CREATION = {
   },
   rateLimited: "Muitas tentativas por aqui. Espere alguns minutos e tente de novo.",
   shortcuts: {
-    price: {
-      label: "Quanto custa?",
-      answer: `${PRICE_TEXT.trial}. Depois, o ${PLAN_NAME} custa ${PRICE_TEXT.summary}, com tudo incluído.`,
-    },
     app: {
       label: "Meu cliente precisa baixar app?",
       answer: "Não! O link abre direto no navegador do celular, como uma conversa.",

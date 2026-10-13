@@ -1,5 +1,3 @@
-import { PRICE_TEXT } from "@/lib/plans";
-
 type Icon =
   | "moon"
   | "ghost"
@@ -32,7 +30,6 @@ export interface HomeContent {
   gains: { title: string; items: readonly { icon: Icon; text: string }[] };
   reminders: { title: string; text: string };
   audience: { title: string; chips: readonly { label: string; href: string }[] };
-  pricing: { title: string; tagline: string };
   faq: { title: string; items: readonly { question: string; answer: string }[] };
   closing: { title: string; cta: string };
   footer: { links: readonly { label: string; href: string }[] };
@@ -45,8 +42,8 @@ export interface HomeContent {
 }
 
 /**
- * Texts of the home page (sales page of the MeetChat site). Prices always come from PRICE_TEXT /
- * PLAN_PRICES; niche routes are the existing niche pages.
+ * Texts of the home page (sales page of the MeetChat site). No prices and no trial on the public
+ * pages (decided 2026-10-13): they show up in the panel after the account exists.
  */
 export const HOME: HomeContent = {
   meta: {
@@ -60,7 +57,7 @@ export const HOME: HomeContent = {
     subtitle:
       "Crie seu link de agendamento em 1 minuto e coloque no Instagram e no WhatsApp. Sem app e sem responder mensagem.",
     primaryCta: "Criar meu link grátis",
-    note: PRICE_TEXT.heroNote,
+    note: "Sem cartão · pronto em 1 minuto",
     points: [
       "Agenda 24h sem responder mensagem",
       "Lembrete para o cliente não faltar",
@@ -106,16 +103,12 @@ export const HOME: HomeContent = {
       { label: "e outros", href: "/comecar" },
     ],
   },
-  pricing: {
-    title: "Preços",
-    tagline: `Um plano só, com tudo incluído. ${PRICE_TEXT.trial}.`,
-  },
   faq: {
     title: "Perguntas frequentes",
     items: [
       {
         question: "Preciso de cartão?",
-        answer: PRICE_TEXT.noCard,
+        answer: "Não. Você cria sua conta e coloca seu link no ar sem cartão.",
       },
       {
         question: "Meu cliente precisa baixar app?",
@@ -133,7 +126,8 @@ export const HOME: HomeContent = {
       },
       {
         question: "Atende mais de um profissional?",
-        answer: `Sim. Cada profissional tem a própria agenda. O plano inclui 1 profissional e cada extra custa ${PRICE_TEXT.extraProfessional}.`,
+        answer:
+          "Sim. Cada profissional tem a própria agenda, e o cliente escolhe com quem quer agendar.",
       },
       {
         question: "E se eu não souber mexer?",
@@ -148,7 +142,6 @@ export const HOME: HomeContent = {
   },
   footer: {
     links: [
-      { label: "Preços", href: "/precos" },
       { label: "Termos de uso", href: "/termos" },
       { label: "Privacidade", href: "/privacidade" },
       // Support is by e-mail only.

@@ -1,5 +1,3 @@
-import { PRICE_TEXT } from "@/lib/plans";
-
 import type { BrandConfigInput, Segment } from "./schema";
 
 type Term = { singular: string; plural: string };
@@ -51,7 +49,7 @@ const TERMS: Record<NicheKind, { customer: Term; service: Term; appointment: Ter
 
 /**
  * Builds a niche brand. Texts avoid gendered articles around the terms ("horário" instead of
- * "a sessão") so every niche reads naturally; prices always come from PRICE_TEXT.
+ * "a sessão") so every niche reads naturally. No prices on the public pages (2026-10-13).
  */
 export function nicheBrand<T extends NicheBrandInput>(input: T) {
   const kind = input.kind ?? "general";
@@ -156,7 +154,7 @@ export function nicheBrand<T extends NicheBrandInput>(input: T) {
         ...(input.faq ?? []),
         {
           question: "Preciso de cartão para testar?",
-          answer: PRICE_TEXT.noCard,
+          answer: "Não. Você cria sua conta e coloca seu link no ar sem cartão.",
         },
         {
           question: `Meus ${customer.plural} precisam baixar algum aplicativo?`,
@@ -177,7 +175,8 @@ export function nicheBrand<T extends NicheBrandInput>(input: T) {
         },
         {
           question: "Funciona com mais de um profissional?",
-          answer: `Sim. Cada profissional tem a própria agenda. O plano inclui 1 profissional e cada extra custa ${PRICE_TEXT.extraProfessional}.`,
+          answer:
+            "Sim. Cada profissional tem a própria agenda, e o cliente escolhe com quem quer agendar.",
         },
         {
           question: "Posso colocar no meu site?",

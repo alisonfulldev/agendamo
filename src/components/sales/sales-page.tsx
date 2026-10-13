@@ -19,9 +19,7 @@ import { brandUrl } from "@/brands/urls";
 import { ClaimLink } from "@/components/sales/claim-link";
 import { DemoChat } from "@/components/sales/demo-chat";
 import { FEATURE_VISUALS } from "@/components/sales/feature-visuals";
-import { PlansTable } from "@/components/sales/plans-table";
 import { Button } from "@/components/ui/button";
-import { PLAN_NAME, PLAN_PRICES, PRICE_TEXT, TRIAL_DAYS } from "@/lib/plans";
 
 const SOCIAL_LABELS = {
   instagram: "Instagram",
@@ -123,27 +121,18 @@ export function SalesPage({
     applicationCategory: "BusinessApplication",
     operatingSystem: "Web",
     description: sales.subtitle,
-    offers: [
-      {
-        "@type": "Offer",
-        name: PLAN_NAME,
-        price: (PLAN_PRICES.complete.monthly / 100).toFixed(2),
-        priceCurrency: "BRL",
-      },
-    ],
   };
   const nav = [
     ["#como-funciona", "Como funciona"],
     ["#recursos", "Recursos"],
     ...(isHome ? [["#nichos", "Nichos"]] : []),
-    ["#preco", "Preço"],
     ["#duvidas", "Dúvidas"],
   ];
   const facts = [
     ["24 h", "por dia recebendo agendamentos"],
     ["5 min", "para colocar seu link no ar"],
     ["0", "aplicativos para o cliente instalar"],
-    [String(TRIAL_DAYS), "dias grátis para testar, sem cartão"],
+    ["0", "cartão de crédito para começar"],
   ];
 
   return (
@@ -215,16 +204,14 @@ export function SalesPage({
               </p>
               <ClaimLink prefix={linkPrefix} signupHref={signupHref} />
               <ul className="flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground">
-                {[
-                  `${TRIAL_DAYS} dias grátis`,
-                  "Sem cartão de crédito",
-                  "Cancele quando quiser",
-                ].map((item) => (
-                  <li key={item} className="flex items-center gap-1.5">
-                    <CircleCheck className="size-4 text-primary" aria-hidden />
-                    {item}
-                  </li>
-                ))}
+                {["Pronto em 5 minutos", "Sem cartão de crédito", "Cancele quando quiser"].map(
+                  (item) => (
+                    <li key={item} className="flex items-center gap-1.5">
+                      <CircleCheck className="size-4 text-primary" aria-hidden />
+                      {item}
+                    </li>
+                  ),
+                )}
               </ul>
             </div>
 
@@ -409,21 +396,6 @@ export function SalesPage({
           </div>
         </section>
 
-        {/* Pricing */}
-        <section
-          id="preco"
-          aria-labelledby="plans"
-          className="mx-auto max-w-6xl scroll-mt-20 px-6 py-24"
-        >
-          <SectionHeading
-            id="plans"
-            eyebrow="Preço"
-            title="Um preço simples e justo"
-            text={`Um plano só, com tudo incluído. ${PRICE_TEXT.trial}.`}
-          />
-          <PlansTable signupHref={signupHref} />
-        </section>
-
         {sales.testimonials.length > 0 ? (
           <section aria-labelledby="testimonials" className="border-y bg-muted/60">
             <div className="mx-auto max-w-6xl px-6 py-24">
@@ -513,9 +485,7 @@ export function SalesPage({
             <h2 className="mx-auto max-w-2xl text-3xl font-bold tracking-tight text-balance sm:text-5xl">
               Comece hoje: em 5 minutos seu link está no ar
             </h2>
-            <p className="mx-auto mt-5 max-w-xl text-lg opacity-90">
-              {PRICE_TEXT.trial}. Sem fidelidade.
-            </p>
+            <p className="mx-auto mt-5 max-w-xl text-lg opacity-90">Sem cartão e sem fidelidade.</p>
             <Button
               asChild
               size="lg"
@@ -550,9 +520,6 @@ export function SalesPage({
             </a>
             <a href="#recursos" className="text-muted-foreground hover:text-foreground">
               Recursos
-            </a>
-            <a href="#preco" className="text-muted-foreground hover:text-foreground">
-              Preço
             </a>
             <Link href="/entrar" className="text-muted-foreground hover:text-foreground">
               Entrar

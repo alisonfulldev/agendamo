@@ -46,11 +46,12 @@ for (const brand of [psychology, physio]) {
       "href",
       new RegExp(`/${brand.niche.route}$`),
     );
-    // The phone plays the niche's own example; internal links to the home and /precos.
+    // The phone plays the niche's own example; a link back to the home; no prices.
     await expect(
       page.getByRole("group", { name: /Exemplo:/ }).getByText(heroDemoFor(brand).business),
     ).toBeVisible();
-    await expect(page.locator('a[href="/precos"]').first()).toBeAttached();
+    await expect(page.locator('a[href="/precos"]')).toHaveCount(0);
+    expect(await page.locator("body").textContent()).not.toMatch(/R\$\s?\d|dias grátis/);
     await expect(page.locator('header a[href="/"]')).toBeAttached();
     // The main button opens the creation conversation with the niche already chosen.
     await page.locator("#cta-topo a").click();

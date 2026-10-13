@@ -8,7 +8,6 @@ import { BRANDS, DEFAULT_BRAND, getNiche, NICHES, parseBrands, PLATFORM } from "
 /** Every theme on the site: the niches and the MeetChat product (generic home). */
 const ALL = [...BRANDS, PLATFORM];
 import { psychology } from "@/brands/psychology";
-import { PRICE_TEXT } from "@/lib/plans";
 import { contrastRatio, readableOn } from "@/brands/theme";
 
 describe("brand configs", () => {
@@ -162,11 +161,11 @@ describe("parseBrands", () => {
 });
 
 describe("niche copy", () => {
-  it("FAQ prices always come from the price table", () => {
+  it("no prices and no trial in the public copy (they show up in the panel)", () => {
     for (const brand of [...BRANDS, PLATFORM]) {
-      const answers = brand.sales.faq.map((item) => item.answer).join(" ");
-      expect(answers, brand.key).toContain(PRICE_TEXT.noCard);
-      expect(answers, brand.key).toContain(PRICE_TEXT.extraProfessional);
+      const copy = JSON.stringify(brand.sales);
+      expect(copy, brand.key).not.toMatch(/R\$\s?\d/);
+      expect(copy, brand.key).not.toMatch(/dias grátis|teste grátis/i);
     }
   });
 

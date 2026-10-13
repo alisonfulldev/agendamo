@@ -667,13 +667,6 @@ export function Conversation({ photos }: { photos: boolean }) {
       {!ownChat ? (
         <div className="flex gap-2 overflow-x-auto border-t bg-card px-3 pt-2 pb-1">
           <ShortcutChip
-            onClick={() =>
-              shortcut(CREATION.shortcuts.price.label, CREATION.shortcuts.price.answer)
-            }
-          >
-            {CREATION.shortcuts.price.label}
-          </ShortcutChip>
-          <ShortcutChip
             onClick={() => shortcut(CREATION.shortcuts.app.label, CREATION.shortcuts.app.answer)}
           >
             {CREATION.shortcuts.app.label}

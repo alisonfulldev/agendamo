@@ -2,9 +2,7 @@ import { expect, test } from "@playwright/test";
 
 import { HOME } from "../src/content/home";
 
-test("home page: SEO texts, sections in order, current prices and one main button", async ({
-  page,
-}) => {
+test("home page: SEO texts, sections in order, no prices and one main button", async ({ page }) => {
   await page.goto("/");
   await expect(page).toHaveTitle("Agendamento online grátis pelo link da bio | MeetChat");
   await expect(page.locator('meta[name="description"]')).toHaveAttribute(
@@ -19,15 +17,16 @@ test("home page: SEO texts, sections in order, current prices and one main butto
     "Como funciona o agendamento online",
     "Agendamento pelo Instagram e WhatsApp",
     "Lembrete automático para o cliente não faltar",
-    "Preços",
     "Perguntas frequentes",
   ].map((title) => h2.indexOf(title));
   expect(order.every((i) => i >= 0)).toBe(true);
   expect([...order].sort((a, b) => a - b)).toEqual(order);
   await expect(page.getByText("Quanto tempo você perde")).toHaveCount(0);
-  await expect(page.getByText("R$ 29,90", { exact: true }).first()).toBeVisible();
-  await expect(page.getByText(/R\$ 24,90\/mês no anual/).first()).toBeVisible();
-  await expect(page.getByText("R$ 19,90")).toHaveCount(0);
+  // Prices and the trial only show up in the panel, after the account exists.
+  const text = await page.locator("body").textContent();
+  expect(text).not.toMatch(/R\$\s?\d/);
+  expect(text).not.toMatch(/dias grátis|teste grátis/i);
+  await expect(page.locator('a[href="/precos"]')).toHaveCount(0);
   await expect(page.getByText("30 dias grátis")).toHaveCount(0);
   // Every niche page is linked from the home.
   await expect(page.locator('a[href="/barbearia"]').first()).toBeAttached();
@@ -44,7 +43,7 @@ test("structured data: Organization, SoftwareApplication with the plan and FAQPa
   expect(types).toEqual(expect.arrayContaining(["Organization", "SoftwareApplication", "FAQPage"]));
   const app = items.find((i) => i["@type"] === "SoftwareApplication")!;
   expect(app.applicationCategory).toBe("BusinessApplication");
-  expect((app.offers as { price: string }[]).map((o) => o.price)).toEqual(["29.90"]);
+  expect(app.offers).toBeUndefined();
   const faq = items.find((i) => i["@type"] === "FAQPage")!;
   expect((faq.mainEntity as unknown[]).length).toBe(HOME.faq.items.length);
 });
@@ -105,7 +104,7 @@ test("phone: the bottom bar shows up only after the top button leaves the screen
   await page.goto("/");
   const sticky = page.locator("div.fixed.bottom-0");
   await expect(sticky).toHaveAttribute("aria-hidden", "true");
-  await page.getByRole("heading", { name: HOME.pricing.title }).scrollIntoViewIfNeeded();
+  await page.getByRole("heading", { name: HOME.reminders.title }).scrollIntoViewIfNeeded();
   await expect(sticky).toHaveAttribute("aria-hidden", "false");
   // Never over the closing button.
   await page.getByRole("heading", { name: HOME.closing.title }).scrollIntoViewIfNeeded();

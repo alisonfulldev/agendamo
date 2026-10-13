@@ -64,7 +64,7 @@ const prices = PLAN_PRICES.complete;
 const monthlyText = `${reais(prices.monthly)}/mês`;
 const yearlyPerMonthText = `${reais(Math.round(prices.yearly / 12))}/mês`;
 
-/** Prices as shown in copy (site, FAQ, e-mails): always derived from PLAN_PRICES. */
+/** Prices as shown in the panel and in e-mails (never on the public pages): from PLAN_PRICES. */
 export const PRICE_TEXT = {
   monthly: monthlyText,
   yearly: `${reais(prices.yearly)}/ano`,
@@ -73,10 +73,6 @@ export const PRICE_TEXT = {
   yearlySavings: `economize ${reais(yearlySavings())} por ano`,
   extraProfessional: `${reais(PLAN_PRICES.extraProfessional.monthly)}/mês`,
   trial: `${TRIAL_DAYS} dias grátis, sem cartão`,
-  /** Under the main button of the site. */
-  heroNote: `${TRIAL_DAYS} dias grátis · sem cartão · pronto em 1 minuto`,
-  /** "Preciso de cartão?" (FAQ of every brand). */
-  noCard: `Não. Você usa tudo por ${TRIAL_DAYS} dias grátis, sem cartão. Depois, o ${PLAN_NAME} custa ${monthlyText} ou ${yearlyPerMonthText} no anual. Se não assinar, seu link continua no ar e os pedidos chegam no seu WhatsApp.`,
 };
 
 /** trial: the 14 days; subscribed: paying; waiting: neither (chat ends on WhatsApp). */

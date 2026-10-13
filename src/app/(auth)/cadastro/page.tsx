@@ -6,7 +6,6 @@ import { SignedInNotice } from "@/components/auth/signed-in-notice";
 import { getSessionUser } from "@/lib/auth/session";
 
 import { SignUpForm } from "../forms";
-import { PRICE_TEXT } from "@/lib/plans";
 
 export const metadata: Metadata = { title: "Criar conta", robots: { index: false } };
 
@@ -15,7 +14,7 @@ export default async function SignUpPage() {
   return (
     <AuthShell
       title="Criar sua conta"
-      description={`${PRICE_TEXT.trial}. Leva poucos minutos.`}
+      description="Sem cartão. Leva poucos minutos."
       footer={
         <>
           Já tem conta?{" "}

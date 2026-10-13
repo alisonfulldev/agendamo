@@ -121,6 +121,5 @@ describe("prices", () => {
   it("trial copy uses the 14 days", () => {
     expect(TRIAL_DAYS).toBe(14);
     expect(PRICE_TEXT.trial).toBe("14 dias grátis, sem cartão");
-    expect(PRICE_TEXT.noCard).toContain("14 dias");
   });
 });

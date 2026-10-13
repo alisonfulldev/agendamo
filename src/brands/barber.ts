@@ -1,5 +1,3 @@
-import { PRICE_TEXT } from "@/lib/plans";
-
 import type { BrandConfigInput } from "./schema";
 
 // Niche of the MeetChat product (domain still provisional).
@@ -91,7 +89,7 @@ export const barber = {
     faq: [
       {
         question: "Preciso de cartão para testar?",
-        answer: PRICE_TEXT.noCard,
+        answer: "Não. Você cria sua conta e coloca seu link no ar sem cartão.",
       },
       {
         question: "Meus clientes precisam baixar algum aplicativo?",
@@ -104,7 +102,8 @@ export const barber = {
       },
       {
         question: "Funciona com mais de um profissional?",
-        answer: `Sim. Cada profissional tem a própria agenda. O plano inclui 1 profissional e cada extra custa ${PRICE_TEXT.extraProfessional}.`,
+        answer:
+          "Sim. Cada profissional tem a própria agenda, e o cliente escolhe com quem quer agendar.",
       },
       {
         question: "Dá pra cada barbeiro ter a própria agenda?",

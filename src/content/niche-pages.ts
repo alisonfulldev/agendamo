@@ -59,7 +59,6 @@ export function nicheHomeContent(brand: BrandConfig): HomeContent {
         { label: "Ver todas as áreas", href: "/comecar" },
       ],
     },
-    pricing: HOME.pricing,
     faq: { title: HOME.faq.title, items: [...(seo.faq ?? []), ...brand.sales.faq] },
     closing: {
       title: `Seu link de agendamento para ${niche.name.toLowerCase()} pronto em 1 minuto.`,
