@@ -8,16 +8,15 @@ export const platform = nicheBrand({
   key: "agendamo",
   segment: "beauty",
   domains: ["agendamo.example.com"],
-  // Vinho #A8466D on warm cream (docs/design/direction.md). All AA: text 15:1, muted 6.3:1,
-  // white on the brand 5.6:1, success/warning on white 5.3 and 5.4:1.
+  // Generic MeetChat palette (indigo); each niche page keeps its own colors.
   theme: {
-    primary: "#A8466D",
-    background: "#FBF6F3",
+    primary: "#4338CA",
+    background: "#F8F9FC",
     surface: "#FFFFFF",
-    text: "#2B1D23",
-    muted: "#6B5560",
-    button: "#A8466D",
-    accent: "#F5E4EA",
+    text: "#141A2E",
+    muted: "#5B6478",
+    button: "#4338CA",
+    accent: "#E3E5FB",
     danger: "#B42318",
     success: "#1F7A4D",
     warning: "#9A5B00",

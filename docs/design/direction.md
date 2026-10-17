@@ -2,28 +2,28 @@
 
 ## Conceito: "a conversa que vira horário"
 
-O site é feito do próprio produto. Cada seção mostra um pedaço real do caminho (o link na bio, a conversa, o lembrete, a agenda) em mockups que são componentes React, não imagens. Tom caloroso e confiante: fundo creme quente, vinho da marca, tipografia com personalidade nos títulos e leitura limpa no corpo. Funciona para barbearia e para consultório porque cada página de nicho usa a paleta do nicho; os componentes só leem as variáveis do tema.
+O site é feito do próprio produto. Cada seção mostra um pedaço real do caminho (o link na bio, a conversa, o lembrete, a agenda) em mockups que são componentes React, não imagens. Tom caloroso e confiante: tipografia com personalidade nos títulos e leitura limpa no corpo; na home, a cor genérica do MeetChat; em cada nicho, a cor do nicho. Funciona para barbearia e para consultório porque cada página de nicho usa a paleta do nicho; os componentes só leem as variáveis do tema.
 
-## Paleta (plataforma)
+## Paleta
 
-Base `#A8466D` (vinho), em `src/brands/platform.ts`. A escala de 10 tons e os tons de seção são derivados no CSS com `color-mix` a partir das variáveis do tema, então valem para qualquer nicho, inclusive o tema escuro da barbearia, sem cor literal fora dos arquivos de marca.
+Decisão de 2026-10-17: a home (plataforma) mantém a **cor genérica do MeetChat (índigo)**; cada página de nicho usa as **cores do próprio nicho** (o vinho `#A8466D` é a cor do nicho "beleza"). Valores em `src/brands/platform.ts` e nos arquivos de cada nicho. A escala de 10 tons e os tons de seção são derivados no CSS com `color-mix` a partir das variáveis do tema, então valem para qualquer nicho, inclusive o tema escuro da barbearia, sem cor literal fora dos arquivos de marca.
 
-| Token                        | Uso                                   | Valor (plataforma)                         |
-| ---------------------------- | ------------------------------------- | ------------------------------------------ |
-| `primary` / `button`         | marca, CTA                            | `#A8466D`                                  |
-| `background`                 | fundo creme quente                    | `#FBF6F3`                                  |
-| `surface`                    | cartões, mockups                      | `#FFFFFF`                                  |
-| `text`                       | texto principal                       | `#2B1D23`                                  |
-| `muted`                      | texto secundário (AA sobre o fundo)   | `#6B5560`                                  |
-| `accent`                     | fundo rosado das seções de tom quente | `#F5E4EA`                                  |
-| `success` (novo, opcional)   | confirmação                           | `#1F7A4D`                                  |
-| `warning` (novo, opcional)   | alerta                                | `#9A5B00`                                  |
-| `danger`                     | erro                                  | `#B42318`                                  |
-| `--brand-50` … `--brand-900` | escala derivada                       | `color-mix` de `primary` com fundo e texto |
+| Token                        | Uso                           | Valor (plataforma)                         |
+| ---------------------------- | ----------------------------- | ------------------------------------------ |
+| `primary` / `button`         | marca, CTA                    | `#4338CA`                                  |
+| `background`                 | fundo                         | `#F8F9FC`                                  |
+| `surface`                    | cartões, mockups              | `#FFFFFF`                                  |
+| `text`                       | texto principal               | `#141A2E`                                  |
+| `muted`                      | texto secundário              | `#5B6478`                                  |
+| `accent`                     | fundo das seções de tom claro | `#E3E5FB`                                  |
+| `success` (novo, opcional)   | confirmação                   | `#1F7A4D`                                  |
+| `warning` (novo, opcional)   | alerta                        | `#9A5B00`                                  |
+| `danger`                     | erro                          | `#B42318`                                  |
+| `--brand-50` … `--brand-900` | escala derivada               | `color-mix` de `primary` com fundo e texto |
 
 Nichos sem `success`/`warning` usam a cor da marca para confirmação (alerta continua `danger`).
 
-Contraste: texto `#2B1D23` sobre `#FBF6F3` ≈ 15:1; `muted` `#6B5560` sobre `#FBF6F3` ≈ 6.3:1 e sobre o rosado `#F5E4EA` ≈ 5.6:1; branco sobre `#A8466D` ≈ 5.6:1; `#A8466D` sobre o fundo ≈ 5.2:1; `success` e `warning` sobre branco ≈ 5.3 e 5.4:1 (todos AA).
+Contraste (todos AA): texto sobre o fundo ≈ 16,4:1; `muted` sobre o fundo ≈ 5,6:1 e sobre `accent` ≈ 4,8:1; branco sobre `#4338CA` ≈ 7,9:1; `#4338CA` sobre o fundo ≈ 7,5:1; `success` sobre o fundo ≈ 5,1:1.
 
 ## Tipografia
 
@@ -35,7 +35,7 @@ Contraste: texto `#2B1D23` sobre `#FBF6F3` ≈ 15:1; `muted` `#6B5560` sobre `#F
 ## Layout e ritmo
 
 - Grid de 4/8/12 colunas (`max-w-6xl`, gutter 20 px no celular), seções com 72 a 112 px de respiro vertical.
-- Ritmo de seções: creme (claro) → rosado (tom quente) → creme → escuro pontual (CTA final, cor do texto como fundo) → creme.
+- Ritmo de seções: claro → tom da marca (accent) → claro → escuro pontual (CTA final, cor do texto como fundo) → claro.
 - Cantos 16 a 28 px, bordas de 1 px a 10% do texto, sombras em duas camadas (contato curto + difusa tingida pela marca), gradientes só como luz de fundo.
 - Sem grade de cards ícone + título + texto. Variação: portas de dor com cena em primeira pessoa, linhas alternadas texto/mockup, tabela de comparação, cartões de nicho por grupo.
 
