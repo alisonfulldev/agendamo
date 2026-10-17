@@ -1,0 +1,46 @@
+# Checks on every push and pull request: lint, types and tests (the SEO quality gate,
+# unique titles/descriptions, JSON-LD validity, sitemap/robots rules, profile indexing).
+# The SEO audit job checks the published site (sitemap URLs: status, noindex, canonical, H1,
+# title, description, JSON-LD; internal links: orphans, broken links, redirects).
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "0 9 * * 1" # Mondays, 06:00 in Brasília
+  workflow_dispatch:
+    inputs:
+      url:
+        description: "Site to audit"
+        required: false
+        default: "https://meetchat.com.br"
+
+jobs:
+  checks:
+    if: github.event_name == 'push' || github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+
+  seo-audit:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    env:
+      SITE: ${{ github.event.inputs.url || 'https://meetchat.com.br' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node scripts/seo/report-index-coverage.mts "$SITE" --strict
+      - run: node scripts/seo/internal-links.mts "$SITE" --strict
