@@ -1,6 +1,6 @@
 /**
  * Sends every URL of the live sitemap to IndexNow (run after a deploy that changed pages):
- *   INDEXNOW_KEY=... node scripts/seo/indexnow.ts [https://meetchat.com.br]
+ *   INDEXNOW_KEY=... node scripts/seo/indexnow.mts [https://meetchat.com.br]
  * Reads the sitemap index and its files, then posts the URLs (up to 10 000 per request).
  * Uses only Node built-ins (no app imports), so it runs without a build.
  */
