@@ -142,6 +142,7 @@ export function NicheCityPage({ brand, listing }: { brand: BrandConfig; listing:
         <GuideCta
           title={`Atende ${niche.name.toLowerCase()} em ${listing.city}? Crie seu link de agendamento.`}
           niche={niche.route}
+          label={`Criar meu link de ${niche.name.toLowerCase()}`}
         />
       </main>
       <SiteFooter />

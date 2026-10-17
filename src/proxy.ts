@@ -14,7 +14,9 @@ import { DEMO_SESSION_COOKIE, isDemoMode } from "@/lib/demo/mode";
 import { decodeDemoSession } from "@/lib/demo/session";
 import { resolveCustomDomain } from "@/lib/domains/resolve";
 import { PATH_HEADER } from "@/lib/request-headers";
+import { BUCKET_HEADER, BUCKETS, EXPERIMENT_COOKIE } from "@/lib/experiments";
 import { securityHeaders } from "@/lib/security-headers";
+import { BOT_PATTERN } from "@/lib/tracking/events";
 
 const ONE_MONTH_SECONDS = 60 * 60 * 24 * 30;
 
@@ -73,11 +75,23 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  // Overwrites any x-brand / x-pathname sent by the client.
+  // Experiments (docs/design/experiments.md): a stable anonymous bucket for people on the
+  // marketing pages, drawn on the first visit and also passed to this request (so the first page
+  // already shows the visitor's variant). Bots never get one: search engines see the control.
+  const newBucket =
+    !request.cookies.has(EXPERIMENT_COOKIE) &&
+    !matches(path, [...PROTECTED_PREFIXES, "/api", "/auth"]) &&
+    !BOT_PATTERN.test(request.headers.get("user-agent") ?? "")
+      ? Math.floor(Math.random() * BUCKETS)
+      : null;
+
+  // Overwrites any x-brand / x-pathname / bucket header sent by the client.
   const forwardedHeaders = () => {
     const headers = new Headers(request.headers);
     headers.set(BRAND_HEADER, brand.key);
     headers.set(PATH_HEADER, path);
+    headers.delete(BUCKET_HEADER);
+    if (newBucket !== null) headers.set(BUCKET_HEADER, String(newBucket));
     return headers;
   };
 
@@ -141,6 +155,17 @@ export async function proxy(request: NextRequest) {
       secure: request.nextUrl.protocol === "https:",
       path: "/",
       maxAge: ONE_MONTH_SECONDS,
+    });
+  }
+
+  // Experiments: the bucket drawn above is saved for the next visits.
+  if (newBucket !== null) {
+    response.cookies.set(EXPERIMENT_COOKIE, String(newBucket), {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: request.nextUrl.protocol === "https:",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 180,
     });
   }
 

@@ -10,6 +10,7 @@ import { SiteTracker } from "@/components/seo/site-tracker";
 import { Breadcrumbs } from "@/components/site/breadcrumbs";
 import { SiteFooter, SiteHeader } from "@/components/site/site-chrome";
 import type { LandingCopy } from "@/content/copy/landing";
+import type { Variant } from "@/lib/experiments";
 import { siteUrl } from "@/lib/site-url";
 import { isStorageConfigured } from "@/lib/storage/r2";
 import {
@@ -50,6 +51,7 @@ export function LandingPage({
   brand = PLATFORM,
   niche,
   extras = [],
+  experiment = null,
 }: {
   copy: LandingCopy;
   /** Meta description (SoftwareApplication data). */
@@ -60,8 +62,21 @@ export function LandingPage({
   niche?: { route: string; name: string };
   /** Niche hub: guides, tools, cities and related areas. */
   extras?: LinkGroup[];
+  /** Headline/CTA experiment of the page and the visitor's variant (docs/design/experiments.md). */
+  experiment?: { label: string; variant: Variant } | null;
 }) {
   const page = siteUrl(niche ? `/${niche.route}` : "/");
+  const variant = experiment?.variant;
+  if (variant?.title || variant?.cta) {
+    copy = {
+      ...copy,
+      hero: {
+        ...copy.hero,
+        title: variant.title ?? copy.hero.title,
+        cta: variant.cta ?? copy.hero.cta,
+      },
+    };
+  }
   return (
     <div
       data-theme-scope=""
@@ -75,7 +90,7 @@ export function LandingPage({
             <Breadcrumbs items={[{ name: niche.name, path: `/${niche.route}` }]} />
           </div>
         ) : null}
-        <Hero copy={copy} niche={niche?.route} />
+        <Hero copy={copy} niche={niche?.route} brand={brand} />
         {copy.doors ? <PainDoors doors={copy.doors} /> : null}
         {copy.pains ? <PainScenes pains={copy.pains} /> : null}
         <StoryRows story={copy.story} mock={copy.mock} />
@@ -85,12 +100,26 @@ export function LandingPage({
         <PlansTeaser />
         {extras.length ? <ExtraLinks groups={extras} /> : null}
         <FaqAccordion title={faq.title} items={faq.items} />
+        {copy.ymyl ? (
+          <div className={`${container} -mt-8 max-w-3xl pb-16`}>
+            <p
+              role="note"
+              className="rounded-2xl border border-dashed p-4 text-sm text-muted-foreground"
+            >
+              {copy.ymyl.notice}
+            </p>
+          </div>
+        ) : null}
         <ClosingCta closing={copy.closing} note={copy.hero.note} niche={niche?.route} />
       </main>
       <SiteFooter />
       <StickyCta hideOn={["cta-topo", "cta-final"]} label={copy.hero.cta} niche={niche?.route} />
       <LazyCreationChat photos={isStorageConfigured()} />
-      <SiteTracker template={niche ? "nicho" : "home"} niche={niche ? brand.key : null} />
+      <SiteTracker
+        template={niche ? "nicho" : "home"}
+        niche={niche ? brand.key : null}
+        experiment={experiment?.label ?? null}
+      />
       <JsonLd
         nodes={[
           organizationNode(),

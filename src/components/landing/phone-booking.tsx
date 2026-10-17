@@ -37,7 +37,16 @@ function duration(minutes: number) {
  * on screen and answers to taps (tapping stops the autoplay). Fixed size (no layout shift); the
  * server renders the first step, so the phone is there without JavaScript.
  */
-export function PhoneBooking({ mock, label }: { mock: PhoneMock; label: string }) {
+export function PhoneBooking({
+  mock,
+  label,
+  messages,
+}: {
+  mock: PhoneMock;
+  label: string;
+  /** The niche's real chat texts ({business} already filled), so the mock speaks like the product. */
+  messages: { greeting: string; askProfessional: string; askDate: string };
+}) {
   const reduced = useSyncExternalStore(
     subscribeReducedMotion,
     () => window.matchMedia("(prefers-reduced-motion: reduce)").matches,
@@ -118,7 +127,7 @@ export function PhoneBooking({ mock, label }: { mock: PhoneMock; label: string }
           aria-live="polite"
           className="flex flex-1 flex-col gap-2.5 overflow-hidden bg-muted p-3"
         >
-          <p className={bubble}>Oi! Qual serviço você quer agendar?</p>
+          <p className={bubble}>{messages.greeting}</p>
           {stage === 0 ? (
             <div className="flex flex-col gap-2">
               {mock.services.map((s, i) => (
@@ -146,7 +155,7 @@ export function PhoneBooking({ mock, label }: { mock: PhoneMock; label: string }
 
           {stage >= 1 && askProfessional ? (
             <>
-              <p className={`lp-in ${bubble}`}>Com quem você prefere?</p>
+              <p className={`lp-in ${bubble}`}>{messages.askProfessional}</p>
               {stage === 1 ? (
                 <div className="lp-in grid grid-cols-2 gap-2">
                   {mock.professionals.map((p, i) => (
@@ -168,7 +177,7 @@ export function PhoneBooking({ mock, label }: { mock: PhoneMock; label: string }
 
           {stage >= 2 && stage < DONE ? (
             <>
-              <p className={`lp-in ${bubble}`}>Qual dia e horário ficam bons?</p>
+              <p className={`lp-in ${bubble}`}>{messages.askDate}</p>
               <div className="lp-in flex gap-1.5">
                 {DAYS.map((d, i) => (
                   <button

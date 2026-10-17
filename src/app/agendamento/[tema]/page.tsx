@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { NoShowBlock, TopicVisual } from "@/components/landing/topic-blocks";
 import { JsonLd } from "@/components/seo/json-ld";
 import { Breadcrumbs } from "@/components/site/breadcrumbs";
 import { GuideArticle, GuideCta, GuideFaq } from "@/components/site/guide-article";
@@ -65,7 +66,9 @@ export default async function IntentPageRoute({ params }: PageProps<"/agendament
         answer={page.answer}
         sections={page.sections}
         path={path}
+        afterAnswer={<TopicVisual topic={page.slug} />}
       />
+      {page.slug === "reduzir-faltas" ? <NoShowBlock /> : null}
       {byNiche.length ? (
         <nav aria-labelledby="por-area" className="mt-10">
           <h2 id="por-area" className="text-lg font-bold">

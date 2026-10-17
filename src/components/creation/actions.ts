@@ -29,8 +29,15 @@ const sourceSchema = z
     utm_medium: z.string().max(100).optional(),
     utm_campaign: z.string().max(100).optional(),
     via: z.enum(["direct", "nome", "ramo"]).optional(),
-    /** A/B test of the home's top (?v=b). */
-    variant: z.enum(["a", "b"]).optional(),
+    /** Headline/CTA experiment (docs/design/experiments.md): variant id and "experiment:variant". */
+    variant: z
+      .string()
+      .regex(/^[a-z0-9]{1,8}$/)
+      .optional(),
+    experiment: z
+      .string()
+      .regex(/^[a-z0-9-]{1,60}:[a-z0-9]{1,8}$/)
+      .optional(),
     page: z.string().max(200).optional(),
     referrer: z.string().max(200).optional(),
     /** First page of the visitor's session and the template of the page (SEO funnel). */

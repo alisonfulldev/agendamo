@@ -4,7 +4,7 @@ import Link from "next/link";
 
 import { OpenCreationLink } from "@/components/creation/open-creation";
 import type { FaqItem, GuideSection } from "@/content/niche-guides/types";
-import { HOME } from "@/content/home";
+import { NOTE } from "@/content/copy/shared";
 import { formatPageDate } from "@/content/site-pages";
 import { createEntityLinker, type EntityLinker } from "@/lib/seo/entity-links";
 import { slugify } from "@/lib/slug";
@@ -35,13 +35,18 @@ export function GuideArticle({
   const linker = createEntityLinker({ currentPath: path });
   return (
     <article>
-      <h1 className="mt-6 font-heading text-3xl leading-tight font-bold tracking-tight text-balance sm:text-4xl">
+      <h1 className="lp-display mt-6 font-heading text-[2.25rem] leading-[1.08] font-semibold text-balance sm:text-5xl">
         {h1}
       </h1>
       <p className="mt-2 text-sm text-muted-foreground">
         Atualizado em {formatPageDate(updatedAt)}
       </p>
-      <p className="mt-6 text-lg leading-relaxed text-pretty">{answer}</p>
+      <div className="mt-6 rounded-3xl border bg-brand-50 p-5 sm:p-6">
+        <p className="text-sm font-semibold tracking-wide text-primary uppercase">
+          Resposta rápida
+        </p>
+        <p className="mt-2 text-lg leading-relaxed text-pretty">{answer}</p>
+      </div>
       {afterAnswer}
       <GuideSections sections={sections} linker={linker} />
       {notice ? (
@@ -141,18 +146,31 @@ export function GuideFaq({ items }: { items: readonly FaqItem[] }) {
   );
 }
 
-/** Call to action box: opens the creation conversation (with the niche preset when given). */
-export function GuideCta({ title, niche }: { title: string; niche?: string }) {
+/**
+ * Call to action at the end of a guide, on the inverted (dark) section, with a button that says
+ * what it does and for whom ("Criar meu link de barbearia") and the D1 note under it.
+ */
+export function GuideCta({
+  title,
+  niche,
+  label = "Criar meu link de agendamento",
+}: {
+  title: string;
+  niche?: string;
+  label?: string;
+}) {
   return (
-    <aside className="site-cta-panel mt-12 flex flex-col items-start gap-3 rounded-3xl px-6 py-10 text-primary-foreground">
-      <p className="text-2xl font-bold tracking-tight text-balance">{title}</p>
+    <aside className="lp-invert mt-14 flex flex-col items-start gap-4 rounded-[2rem] px-6 py-10 sm:px-10 sm:py-12">
+      <p className="lp-display font-heading text-3xl leading-tight font-semibold text-balance">
+        {title}
+      </p>
       <OpenCreationLink
         niche={niche}
-        className="flex h-12 items-center justify-center rounded-xl bg-background px-6 font-semibold text-foreground shadow-lg"
+        className="lp-press inline-flex min-h-[52px] w-full items-center justify-center rounded-2xl bg-background px-5 py-3 text-center font-semibold text-[color:var(--brand-text)] shadow-lg sm:w-auto"
       >
-        {HOME.hero.primaryCta}
+        {label}
       </OpenCreationLink>
-      <p className="text-sm opacity-90">{HOME.hero.note}</p>
+      <p className="text-sm text-muted-foreground">{NOTE}</p>
     </aside>
   );
 }

@@ -34,6 +34,7 @@ export async function POST(request: Request) {
     template: event.template,
     niche: event.niche,
     landing: event.landing,
+    experiment: event.experiment,
     session_id: event.sessionId,
   });
   if (error) console.error("site event insert failed", error.message);

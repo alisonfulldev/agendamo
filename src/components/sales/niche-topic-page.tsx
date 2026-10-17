@@ -4,11 +4,13 @@ import Link from "next/link";
 import { getBrand } from "@/brands";
 import { brandThemeStyle } from "@/brands/theme";
 import { LazyCreationChat } from "@/components/creation/lazy-creation-chat";
+import { NoShowBlock, TopicVisual } from "@/components/landing/topic-blocks";
 import { JsonLd } from "@/components/seo/json-ld";
 import { SiteTracker } from "@/components/seo/site-tracker";
 import { Breadcrumbs } from "@/components/site/breadcrumbs";
 import { GuideArticle, GuideCta, GuideFaq } from "@/components/site/guide-article";
 import { SiteFooter, SiteHeader } from "@/components/site/site-chrome";
+import { NICHE_LANDINGS } from "@/content/copy/landing";
 import { NICHE_TOPICS, TOPIC_LABELS, type TopicEntry } from "@/content/niche-guides";
 import { pageMetadata } from "@/lib/seo/metadata";
 import { passesQualityGate } from "@/lib/seo/quality";
@@ -61,10 +63,15 @@ export function NicheTopicPage({ entry }: { entry: TopicEntry }) {
           sections={page.sections}
           notice={guide.disclaimer}
           path={entry.path}
+          afterAnswer={<TopicVisual topic={entry.topic} brandKey={brand.key} />}
         />
+        {entry.topic === "reduzir-faltas" ? <NoShowBlock /> : null}
         <GuideCta
           title={`Seu link de agendamento para ${niche.name.toLowerCase()} pronto em 1 minuto.`}
           niche={niche.route}
+          label={
+            NICHE_LANDINGS[brand.key]?.hero.cta ?? `Criar meu link de ${niche.name.toLowerCase()}`
+          }
         />
         <GuideFaq items={page.faq ?? []} />
 

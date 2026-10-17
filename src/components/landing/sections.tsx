@@ -48,8 +48,20 @@ export function CtaButton({
 }
 
 /** First screen: the pain or result in the visitor's words, mechanism + honest condition, CTA, phone. */
-export function Hero({ copy, niche }: { copy: LandingCopy; niche?: string }) {
+export function Hero({
+  copy,
+  niche,
+  brand,
+}: {
+  copy: LandingCopy;
+  niche?: string;
+  /** Brand of the page: its real chat messages go into the phone mock. */
+  brand: BrandConfig;
+}) {
   const { hero } = copy;
+  const fill = (text: string) => text.replaceAll("{business}", copy.mock.business);
+  // Long headlines get a slightly smaller size so they keep 3–4 lines on desktop.
+  const long = hero.title.length > 48;
   return (
     <section className="lp-hero-light relative overflow-hidden">
       <div
@@ -60,7 +72,13 @@ export function Hero({ copy, niche }: { copy: LandingCopy; niche?: string }) {
             <span className="size-1.5 rounded-full bg-primary" aria-hidden />
             {hero.eyebrow}
           </p>
-          <h1 className="lp-display mt-4 font-heading text-[2.5rem] leading-[1.05] font-semibold text-balance sm:text-6xl lg:text-[4rem]">
+          <h1
+            className={`lp-display mt-4 font-heading leading-[1.05] font-semibold text-balance ${
+              long
+                ? "text-[2.25rem] sm:text-5xl lg:text-[3.25rem]"
+                : "text-[2.5rem] sm:text-6xl lg:text-[4rem]"
+            }`}
+          >
             {hero.title}
           </h1>
           <p className="mt-5 max-w-xl text-[17px] leading-relaxed text-pretty text-muted-foreground sm:text-lg">
@@ -83,6 +101,11 @@ export function Hero({ copy, niche }: { copy: LandingCopy; niche?: string }) {
         </div>
         <PhoneBooking
           mock={copy.mock}
+          messages={{
+            greeting: fill(brand.chatMessages.greeting),
+            askProfessional: fill(brand.chatMessages.askProfessional),
+            askDate: fill(brand.chatMessages.askDate),
+          }}
           label={`Exemplo de agendamento em ${copy.mock.business}: escolher serviço, profissional, dia e horário`}
         />
       </div>

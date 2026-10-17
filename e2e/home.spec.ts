@@ -3,6 +3,11 @@ import { expect, test } from "@playwright/test";
 import { HOME_LANDING } from "../src/content/copy/landing";
 import { HOME } from "../src/content/home";
 
+// Bucket 0 = control of every headline experiment (docs/design/experiments.md).
+test.beforeEach(async ({ context, baseURL }) => {
+  await context.addCookies([{ name: "mc_ab", value: "0", url: baseURL! }]);
+});
+
 test("home: SEO texts, one H1, sections in order, no price values and every niche linked", async ({
   page,
 }) => {
@@ -79,7 +84,7 @@ test("phone mock: answers to taps from service to the confirmation", async ({ br
   await page.goto("/");
   const phone = page.getByRole("group", { name: /Exemplo de agendamento/ });
   // Rendered by the server: there before any JavaScript runs.
-  await expect(phone.getByText("Oi! Qual serviço você quer agendar?")).toBeVisible();
+  await expect(phone.getByText(/Qual serviço você quer agendar\?/)).toBeVisible();
   const [first] = HOME_LANDING.mock.services;
   await phone.getByRole("button", { name: new RegExp(first!.name) }).click();
   await phone.getByRole("button", { name: HOME_LANDING.mock.professionals[1]! }).click();

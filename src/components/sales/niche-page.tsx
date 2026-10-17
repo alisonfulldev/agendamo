@@ -9,6 +9,7 @@ import { getPublishedGuide, NICHE_TOPICS, TOPIC_LABELS } from "@/content/niche-g
 import { TOOLS } from "@/content/tools";
 import { nicheHomeContent } from "@/content/niche-pages";
 import { getDirectoryCities } from "@/lib/directory/data";
+import { experimentVariant } from "@/lib/experiments-server";
 import { pageMetadata } from "@/lib/seo/metadata";
 import { passesQualityGate } from "@/lib/seo/quality";
 
@@ -99,6 +100,7 @@ async function NicheLanding({ brand, copy }: { brand: BrandConfig; copy: Landing
       brand={brand}
       niche={{ route: niche.route, name: niche.name }}
       extras={extras}
+      experiment={await experimentVariant(`/${niche.route}`)}
     />
   );
 }

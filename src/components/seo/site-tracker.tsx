@@ -8,7 +8,11 @@ const SESSION_KEY = "mc_site_session";
 const LANDING_KEY = "mc_site_landing";
 
 /** Template and niche of the page on screen, for the CTA click and the sign-up source. */
-let current: { template: SiteTemplate; niche: string | null } = { template: "outro", niche: null };
+let current: { template: SiteTemplate; niche: string | null; experiment: string | null } = {
+  template: "outro",
+  niche: null,
+  experiment: null,
+};
 
 function stored(key: string, create: () => string): string | null {
   try {
@@ -62,13 +66,16 @@ export function trackSiteEvent(type: "page_view" | "cta_click") {
 export function SiteTracker({
   template,
   niche = null,
+  experiment = null,
 }: {
   template: SiteTemplate;
   niche?: string | null;
+  /** "experiment:variant" shown on this page (docs/design/experiments.md). */
+  experiment?: string | null;
 }) {
   useEffect(() => {
-    current = { template, niche };
+    current = { template, niche, experiment };
     trackSiteEvent("page_view");
-  }, [template, niche]);
+  }, [template, niche, experiment]);
   return null;
 }

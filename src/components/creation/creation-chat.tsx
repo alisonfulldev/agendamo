@@ -207,7 +207,9 @@ function sourceInfo(viaName: boolean, viaNiche: boolean) {
     utm_medium: pick("utm_medium"),
     utm_campaign: pick("utm_campaign"),
     via: viaName ? ("nome" as const) : viaNiche ? ("ramo" as const) : ("direct" as const),
-    variant: params.get("v") === "b" ? ("b" as const) : ("a" as const),
+    // Headline/CTA experiment of the page where the conversation started.
+    variant: siteContext().experiment?.split(":")[1],
+    experiment: siteContext().experiment ?? undefined,
     page: window.location.pathname.slice(0, 200),
     referrer,
     // Funnel attribution (Fase 9): the session's first page and the template of this one.

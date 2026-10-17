@@ -3,9 +3,10 @@ import { Figtree, Fraunces, Inter, Lora, Nunito, Oswald, Poppins } from "next/fo
 import type { FontKey } from "./schema";
 
 // Every FontKey in schema.ts must be loaded here with the matching CSS variable.
-// preload is off so one brand does not download another brand's fonts, except the MeetChat
-// site's own pair (Fraunces + Figtree, the home) and Inter, the body font of most niches, so the
-// title at the top paints early (Lighthouse LCP). Fallbacks are metric-adjusted (no layout shift).
+// preload is off so one page does not download another brand's fonts, except the MeetChat
+// site's own pair (Fraunces + Figtree, the home), so the title at the top paints early (LCP).
+// Preloading Inter too made the three files compete on slow connections. Fallbacks are
+// metric-adjusted, so a niche font arriving late causes no layout shift.
 const poppins = Poppins({
   variable: "--font-poppins",
   weight: ["400", "500", "600", "700"],
@@ -38,6 +39,7 @@ const oswald = Oswald({
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
+  preload: false,
 });
 
 const lora = Lora({

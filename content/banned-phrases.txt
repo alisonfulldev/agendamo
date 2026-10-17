@@ -1,0 +1,38 @@
+# Frases proibidas na copy do site (uma por linha, sem diferenciar maiúsculas).
+# Clichês de marketing e de IA, superlativos sem prova, urgência falsa e promessas de resultado.
+# O teste src/lib/copy/copy-lint.test.ts falha se alguma aparecer num texto publicado.
+revolucion
+alavanc
+solução completa
+descubra como
+em um mundo cada vez mais
+vale ressaltar
+vale lembrar que
+no mundo de hoje
+potencialize
+maximize
+transforme seu negócio
+próximo nível
+inovador
+de ponta
+incrível
+imperdível
+garantido
+garantimos
+o melhor
+a melhor
+o mais rápido
+a mais rápida
+número 1
+nº 1
+líder de mercado
+para sempre
+últimas vagas
+só hoje
+aumente seu faturamento
+aumente suas vendas
+dobre
+triplique
+fature mais
+lucre mais
+sem esforço nenhum

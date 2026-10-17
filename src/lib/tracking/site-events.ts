@@ -35,6 +35,12 @@ export const siteEventSchema = z.object({
     .nullable()
     .default(null),
   landing: path.nullable().default(null),
+  /** "experiment:variant" of a headline/CTA test, e.g. "home-hero:b". */
+  experiment: z
+    .string()
+    .regex(/^[a-z0-9-]{1,60}:[a-z0-9]{1,8}$/)
+    .nullable()
+    .default(null),
   sessionId: z.uuid(),
 });
 

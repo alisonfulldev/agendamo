@@ -6,6 +6,7 @@ import { LandingPage } from "@/components/landing/landing-page";
 import { SalesPage } from "@/components/sales/sales-page";
 import { HOME_LANDING } from "@/content/copy/landing";
 import { HOME } from "@/content/home";
+import { experimentVariant } from "@/lib/experiments-server";
 import { pageMetadata } from "@/lib/seo/metadata";
 
 /**
@@ -41,5 +42,12 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function Home() {
   const niche = await homeBrand();
   if (niche) return <SalesPage brand={niche} signupHref="/cadastro" />;
-  return <LandingPage copy={HOME_LANDING} description={HOME.meta.description} faq={HOME.faq} />;
+  return (
+    <LandingPage
+      copy={HOME_LANDING}
+      description={HOME.meta.description}
+      faq={HOME.faq}
+      experiment={await experimentVariant("/")}
+    />
+  );
 }
