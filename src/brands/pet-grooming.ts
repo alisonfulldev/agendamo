@@ -5,6 +5,7 @@ export const petGrooming = nicheBrand({
   segment: "pet_grooming",
   niche: {
     route: "banho-e-tosa",
+    schemaType: "LocalBusiness",
     name: "Banho e tosa",
     icon: "paw",
     group: "pets",

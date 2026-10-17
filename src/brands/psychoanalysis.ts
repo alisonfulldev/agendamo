@@ -6,6 +6,7 @@ export const psychoanalysis = nicheBrand({
   segment: "psychoanalysis",
   niche: {
     route: "psicanalise",
+    schemaType: "ProfessionalService",
     name: "Psicanálise",
     icon: "sofa",
     group: "health",

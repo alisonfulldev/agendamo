@@ -5,6 +5,7 @@ export const photography = nicheBrand({
   segment: "photography",
   niche: {
     route: "fotografia",
+    schemaType: "ProfessionalService",
     name: "Fotografia",
     icon: "camera",
     group: "services",

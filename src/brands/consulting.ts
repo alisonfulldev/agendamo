@@ -5,6 +5,7 @@ export const consulting = nicheBrand({
   segment: "consulting",
   niche: {
     route: "consultoria",
+    schemaType: "ProfessionalService",
     name: "Consultorias",
     icon: "briefcase",
     group: "services",

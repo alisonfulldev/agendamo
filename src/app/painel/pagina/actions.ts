@@ -6,15 +6,18 @@ import { z } from "zod";
 import { getPlanFeatures } from "@/lib/plans";
 import { requireOwner } from "@/lib/business/context";
 import { invalidatePublicPage } from "@/lib/cache";
+import { notifyProfileChanged } from "@/lib/seo/profile-indexnow";
 import { invalid, type FormState } from "@/lib/forms";
 import { parseBRL } from "@/lib/money";
 import { normalizeBrPhone } from "@/lib/phone";
 import { normalizeInstagram } from "@/lib/social";
 import { createClient } from "@/lib/supabase/server";
 
-function refresh(slug: string) {
-  invalidatePublicPage(slug);
+/** Profile content changed: fresh public page, panel and IndexNow (when the profile is complete). */
+function refresh(business: { slug: string; brand_key: string | null }) {
+  invalidatePublicPage(business.slug);
   revalidatePath("/painel/pagina");
+  notifyProfileChanged(business);
 }
 
 const emptyToNull = (v: unknown) => (typeof v === "string" && v.trim() === "" ? null : v);
@@ -86,7 +89,7 @@ export async function savePageInfoAction(_prev: FormState, formData: FormData): 
     updated_at: new Date().toISOString(),
   });
   if (error) return { ok: false, message: "Não foi possível salvar. Tente de novo." };
-  refresh(business.slug);
+  refresh(business);
   return { ok: true, message: "Perfil atualizado." };
 }
 
@@ -118,7 +121,7 @@ export async function saveLinksAction(input: unknown): Promise<{ ok: boolean; er
       );
     if (error) return { ok: false, error: "Não foi possível salvar." };
   }
-  refresh(business.slug);
+  refresh(business);
   return { ok: true };
 }
 
@@ -224,7 +227,7 @@ export async function saveServiceAction(_prev: FormState, formData: FormData): P
       );
     }
   }
-  refresh(business.slug);
+  refresh(business);
   return { ok: true, message: "Serviço salvo." };
 }
 
@@ -246,7 +249,7 @@ export async function deleteServiceAction(
     .eq("business_id", business.id);
   if (error)
     return { ok: false, error: "Não foi possível excluir. Desative o serviço em vez disso." };
-  refresh(business.slug);
+  refresh(business);
   return { ok: true };
 }
 
@@ -259,7 +262,7 @@ export async function reorderServicesAction(orderedIds: string[]): Promise<{ ok:
       supabase.from("services").update({ position }).eq("id", id).eq("business_id", business.id),
     ),
   );
-  refresh(business.slug);
+  refresh(business);
   return { ok: true };
 }
 
@@ -325,7 +328,7 @@ export async function saveComboAction(input: unknown): Promise<{ ok: boolean; er
     })),
   );
   if (error) return { ok: false, error: "Não foi possível salvar os serviços do combo." };
-  refresh(business.slug);
+  refresh(business);
   return { ok: true };
 }
 
@@ -333,6 +336,6 @@ export async function deleteComboAction(comboId: string): Promise<{ ok: boolean 
   const { business } = await requireOwner();
   const supabase = await createClient();
   await supabase.from("combos").delete().eq("id", comboId).eq("business_id", business.id);
-  refresh(business.slug);
+  refresh(business);
   return { ok: true };
 }

@@ -5,6 +5,7 @@ export const tutoring = nicheBrand({
   segment: "tutoring",
   niche: {
     route: "aulas",
+    schemaType: "ProfessionalService",
     name: "Aulas particulares",
     icon: "cap",
     group: "services",

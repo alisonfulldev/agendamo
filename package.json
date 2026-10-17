@@ -6,6 +6,7 @@
     "dev": "next dev",
     "dev:demo": "node scripts/dev-demo.mjs",
     "check:setup": "node scripts/check-setup.mjs",
+    "prebuild": "npm run -s seo:gate",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
@@ -17,7 +18,11 @@
     "test:e2e": "playwright test",
     "test:e2e:demo": "playwright test --config playwright.demo.config.ts",
     "db:new": "supabase migration new",
-    "db:push": "supabase db push"
+    "db:push": "supabase db push",
+    "seo:indexnow": "node scripts/seo/indexnow.mts",
+    "seo:gate": "vitest run src/lib/seo/quality-gate.test.ts",
+    "seo:links": "node scripts/seo/internal-links.mts",
+    "seo:coverage": "node scripts/seo/report-index-coverage.mts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1145.0",

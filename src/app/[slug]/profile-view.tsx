@@ -3,7 +3,8 @@ import type { ReactNode } from "react";
 
 import { PLATFORM } from "@/brands";
 import { MeetChatBadge } from "@/components/chat/meetchat-badge";
-import { brandUrl } from "@/brands/urls";
+import { canonicalUrl, nicheHubUrl } from "@/brands/urls";
+import { reportProfileHref } from "@/content/contact";
 import { formatBRL, formatDuration } from "@/lib/money";
 import { instagramHandle } from "@/lib/social";
 import { publicUrl } from "@/lib/storage/r2";
@@ -282,9 +283,18 @@ export function ProfileView({
 
       {loaded.features.removeBranding ? null : (
         <div className="flex justify-center pt-2">
-          <MeetChatBadge href={brandUrl(brand, "/")} logo={PLATFORM.logo} />
+          <MeetChatBadge href={nicheHubUrl(brand)} logo={PLATFORM.logo} niche={brand.niche?.name} />
         </div>
       )}
+      <p className="text-center text-xs text-muted-foreground">
+        <a
+          href={reportProfileHref(canonicalUrl(brand, `/${data.business.slug}/perfil`))}
+          className="underline-offset-4 hover:underline"
+          rel="nofollow"
+        >
+          Denunciar este perfil
+        </a>
+      </p>
     </div>
   );
 }

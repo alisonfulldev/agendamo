@@ -6,6 +6,7 @@ export const medical = nicheBrand({
   kind: "health",
   niche: {
     route: "consultorios",
+    schemaType: "Physician",
     name: "Consultórios médicos",
     icon: "stethoscope",
     group: "health",

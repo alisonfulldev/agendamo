@@ -10,6 +10,7 @@ export const beauty = {
   defaultSegment: "beauty",
   niche: {
     route: "beleza",
+    schemaType: "BeautySalon",
     name: "Beleza",
     icon: "sparkles",
     group: "beauty",

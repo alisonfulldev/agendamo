@@ -11,8 +11,9 @@ import { getBrand } from "@/brands";
 import { audit } from "@/lib/audit";
 import { localToUtc } from "@/lib/availability";
 import { requireOwner } from "@/lib/business/context";
-import { slugSchema, weeklyHoursSchema } from "@/lib/business/schemas";
+import { businessNameSchema, slugSchema, weeklyHoursSchema } from "@/lib/business/schemas";
 import { invalidatePublicPage } from "@/lib/cache";
+import { notifyProfileChanged } from "@/lib/seo/profile-indexnow";
 import { formValues, invalid, type FormState } from "@/lib/forms";
 import { normalizePixKey, pixText } from "@/lib/pix";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -25,7 +26,7 @@ function refresh(slug: string) {
 }
 
 const businessSchema = z.object({
-  name: z.string().trim().min(2, "Informe o nome").max(120),
+  name: businessNameSchema,
   slug: slugSchema,
   timezone: z.enum(BR_TIMEZONE_VALUES),
   slot_interval_minutes: z.coerce
@@ -136,6 +137,7 @@ export async function saveBusinessAction(_prev: FormState, formData: FormData): 
     };
   refresh(business.slug);
   if (parsed.data.slug !== business.slug) invalidatePublicPage(parsed.data.slug);
+  notifyProfileChanged({ ...business, slug: parsed.data.slug }, business.slug);
   return { ok: true, message: "Configurações salvas." };
 }
 

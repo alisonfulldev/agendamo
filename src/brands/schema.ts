@@ -36,6 +36,25 @@ export const SEGMENTS = [
   "general",
 ] as const;
 
+/** schema.org LocalBusiness types used by the niches (structured data of business profiles). */
+export const SCHEMA_BUSINESS_TYPES = [
+  "LocalBusiness",
+  "BeautySalon",
+  "HairSalon",
+  "NailSalon",
+  "TattooParlor",
+  "HealthAndBeautyBusiness",
+  "MedicalBusiness",
+  "Physician",
+  "Dentist",
+  "Physiotherapy",
+  "VeterinaryCare",
+  "SportsActivityLocation",
+  "ProfessionalService",
+  "AutoWash",
+] as const;
+export type SchemaBusinessType = (typeof SCHEMA_BUSINESS_TYPES)[number];
+
 /** Sections of the niche list on the MeetChat site. */
 export const NICHE_GROUPS = ["beauty", "health", "wellness", "pets", "services"] as const;
 
@@ -136,6 +155,8 @@ export const brandConfigSchema = z.object({
   niche: z
     .object({
       route: z.string().regex(/^[a-z]+(-[a-z]+)*$/),
+      /** schema.org type of this niche's businesses (LocalBusiness or a subtype), for profiles. */
+      schemaType: z.enum(SCHEMA_BUSINESS_TYPES),
       /** Short name for menus and links ("Psicologia"). */
       name: text,
       /** Icon shown on the niche cards (mapped to an icon in the UI). */

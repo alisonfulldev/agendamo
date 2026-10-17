@@ -5,6 +5,7 @@ export const tattoo = nicheBrand({
   segment: "tattoo",
   niche: {
     route: "tatuagem",
+    schemaType: "TattooParlor",
     name: "Tatuagem",
     icon: "pen",
     group: "beauty",

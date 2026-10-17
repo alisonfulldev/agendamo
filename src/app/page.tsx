@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 
 import { getCurrentBrand } from "@/brands/server";
-import { brandUrl, hasRealDomain } from "@/brands/urls";
+import { hasRealDomain } from "@/brands/urls";
 import { HomePage } from "@/components/home/home-page";
 import { SalesPage } from "@/components/sales/sales-page";
 import { HOME } from "@/content/home";
-import { siteUrl } from "@/lib/site-url";
+import { pageMetadata } from "@/lib/seo/metadata";
 
 /**
  * Home: the short MeetChat sales page (src/content/home.ts). A niche that one day answers on its
@@ -19,32 +19,21 @@ async function homeBrand() {
 export async function generateMetadata(): Promise<Metadata> {
   const niche = await homeBrand();
   if (niche) {
-    return {
-      title: { absolute: `${niche.name} · ${niche.sales.title}` },
+    return pageMetadata({
+      title: `${niche.name} · ${niche.sales.title}`,
       description: niche.sales.subtitle,
-      alternates: { canonical: brandUrl(niche, "/").split("?")[0] },
-      openGraph: {
-        title: niche.sales.title,
-        description: niche.sales.subtitle,
-        images: [{ url: "/og", width: 1200, height: 630 }],
-      },
-    };
+      path: "/",
+      brand: niche,
+      siteName: niche.name,
+      socialTitle: niche.sales.title,
+    });
   }
-  return {
-    title: { absolute: HOME.meta.title },
+  return pageMetadata({
+    title: HOME.meta.title,
     description: HOME.meta.description,
-    alternates: { canonical: siteUrl("/") },
-    openGraph: {
-      title: HOME.hero.title,
-      description: HOME.meta.description,
-      url: siteUrl("/"),
-      siteName: "MeetChat",
-      locale: "pt_BR",
-      type: "website",
-      images: [{ url: "/og", width: 1200, height: 630 }],
-    },
-    twitter: { card: "summary_large_image" },
-  };
+    path: "/",
+    socialTitle: HOME.hero.title,
+  });
 }
 
 export default async function Home({ searchParams }: PageProps<"/">) {

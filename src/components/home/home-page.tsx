@@ -15,15 +15,26 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
-import { NICHES, PLATFORM, type BrandConfig } from "@/brands";
+import { PLATFORM, type BrandConfig } from "@/brands";
 import { brandThemeStyle } from "@/brands/theme";
 import { HOME_DEMO, heroDemoFor } from "@/content/hero-demo";
 import { HOME, type HomeContent } from "@/content/home";
 import { siteUrl } from "@/lib/site-url";
+import {
+  faqNode,
+  organizationNode,
+  softwareApplicationNode,
+  websiteNode,
+} from "@/lib/seo/structured-data";
 import { isStorageConfigured } from "@/lib/storage/r2";
 
 import { LazyCreationChat } from "@/components/creation/lazy-creation-chat";
 import { OpenCreationLink } from "@/components/creation/open-creation";
+
+import { JsonLd } from "@/components/seo/json-ld";
+import { SiteTracker } from "@/components/seo/site-tracker";
+import { Breadcrumbs } from "@/components/site/breadcrumbs";
+import { SiteFooter, SiteHeader } from "@/components/site/site-chrome";
 
 import { PhoneDemo } from "./phone-demo";
 import { StickyCta } from "./sticky-cta";
@@ -40,44 +51,21 @@ const ICONS: Record<string, LucideIcon> = {
   pointer: MousePointerClick,
 };
 
-/** Structured data for search engines: the app with its price, the FAQ and the breadcrumb. */
-function jsonLd(content: HomeContent, niche?: { route: string; name: string }) {
+/**
+ * Structured data: MeetChat (organization, and the site on the home), the app with the two price
+ * levels of /precos and the FAQ shown on the page (niche pages add the breadcrumb's own).
+ */
+function structuredData(content: HomeContent, niche?: { route: string; name: string }) {
   const page = siteUrl(niche ? `/${niche.route}` : "/");
   return [
-    {
-      "@context": "https://schema.org",
-      "@type": "Organization",
-      name: "MeetChat",
-      url: siteUrl("/"),
-      logo: siteUrl(PLATFORM.logo),
-      email: "contato@brandcodesolutions.com.br",
-    },
-    {
-      "@context": "https://schema.org",
-      "@type": "SoftwareApplication",
+    organizationNode(),
+    niche ? null : websiteNode(),
+    softwareApplicationNode({
       name: niche ? `MeetChat para ${niche.name.toLowerCase()}` : "MeetChat",
-      applicationCategory: "BusinessApplication",
-      operatingSystem: "Web",
       url: page,
       description: content.meta.description,
-    },
-    {
-      "@context": "https://schema.org",
-      "@type": "FAQPage",
-      mainEntity: content.faq.items.map((item) => ({
-        "@type": "Question",
-        name: item.question,
-        acceptedAnswer: { "@type": "Answer", text: item.answer },
-      })),
-    },
-    {
-      "@context": "https://schema.org",
-      "@type": "BreadcrumbList",
-      itemListElement: [
-        { "@type": "ListItem", position: 1, name: "MeetChat", item: siteUrl("/") },
-        ...(niche ? [{ "@type": "ListItem", position: 2, name: niche.name, item: page }] : []),
-      ],
-    },
+    }),
+    faqNode(content.faq.items),
   ];
 }
 
@@ -111,26 +99,14 @@ export function HomePage({
       style={brandThemeStyle(brand)}
       className="flex min-h-full flex-col bg-background font-sans text-foreground"
     >
-      <header className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-5">
-        <Link href="/" className="flex items-center gap-2 font-heading text-lg font-semibold">
-          {/* eslint-disable-next-line @next/next/no-img-element -- small static SVG logo */}
-          <img src={brand.logo} alt="" width={30} height={30} />
-          MeetChat
-          {niche ? (
-            <span className="rounded-full border bg-card px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
-              {niche.name}
-            </span>
-          ) : null}
-        </Link>
-        <Link
-          href="/entrar"
-          className="rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground"
-        >
-          Entrar
-        </Link>
-      </header>
+      <SiteHeader badge={niche?.name} logo={brand.logo} />
 
       <main className="flex-1">
+        {niche ? (
+          <div className="mx-auto max-w-6xl px-5 pt-1">
+            <Breadcrumbs items={[{ name: niche.name, path: `/${niche.route}` }]} />
+          </div>
+        ) : null}
         {/* Top: what it is in 3 seconds, the product working and one main button. */}
         <section id="topo">
           <div className="mx-auto grid max-w-6xl items-start gap-8 px-5 pt-2 pb-12 md:items-center md:gap-12 md:pt-12 md:pb-16 lg:grid-cols-[1.1fr_0.9fr]">
@@ -231,6 +207,19 @@ export function HomePage({
           </section>
         ) : null}
 
+        {content.notes ? (
+          <section aria-labelledby="nicho" className="below-fold mx-auto max-w-3xl px-5 pb-14">
+            <h2 id="nicho" className="text-2xl font-bold tracking-tight text-balance sm:text-3xl">
+              {content.notes.title}
+            </h2>
+            <ul className="mt-5 flex list-disc flex-col gap-3 pl-6 text-lg leading-relaxed text-muted-foreground marker:text-primary">
+              {content.notes.items.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
+
         {/* Gains */}
         <section aria-labelledby="ganhos" className="below-fold mx-auto max-w-6xl px-5 py-16">
           <h2 id="ganhos" className="text-center text-3xl font-bold tracking-tight text-balance">
@@ -266,6 +255,46 @@ export function HomePage({
             {content.reminders.text}
           </p>
         </section>
+
+        {content.cities ? (
+          <nav aria-labelledby="cidades" className="mx-auto max-w-3xl px-5 pb-16">
+            <h2 id="cidades" className="text-2xl font-bold tracking-tight text-balance">
+              {content.cities.title}
+            </h2>
+            <ul className="mt-5 flex flex-wrap gap-2.5">
+              {content.cities.links.map((link) => (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    className="inline-flex h-10 items-center rounded-full border bg-card px-4 text-sm font-medium transition-colors hover:border-primary hover:text-primary"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        ) : null}
+
+        {content.guides ? (
+          <nav aria-labelledby="guias" className="mx-auto max-w-3xl px-5 pb-16">
+            <h2 id="guias" className="text-2xl font-bold tracking-tight text-balance">
+              {content.guides.title}
+            </h2>
+            <ul className="mt-5 grid gap-3 sm:grid-cols-3">
+              {content.guides.links.map((link) => (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    className="flex h-full items-center rounded-2xl border bg-card p-4 font-medium transition-colors hover:border-primary hover:text-primary"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        ) : null}
 
         {/* FAQ */}
         <section aria-labelledby="faq" className="mx-auto max-w-3xl px-5 py-16">
@@ -306,45 +335,12 @@ export function HomePage({
         </section>
       </main>
 
-      <nav aria-labelledby="areas" className="mx-auto w-full max-w-6xl px-5 pb-10">
-        <h2 id="areas" className="text-sm font-semibold text-muted-foreground">
-          Agendamento online por área
-        </h2>
-        <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-sm">
-          {NICHES.map((b) => (
-            <li key={b.key}>
-              <Link
-                href={`/${b.niche!.route}`}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                {b.niche!.name}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </nav>
-
-      <footer className="border-t pb-24 md:pb-0">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-5 py-8 text-sm text-muted-foreground sm:flex-row">
-          <p>© 2026 MeetChat</p>
-          <nav aria-label="Rodapé" className="flex flex-wrap justify-center gap-5">
-            {content.footer.links.map((link) => (
-              <Link key={link.label} href={link.href} className="hover:text-foreground">
-                {link.label}
-              </Link>
-            ))}
-          </nav>
-        </div>
-      </footer>
+      <SiteFooter links={content.footer.links} />
 
       <StickyCta hideOn={["cta-topo", "cta-final"]} label={hero.primaryCta} niche={route} />
       <LazyCreationChat photos={isStorageConfigured()} />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(jsonLd(content, niche)).replace(/</g, "\\u003c"),
-        }}
-      />
+      <SiteTracker template={niche ? "nicho" : "home"} niche={niche ? brand.key : null} />
+      <JsonLd nodes={structuredData(content, niche)} />
     </div>
   );
 }

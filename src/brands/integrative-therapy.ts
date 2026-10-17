@@ -5,6 +5,7 @@ export const integrativeTherapy = nicheBrand({
   segment: "integrative_therapy",
   niche: {
     route: "terapias-integrativas",
+    schemaType: "HealthAndBeautyBusiness",
     name: "Terapias integrativas",
     icon: "leaf",
     group: "wellness",

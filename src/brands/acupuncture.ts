@@ -6,6 +6,7 @@ export const acupuncture = nicheBrand({
   segment: "acupuncture",
   niche: {
     route: "acupuntura",
+    schemaType: "HealthAndBeautyBusiness",
     name: "Acupuntura",
     icon: "target",
     group: "wellness",

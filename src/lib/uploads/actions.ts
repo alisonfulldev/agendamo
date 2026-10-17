@@ -6,6 +6,7 @@ import { z } from "zod";
 import { audit } from "@/lib/audit";
 import { requireOwner } from "@/lib/business/context";
 import { invalidatePublicPage } from "@/lib/cache";
+import { notifyProfileChanged } from "@/lib/seo/profile-indexnow";
 import { IMAGE_KINDS, isKeyOf, MAX_UPLOAD_BYTES } from "@/lib/images/presets";
 import { getPlanFeatures } from "@/lib/plans";
 import { deleteObject, objectSize } from "@/lib/storage/r2";
@@ -22,9 +23,11 @@ const registerSchema = z.object({
   professionalId: z.uuid().optional(),
 });
 
-function refresh(slug: string) {
-  invalidatePublicPage(slug);
+/** Profile content changed: fresh public page, panel and IndexNow (when the profile is complete). */
+function refresh(business: { slug: string; brand_key: string | null }) {
+  invalidatePublicPage(business.slug);
   revalidatePath("/painel", "layout");
+  notifyProfileChanged(business);
 }
 
 /** Records an image after the browser uploaded it to R2 with the presigned URL. */
@@ -105,7 +108,7 @@ export async function registerUploadAction(input: unknown): Promise<UploadResult
     if (current?.photo_key) await deleteObject(current.photo_key as string);
   }
 
-  refresh(business.slug);
+  refresh(business);
   return { ok: true };
 }
 
@@ -134,7 +137,7 @@ export async function deletePhotoAction(photoId: string): Promise<UploadResult> 
     action: "photo.deleted",
     details: { key: photo.object_key },
   });
-  refresh(business.slug);
+  refresh(business);
   return { ok: true };
 }
 
@@ -154,7 +157,7 @@ export async function removePageImageAction(kind: "avatar" | "cover"): Promise<U
     .update({ [column]: null })
     .eq("business_id", business.id);
   if (key) await deleteObject(key);
-  refresh(business.slug);
+  refresh(business);
   return { ok: true };
 }
 
@@ -170,6 +173,6 @@ export async function reorderPhotosAction(orderedIds: string[]): Promise<UploadR
     ),
   );
   if (results.some((r) => r.error)) return { ok: false, error: "Não foi possível salvar a ordem." };
-  refresh(business.slug);
+  refresh(business);
   return { ok: true };
 }

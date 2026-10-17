@@ -5,6 +5,7 @@ export const personalTrainer = nicheBrand({
   segment: "personal_trainer",
   niche: {
     route: "personal",
+    schemaType: "ProfessionalService",
     name: "Personal trainer",
     icon: "dumbbell",
     group: "wellness",

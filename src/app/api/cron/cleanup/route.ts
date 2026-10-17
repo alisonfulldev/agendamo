@@ -4,19 +4,20 @@ import { deleteObject, isStorageConfigured } from "@/lib/storage/r2";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 /**
- * Daily housekeeping: abandoned bookings > 30 days, expired tokens, old rate limits, raw events and
- * demonstrations older than 7 days (with their photos).
+ * Daily housekeeping: abandoned bookings > 30 days, expired tokens, old rate limits, raw events,
+ * demonstrations older than 7 days (with their photos) and site events older than 400 days.
  */
 export const POST = cronRoute(async () => {
   const admin = createAdminClient();
-  const [expired, rateLimits, events, demos, codes] = await Promise.all([
+  const [expired, rateLimits, events, demos, codes, siteEvents] = await Promise.all([
     admin.rpc("purge_expired"),
     admin.rpc("purge_rate_limits"),
     admin.rpc("purge_page_events"),
     admin.rpc("purge_expired_demos"),
     admin.rpc("purge_email_codes"),
+    admin.rpc("purge_site_events"),
   ]);
-  for (const r of [expired, rateLimits, events, demos, codes])
+  for (const r of [expired, rateLimits, events, demos, codes, siteEvents])
     if (r.error) throw new Error(r.error.message);
   const photos = ((demos.data ?? []) as { photo_key: string | null }[])
     .map((d) => d.photo_key)

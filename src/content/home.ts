@@ -1,3 +1,7 @@
+import { TRIAL_DAYS } from "@/lib/plans";
+
+import { CONTACT_EMAIL } from "./contact";
+
 type Icon =
   | "moon"
   | "ghost"
@@ -26,6 +30,12 @@ export interface HomeContent {
   };
   /** Unique text about the niche (niche pages), after "Como funciona". */
   intro?: { title: string; paragraphs: readonly string[] };
+  /** What is particular about scheduling in the niche (published niche guides). */
+  notes?: { title: string; items: readonly string[] };
+  /** Directory cities of the niche with enough profiles (/{nicho}/{cidade}). */
+  cities?: { title: string; links: readonly { label: string; href: string }[] };
+  /** Links to the niche's subpages (published niche guides). */
+  guides?: { title: string; links: readonly { label: string; href: string }[] };
   steps: { title: string; items: readonly string[] };
   gains: { title: string; items: readonly { icon: Icon; text: string }[] };
   reminders: { title: string; text: string };
@@ -42,22 +52,23 @@ export interface HomeContent {
 }
 
 /**
- * Texts of the home page (sales page of the MeetChat site). No prices and no trial on the public
- * pages (decided 2026-10-13): they show up in the panel after the account exists.
+ * Texts of the home page (sales page of the MeetChat site). Prices only on /precos (2026-10-16);
+ * "grátis" only where true, with the limit next to the promise.
  */
 export const HOME: HomeContent = {
   meta: {
     title: "Agendamento online grátis pelo link da bio | MeetChat",
     description:
-      "Crie seu link de agendamento em 1 minuto. Seus clientes marcam horário sozinhos pelo Instagram e WhatsApp, 24h. Grátis, sem cartão.",
+      "Crie seu link de agendamento em 1 minuto. Seus clientes marcam horário sozinhos pelo Instagram e WhatsApp, 24h. Comece grátis, sem cartão.",
   },
   hero: {
     eyebrow: "Agendamento online grátis",
     title: "Seus clientes marcam horário sozinhos, 24h",
     subtitle:
       "Crie seu link de agendamento em 1 minuto e coloque no Instagram e no WhatsApp. Sem app e sem responder mensagem.",
-    primaryCta: "Criar meu link grátis",
-    note: "Sem cartão · pronto em 1 minuto",
+    primaryCta: "Comece grátis, sem cartão",
+    // D1 (2026-10-16): the limit of "grátis" stays next to the promise.
+    note: "Grátis no modo WhatsApp. Lembretes automáticos e agenda completa no plano pago.",
     points: [
       "Agenda 24h sem responder mensagem",
       "Lembrete para o cliente não faltar",
@@ -107,6 +118,10 @@ export const HOME: HomeContent = {
     title: "Perguntas frequentes",
     items: [
       {
+        question: "O MeetChat é grátis?",
+        answer: `Criar a conta e colocar o link no ar é grátis, sem cartão. No modo grátis, o cliente escolhe o serviço, o dia e o turno e chama você no WhatsApp com a mensagem pronta. Lembretes automáticos, horário reservado na hora e a agenda completa são do plano pago. Todo cadastro começa com ${TRIAL_DAYS} dias do plano pago, sem cartão.`,
+      },
+      {
         question: "Preciso de cartão?",
         answer: "Não. Você cria sua conta e coloca seu link no ar sem cartão.",
       },
@@ -138,14 +153,20 @@ export const HOME: HomeContent = {
   },
   closing: {
     title: "Seu link de agendamento pronto em 1 minuto.",
-    cta: "Criar meu link grátis",
+    cta: "Comece grátis, sem cartão",
   },
   footer: {
     links: [
+      { label: "Preços", href: "/precos" },
+      { label: "Guias", href: "/agendamento" },
+      { label: "Ferramentas", href: "/ferramentas" },
+      { label: "Comparativos", href: "/comparar" },
+      { label: "Recursos", href: "/recursos" },
+      { label: "Ajuda", href: "/ajuda" },
       { label: "Termos de uso", href: "/termos" },
       { label: "Privacidade", href: "/privacidade" },
       // Support is by e-mail only.
-      { label: "Contato", href: "mailto:contato@brandcodesolutions.com.br" },
+      { label: "Contato", href: `mailto:${CONTACT_EMAIL}` },
       { label: "Entrar", href: "/entrar" },
     ],
   },

@@ -5,6 +5,7 @@ export const lashBrow = nicheBrand({
   segment: "lash_brow",
   niche: {
     route: "cilios-e-sobrancelhas",
+    schemaType: "BeautySalon",
     name: "Cílios e sobrancelhas",
     icon: "eye",
     group: "beauty",

@@ -4,6 +4,8 @@ import Link from "next/link";
 import type { BrandConfig } from "@/brands";
 import { formatBRL } from "@/lib/money";
 import type { PortalListingItem } from "@/lib/portal/data";
+import { JsonLd } from "@/components/seo/json-ld";
+import { faqNode } from "@/lib/seo/structured-data";
 import { publicUrl } from "@/lib/storage/r2";
 
 import { PortalTracker } from "@/app/explorar/portal-tracker";
@@ -162,20 +164,7 @@ export function PortalListing({
         </nav>
       ) : null}
 
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "FAQPage",
-            mainEntity: faq.map((f) => ({
-              "@type": "Question",
-              name: f.q,
-              acceptedAnswer: { "@type": "Answer", text: f.a },
-            })),
-          }).replace(/</g, "\\u003c"),
-        }}
-      />
+      <JsonLd nodes={[faqNode(faq.map((f) => ({ question: f.q, answer: f.a })))]} />
     </>
   );
 }

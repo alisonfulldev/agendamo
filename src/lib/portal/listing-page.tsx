@@ -5,8 +5,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { getCurrentBrand } from "@/brands/server";
-import { brandUrl } from "@/brands/urls";
 import { PortalListing } from "@/components/portal/listing";
+import { pageMetadata } from "@/lib/seo/metadata";
 import { isValidSlugFormat, slugify } from "@/lib/slug";
 
 import {
@@ -48,12 +48,13 @@ export async function portalListingMetadata(params: Params): Promise<Metadata> {
     ? `${data.neighborhoodName}, ${data.entry.city}`
     : data.entry.city;
   const path = `/explorar/${params.city}${params.neighborhood ? `/${params.neighborhood}` : ""}/${params.service}`;
-  return {
+  return pageMetadata({
     title: `${data.entry.service_name} em ${place} · ${data.brand.name}`,
     description: `${data.items.length} negócios de ${data.entry.service_name.toLowerCase()} em ${place}. Veja preços, avaliações e agende online.`,
-    alternates: { canonical: brandUrl(data.brand, path).split("?")[0] },
-    robots: data.items.length >= MIN_INDEXABLE_LISTING ? undefined : { index: false, follow: true },
-  };
+    path,
+    brand: data.brand,
+    index: data.items.length >= MIN_INDEXABLE_LISTING,
+  });
 }
 
 export async function PortalListingPage(params: Params) {

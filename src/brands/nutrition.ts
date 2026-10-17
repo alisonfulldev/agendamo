@@ -6,6 +6,7 @@ export const nutrition = nicheBrand({
   segment: "nutrition",
   niche: {
     route: "nutricao",
+    schemaType: "MedicalBusiness",
     name: "Nutrição",
     icon: "apple",
     group: "health",

@@ -7,6 +7,8 @@ import { getBrand, getNiche, NICHES, PLATFORM } from "@/brands";
 import { brandThemeStyle } from "@/brands/theme";
 import { nichesByGroup } from "@/components/sales/niche-cards";
 import { CREATION, detectNiche } from "@/content/creation";
+import { siteContext, siteLanding } from "@/components/seo/site-tracker";
+import { isReservedBusinessName } from "@/lib/business/reserved-names";
 import { EMAIL_PATTERN, suggestEmailFix } from "@/lib/email-typos";
 import { compressImage } from "@/lib/images/compress";
 import { formatDuration } from "@/lib/money";
@@ -208,6 +210,9 @@ function sourceInfo(viaName: boolean, viaNiche: boolean) {
     variant: params.get("v") === "b" ? ("b" as const) : ("a" as const),
     page: window.location.pathname.slice(0, 200),
     referrer,
+    // Funnel attribution (Fase 9): the session's first page and the template of this one.
+    landing: siteLanding() ?? undefined,
+    template: siteContext().template,
   };
 }
 
@@ -328,6 +333,10 @@ export function Conversation({ photos }: { photos: boolean }) {
   function submitName(raw: string, current = state) {
     const name = raw.trim().slice(0, 120);
     if (name.length < 2) return;
+    if (isReservedBusinessName(name)) {
+      update({}, [user(name), system(CREATION.reservedName)]);
+      return;
+    }
     const next = { ...current, name, log: [...current.log, user(name)] };
     const preset = nicheFromParam(creationParams().niche);
     if (preset) {

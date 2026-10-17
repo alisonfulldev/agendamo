@@ -5,6 +5,7 @@ export const autoDetailing = nicheBrand({
   segment: "auto_detailing",
   niche: {
     route: "estetica-automotiva",
+    schemaType: "AutoWash",
     name: "Estética automotiva",
     icon: "car",
     group: "services",

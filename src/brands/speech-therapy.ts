@@ -6,6 +6,7 @@ export const speechTherapy = nicheBrand({
   segment: "speech_therapy",
   niche: {
     route: "fonoaudiologia",
+    schemaType: "MedicalBusiness",
     name: "Fonoaudiologia",
     icon: "audio",
     group: "health",

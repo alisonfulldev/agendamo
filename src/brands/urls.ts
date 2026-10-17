@@ -1,5 +1,6 @@
 import { getBrandBaseUrl, type BrandConfig } from "@/brands";
 import { BRAND_QUERY_PARAM } from "@/brands/host";
+import { siteUrl, withoutQuery } from "@/lib/site-url";
 
 /** True on the production deployment (Vercel), where each brand answers on its own domain. */
 export function isProductionDeployment(): boolean {
@@ -22,4 +23,22 @@ export function brandUrl(brand: BrandConfig, path = "/"): string {
   const url = new URL(path, process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000");
   url.searchParams.set(BRAND_QUERY_PARAM, brand.key);
   return url.toString();
+}
+
+/**
+ * Canonical (indexable) URL of a public page in a brand: the brand's own domain in production,
+ * otherwise the shared MeetChat site. Never carries parameters (?brand=, ?criar=…).
+ */
+export function canonicalUrl(brand: BrandConfig, path = "/"): string {
+  return withoutQuery(
+    isProductionDeployment() && hasRealDomain(brand)
+      ? new URL(path, getBrandBaseUrl(brand)).toString()
+      : siteUrl(path),
+  );
+}
+
+/** The niche's sales page (/barbearia…), or the MeetChat home for "Outro / Geral". */
+export function nicheHubUrl(brand: BrandConfig): string {
+  if (isProductionDeployment() && hasRealDomain(brand)) return canonicalUrl(brand, "/");
+  return canonicalUrl(brand, brand.niche ? `/${brand.niche.route}` : "/");
 }

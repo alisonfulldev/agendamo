@@ -6,6 +6,7 @@ export const chiropractic = nicheBrand({
   segment: "chiropractic",
   niche: {
     route: "quiropraxia",
+    schemaType: "MedicalBusiness",
     name: "Quiropraxia",
     icon: "bone",
     group: "health",

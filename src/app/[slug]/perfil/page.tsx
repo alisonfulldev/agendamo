@@ -1,12 +1,22 @@
 import { CalendarCheck } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
+import { permanentRedirect } from "next/navigation";
 
 import { brandUrl } from "@/brands/urls";
+import { BrandScope } from "@/components/brand-scope";
+import { JsonLd } from "@/components/seo/json-ld";
+import { getDirectoryCities } from "@/lib/directory/data";
+import { slugify } from "@/lib/slug";
 
 import { BackToChatButton } from "../chat-home";
-import { businessJsonLd, businessMetadata, loadBusinessPage, themeOverride } from "../load";
+import {
+  businessGone,
+  businessStructuredData,
+  businessMetadata,
+  loadBusinessPage,
+  themeOverride,
+} from "../load";
 import { PageTracker } from "../page-tracker";
 import { ProfileView } from "../profile-view";
 
@@ -19,31 +29,44 @@ export async function generateMetadata({ params }: PageProps<"/[slug]/perfil">):
 export default async function BusinessProfilePage({ params }: PageProps<"/[slug]/perfil">) {
   const { slug } = await params;
   const loaded = await loadBusinessPage(slug);
-  if (!loaded) notFound();
+  if (!loaded) return businessGone(slug);
   const { data, brand, domainBrand } = loaded;
-  if (brand.key !== domainBrand.key) redirect(brandUrl(brand, `/${data.business.slug}/perfil`));
+  if (loaded.wrongDomain) permanentRedirect(brandUrl(brand, `/${data.business.slug}/perfil`));
+
+  // Link to the niche's directory page of the profile's city, when that page is indexable.
+  const citySlug = data.page?.city ? slugify(data.page.city) : "";
+  const directory =
+    brand.niche && citySlug
+      ? (await getDirectoryCities(brand.key)).find((c) => c.citySlug === citySlug && c.indexable)
+      : undefined;
 
   const label = "Agendar";
   const override = themeOverride(loaded);
 
   return (
-    <div
-      data-theme-scope={override ? "" : undefined}
+    <BrandScope
+      brand={brand}
+      current={domainBrand}
       style={override}
       className="flex min-h-[100dvh] justify-center bg-muted"
     >
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(businessJsonLd(data)).replace(/</g, "\u003c"),
-        }}
-      />
+      <JsonLd nodes={businessStructuredData(loaded, { breadcrumb: true })} />
       <PageTracker businessId={data.business.id} />
       <main className="w-full max-w-xl pb-24">
         <ProfileView
           loaded={loaded}
           chatAction={<BackToChatButton slug={data.business.slug} label={label} />}
         />
+        {directory ? (
+          <p className="px-4 pt-4 text-center text-sm">
+            <Link
+              href={`/${brand.niche!.route}/${directory.citySlug}`}
+              className="font-medium text-primary underline-offset-4 hover:underline"
+            >
+              Mais {brand.niche!.name.toLowerCase()} em {directory.city}
+            </Link>
+          </p>
+        ) : null}
       </main>
       <div className="fixed inset-x-0 bottom-0 z-20 mx-auto max-w-xl bg-gradient-to-t from-muted via-muted to-transparent px-4 pt-6 pb-4">
         <Link
@@ -53,6 +76,6 @@ export default async function BusinessProfilePage({ params }: PageProps<"/[slug]
           <CalendarCheck className="size-5" aria-hidden /> {label}
         </Link>
       </div>
-    </div>
+    </BrandScope>
   );
 }

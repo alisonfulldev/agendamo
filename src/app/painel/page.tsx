@@ -82,7 +82,7 @@ export default async function PanelHomePage({ searchParams }: PageProps<"/painel
       {
         done: (views.count ?? 0) > 0,
         label: "Divulgue seu link",
-        hint: "WhatsApp, Instagram, Facebook, botões do seu site… Marca sozinho quando alguém abrir seu link (suas visitas não contam).",
+        hint: "Coloque na bio do Instagram, no perfil do WhatsApp Business e no campo “Links de agendamento” do seu Perfil da Empresa no Google. Marca sozinho quando alguém abrir seu link (suas visitas não contam).",
         href: "/painel/pagina",
       },
       {

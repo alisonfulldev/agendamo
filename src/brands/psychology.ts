@@ -6,6 +6,7 @@ export const psychology = nicheBrand({
   segment: "psychology",
   niche: {
     route: "psicologia",
+    schemaType: "MedicalBusiness",
     name: "Psicologia",
     icon: "brain",
     group: "health",

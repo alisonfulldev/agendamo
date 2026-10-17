@@ -8,6 +8,7 @@ import { getCurrentBrand } from "@/brands/server";
 import { brandThemeStyle } from "@/brands/theme";
 import { hasRealDomain } from "@/brands/urls";
 import { BrandProvider } from "@/components/brand-provider";
+import { toClientBrand } from "@/components/brand-scope";
 import { isDemoMode } from "@/lib/demo/mode";
 
 import "./globals.css";
@@ -67,18 +68,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       style={brandThemeStyle(brand)}
     >
       <body className="flex min-h-full flex-col">
-        <BrandProvider
-          brand={{
-            key: brand.key,
-            name: brand.name,
-            logo: brand.logo,
-            terms: brand.terms,
-            chatMessages: brand.chatMessages,
-            socialLinks: brand.socialLinks,
-          }}
-        >
-          {children}
-        </BrandProvider>
+        <BrandProvider brand={toClientBrand(brand)}>{children}</BrandProvider>
         {isDemoMode() ? (
           <Link
             href="/demo"

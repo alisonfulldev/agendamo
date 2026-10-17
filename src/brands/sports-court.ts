@@ -5,6 +5,7 @@ export const sportsCourt = nicheBrand({
   segment: "sports_court",
   niche: {
     route: "quadras",
+    schemaType: "SportsActivityLocation",
     name: "Quadras esportivas",
     icon: "trophy",
     group: "services",

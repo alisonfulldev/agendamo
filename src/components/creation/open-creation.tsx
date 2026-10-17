@@ -1,5 +1,7 @@
 "use client";
 
+import { trackSiteEvent } from "@/components/seo/site-tracker";
+
 import { openCreation } from "./creation-store";
 
 /**
@@ -21,9 +23,12 @@ export function OpenCreationLink({
   return (
     <a
       href={niche ? `?criar=1&ramo=${niche}` : "?criar=1"}
+      // Same page with the conversation open: not a page of its own for search engines.
+      rel="nofollow"
       className={className}
       tabIndex={tabIndex}
       onClick={(event) => {
+        trackSiteEvent("cta_click");
         if (event.metaKey || event.ctrlKey || event.shiftKey) return;
         event.preventDefault();
         openCreation(niche);

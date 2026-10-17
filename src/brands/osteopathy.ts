@@ -6,6 +6,7 @@ export const osteopathy = nicheBrand({
   segment: "osteopathy",
   niche: {
     route: "osteopatia",
+    schemaType: "MedicalBusiness",
     name: "Osteopatia",
     icon: "hand-heart",
     group: "health",

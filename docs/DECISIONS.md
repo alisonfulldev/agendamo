@@ -227,3 +227,11 @@ Revise antes de aplicar no Supabase de produção.
 - `/beleza`, `/barbearia`, `/estetica`, `/psicologia`, `/fisioterapia`: a landing do nicho (componente `SalesPage`), com o tema aplicado só na página; o cadastro sai em `/cadastro?brand=<nicho>`.
 - Endereços reservados (migration `20261004110000`) para nenhum negócio usar esses links. Sitemap lista a home e as páginas de nicho.
 - Se um nicho ganhar domínio próprio no futuro, a home daquele domínio mostra a landing do nicho.
+
+## SEO: preços públicos, "grátis" e marca no domínio compartilhado (2026-10-16)
+
+- D1: "grátis" só onde é verdade, com o limite ao lado da promessa ("Grátis no modo WhatsApp. Lembretes automáticos e agenda completa no plano pago."). Botão: "Comece grátis, sem cartão"; "Teste grátis" só com prazo; nunca "para sempre". `/precos` volta a existir com os dois níveis (textos em `src/content/pricing.ts`, valores de `src/lib/plans.ts`). Isso substitui a decisão de 2026-10-13 de não mostrar preços nas páginas públicas. `SoftwareApplication` ganha as duas `Offer` só na Fase 2, refletindo `/precos`.
+- D2: no domínio compartilhado, `/<slug>`, `/<slug>/perfil` e `/<slug>/agendar` abrem na marca do negócio, sem redirect para `?brand=` (componente `BrandScope`). Só o domínio próprio de outra marca redireciona (308). O selo leva à página do nicho (`nicheHubUrl`).
+- D3: páginas novas sob prefixos: `/recursos/`, `/ferramentas/`, `/comparar/`, `/agendamento/`, `/ajuda/`, `/precos`. Nichos e subpáginas de nicho ficam no primeiro nível.
+- D4: diretório `/{nicho}/{cidade}` indexável a partir de 3 perfis elegíveis (configurável); `/explorar` fica como busca; 301 1:1 das URLs com equivalente depois de checar o Search Console; bairro só depois de a cidade mostrar tração.
+- Metadata de páginas públicas sai de `pageMetadata` (`src/lib/seo/metadata.ts`); sitemap virou índice (`/sitemap.xml` → `/sitemap/<seção>.xml`) com `lastmod` real (`src/content/site-pages.ts`); robots em `src/lib/seo/robots.ts`, com rastreadores de IA liberados por padrão.

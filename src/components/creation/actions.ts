@@ -5,6 +5,8 @@ import { randomUUID } from "node:crypto";
 import { z } from "zod";
 
 import { getNiche } from "@/brands";
+import { isReservedBusinessName } from "@/lib/business/reserved-names";
+import { SITE_TEMPLATES } from "@/lib/tracking/site-events";
 import { checkSlug } from "@/lib/business/slug-check";
 import { MAX_UPLOAD_BYTES, UPLOAD_CONTENT_TYPE } from "@/lib/images/presets";
 import { hashedClientIp, rateLimitRequest } from "@/lib/rate-limit";
@@ -31,11 +33,19 @@ const sourceSchema = z
     variant: z.enum(["a", "b"]).optional(),
     page: z.string().max(200).optional(),
     referrer: z.string().max(200).optional(),
+    /** First page of the visitor's session and the template of the page (SEO funnel). */
+    landing: z.string().max(200).optional(),
+    template: z.enum(SITE_TEMPLATES).optional(),
   })
   .default({});
 
 const createSchema = z.object({
-  name: z.string().trim().min(1).max(120),
+  name: z
+    .string()
+    .trim()
+    .min(1)
+    .max(120)
+    .refine((name) => !isReservedBusinessName(name)),
   brandKey: z.string().max(40),
   nicheDescription: z.string().trim().max(200).nullable().default(null),
   source: sourceSchema,

@@ -2,20 +2,29 @@ import type { Metadata } from "next";
 
 import { getCurrentBrand } from "@/brands/server";
 import { LegalPage } from "@/components/sales/legal-page";
+import { formatPageDate, SITE_PAGES } from "@/content/site-pages";
+import { pageMetadata } from "@/lib/seo/metadata";
 
 export async function generateMetadata(): Promise<Metadata> {
   const brand = await getCurrentBrand();
-  return {
-    title: "Política de Privacidade",
-    description: `Como o ${brand.name} trata seus dados.`,
-  };
+  return pageMetadata({
+    title: `Política de Privacidade · ${brand.name}`,
+    description: `Como o ${brand.name} trata os dados de profissionais e clientes: o que é coletado, para quê e como pedir a exclusão.`,
+    path: "/privacidade",
+    brand,
+  });
 }
 
 export default async function PrivacyPage() {
   const brand = await getCurrentBrand();
   const contact = brand.emailFrom.address;
   return (
-    <LegalPage title="Política de Privacidade" brandName={brand.name} updatedAt="02/10/2026">
+    <LegalPage
+      title="Política de Privacidade"
+      brand={brand}
+      path="/privacidade"
+      updatedAt={formatPageDate(SITE_PAGES.privacy.updatedAt)}
+    >
       <p>
         Esta Política explica como o {brand.name} trata dados pessoais, conforme a Lei Geral de
         Proteção de Dados (LGPD).

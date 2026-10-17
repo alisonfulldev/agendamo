@@ -33,6 +33,7 @@ export interface PublicPage {
     | "min_notice_minutes"
     | "max_days_ahead"
     | "booking_confirmation"
+    | "portal_opt_out"
   >;
   page: {
     bio: string | null;
@@ -69,13 +70,19 @@ async function fetchPublicPage(slug: string): Promise<PublicPage | null> {
   return (data as PublicPage | null) ?? null;
 }
 
-type LivePlan = Pick<Business, "plan" | "trial_started_at" | "trial_ends_at" | "created_at">;
+type LivePlan = Pick<
+  Business,
+  "plan" | "trial_started_at" | "trial_ends_at" | "created_at" | "portal_opt_out"
+>;
 
-/** Plan fields read fresh on every request, so trial/plan changes apply at once (rule 6). */
+/**
+ * Fields read fresh on every request: plan and trial, so changes apply at once (rule 6), and the
+ * owner's "Não aparecer nas buscas" choice, so the profile leaves the index right away.
+ */
 async function fetchLivePlan(slug: string): Promise<LivePlan | null> {
   const { data, error } = await createAdminClient()
     .from("businesses")
-    .select("plan, trial_started_at, trial_ends_at, created_at")
+    .select("plan, trial_started_at, trial_ends_at, created_at, portal_opt_out")
     .eq("slug", slug.toLowerCase())
     .is("suspended_at", null)
     .maybeSingle();
@@ -103,4 +110,22 @@ export async function getPublicPage(
     ...page,
     business: { ...page.business, ...live },
   };
+}
+
+/**
+ * Niche (brand key) of a suspended business, so its old links lead somewhere useful (the niche
+ * page) instead of a dead end. Null when the link never existed or the account was deleted.
+ */
+export async function suspendedBusinessBrand(slug: string): Promise<string | null> {
+  const { data, error } = await createAdminClient()
+    .from("businesses")
+    .select("brand_key")
+    .eq("slug", slug.toLowerCase())
+    .not("suspended_at", "is", null)
+    .maybeSingle();
+  if (error) {
+    console.error("suspended lookup failed", error.message);
+    return null;
+  }
+  return (data as { brand_key: string } | null)?.brand_key ?? null;
 }

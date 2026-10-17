@@ -6,3 +6,11 @@ export function siteUrl(path = "/"): string {
   const base = process.env.NEXT_PUBLIC_APP_URL || "https://meetchat.com.br";
   return new URL(path, base).toString();
 }
+
+/** Same URL without parameters and fragment (canonicals, sitemaps). */
+export function withoutQuery(url: string): string {
+  const clean = new URL(url);
+  clean.search = "";
+  clean.hash = "";
+  return clean.toString();
+}

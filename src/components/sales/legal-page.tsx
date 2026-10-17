@@ -1,23 +1,25 @@
-import Link from "next/link";
+import type { BrandConfig } from "@/brands";
+import { Breadcrumbs } from "@/components/site/breadcrumbs";
 import type { ReactNode } from "react";
 
 /** Layout for legal texts. Shows the legal-review notice until the texts are reviewed. */
 export function LegalPage({
   title,
-  brandName,
+  brand,
+  path,
   updatedAt,
   children,
 }: {
   title: string;
-  brandName: string;
+  brand: BrandConfig;
+  /** Clean path of the page ("/termos"), for the breadcrumb. */
+  path: string;
   updatedAt: string;
   children: ReactNode;
 }) {
   return (
     <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-12">
-      <Link href="/" className="text-sm text-primary underline-offset-4 hover:underline">
-        ← {brandName}
-      </Link>
+      <Breadcrumbs items={[{ name: title, path }]} brand={brand} />
       <h1 className="mt-4 text-3xl font-bold">{title}</h1>
       <p className="mt-1 text-sm text-muted-foreground">Atualizado em {updatedAt}</p>
       <p

@@ -5,6 +5,8 @@ import { normalizeBrPhone } from "@/lib/phone";
 import { isValidSlugFormat } from "@/lib/slug";
 import { normalizeInstagram } from "@/lib/social";
 
+import { isReservedBusinessName, RESERVED_NAME_MESSAGE } from "./reserved-names";
+
 // Shared between browser (step validation) and server (authoritative validation).
 
 const optionalText = (max: number) =>
@@ -48,9 +50,17 @@ export const slugSchema = z
   .toLowerCase()
   .refine(isValidSlugFormat, "Use de 3 a 40 letras minúsculas, números e hífens");
 
+/** Business name: 2–120 characters, never passing for the platform (reserved names). */
+export const businessNameSchema = z
+  .string()
+  .trim()
+  .min(2, "Informe o nome do negócio")
+  .max(120)
+  .refine((name) => !isReservedBusinessName(name), RESERVED_NAME_MESSAGE);
+
 export const onboardingSchema = z.object({
   segment: z.enum(SEGMENTS),
-  name: z.string().trim().min(2, "Informe o nome do negócio").max(120),
+  name: businessNameSchema,
   slug: slugSchema,
   whatsapp: z
     .string()

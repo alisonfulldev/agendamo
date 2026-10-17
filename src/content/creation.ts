@@ -34,6 +34,7 @@ export const CREATION = {
   resumeYes: "Continuar",
   resumeNo: "Começar de novo",
   error: "Não consegui montar seu chat agora. Pode tentar de novo?",
+  reservedName: "Esse nome é reservado. Qual é o nome do seu negócio?",
   signup: {
     askWhatsapp:
       "Qual o seu WhatsApp? É por ele que seus clientes falam com você quando precisarem.",

@@ -5,6 +5,7 @@ export const yoga = nicheBrand({
   segment: "yoga",
   niche: {
     route: "yoga",
+    schemaType: "SportsActivityLocation",
     name: "Yoga",
     icon: "sun",
     group: "wellness",

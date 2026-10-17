@@ -139,6 +139,13 @@ npm run dev           # o app com os serviços reais em http://localhost:3000
 Depois, em produção: crie uma conta de teste pelo cadastro, confirme pelo e-mail, crie o negócio,
 agende pelo link e assine no sandbox do Asaas.
 
+## IndexNow (opcional)
+
+1. Gere uma chave: `node -e "console.log(crypto.randomUUID())"`.
+2. Na Vercel, crie `INDEXNOW_KEY` (Production) com ela e faça o deploy. Confira `https://meetchat.com.br/indexnow-key.txt`: deve mostrar a chave.
+3. A partir daí, perfis completos avisam o IndexNow sozinhos quando a dona muda página, serviços, fotos, nome ou link.
+4. Depois de um deploy que mudou páginas do site: `INDEXNOW_KEY=<chave> npm run seo:indexnow` envia todas as URLs do sitemap.
+
 ## Fica para depois (opcional)
 
 R2 (envio de fotos), notificações push, Google Agenda e Sentry estão prontos no código e seguem o

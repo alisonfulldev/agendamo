@@ -2,17 +2,29 @@ import type { Metadata } from "next";
 
 import { getCurrentBrand } from "@/brands/server";
 import { LegalPage } from "@/components/sales/legal-page";
+import { formatPageDate, SITE_PAGES } from "@/content/site-pages";
+import { pageMetadata } from "@/lib/seo/metadata";
 
 export async function generateMetadata(): Promise<Metadata> {
   const brand = await getCurrentBrand();
-  return { title: "Termos de Uso", description: `Termos de Uso do ${brand.name}.` };
+  return pageMetadata({
+    title: `Termos de Uso · ${brand.name}`,
+    description: `Termos de Uso do ${brand.name}: conta, plano, sinal por Pix, clientes finais e encerramento.`,
+    path: "/termos",
+    brand,
+  });
 }
 
 export default async function TermsPage() {
   const brand = await getCurrentBrand();
   const contact = brand.emailFrom.address;
   return (
-    <LegalPage title="Termos de Uso" brandName={brand.name} updatedAt="12/10/2026">
+    <LegalPage
+      title="Termos de Uso"
+      brand={brand}
+      path="/termos"
+      updatedAt={formatPageDate(SITE_PAGES.terms.updatedAt)}
+    >
       <p>
         Estes Termos regulam o uso do {brand.name}, plataforma de página de apresentação, agenda e
         ferramentas de venda para negócios de serviço com horário marcado. Ao criar uma conta, você

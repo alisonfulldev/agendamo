@@ -3,7 +3,12 @@ import "server-only";
 import { headers } from "next/headers";
 
 import { getBrand, type BrandConfig } from "@/brands";
-import { BRAND_HEADER, getBrandByHost } from "@/brands/resolve";
+import {
+  BRAND_HEADER,
+  getBrandByHost,
+  isBrandSelectableHost,
+  normalizeHost,
+} from "@/brands/resolve";
 import { PATH_HEADER } from "@/lib/request-headers";
 
 /** Brand of the current request, as resolved by the proxy. For Server Components, Actions and Route Handlers. */
@@ -26,4 +31,12 @@ export async function getRequestOrigin(): Promise<string> {
 /** Pathname of the current request (set by the proxy). */
 export async function getRequestPath(): Promise<string> {
   return (await headers()).get(PATH_HEADER) ?? "/";
+}
+
+/**
+ * True on the shared MeetChat domain (and localhost/previews), where every niche lives together:
+ * a business page shows in its own brand right there, never redirected to ?brand=.
+ */
+export async function isSharedDomain(): Promise<boolean> {
+  return isBrandSelectableHost(normalizeHost((await headers()).get("host")));
 }

@@ -6,6 +6,7 @@ export const podiatry = nicheBrand({
   segment: "podiatry",
   niche: {
     route: "podologia",
+    schemaType: "MedicalBusiness",
     name: "Podologia",
     icon: "footprints",
     group: "health",

@@ -5,6 +5,7 @@ export const massageTherapy = nicheBrand({
   segment: "massage_therapy",
   niche: {
     route: "massoterapia",
+    schemaType: "HealthAndBeautyBusiness",
     name: "Massoterapia",
     icon: "hand",
     group: "wellness",

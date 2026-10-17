@@ -16,6 +16,7 @@ import type { ReactNode } from "react";
 import { NICHES, type BrandConfig } from "@/brands";
 import { brandThemeStyle } from "@/brands/theme";
 import { brandUrl } from "@/brands/urls";
+import { jsonLdHtml } from "@/lib/seo/json-ld";
 import { ClaimLink } from "@/components/sales/claim-link";
 import { DemoChat } from "@/components/sales/demo-chat";
 import { FEATURE_VISUALS } from "@/components/sales/feature-visuals";
@@ -141,10 +142,7 @@ export function SalesPage({
       style={brandThemeStyle(brand)}
       className="flex min-h-full flex-col bg-background font-sans text-foreground"
     >
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
-      />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdHtml(jsonLd) }} />
 
       <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur-lg">
         <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 px-6">
@@ -174,7 +172,7 @@ export function SalesPage({
               <Link href="/entrar">Entrar</Link>
             </Button>
             <Button asChild className="hidden h-9 px-4 sm:inline-flex">
-              <Link href={signupHref}>Testar grátis</Link>
+              <Link href={signupHref}>Comece grátis</Link>
             </Button>
           </div>
         </div>

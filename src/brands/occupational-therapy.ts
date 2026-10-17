@@ -6,6 +6,7 @@ export const occupationalTherapy = nicheBrand({
   segment: "occupational_therapy",
   niche: {
     route: "terapia-ocupacional",
+    schemaType: "MedicalBusiness",
     name: "Terapia ocupacional",
     icon: "puzzle",
     group: "health",

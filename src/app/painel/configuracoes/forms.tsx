@@ -134,9 +134,10 @@ export function BusinessSettingsForm({ business }: { business: Business }) {
       </div>
       <label className="flex items-center justify-between gap-3 rounded-xl border p-3">
         <span>
-          <span className="font-medium">Não aparecer no portal</span>
+          <span className="font-medium">Não aparecer nas buscas</span>
           <span className="block text-sm text-muted-foreground">
-            Seu negócio deixa de ser listado nas buscas do portal da marca.
+            Seu perfil sai do portal e do diretório do MeetChat e pede ao Google e a outros
+            buscadores para não mostrá-lo. Seu link continua funcionando para quem já o tem.
           </span>
         </span>
         <Switch name="portal_opt_out" defaultChecked={business.portal_opt_out} />

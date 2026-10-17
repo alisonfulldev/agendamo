@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { psychology } from "@/brands/psychology";
-import { brandUrl, hasRealDomain } from "@/brands/urls";
+import { GENERAL_NICHE } from "@/brands";
+import { brandUrl, canonicalUrl, hasRealDomain, nicheHubUrl } from "@/brands/urls";
 
 afterEach(() => vi.unstubAllEnvs());
 
@@ -19,5 +20,30 @@ describe("brandUrl", () => {
     const brand = { ...psychology, domains: ["psicologia.example.com"] };
     expect(hasRealDomain(brand)).toBe(false);
     expect(brandUrl(brand, "/x")).toBe("https://agendamo.vercel.app/x?brand=psychology");
+  });
+});
+
+describe("canonicalUrl", () => {
+  it("uses the shared site without ?brand= while the brand has no real domain", () => {
+    vi.stubEnv("VERCEL_ENV", "production");
+    vi.stubEnv("NEXT_PUBLIC_APP_URL", "https://meetchat.com.br");
+    expect(canonicalUrl(psychology, "/ana/perfil?x=1#y")).toBe(
+      "https://meetchat.com.br/ana/perfil",
+    );
+  });
+
+  it("uses the brand's own domain in production", () => {
+    vi.stubEnv("VERCEL_ENV", "production");
+    const brand = { ...psychology, domains: ["agendapsi.com.br"] };
+    expect(canonicalUrl(brand, "/ana/perfil")).toBe("https://agendapsi.com.br/ana/perfil");
+  });
+});
+
+describe("nicheHubUrl", () => {
+  it("links to the niche page on the shared site", () => {
+    vi.stubEnv("VERCEL_ENV", "production");
+    vi.stubEnv("NEXT_PUBLIC_APP_URL", "https://meetchat.com.br");
+    expect(nicheHubUrl(psychology)).toBe("https://meetchat.com.br/psicologia");
+    expect(nicheHubUrl(GENERAL_NICHE)).toBe("https://meetchat.com.br/");
   });
 });

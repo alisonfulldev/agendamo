@@ -5,6 +5,7 @@ export const veterinary = nicheBrand({
   segment: "veterinary",
   niche: {
     route: "veterinaria",
+    schemaType: "VeterinaryCare",
     name: "Veterinária",
     icon: "stethoscope",
     group: "pets",

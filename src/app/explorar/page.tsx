@@ -3,20 +3,21 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { getCurrentBrand } from "@/brands/server";
-import { brandUrl } from "@/brands/urls";
 import { Button } from "@/components/ui/button";
 import { getPortalIndex } from "@/lib/portal/data";
+import { pageMetadata } from "@/lib/seo/metadata";
 import { slugify } from "@/lib/slug";
 
 import { PortalTracker } from "./portal-tracker";
 
 export async function generateMetadata(): Promise<Metadata> {
   const brand = await getCurrentBrand();
-  return {
+  return pageMetadata({
     title: `Encontre profissionais · ${brand.name}`,
     description: `Busque por cidade e serviço e agende com profissionais do ${brand.name}.`,
-    alternates: { canonical: brandUrl(brand, "/explorar").split("?")[0] },
-  };
+    path: "/explorar",
+    brand,
+  });
 }
 
 const selectClass = "h-11 w-full rounded-lg border border-input bg-transparent px-2";

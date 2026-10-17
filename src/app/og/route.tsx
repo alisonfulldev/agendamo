@@ -88,7 +88,7 @@ export async function GET(request: Request) {
             borderRadius: 16,
           }}
         >
-          Criar meu link grátis
+          Comece grátis, sem cartão
         </div>
       </div>
       <div

@@ -5,6 +5,7 @@ export const nails = nicheBrand({
   segment: "nails",
   niche: {
     route: "manicure",
+    schemaType: "NailSalon",
     name: "Manicure",
     icon: "brush",
     group: "beauty",

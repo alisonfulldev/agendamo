@@ -6,6 +6,7 @@ export const physio = nicheBrand({
   segment: "physio",
   niche: {
     route: "fisioterapia",
+    schemaType: "Physiotherapy",
     name: "Fisioterapia",
     icon: "activity",
     group: "health",

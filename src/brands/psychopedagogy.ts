@@ -6,6 +6,7 @@ export const psychopedagogy = nicheBrand({
   segment: "psychopedagogy",
   niche: {
     route: "psicopedagogia",
+    schemaType: "ProfessionalService",
     name: "Psicopedagogia",
     icon: "book",
     group: "health",

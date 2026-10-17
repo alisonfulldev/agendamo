@@ -2,10 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { PLATFORM } from "@/brands";
-import { brandUrl } from "@/brands/urls";
+import { getNiche, PLATFORM } from "@/brands";
+import { nicheHubUrl } from "@/brands/urls";
 import { MeetChatBadge } from "@/components/chat/meetchat-badge";
-import { getCurrentBrand } from "@/brands/server";
+import { getCurrentBrand, isSharedDomain } from "@/brands/server";
+import { BrandScope } from "@/components/brand-scope";
 import { getPlanFeatures } from "@/lib/plans";
 import { getPublicPage } from "@/lib/public/page";
 import { isValidSlugFormat } from "@/lib/slug";
@@ -23,9 +24,12 @@ export default async function EmbeddedBookingPage({
   const { slug } = await params;
   const { embed } = await searchParams;
   if (!isValidSlugFormat(slug)) notFound();
-  const brand = await getCurrentBrand();
-  const page = await getPublicPage(brand.key, slug);
-  if (!page || page.business.brand_key !== brand.key) notFound();
+  const domainBrand = await getCurrentBrand();
+  const page = await getPublicPage(domainBrand.key, slug);
+  if (!page) notFound();
+  // Shared domain: shown in the business's brand (iframes often have no brand cookie).
+  const brand = getNiche(page.business.brand_key);
+  if (brand.key !== domainBrand.key && !(await isSharedDomain())) notFound();
   // The chat on external sites is part of Agenda and Pro (not Grátis).
   const features = getPlanFeatures(page.business);
 
@@ -40,17 +44,23 @@ export default async function EmbeddedBookingPage({
     );
   }
   return (
-    <EmbeddedChat
-      slug={slug}
-      businessId={page.business.id}
-      businessName={page.business.name}
-      avatarUrl={publicUrl(page.page?.avatar_key)}
-      embedded={embed === "1"}
-      branding={
-        features.removeBranding ? null : (
-          <MeetChatBadge href={brandUrl(brand, "/")} logo={PLATFORM.logo} />
-        )
-      }
-    />
+    <BrandScope brand={brand} current={domainBrand} className="flex flex-1 flex-col">
+      <EmbeddedChat
+        slug={slug}
+        businessId={page.business.id}
+        businessName={page.business.name}
+        avatarUrl={publicUrl(page.page?.avatar_key)}
+        embedded={embed === "1"}
+        branding={
+          features.removeBranding ? null : (
+            <MeetChatBadge
+              href={nicheHubUrl(brand)}
+              logo={PLATFORM.logo}
+              niche={brand.niche?.name}
+            />
+          )
+        }
+      />
+    </BrandScope>
   );
 }

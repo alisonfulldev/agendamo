@@ -1,14 +1,22 @@
 import type { Metadata } from "next";
-import { notFound, redirect } from "next/navigation";
+import { permanentRedirect } from "next/navigation";
 
 import { PLATFORM } from "@/brands";
+import { BrandScope } from "@/components/brand-scope";
+import { JsonLd } from "@/components/seo/json-ld";
 import { MeetChatBadge } from "@/components/chat/meetchat-badge";
 
-import { brandUrl } from "@/brands/urls";
+import { brandUrl, nicheHubUrl } from "@/brands/urls";
 import { publicUrl } from "@/lib/storage/r2";
 
 import { BackToChatButton, ChatHome } from "./chat-home";
-import { businessJsonLd, businessMetadata, loadBusinessPage, themeOverride } from "./load";
+import {
+  businessGone,
+  businessStructuredData,
+  businessMetadata,
+  loadBusinessPage,
+  themeOverride,
+} from "./load";
 import { PageTracker } from "./page-tracker";
 import { ProfileView } from "./profile-view";
 
@@ -25,11 +33,11 @@ export default async function BusinessChatPage({ params, searchParams }: PagePro
   const { slug } = await params;
   const query = await searchParams;
   const loaded = await loadBusinessPage(slug);
-  if (!loaded) notFound();
+  if (!loaded) return businessGone(slug);
   const { data, brand, domainBrand, automaticBooking } = loaded;
 
   // A business always shows on its own brand's domain.
-  if (brand.key !== domainBrand.key) redirect(brandUrl(brand, `/${data.business.slug}`));
+  if (loaded.wrongDomain) permanentRedirect(brandUrl(brand, `/${data.business.slug}`));
 
   const { business, page } = data;
   // Waiting mode (no trial, no subscription): the chat collects the request for WhatsApp.
@@ -42,13 +50,8 @@ export default async function BusinessChatPage({ params, searchParams }: PagePro
   const initialDate = param("agendar") === "1" ? param("data") : null;
 
   return (
-    <div data-theme-scope={override ? "" : undefined} style={override}>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(businessJsonLd(data)).replace(/</g, "\\u003c"),
-        }}
-      />
+    <BrandScope brand={brand} current={domainBrand} style={override}>
+      <JsonLd nodes={businessStructuredData(loaded)} />
       {param("preview") ? null : <PageTracker businessId={business.id} noticePosition="top" />}
       <ChatHome
         mode={mode}
@@ -64,7 +67,11 @@ export default async function BusinessChatPage({ params, searchParams }: PagePro
         branding={
           // Only in waiting mode (trial and subscription have no brand footer).
           loaded.features.removeBranding ? null : (
-            <MeetChatBadge href={brandUrl(brand, "/")} logo={PLATFORM.logo} />
+            <MeetChatBadge
+              href={nicheHubUrl(brand)}
+              logo={PLATFORM.logo}
+              niche={brand.niche?.name}
+            />
           )
         }
         profile={
@@ -74,6 +81,6 @@ export default async function BusinessChatPage({ params, searchParams }: PagePro
           />
         }
       />
-    </div>
+    </BrandScope>
   );
 }
