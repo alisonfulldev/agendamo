@@ -47,6 +47,17 @@ const matches = (path: string, prefixes: string[]) =>
 export async function proxy(request: NextRequest) {
   const host = request.headers.get("host");
   const path = request.nextUrl.pathname;
+
+  // One host per site: www.<domain> redirects permanently to <domain> (canonicals and sitemaps
+  // use the domain without www; serving both duplicates every page for search engines).
+  const rawHost = (host ?? "").toLowerCase();
+  if (process.env.VERCEL_ENV === "production" && rawHost.startsWith("www.")) {
+    const target = new URL(request.url);
+    target.host = rawHost.slice(4);
+    target.protocol = "https:";
+    target.port = "";
+    return NextResponse.redirect(target, 308);
+  }
   const brandParam = request.nextUrl.searchParams.get(BRAND_QUERY_PARAM);
   const brandCookie = request.cookies.get(BRAND_COOKIE)?.value;
   let brand = getBrandByHost(host, { brandParam, brandCookie });
