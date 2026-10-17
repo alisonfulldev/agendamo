@@ -99,6 +99,8 @@ export const FONT_CSS_VARIABLES = {
   inter: "--font-inter",
   lora: "--font-lora",
   nunito: "--font-nunito",
+  fraunces: "--font-fraunces",
+  figtree: "--font-figtree",
 } as const;
 
 export const FONT_KEYS = Object.keys(FONT_CSS_VARIABLES) as [
@@ -177,6 +179,10 @@ export const brandConfigSchema = z.object({
     accent: hexColor,
     /** Errors and destructive actions. */
     danger: hexColor,
+    /** Confirmations ("horário confirmado"). Optional: without it, confirmations use the brand color. */
+    success: hexColor.optional(),
+    /** Warnings. Optional: without it, warnings use the danger color. */
+    warning: hexColor.optional(),
     headingFont: z.enum(FONT_KEYS),
     bodyFont: z.enum(FONT_KEYS),
     radius: z.string().regex(/^\d+(\.\d+)?rem$/, "Use rem, e.g. 0.75rem"),

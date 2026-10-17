@@ -335,7 +335,7 @@ export function HomePage({
         </section>
       </main>
 
-      <SiteFooter links={content.footer.links} />
+      <SiteFooter />
 
       <StickyCta hideOn={["cta-topo", "cta-final"]} label={hero.primaryCta} niche={route} />
       <LazyCreationChat photos={isStorageConfigured()} />

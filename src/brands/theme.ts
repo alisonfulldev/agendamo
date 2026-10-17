@@ -42,6 +42,8 @@ export function brandThemeStyle(brand: BrandConfig): CSSProperties {
     "--brand-accent": theme.accent,
     "--brand-accent-foreground": readableOn(theme.accent, theme),
     "--brand-danger": theme.danger,
+    ...(theme.success ? { "--brand-success": theme.success } : {}),
+    ...(theme.warning ? { "--brand-warning": theme.warning } : {}),
     "--brand-radius": theme.radius,
     "--brand-font-heading": `var(${FONT_CSS_VARIABLES[theme.headingFont]})`,
     "--brand-font-body": `var(${FONT_CSS_VARIABLES[theme.bodyFont]})`,

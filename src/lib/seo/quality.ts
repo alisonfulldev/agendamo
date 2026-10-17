@@ -1,5 +1,6 @@
 import { NICHES } from "@/brands";
 import { publishedArticles } from "@/content/articles";
+import { NICHE_LANDINGS, type LandingCopy } from "@/content/copy/landing";
 import { INTENT_PAGES } from "@/content/intent-pages";
 import { nicheHomeContent } from "@/content/niche-pages";
 import {
@@ -84,6 +85,9 @@ export function topicBlocks(page: GuideLike): number {
 function hubText(brandKey: string): string {
   const brand = NICHES.find((b) => b.key === brandKey)!;
   const c = nicheHomeContent(brand);
+  const landing = NICHE_LANDINGS[brandKey];
+  if (landing)
+    return [landingText(landing), ...c.faq.items.flatMap((f) => [f.question, f.answer])].join("\n");
   const guide = getPublishedGuide(brandKey);
   return [
     c.hero.title,
@@ -101,6 +105,25 @@ function hubText(brandKey: string): string {
     c.closing.title,
     guide?.notes?.title ?? "",
     ...(guide?.notes?.items ?? []),
+  ].join("\n");
+}
+
+/** All the text of a redesigned landing page (src/content/copy/landing.ts). */
+export function landingText(copy: LandingCopy): string {
+  return [
+    copy.hero.title,
+    copy.hero.subtitle,
+    ...(copy.doors?.items.flatMap((d) => [d.pain, d.answer]) ?? []),
+    copy.pains?.title ?? "",
+    ...(copy.pains?.items.flatMap((p) => [p.scene, p.relief]) ?? []),
+    copy.story.title,
+    ...copy.story.rows.flatMap((r) => [r.kicker, r.title, r.text]),
+    copy.compare.title,
+    ...copy.compare.rows.flatMap((r) => [r.label, r.before, r.after]),
+    copy.objections.title,
+    ...copy.objections.items.flatMap((o) => [o.question, o.answer]),
+    copy.closing.title,
+    copy.closing.subtitle,
   ].join("\n");
 }
 

@@ -1,54 +1,61 @@
 import { expect, test } from "@playwright/test";
 
+import { HOME_LANDING } from "../src/content/copy/landing";
 import { HOME } from "../src/content/home";
 
-test("home page: SEO texts, sections in order, no prices and one main button", async ({ page }) => {
+test("home: SEO texts, one H1, sections in order, no price values and every niche linked", async ({
+  page,
+}) => {
   await page.goto("/");
-  await expect(page).toHaveTitle("Agendamento online grátis pelo link da bio | MeetChat");
+  await expect(page).toHaveTitle(HOME.meta.title);
   await expect(page.locator('meta[name="description"]')).toHaveAttribute(
     "content",
     HOME.meta.description,
   );
   await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText(HOME.hero.title);
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(HOME_LANDING.hero.title);
   const h2 = await page.getByRole("heading", { level: 2 }).allTextContents();
   const order = [
-    HOME.audience.title,
-    "Como funciona o agendamento online",
-    "Agendamento pelo Instagram e WhatsApp",
-    "Lembrete automático para o cliente não faltar",
-    "Perguntas frequentes",
+    HOME_LANDING.doors!.title,
+    HOME_LANDING.story.title,
+    HOME_LANDING.compare.title,
+    "Feito para quem trabalha com hora marcada",
+    HOME_LANDING.objections.title,
+    HOME.faq.title,
+    HOME_LANDING.closing.title,
   ].map((title) => h2.indexOf(title));
   expect(order.every((i) => i >= 0)).toBe(true);
   expect([...order].sort((a, b) => a - b)).toEqual(order);
-  await expect(page.getByText("Quanto tempo você perde")).toHaveCount(0);
-  // Prices and the trial only show up in the panel, after the account exists.
-  const text = await page.locator("body").textContent();
+  // D1: no price values on the home (only on /precos), "grátis" always with its limit.
+  const text = (await page.locator("body").textContent()) ?? "";
   expect(text).not.toMatch(/R\$\s?\d/);
-  expect(text).not.toMatch(/dias grátis|teste grátis/i);
-  await expect(page.locator('a[href="/precos"]')).toHaveCount(0);
-  await expect(page.getByText("30 dias grátis")).toHaveCount(0);
+  expect(text).not.toMatch(/para sempre/i);
+  await expect(page.getByText(HOME_LANDING.hero.note).first()).toBeVisible();
+  await expect(page.locator('a[href="/precos"]').first()).toBeAttached();
   // Every niche page is linked from the home.
   await expect(page.locator('a[href="/barbearia"]').first()).toBeAttached();
-  await expect(page.locator('a[href="/terapia-ocupacional"]')).toBeAttached();
+  await expect(page.locator('a[href="/terapia-ocupacional"]').first()).toBeAttached();
 });
 
-test("structured data: Organization, SoftwareApplication with the plan and FAQPage", async ({
+test("structured data: Organization, WebSite, SoftwareApplication with both offers, FAQPage", async ({
   page,
 }) => {
   await page.goto("/");
   const blocks = await page.locator('script[type="application/ld+json"]').allTextContents();
-  const items = blocks.flatMap((b) => JSON.parse(b) as Record<string, unknown>[]);
+  const items = blocks.flatMap(
+    (b) => (JSON.parse(b) as { "@graph": Record<string, unknown>[] })["@graph"],
+  );
   const types = items.map((i) => i["@type"]);
-  expect(types).toEqual(expect.arrayContaining(["Organization", "SoftwareApplication", "FAQPage"]));
+  expect(types).toEqual(
+    expect.arrayContaining(["Organization", "WebSite", "SoftwareApplication", "FAQPage"]),
+  );
   const app = items.find((i) => i["@type"] === "SoftwareApplication")!;
-  expect(app.applicationCategory).toBe("BusinessApplication");
-  expect(app.offers).toBeUndefined();
+  expect((app.offers as unknown[]).length).toBe(2);
   const faq = items.find((i) => i["@type"] === "FAQPage")!;
   expect((faq.mainEntity as unknown[]).length).toBe(HOME.faq.items.length);
 });
 
-test("phone 390x844: the first screen shows the whole top and the start of the phone", async ({
+test("phone 390x844: title, CTA and the start of the phone in the first screen, no sideways scroll", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
@@ -57,44 +64,30 @@ test("phone 390x844: the first screen shows the whole top and the start of the p
     const box = (await locator.boundingBox())!;
     return box.y >= 0 && box.y + box.height <= 844;
   };
-  expect(await inView(page.getByText(HOME.hero.eyebrow, { exact: true }))).toBe(true);
   expect(await inView(page.getByRole("heading", { level: 1 }))).toBe(true);
-  expect(await inView(page.getByText(HOME.hero.subtitle))).toBe(true);
   const cta = page.locator("#cta-topo a");
   expect(await inView(cta)).toBe(true);
   expect((await cta.boundingBox())!.height).toBeGreaterThanOrEqual(52);
-  expect(await inView(page.getByText(HOME.hero.note).first())).toBe(true);
-  expect(await inView(page.getByRole("link", { name: "Ver como funciona" }))).toBe(true);
-  const phone = (await page.getByRole("group", { name: /Exemplo:/ }).boundingBox())!;
+  const phone = (await page.getByRole("group", { name: /Exemplo de agendamento/ }).boundingBox())!;
   expect(phone.y).toBeLessThan(844);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(390);
 });
 
-test("demo: in order, ending on the notification, without MeetChat balloons, emojis or dates", async ({
-  page,
-}) => {
+test("phone mock: answers to taps from service to the confirmation", async ({ browser }) => {
+  const context = await browser.newContext({ reducedMotion: "reduce" });
+  const page = await context.newPage();
   await page.goto("/");
-  const phone = page.getByRole("group", { name: /Exemplo:/ });
-  // Never empty: the first balloon comes from the server.
-  await expect(phone.getByText("Olá! Qual serviço você quer agendar?")).toBeVisible();
-  await expect(phone.getByText("Studio Lumi")).toBeVisible();
-  await expect(phone.getByText("Agendamento 24h")).toBeVisible();
-  await expect(phone.getByText("Novo agendamento: Ana, sábado 10h")).toBeVisible({
-    timeout: 10_000,
-  });
-  const text = await phone.innerText();
-  const order = [
-    "Olá! Qual serviço você quer agendar?",
-    "Design de sobrancelha",
-    "Qual dia fica melhor?",
-    "Sábado, 10h",
-    "Pronto, Ana! Horário confirmado para sábado às 10h.",
-  ].map((t) => text.indexOf(t));
-  expect(order.every((i) => i >= 0)).toBe(true);
-  expect(text).not.toMatch(/\d{1,2}\/\d{1,2}/);
-  expect(text).not.toMatch(/\p{Extended_Pictographic}/u);
-  expect(text).not.toMatch(/Qual o nome/);
+  const phone = page.getByRole("group", { name: /Exemplo de agendamento/ });
+  // Rendered by the server: there before any JavaScript runs.
+  await expect(phone.getByText("Oi! Qual serviço você quer agendar?")).toBeVisible();
+  const [first] = HOME_LANDING.mock.services;
+  await phone.getByRole("button", { name: new RegExp(first!.name) }).click();
+  await phone.getByRole("button", { name: HOME_LANDING.mock.professionals[1]! }).click();
+  await phone.getByRole("button", { name: "Sábado" }).click();
+  await phone.getByRole("button", { name: "18:30" }).click();
+  await expect(phone.getByText("Horário confirmado")).toBeVisible();
   await expect(phone.getByRole("button", { name: "Ver de novo" })).toBeVisible();
+  await context.close();
 });
 
 test("phone: the bottom bar shows up only after the top button leaves the screen, never over the closing button", async ({
@@ -104,27 +97,8 @@ test("phone: the bottom bar shows up only after the top button leaves the screen
   await page.goto("/");
   const sticky = page.locator("div.fixed.bottom-0");
   await expect(sticky).toHaveAttribute("aria-hidden", "true");
-  await page.getByRole("heading", { name: HOME.reminders.title }).scrollIntoViewIfNeeded();
+  await page.getByRole("heading", { name: HOME_LANDING.compare.title }).scrollIntoViewIfNeeded();
   await expect(sticky).toHaveAttribute("aria-hidden", "false");
-  // Never over the closing button.
-  await page.getByRole("heading", { name: HOME.closing.title }).scrollIntoViewIfNeeded();
+  await page.getByRole("heading", { name: HOME_LANDING.closing.title }).scrollIntoViewIfNeeded();
   await expect(sticky).toHaveAttribute("aria-hidden", "true");
-});
-
-test("reduced motion: the whole conversation and the notification, still", async ({ browser }) => {
-  const context = await browser.newContext({ reducedMotion: "reduce" });
-  const page = await context.newPage();
-  await page.goto("/");
-  const phone = page.getByRole("group", { name: /Exemplo:/ });
-  await expect(
-    phone.getByText("Pronto, Ana! Horário confirmado para sábado às 10h."),
-  ).toBeVisible();
-  await expect(phone.getByText("Novo agendamento: Ana, sábado 10h")).toBeVisible();
-  await context.close();
-});
-
-test("A/B test: ?v=b shows the other title and button", async ({ page }) => {
-  await page.goto("/?v=b");
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText(HOME.hero.variantB!.title);
-  await expect(page.locator("#cta-topo a")).toHaveText(HOME.hero.variantB!.primaryCta);
 });
