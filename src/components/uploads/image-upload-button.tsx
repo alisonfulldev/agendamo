@@ -46,7 +46,9 @@ export function ImageUploadButton({
       body,
     });
     if (!response.ok) {
-      throw new ImageError("O envio falhou. Verifique sua conexão e tente de novo.");
+      throw new ImageError("O envio falhou. Verifique sua conexão e tente de novo.", {
+        cause: `http ${response.status}`,
+      });
     }
   }
 
@@ -62,20 +64,50 @@ export function ImageUploadButton({
     if (!result.ok) throw new ImageError(result.error);
   }
 
-  async function upload(file: File) {
+  /** Tells the server which step failed and why (no image, no file name), for the log. */
+  function report(step: string, file: File, error: unknown) {
+    const body = JSON.stringify({
+      kind,
+      step,
+      error: (error instanceof Error
+        ? `${error.name}: ${error.message}${error.cause ? ` (${String(error.cause)})` : ""}`
+        : String(error)
+      ).slice(0, 200),
+      type: file.type.slice(0, 100),
+      sizeKb: Math.round(file.size / 1024),
+      browser: navigator.userAgent.slice(0, 200),
+    });
+    void fetch("/api/uploads/report", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body,
+      keepalive: true,
+    }).catch(() => undefined);
+  }
+
+  async function upload(picked: File) {
     setStatus("working");
     setError(null);
+    let step = "read";
     try {
+      // Read the whole file right away: on Android a picked file can stop being readable later
+      // (gallery items still syncing, revoked access), and every later step would fail with it.
+      const file = new File([await picked.arrayBuffer()], picked.name, { type: picked.type });
+      step = "prepare";
       let image: Awaited<ReturnType<typeof compressImage>> | null = null;
       try {
         image = await compressImage(file, kind);
       } catch (e) {
         if (!(e instanceof PrepareError)) throw e;
+        step = "original";
         await uploadOriginal(file, e.reason);
       }
       if (image) {
+        step = "sign";
         const signed = await sign({ contentType: image.blob.type, size: image.blob.size });
+        step = "put";
         await put(signed, image.blob);
+        step = "save";
         const result = await registerUploadAction({
           kind,
           key: signed.key,
@@ -87,7 +119,14 @@ export function ImageUploadButton({
       }
       router.refresh();
     } catch (e) {
-      setError(e instanceof ImageError ? e.message : "Não foi possível enviar a imagem.");
+      report(step, picked, e);
+      setError(
+        step === "read"
+          ? "Não conseguimos abrir essa foto no celular. Se ela estiver na nuvem, baixe para o aparelho e tente de novo."
+          : e instanceof ImageError
+            ? e.message
+            : "Não foi possível enviar a imagem.",
+      );
     } finally {
       setStatus("idle");
       if (inputRef.current) inputRef.current.value = "";
@@ -115,7 +154,8 @@ export function ImageUploadButton({
         aria-describedby={error ? errorId : undefined}
         onClick={() => inputRef.current?.click()}
       >
-        <ImagePlus /> {status === "converting"
+        <ImagePlus />{" "}
+        {status === "converting"
           ? "Preparando sua foto…"
           : status === "working"
             ? "Enviando…"
