@@ -18,7 +18,8 @@ export const IMAGE_PRESETS: Record<ImageKind, ImagePreset> = {
   photo: { maxWidth: 800, maxHeight: 800 },
 };
 
-export const MAX_ORIGINAL_BYTES = 15 * 1024 * 1024;
+/** Original photo picked by the user (never uploaded: only the compressed WebP is). */
+export const MAX_ORIGINAL_BYTES = 50 * 1024 * 1024;
 export const MAX_UPLOAD_BYTES = 300 * 1024;
 export const WEBP_QUALITY = 0.75;
 export const UPLOAD_CONTENT_TYPE = "image/webp";

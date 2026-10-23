@@ -235,3 +235,10 @@ Revise antes de aplicar no Supabase de produção.
 - D3: páginas novas sob prefixos: `/recursos/`, `/ferramentas/`, `/comparar/`, `/agendamento/`, `/ajuda/`, `/precos`. Nichos e subpáginas de nicho ficam no primeiro nível.
 - D4: diretório `/{nicho}/{cidade}` indexável a partir de 3 perfis elegíveis (configurável); `/explorar` fica como busca; 301 1:1 das URLs com equivalente depois de checar o Search Console; bairro só depois de a cidade mostrar tração.
 - Metadata de páginas públicas sai de `pageMetadata` (`src/lib/seo/metadata.ts`); sitemap virou índice (`/sitemap.xml` → `/sitemap/<seção>.xml`) com `lastmod` real (`src/content/site-pages.ts`); robots em `src/lib/seo/robots.ts`, com rastreadores de IA liberados por padrão.
+
+## Fotos: qualquer foto, aviso no painel e lembrete por e-mail (2026-10-23)
+
+- Fotos de resolução máxima (Samsung 50 a 200 MP) e imagens de tela cheia baixadas falhavam ao abrir no navegador. A leitura agora tenta em etapas (imagem inteira → já reduzida a 2400 px → leitor de `<img>`), aceita fotos sem tipo pela extensão e originais de até 50 MB (só o WebP comprimido de até 300 KB é enviado). Mensagens de erro dizem o que fazer (HEIC: compartilhar como JPG ou enviar um print). HEIC no Chrome continua sem leitura (exigiria biblioteca nova, pendente de aprovação).
+- Falhas no registro da foto no servidor passam a ir para o log com o motivo (sem dado pessoal nem imagem).
+- Aviso no painel (`src/app/painel/photo-prompt.tsx`) quando falta foto de perfil ou capa: prévia do perfil e envio ali mesmo; não aparece no tour, em "Meu perfil" nem no modo de espera; "Agora não" esconde por 3 dias.
+- E-mail e push únicos (tipo "Dicas para completar o perfil", desligável em Notificações) para donas sem foto de perfil ou capa, a partir do dia seguinte ao cadastro; as contas existentes recebem uma vez. Enviado pela tarefa diária das 8h30 (`daily-alert`).

@@ -17,6 +17,7 @@ export const OWNER_NOTIFICATION_TYPES = {
   weekly_summary: "Resumo semanal",
   empty_slots: "Horários vagos amanhã",
   account: "Plano, teste e cobrança",
+  profile_tips: "Dicas para completar o perfil",
 } as const;
 
 export type OwnerNotificationType = keyof typeof OWNER_NOTIFICATION_TYPES;

@@ -133,7 +133,9 @@ export async function objectSize(key: string): Promise<number | null> {
   try {
     const head = await client.send(new HeadObjectCommand({ Bucket: bucket, Key: key }));
     return head.ContentLength ?? null;
-  } catch {
+  } catch (error) {
+    const e = error as { name?: string; $metadata?: { httpStatusCode?: number } };
+    console.error("r2 head failed", { name: e.name, status: e.$metadata?.httpStatusCode });
     return null;
   }
 }

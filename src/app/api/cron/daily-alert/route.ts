@@ -4,6 +4,7 @@ import { addDaysToDate } from "@/lib/availability";
 import { cronRoute } from "@/lib/cron";
 import type { Business } from "@/lib/db/types";
 import { claimNotification, notifyTeam } from "@/lib/notifications/owner";
+import { sendPhotoReminders } from "@/lib/notifications/photo-reminder";
 import { getPlanFeatures, PLAN_NAME } from "@/lib/plans";
 import { displayCount } from "@/lib/stats";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -11,6 +12,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 /**
  * Morning alert when people clicked the main button outside working hours yesterday.
  * At most one per business per day (notification_log). Wording: "pessoas quiseram agendar".
+ * Also sends the one-time profile photo reminder (src/lib/notifications/photo-reminder.ts).
  */
 export const POST = cronRoute(async () => {
   const admin = createAdminClient();
@@ -60,5 +62,7 @@ export const POST = cronRoute(async () => {
     });
     sent++;
   }
-  return { sent };
+  // Same morning run: one-time reminder to put a profile photo and a cover.
+  const photoReminders = await sendPhotoReminders(now.getTime());
+  return { sent, photoReminders };
 });

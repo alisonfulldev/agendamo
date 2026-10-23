@@ -21,20 +21,82 @@ function toBlob(canvas: HTMLCanvasElement, quality: number): Promise<Blob | null
   return new Promise((resolve) => canvas.toBlob(resolve, UPLOAD_CONTENT_TYPE, quality));
 }
 
+/** HEIC/HEIF (iPhone, Samsung "alta eficiência"): only Safari decodes it natively. */
+function isHeic(file: File): boolean {
+  return /image\/hei[cf]/i.test(file.type) || /\.hei[cf]$/i.test(file.name);
+}
+
+/** Image files, also when the system gives no type (some HEIC and downloaded files). */
+function looksLikeImage(file: File): boolean {
+  return (
+    file.type.startsWith("image/") ||
+    /\.(jpe?g|png|webp|gif|bmp|avif|hei[cf]|tiff?)$/i.test(file.name)
+  );
+}
+
+/** Width the image is decoded at when the full size does not fit in the browser's memory. */
+const SAFE_DECODE_WIDTH = 2400;
+
+function loadImageElement(file: File): Promise<HTMLImageElement> {
+  const url = URL.createObjectURL(file);
+  const image = new Image();
+  image.decoding = "async";
+  image.src = url;
+  return image
+    .decode()
+    .then(() => image)
+    .finally(() => URL.revokeObjectURL(url));
+}
+
 /**
- * Resizes and converts to WebP with the native canvas (rule 7). Lowers the quality step by step
- * if needed to stay under the 300 KB the server accepts.
+ * Decodes any photo the browser can read, in steps, so huge photos (50 to 200 MP phone cameras,
+ * full-screen downloads) do not fail: the full image; if that fails (usually memory), the image
+ * already reduced while decoding; then the browser's <img> decoder. Orientation follows the
+ * photo's EXIF in all of them.
+ */
+async function decodeImage(file: File): Promise<ImageBitmap> {
+  try {
+    return await createImageBitmap(file, { imageOrientation: "from-image" });
+  } catch {
+    // Too big for the browser's memory, or a format createImageBitmap does not take.
+  }
+  try {
+    return await createImageBitmap(file, {
+      imageOrientation: "from-image",
+      resizeWidth: SAFE_DECODE_WIDTH,
+      resizeQuality: "high",
+    });
+  } catch {
+    // Next decoder.
+  }
+  const element = await loadImageElement(file);
+  const scale = Math.min(1, SAFE_DECODE_WIDTH / element.naturalWidth);
+  return createImageBitmap(element, {
+    resizeWidth: Math.max(1, Math.round(element.naturalWidth * scale)),
+    resizeHeight: Math.max(1, Math.round(element.naturalHeight * scale)),
+    resizeQuality: "high",
+  });
+}
+
+/**
+ * Resizes and converts to WebP with the native canvas (rule 7). Accepts any photo the browser can
+ * read, of any size up to MAX_ORIGINAL_BYTES (only the compressed result is uploaded). Lowers the
+ * quality step by step if needed to stay under the 300 KB the server accepts.
  */
 export async function compressImage(file: File, kind: ImageKind): Promise<CompressedImage> {
-  if (!file.type.startsWith("image/")) throw new ImageError("Escolha um arquivo de imagem.");
+  if (!looksLikeImage(file)) throw new ImageError("Escolha um arquivo de foto ou imagem.");
   if (file.size > MAX_ORIGINAL_BYTES)
-    throw new ImageError("A imagem passa de 15 MB. Escolha uma menor.");
+    throw new ImageError("Essa foto passa de 50 MB. Escolha outra ou tire um print dela.");
 
   let bitmap: ImageBitmap;
   try {
-    bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
+    bitmap = await decodeImage(file);
   } catch {
-    throw new ImageError("Não conseguimos ler essa imagem. Tente outra (JPG, PNG ou WebP).");
+    throw new ImageError(
+      isHeic(file)
+        ? "Essa foto está no formato HEIC, que este navegador não abre. No celular, compartilhe a foto como JPG (ou tire um print dela) e envie de novo."
+        : "Não conseguimos abrir essa foto neste navegador. Tente tirar um print dela e enviar o print.",
+    );
   }
 
   const preset = IMAGE_PRESETS[kind];

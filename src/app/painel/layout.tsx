@@ -14,8 +14,12 @@ import { getBusinessContext } from "@/lib/business/context";
 import { getPlanFeatures } from "@/lib/plans";
 import { trialCounter } from "@/lib/plan-text";
 
+import { publicUrl } from "@/lib/storage/r2";
+import { createClient } from "@/lib/supabase/server";
+
 import { MobileNav } from "./mobile-nav";
 import { PanelNav } from "./panel-nav";
+import { PhotoPrompt } from "./photo-prompt";
 import { PanelTour } from "./tour";
 
 export const metadata: Metadata = { title: "Painel", robots: { index: false } };
@@ -48,6 +52,17 @@ export default async function PanelLayout({ children }: LayoutProps<"/painel">) 
   };
   const customers = context.brand.terms.customer.plural;
   const customersLabel = customers.charAt(0).toUpperCase() + customers.slice(1);
+
+  // Profile photo and cover: a friendly prompt while one of them is missing (owners only).
+  const { data: pageImages } = context.isOwner
+    ? await (
+        await createClient()
+      )
+        .from("page_settings")
+        .select("avatar_key, cover_key")
+        .eq("business_id", context.business.id)
+        .maybeSingle()
+    : { data: null };
 
   // Rule 14: the panel uses the business's brand. In production, send owners to that domain.
   if (context.brand.key !== domainBrand.key && isProductionDeployment()) {
@@ -104,6 +119,13 @@ export default async function PanelLayout({ children }: LayoutProps<"/painel">) 
         <Suspense>
           <PanelTour />
         </Suspense>
+      ) : null}
+      {context.isOwner && features.active ? (
+        <PhotoPrompt
+          businessName={context.business.name}
+          avatarUrl={publicUrl(pageImages?.avatar_key)}
+          coverUrl={publicUrl(pageImages?.cover_key)}
+        />
       ) : null}
     </div>
   );

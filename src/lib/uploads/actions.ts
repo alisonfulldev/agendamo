@@ -35,12 +35,21 @@ export async function registerUploadAction(input: unknown): Promise<UploadResult
   const { business } = await requireOwner();
   const parsed = registerSchema.safeParse(input);
   if (!parsed.success || !isKeyOf(parsed.data.key, business.id, parsed.data.kind)) {
+    console.error("upload register refused", { reason: "invalid_input", business: business.id });
     return { ok: false, error: "Envio inválido." };
   }
   const { kind, key, width, height, professionalId } = parsed.data;
 
   const size = await objectSize(key);
-  if (size === null) return { ok: false, error: "O envio não terminou. Tente de novo." };
+  if (size === null) {
+    // Logged with the reason (no personal data, no image) so failures can be traced.
+    console.error("upload register refused", {
+      reason: "object_missing",
+      kind,
+      business: business.id,
+    });
+    return { ok: false, error: "O envio não terminou. Tente de novo." };
+  }
   if (size > MAX_UPLOAD_BYTES) {
     await deleteObject(key);
     return { ok: false, error: "Imagem acima de 300 KB." };
@@ -84,6 +93,7 @@ export async function registerUploadAction(input: unknown): Promise<UploadResult
       .from("page_settings")
       .upsert({ business_id: business.id, [column]: key, updated_at: new Date().toISOString() });
     if (error) {
+      console.error("upload register refused", { reason: "save_failed", kind, code: error.code });
       await deleteObject(key);
       return { ok: false, error: "Não foi possível salvar a imagem." };
     }
