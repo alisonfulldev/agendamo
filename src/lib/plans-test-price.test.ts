@@ -23,7 +23,7 @@ describe("temporary test price (NEXT_PUBLIC_PRICE_TEST_CENTS)", () => {
   it("without it, the normal prices", async () => {
     vi.stubEnv("NEXT_PUBLIC_PRICE_TEST_CENTS", "");
     const { PLAN_PRICES } = await import("@/lib/plans");
-    expect(PLAN_PRICES.complete.monthly).toBe(2990);
-    expect(PLAN_PRICES.complete.yearly).toBe(29880);
+    expect(PLAN_PRICES.complete.monthly).toBe(2390);
+    expect(PLAN_PRICES.complete.yearly).toBe(23880);
   });
 });

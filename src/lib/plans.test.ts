@@ -101,21 +101,21 @@ describe("getPlanFeatures (Completo, 14-day trial, waiting mode)", () => {
 });
 
 describe("prices", () => {
-  it("Completo: R$ 29,90/month or R$ 24,90/month on the yearly plan", () => {
-    expect(subscriptionPrice("monthly", 0)).toBe(2990);
-    expect(subscriptionPrice("yearly", 0)).toBe(29880);
-    expect(PRICE_TEXT.summary).toBe("R$ 29,90/mês ou R$ 24,90/mês no anual");
+  it("Completo: R$ 23,90/month or R$ 19,90/month on the yearly plan", () => {
+    expect(subscriptionPrice("monthly", 0)).toBe(2390);
+    expect(subscriptionPrice("yearly", 0)).toBe(23880);
+    expect(PRICE_TEXT.summary).toBe("R$ 23,90/mês ou R$ 19,90/mês no anual");
   });
 
   it("extra professionals and coupons", () => {
-    expect(subscriptionPrice("monthly", 2)).toBe(2990 + 1800);
-    expect(subscriptionPrice("yearly", 1)).toBe(29880 + 9000);
-    expect(subscriptionPrice("monthly", 0, 50)).toBe(1495);
+    expect(subscriptionPrice("monthly", 2)).toBe(2390 + 1800);
+    expect(subscriptionPrice("yearly", 1)).toBe(23880 + 9000);
+    expect(subscriptionPrice("monthly", 0, 50)).toBe(1195);
   });
 
   it("yearly savings shown on the site", () => {
-    expect(yearlySavings()).toBe(2990 * 12 - 29880);
-    expect(PRICE_TEXT.yearlySavings).toBe("economize R$ 60 por ano");
+    expect(yearlySavings()).toBe(2390 * 12 - 23880);
+    expect(PRICE_TEXT.yearlySavings).toBe("economize R$ 48 por ano");
   });
 
   it("trial copy uses the 14 days", () => {

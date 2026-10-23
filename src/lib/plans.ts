@@ -28,7 +28,7 @@ const ASAAS_MINIMUM_CENTS = 500;
 const testPrice = TEST_PRICE > 0 ? Math.max(TEST_PRICE, ASAAS_MINIMUM_CENTS) : 0;
 
 export const PLAN_PRICES = {
-  complete: { monthly: testPrice || 2990, yearly: testPrice || 29880 },
+  complete: { monthly: testPrice || 2390, yearly: testPrice || 23880 },
   extraProfessional: { monthly: 900, yearly: 9000 },
   featured: { monthly: 4900 },
   customDomain: { monthly: 1900 },
@@ -57,7 +57,7 @@ export function yearlySavings(extraProfessionals = 0): number {
   );
 }
 
-/** "R$ 49" (whole reais without ",00"), "R$ 29,90". */
+/** "R$ 49" (whole reais without ",00"), "R$ 23,90". */
 export const reais = (cents: number) => formatBRL(cents).replace(/,00$/, "");
 
 const prices = PLAN_PRICES.complete;

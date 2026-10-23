@@ -19,8 +19,8 @@ describe("monthlyRevenue", () => {
       addons: {},
       extra_professionals: 0,
     };
-    expect(monthlyRevenue(sub)).toBe(2990);
-    expect(monthlyRevenue({ ...sub, billing_cycle: "yearly" })).toBe(2490);
+    expect(monthlyRevenue(sub)).toBe(2390);
+    expect(monthlyRevenue({ ...sub, billing_cycle: "yearly" })).toBe(1990);
     expect(
       monthlyRevenue({
         ...sub,
@@ -32,7 +32,7 @@ describe("monthlyRevenue", () => {
           ],
         },
       }),
-    ).toBe(2990 + 2 * 900 + 4900);
+    ).toBe(2390 + 2 * 900 + 4900);
     expect(monthlyRevenue({ ...sub, status: "cancelled" })).toBe(0);
   });
 });
@@ -77,7 +77,7 @@ describe("computeMetrics", () => {
       trials: 1,
       activeTrials: 1,
       subscribers: 1,
-      mrrCents: 2990,
+      mrrCents: 2390,
       waiting: 0,
     });
   });
@@ -229,9 +229,9 @@ describe("admin panel helpers", () => {
       now,
     );
     expect(overview).toMatchObject({
-      mrrCents: 2990,
-      arrCents: 2990 * 12,
-      arpaCents: 2990,
+      mrrCents: 2390,
+      arrCents: 2390 * 12,
+      arpaCents: 2390,
       byStatus: { subscribed: 1, trial: 1, waiting: 1, suspended: 0 },
       signups7: 1,
       signups30: 2,

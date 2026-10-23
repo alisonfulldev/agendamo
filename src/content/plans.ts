@@ -2,7 +2,7 @@ import { PLAN_NAME, PLAN_PRICES, PRICE_TEXT, reais, TRIAL_DAYS } from "@/lib/pla
 
 export interface PlanCard {
   name: string;
-  /** Big price ("R$ 29,90"). */
+  /** Big price ("R$ 23,90"). */
   price: string;
   period: string;
   /** Under the price: the yearly option. */
