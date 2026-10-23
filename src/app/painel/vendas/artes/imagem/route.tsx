@@ -6,7 +6,7 @@ import QRCode from "qrcode";
 import sharp from "sharp";
 
 import { readableOn, themeInk } from "@/brands/theme";
-import { brandUrl } from "@/brands/urls";
+import { businessUrl } from "@/brands/urls";
 import { addDaysToDate, todayIn } from "@/lib/availability";
 import { loadCatalog } from "@/lib/booking/data";
 import { formatDateLong } from "@/lib/booking/details";
@@ -80,7 +80,7 @@ export async function GET(request: Request) {
     .maybeSingle();
   const primary = (page.data?.primary_color_override as string | null) ?? brand.theme.primary;
   const onPrimary = readableOn(primary, brand.theme);
-  const pageUrl = brandUrl(brand, `/${business.slug}`);
+  const pageUrl = businessUrl(brand, `/${business.slug}`);
   const qr = await QRCode.toDataURL(pageUrl, { width: 360, margin: 1 });
   // The profile photo, else the first photo of the gallery.
   let photoUrl = publicUrl(page.data?.avatar_key as string | null);

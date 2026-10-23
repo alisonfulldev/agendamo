@@ -12,6 +12,7 @@ import { slugify } from "@/lib/slug";
 import { BackToChatButton } from "../chat-home";
 import {
   businessGone,
+  withoutBrandParam,
   businessStructuredData,
   businessMetadata,
   loadBusinessPage,
@@ -26,8 +27,13 @@ export async function generateMetadata({ params }: PageProps<"/[slug]/perfil">):
 }
 
 /** Standalone profile (portal, Google): the same info shown when the photo is tapped in the chat. */
-export default async function BusinessProfilePage({ params }: PageProps<"/[slug]/perfil">) {
+export default async function BusinessProfilePage({
+  params,
+  searchParams,
+}: PageProps<"/[slug]/perfil">) {
   const { slug } = await params;
+  const clean = withoutBrandParam(`/${slug}/perfil`, await searchParams);
+  if (clean) permanentRedirect(clean);
   const loaded = await loadBusinessPage(slug);
   if (!loaded) return businessGone(slug);
   const { data, brand, domainBrand } = loaded;

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { brandUrl } from "@/brands/urls";
+import { businessUrl } from "@/brands/urls";
 import { PageHeader } from "@/components/panel/page-header";
 import { UpgradeNotice } from "@/components/panel/upgrade-notice";
 import { addDaysToDate, todayIn } from "@/lib/availability";
@@ -42,7 +42,7 @@ export default async function ArtsPage({ searchParams }: PageProps<"/painel/vend
         freeTimesOn(catalog, addDaysToDate(today, 1)),
       ])
     : [[], []];
-  const url = brandUrl(brand, `/${business.slug}`);
+  const url = businessUrl(brand, `/${business.slug}`);
   const texts = {
     "horarios-hoje": freeSlotsMessage({
       businessName: business.name,

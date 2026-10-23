@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { brandUrl } from "@/brands/urls";
+import { businessUrl } from "@/brands/urls";
 import { CopyLink } from "@/components/panel/copy-link";
 import { PageHeader, Section } from "@/components/panel/page-header";
 import { PhotoManager } from "@/components/uploads/photo-manager";
@@ -37,7 +37,7 @@ export default async function PageEditorPage() {
   ]);
 
   const page = settings.data as PageSettings | null;
-  const pageUrl = brandUrl(brand, `/${business.slug}`);
+  const pageUrl = businessUrl(brand, `/${business.slug}`);
   const comboViews: ComboView[] = (combos.data ?? []).map((c) => ({
     id: c.id,
     name: c.name,

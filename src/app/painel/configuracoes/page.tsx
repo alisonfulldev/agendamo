@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { GENERAL_NICHE } from "@/brands";
-import { brandUrl } from "@/brands/urls";
+import { businessUrl } from "@/brands/urls";
 import { CopyLink } from "@/components/panel/copy-link";
 import { nichesByGroup } from "@/components/sales/niche-cards";
 import { PageHeader, Section } from "@/components/panel/page-header";
@@ -64,7 +64,7 @@ export default async function SettingsPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Configurações"
-        description={<CopyLink url={brandUrl(brand, `/${business.slug}`)} />}
+        description={<CopyLink url={businessUrl(brand, `/${business.slug}`)} />}
       />
 
       <Section title="Negócio e agendamento">

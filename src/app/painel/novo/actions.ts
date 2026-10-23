@@ -1,7 +1,7 @@
 "use server";
 
 import { getCurrentBrand } from "@/brands/server";
-import { brandUrl } from "@/brands/urls";
+import { businessUrl } from "@/brands/urls";
 import { requireUser } from "@/lib/auth/session";
 import { onboardingSchema } from "@/lib/business/schemas";
 import { checkSlug, isSlugAvailable, type SlugCheck } from "@/lib/business/slug-check";
@@ -94,7 +94,7 @@ export async function createBusinessAction(input: unknown): Promise<CreateBusine
     userId: user.id,
     via: "signup",
   });
-  const pageUrl = brandUrl(brand, `/${data.slug}`);
+  const pageUrl = businessUrl(brand, `/${data.slug}`);
   await notifyAdminsOfSignup({
     businessName: data.name,
     nicheName: brand.niche?.name ?? brand.name,

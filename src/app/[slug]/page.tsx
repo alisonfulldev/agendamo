@@ -12,6 +12,7 @@ import { publicUrl } from "@/lib/storage/r2";
 import { BackToChatButton, ChatHome } from "./chat-home";
 import {
   businessGone,
+  withoutBrandParam,
   businessStructuredData,
   businessMetadata,
   loadBusinessPage,
@@ -32,6 +33,8 @@ export async function generateMetadata({ params }: PageProps<"/[slug]">): Promis
 export default async function BusinessChatPage({ params, searchParams }: PageProps<"/[slug]">) {
   const { slug } = await params;
   const query = await searchParams;
+  const clean = withoutBrandParam(`/${slug}`, query);
+  if (clean) permanentRedirect(clean);
   const loaded = await loadBusinessPage(slug);
   if (!loaded) return businessGone(slug);
   const { data, brand, domainBrand, automaticBooking } = loaded;

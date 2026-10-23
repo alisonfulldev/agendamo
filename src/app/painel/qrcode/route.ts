@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import QRCode from "qrcode";
 
-import { brandUrl } from "@/brands/urls";
+import { businessUrl } from "@/brands/urls";
 import { getBusinessContext } from "@/lib/business/context";
 import { claimNotification } from "@/lib/notifications/owner";
 
@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
   const context = await getBusinessContext();
   if (!context) return new NextResponse("Not found", { status: 404 });
 
-  const url = brandUrl(context.brand, `/${context.business.slug}`);
+  const url = businessUrl(context.brand, `/${context.business.slug}`);
   const format = request.nextUrl.searchParams.get("format") === "svg" ? "svg" : "png";
   const download = request.nextUrl.searchParams.get("download") === "1";
   const disposition = download

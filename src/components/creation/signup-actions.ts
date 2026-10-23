@@ -6,7 +6,7 @@ import QRCode from "qrcode";
 import { z } from "zod";
 
 import { getNiche } from "@/brands";
-import { brandUrl } from "@/brands/urls";
+import { businessUrl } from "@/brands/urls";
 import { TERMS } from "@/content/legal";
 import { audit } from "@/lib/audit";
 import type { Business } from "@/lib/db/types";
@@ -213,7 +213,7 @@ export async function verifySignupCodeAction(input: unknown): Promise<VerifySign
   });
   const trial = started.ok ? "started" : "used";
 
-  const pageUrl = brandUrl(niche, `/${slug}`);
+  const pageUrl = businessUrl(niche, `/${slug}`);
   await notifyAdminsOfSignup({
     businessName: demo.name,
     nicheName: niche.niche?.name ?? "Outro",

@@ -5,6 +5,7 @@ import { notFound, redirect } from "next/navigation";
 import { cache, type CSSProperties } from "react";
 
 import { getNiche } from "@/brands";
+import { BRAND_QUERY_PARAM } from "@/brands/host";
 import { getCurrentBrand, isSharedDomain } from "@/brands/server";
 import { readableOn } from "@/brands/theme";
 import { canonicalUrl, nicheHubUrl } from "@/brands/urls";
@@ -117,4 +118,22 @@ export function businessStructuredData(
       { name: business.name, url },
     ]),
   ];
+}
+
+/**
+ * Old shared links still carry ?brand= (before D2 the shared site needed it). The page sends
+ * them to the short address, keeping the link's own parameters (?ref=, ?agendar=1…).
+ */
+export function withoutBrandParam(
+  path: string,
+  query: Record<string, string | string[] | undefined>,
+): string | null {
+  if (query[BRAND_QUERY_PARAM] === undefined) return null;
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(query)) {
+    if (key === BRAND_QUERY_PARAM || value === undefined) continue;
+    for (const v of Array.isArray(value) ? value : [value]) params.append(key, v);
+  }
+  const search = params.toString();
+  return search ? `${path}?${search}` : path;
 }

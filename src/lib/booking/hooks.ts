@@ -2,7 +2,7 @@ import "server-only";
 
 import { formatInTimeZone } from "date-fns-tz";
 
-import { brandUrl } from "@/brands/urls";
+import { brandUrl, businessUrl } from "@/brands/urls";
 import { sendEmail } from "@/lib/email/send";
 import { claimNotification, notifyTeam } from "@/lib/notifications/owner";
 import { getPlanFeatures } from "@/lib/plans";
@@ -57,7 +57,7 @@ export async function onAppointmentCompleted(appointmentId: string): Promise<voi
             content: {
               heading: "Resta 1 sessão no seu pacote",
               paragraphs: [`Você tem mais 1 sessão do ${name} com ${d.business.name}.`],
-              cta: { label: "Agendar", url: brandUrl(d.brand, `/${d.business.slug}`) },
+              cta: { label: "Agendar", url: businessUrl(d.brand, `/${d.business.slug}`) },
             },
           }).catch((e) => console.error(e));
         }
@@ -128,7 +128,7 @@ export async function onAppointmentCompleted(appointmentId: string): Promise<voi
           secondaryLinks: [
             {
               label: "Indicar uma amiga",
-              url: brandUrl(d.brand, `/${d.business.slug}?ref=${d.customer.referral_code}`),
+              url: businessUrl(d.brand, `/${d.business.slug}?ref=${d.customer.referral_code}`),
             },
           ],
         },
@@ -191,7 +191,7 @@ async function notifyWaitlistOfFreedSlot(
 
   for (const entry of entries ?? []) {
     if (entry.email) {
-      const url = brandUrl(
+      const url = businessUrl(
         d.brand,
         `/${d.business.slug}?agendar=1&servico=${entry.service_id}&data=${date}`,
       );

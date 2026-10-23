@@ -42,3 +42,16 @@ export function nicheHubUrl(brand: BrandConfig): string {
   if (isProductionDeployment() && hasRealDomain(brand)) return canonicalUrl(brand, "/");
   return canonicalUrl(brand, brand.niche ? `/${brand.niche.route}` : "/");
 }
+
+/**
+ * Public link of a business (/<slug>, /<slug>/perfil, with its own query like ?ref= or
+ * ?agendar=1): the short address people share, never with ?brand= (since D2 the page shows in the
+ * business's brand by itself). The brand's own domain in production, otherwise the shared site.
+ */
+export function businessUrl(brand: BrandConfig, path: string): string {
+  const base =
+    isProductionDeployment() && hasRealDomain(brand) ? getBrandBaseUrl(brand) : siteUrl("/");
+  const url = new URL(path, base);
+  url.searchParams.delete(BRAND_QUERY_PARAM);
+  return url.toString();
+}

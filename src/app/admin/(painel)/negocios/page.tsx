@@ -2,7 +2,7 @@ import { formatInTimeZone } from "date-fns-tz";
 import Link from "next/link";
 
 import { BRANDS, getNiche } from "@/brands";
-import { brandUrl } from "@/brands/urls";
+import { businessUrl } from "@/brands/urls";
 import { ownerEmails } from "@/lib/admin-data";
 import {
   ADMIN_STATUS_LABEL,
@@ -172,7 +172,7 @@ export default async function AdminBusinessesPage({ searchParams }: PageProps<"/
                     <tr key={b.id} className="align-top">
                       <td className="max-w-[24rem] py-2.5 pr-3">
                         <a
-                          href={brandUrl(brand, `/${b.slug}`)}
+                          href={businessUrl(brand, `/${b.slug}`)}
                           target="_blank"
                           rel="noreferrer"
                           className="font-medium hover:underline"

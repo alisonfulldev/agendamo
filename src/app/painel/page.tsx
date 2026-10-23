@@ -2,7 +2,7 @@ import { CalendarClock, CheckCircle2, Circle, Sparkles } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { brandUrl } from "@/brands/urls";
+import { businessUrl } from "@/brands/urls";
 import { CopyLink } from "@/components/panel/copy-link";
 import { CopyTextButton } from "@/components/panel/copy-text-button";
 import { InstallGuide } from "@/components/panel/install-guide";
@@ -32,7 +32,7 @@ interface Step {
 export default async function PanelHomePage({ searchParams }: PageProps<"/painel">) {
   const { business, brand, user, isOwner } = await requireBusiness();
   const { senha } = await searchParams;
-  const pageUrl = brandUrl(brand, `/${business.slug}`);
+  const pageUrl = businessUrl(brand, `/${business.slug}`);
   const features = getPlanFeatures(business);
 
   let steps: Step[] = [];
