@@ -34,6 +34,7 @@ Next.js App Router + TypeScript strict; Supabase na nuvem (Postgres, Auth, RLS, 
 Supabase CLI apenas para migrations remotas (sem Docker, sem supabase start);
 Cloudflare R2 para imagens via @aws-sdk/client-s3 e @aws-sdk/s3-request-presigner;
 Tailwind + shadcn/ui; zod; date-fns + date-fns-tz; Resend; web-push; Vitest; Playwright; Sentry; deploy na Vercel.
+heic-to (versão csp) só para abrir fotos HEIC/HEIF no navegador, carregada sob demanda (aprovada em 2026-10-23).
 
 ## Idioma
 Código, tabelas e arquivos em inglês. Interface em português do Brasil.

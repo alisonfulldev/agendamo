@@ -69,13 +69,48 @@ async function decodeImage(file: File): Promise<ImageBitmap> {
   } catch {
     // Next decoder.
   }
-  const element = await loadImageElement(file);
-  const scale = Math.min(1, SAFE_DECODE_WIDTH / element.naturalWidth);
-  return createImageBitmap(element, {
-    resizeWidth: Math.max(1, Math.round(element.naturalWidth * scale)),
-    resizeHeight: Math.max(1, Math.round(element.naturalHeight * scale)),
+  try {
+    const element = await loadImageElement(file);
+    const scale = Math.min(1, SAFE_DECODE_WIDTH / element.naturalWidth);
+    return await createImageBitmap(element, {
+      resizeWidth: Math.max(1, Math.round(element.naturalWidth * scale)),
+      resizeHeight: Math.max(1, Math.round(element.naturalHeight * scale)),
+      resizeQuality: "high",
+    });
+  } catch (error) {
+    // HEIC/HEIF outside Safari: the decoder is loaded only now, only for these photos.
+    if (isHeic(file) || (await looksLikeHeic(file))) return decodeHeic(file);
+    throw error;
+  }
+}
+
+/** HEIC by content (files with no type or extension, e.g. some downloads). */
+async function looksLikeHeic(file: File): Promise<boolean> {
+  const head = new Uint8Array(await file.slice(0, 16).arrayBuffer());
+  const brand = String.fromCharCode(...head.slice(4, 12));
+  return /^ftyp(heic|heix|hevc|hevx|heim|heis|mif1|msf1)/.test(brand);
+}
+
+/**
+ * HEIC/HEIF decoder (libheif, heic-to, LGPL), loaded on demand: the "csp" build runs without
+ * eval, in a worker (CSP worker-src allows blob:). Big photos are reduced right after decoding.
+ */
+async function decodeHeic(file: File): Promise<ImageBitmap> {
+  const { heicTo } = await import("heic-to/csp");
+  const full = await heicTo({
+    blob: file,
+    type: "bitmap",
+    options: { imageOrientation: "from-image" },
+  });
+  if (full.width <= SAFE_DECODE_WIDTH) return full;
+  const scale = SAFE_DECODE_WIDTH / full.width;
+  const reduced = await createImageBitmap(full, {
+    resizeWidth: SAFE_DECODE_WIDTH,
+    resizeHeight: Math.max(1, Math.round(full.height * scale)),
     resizeQuality: "high",
   });
+  full.close();
+  return reduced;
 }
 
 /**
@@ -84,7 +119,10 @@ async function decodeImage(file: File): Promise<ImageBitmap> {
  * quality step by step if needed to stay under the 300 KB the server accepts.
  */
 export async function compressImage(file: File, kind: ImageKind): Promise<CompressedImage> {
-  if (!looksLikeImage(file)) throw new ImageError("Escolha um arquivo de foto ou imagem.");
+  // Refused up front only when the type says it is not an image (a PDF, a video). Files with no
+  // type are tried by content.
+  if (file.type && !looksLikeImage(file))
+    throw new ImageError("Escolha um arquivo de foto ou imagem.");
   if (file.size > MAX_ORIGINAL_BYTES)
     throw new ImageError("Essa foto passa de 50 MB. Escolha outra ou tire um print dela.");
 
@@ -92,9 +130,11 @@ export async function compressImage(file: File, kind: ImageKind): Promise<Compre
   try {
     bitmap = await decodeImage(file);
   } catch {
+    if (!file.type && !looksLikeImage(file))
+      throw new ImageError("Escolha um arquivo de foto ou imagem.");
     throw new ImageError(
       isHeic(file)
-        ? "Essa foto está no formato HEIC, que este navegador não abre. No celular, compartilhe a foto como JPG (ou tire um print dela) e envie de novo."
+        ? "Não conseguimos abrir essa foto HEIC. Tente compartilhar a foto como JPG (ou tire um print dela) e envie de novo."
         : "Não conseguimos abrir essa foto neste navegador. Tente tirar um print dela e enviar o print.",
     );
   }

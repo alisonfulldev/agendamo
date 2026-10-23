@@ -55,7 +55,8 @@ export function contentSecurityPolicy(path: string): string {
     `img-src ${images.join(" ")}`,
     "font-src 'self'",
     `connect-src ${connect.join(" ")}`,
-    "worker-src 'self'",
+    // blob: for the HEIC decoder's worker (heic-to, loaded only for HEIC photos).
+    "worker-src 'self' blob:",
     "manifest-src 'self'",
     "frame-src 'self'",
     "object-src 'none'",
