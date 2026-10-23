@@ -1,5 +1,7 @@
 "use server";
 
+import { randomUUID } from "node:crypto";
+
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
@@ -7,9 +9,19 @@ import { audit } from "@/lib/audit";
 import { requireOwner } from "@/lib/business/context";
 import { invalidatePublicPage } from "@/lib/cache";
 import { notifyProfileChanged } from "@/lib/seo/profile-indexnow";
-import { IMAGE_KINDS, isKeyOf, MAX_UPLOAD_BYTES } from "@/lib/images/presets";
+import { convertToWebp } from "@/lib/images/convert";
+import {
+  IMAGE_KINDS,
+  isIncomingKeyOf,
+  isKeyOf,
+  MAX_ORIGINAL_BYTES,
+  MAX_UPLOAD_BYTES,
+  objectKey,
+  UPLOAD_CONTENT_TYPE,
+  type ImageKind,
+} from "@/lib/images/presets";
 import { getPlanFeatures } from "@/lib/plans";
-import { deleteObject, objectSize } from "@/lib/storage/r2";
+import { deleteObject, objectSize, readObject, writeObject } from "@/lib/storage/r2";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -55,6 +67,28 @@ export async function registerUploadAction(input: unknown): Promise<UploadResult
     return { ok: false, error: "Imagem acima de 300 KB." };
   }
 
+  return saveImage(business, { kind, key, width, height, size, professionalId });
+}
+
+type Owner = Awaited<ReturnType<typeof requireOwner>>["business"];
+
+/**
+ * Records an uploaded image in the database (gallery photo, profile photo, cover or professional
+ * photo), replacing and deleting the previous one. Shared by the browser path and the server
+ * fallback.
+ */
+async function saveImage(
+  business: Owner,
+  image: {
+    kind: ImageKind;
+    key: string;
+    width: number;
+    height: number;
+    size: number;
+    professionalId?: string;
+  },
+): Promise<UploadResult> {
+  const { kind, key, width, height, size, professionalId } = image;
   const supabase = await createClient();
 
   if (kind === "photo") {
@@ -120,6 +154,62 @@ export async function registerUploadAction(input: unknown): Promise<UploadResult
 
   refresh(business);
   return { ok: true };
+}
+
+const originalSchema = z.object({
+  kind: z.enum(IMAGE_KINDS),
+  key: z.string(),
+  professionalId: z.uuid().optional(),
+  /** Why the phone could not prepare the photo (logged, to know what fails). */
+  reason: z.string().max(120).optional(),
+});
+
+/**
+ * Server fallback (rule 7 exception, 2026-10-23): converts the original photo the phone could not
+ * prepare (already in a private temporary key) into the usual WebP, saves it like any upload and
+ * deletes the original. The photo is read in memory only; nothing about it is logged.
+ */
+export async function processOriginalAction(input: unknown): Promise<UploadResult> {
+  const { business } = await requireOwner();
+  const parsed = originalSchema.safeParse(input);
+  if (!parsed.success || !isIncomingKeyOf(parsed.data.key, business.id)) {
+    return { ok: false, error: "Envio inválido." };
+  }
+  const { kind, key, professionalId, reason } = parsed.data;
+
+  const original = await readObject(key, MAX_ORIGINAL_BYTES);
+  if (!original) {
+    console.error("photo fallback refused", { reason: "object_missing", kind });
+    await deleteObject(key).catch(() => undefined);
+    return { ok: false, error: "O envio não terminou. Tente de novo." };
+  }
+
+  let converted: Awaited<ReturnType<typeof convertToWebp>>;
+  try {
+    converted = await convertToWebp(original, kind);
+  } catch (error) {
+    console.error("photo fallback failed", {
+      kind,
+      phone: reason,
+      server: error instanceof Error ? error.message.slice(0, 120) : "unknown",
+    });
+    return { ok: false, error: "Não conseguimos usar essa foto. Tente outra foto." };
+  } finally {
+    await deleteObject(key).catch(() => undefined);
+  }
+
+  const finalKey = objectKey(business.id, kind, randomUUID());
+  await writeObject(finalKey, converted.bytes, UPLOAD_CONTENT_TYPE);
+  // The phone could not prepare it; the server did (kept in the log to follow how often).
+  console.info("photo converted on the server", { kind, phone: reason });
+  return saveImage(business, {
+    kind,
+    key: finalKey,
+    width: converted.width,
+    height: converted.height,
+    size: converted.bytes.length,
+    professionalId,
+  });
 }
 
 /** Deletes a gallery photo and its R2 object. */

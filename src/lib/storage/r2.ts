@@ -160,6 +160,45 @@ export async function copyObject(from: string, to: string): Promise<void> {
   );
 }
 
+/** Writes a finished image (the server fallback's WebP) under a public, immutable key. */
+export async function writeObject(key: string, body: Uint8Array, contentType: string): Promise<void> {
+  if (isDemoMode()) return writeDemoObject(key, Buffer.from(body));
+  const { client, bucket } = r2();
+  await client.send(
+    new PutObjectCommand({
+      Bucket: bucket,
+      Key: key,
+      Body: body,
+      ContentType: contentType,
+      CacheControl: IMMUTABLE_CACHE,
+    }),
+  );
+}
+
+/** Deletes objects under a prefix last changed before `before` (forgotten originals). */
+export async function deleteOlderThan(prefix: string, before: Date): Promise<number> {
+  if (isDemoMode() || !isStorageConfigured()) return 0;
+  const { client, bucket } = r2();
+  let deleted = 0;
+  let token: string | undefined;
+  do {
+    const page = await client.send(
+      new ListObjectsV2Command({ Bucket: bucket, Prefix: prefix, ContinuationToken: token }),
+    );
+    const keys = (page.Contents ?? []).flatMap((object) =>
+      object.Key && object.LastModified && object.LastModified < before ? [{ Key: object.Key }] : [],
+    );
+    if (keys.length > 0) {
+      await client.send(
+        new DeleteObjectsCommand({ Bucket: bucket, Delete: { Objects: keys, Quiet: true } }),
+      );
+      deleted += keys.length;
+    }
+    token = page.IsTruncated ? page.NextContinuationToken : undefined;
+  } while (token);
+  return deleted;
+}
+
 export async function deleteObject(key: string): Promise<void> {
   if (isDemoMode()) return deleteDemoObject(key);
   if (!isStorageConfigured()) return;

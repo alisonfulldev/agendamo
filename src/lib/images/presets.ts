@@ -32,3 +32,15 @@ export function objectKey(businessId: string, kind: ImageKind, id: string): stri
 export function isKeyOf(key: string, businessId: string, kind: ImageKind): boolean {
   return new RegExp(`^businesses/${businessId}/${kind}/[0-9a-f-]{36}\\.webp$`).test(key);
 }
+
+/**
+ * Original photo the phone could not prepare (server fallback, rule 7 exception of 2026-10-23):
+ * uploaded as is to a private key, converted on the server and deleted right after.
+ */
+export function incomingKey(businessId: string, id: string): string {
+  return `incoming/${businessId}/${id}`;
+}
+
+export function isIncomingKeyOf(key: string, businessId: string): boolean {
+  return new RegExp(`^incoming/${businessId}/[0-9a-f-]{36}$`).test(key);
+}

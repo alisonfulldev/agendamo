@@ -242,3 +242,12 @@ Revise antes de aplicar no Supabase de produção.
 - Falhas no registro da foto no servidor passam a ir para o log com o motivo (sem dado pessoal nem imagem).
 - Aviso no painel (`src/app/painel/photo-prompt.tsx`) quando falta foto de perfil ou capa: prévia do perfil e envio ali mesmo; não aparece no tour, em "Meu perfil" nem no modo de espera; "Agora não" esconde por 3 dias.
 - E-mail e push únicos (tipo "Dicas para completar o perfil", desligável em Notificações) para donas sem foto de perfil ou capa, a partir do dia seguinte ao cadastro; as contas existentes recebem uma vez. Enviado pela tarefa diária das 8h30 (`daily-alert`).
+
+## Fotos: conversão no servidor quando o celular não consegue (2026-10-23)
+
+- Mesmo com as etapas no navegador, o Chrome do Android ainda falhava em algumas fotos (inclusive prints). Pesquisa: `createImageBitmap(Blob)` é instável no Chrome móvel; os apps grandes (Facebook etc.) processam a foto no servidor. Decisão definitiva, aprovada pela dona do produto:
+  1. No navegador, a leitura começa pelo mesmo leitor que mostra a foto na galeria (`<img>` + canvas), depois `createImageBitmap` e, para HEIC, `heic-to`.
+  2. Se o celular não conseguir (`PrepareError`), o original (até 50 MB) é enviado direto ao R2 por URL assinada numa chave privada `incoming/<negócio>/<id>`; a ação `processOriginalAction` lê em memória, converte com `sharp` (já instalado, sem custo novo) para o mesmo WebP de até 300 KB, apaga o original e salva como qualquer envio. Exceção à regra 7 registrada no CLAUDE.md.
+  3. O log registra só a etapa que falhou ("photo converted on the server" / "photo fallback failed"), sem dados da foto. A limpeza diária apaga o que sobrar em `incoming/` com mais de 1 dia.
+- Cloudflare Images foi descartado (pago). O editor de recorte fica para depois, se ainda houver falhas.
+

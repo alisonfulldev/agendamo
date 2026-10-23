@@ -46,7 +46,7 @@ Código, tabelas e arquivos em inglês. Interface em português do Brasil.
 4. Horário só é oferecido se duração + intervalo couberem inteiros, fora de pausas, bloqueios, agendamentos, recursos ocupados e compromissos do Google Agenda. Grade 15/30/60. Respeitar antecedência mínima e limite futuro.
 5. Estatísticas sem identificar visitantes: só contagens, horários e id de sessão anônimo. Ignorar dona logada e robôs. Números agregados abaixo de 5 nunca são exibidos.
 6. Recursos de plano verificados no servidor (nunca só na interface) por getPlanFeatures.
-7. Imagens comprimidas no navegador (WebP via canvas nativo) e enviadas direto ao R2 por URL assinada gerada no servidor. Nunca passar arquivo pelo servidor Next. Limites por plano validados no servidor.
+7. Imagens comprimidas no navegador (WebP via canvas nativo) e enviadas direto ao R2 por URL assinada gerada no servidor. Nunca passar arquivo pelo servidor Next. Limites por plano validados no servidor Exceção aprovada (2026-10-23): quando o celular não consegue preparar a foto, o original (até 50 MB) vai direto ao R2 numa chave privada temporária (incoming/), o servidor lê em memória, converte com sharp para o mesmo WebP, apaga o original e nada da foto é logado (src/lib/images/convert.ts; limpeza diária do que sobrar).
 8. Tarefas agendadas: pg_cron + pg_net chamando rotas /api/cron/* protegidas por CRON_SECRET. Todas idempotentes.
 9. Toda entrada validada com zod no servidor. Rotas públicas e de autenticação com limite de chamadas.
 10. E-mails de marketing só com opt-in e descadastro com um clique.

@@ -1,6 +1,6 @@
 import { cronRoute } from "@/lib/cron";
 import { purgeReceiptFiles } from "@/lib/deposits/receipts";
-import { deleteObject, isStorageConfigured } from "@/lib/storage/r2";
+import { deleteObject, deleteOlderThan, isStorageConfigured } from "@/lib/storage/r2";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 /**
@@ -25,9 +25,12 @@ export const POST = cronRoute(async () => {
   if (photos.length && isStorageConfigured()) {
     await Promise.all(photos.map((key) => deleteObject(key).catch(() => undefined)));
   }
+  // Originals uploaded for the server photo fallback and never converted (page closed midway).
+  const incoming = await deleteOlderThan("incoming/", new Date(Date.now() - 86_400_000));
   // Pix receipts: files deleted 30 days after the decision (the hash stays).
   const receipts = await purgeReceiptFiles();
   return {
+    incoming,
     receipts,
     expired: expired.data,
     rateLimits: rateLimits.data,
