@@ -251,3 +251,8 @@ Revise antes de aplicar no Supabase de produção.
   3. O log registra só a etapa que falhou ("photo converted on the server" / "photo fallback failed"), sem dados da foto. A limpeza diária apaga o que sobrar em `incoming/` com mais de 1 dia.
 - Cloudflare Images foi descartado (pago). O editor de recorte fica para depois, se ainda houver falhas.
 
+
+## Preço do Completo: R$ 23,90/mês ou R$ 19,90/mês no anual (2026-10-23)
+
+- Mensal baixou de R$ 29,90 para R$ 23,90; anual de R$ 298,80 para R$ 238,80 (R$ 19,90/mês). Profissional extra continua R$ 9/mês (R$ 90/ano).
+- Assinantes existentes passam ao valor novo a partir da próxima cobrança (needs_reprice, tarefa diária do cron trial), como na mudança de 2026-10-12.
