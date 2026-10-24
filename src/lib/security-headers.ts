@@ -45,12 +45,23 @@ export function contentSecurityPolicy(path: string): string {
     "https://*.r2.cloudflarestorage.com",
     sentry && "https://*.sentry.io",
     sentry,
+    // Google tag on the sales site (src/components/google-tag.tsx).
+    "https://*.google-analytics.com",
+    "https://*.analytics.google.com",
+    "https://*.googletagmanager.com",
   ].filter(Boolean);
-  const images = ["'self'", "data:", "blob:", r2Public].filter(Boolean);
+  const images = [
+    "'self'",
+    "data:",
+    "blob:",
+    r2Public,
+    "https://*.google-analytics.com",
+    "https://*.googletagmanager.com",
+  ].filter(Boolean);
   return [
     "default-src 'self'",
     // Next.js inline bootstrap scripts need 'unsafe-inline' without a nonce setup.
-    `script-src 'self' 'unsafe-inline'${dev ? " 'unsafe-eval'" : ""}`,
+    `script-src 'self' 'unsafe-inline' https://www.googletagmanager.com${dev ? " 'unsafe-eval'" : ""}`,
     "style-src 'self' 'unsafe-inline'",
     `img-src ${images.join(" ")}`,
     "font-src 'self'",

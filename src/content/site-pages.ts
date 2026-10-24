@@ -7,7 +7,7 @@ export const SITE_PAGES = {
   home: { path: "/", updatedAt: "2026-10-16" },
   pricing: { path: "/precos", updatedAt: "2026-10-16" },
   terms: { path: "/termos", updatedAt: "2026-10-12" },
-  privacy: { path: "/privacidade", updatedAt: "2026-10-02" },
+  privacy: { path: "/privacidade", updatedAt: "2026-10-24" },
 } as const;
 
 /**

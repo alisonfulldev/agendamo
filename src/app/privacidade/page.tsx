@@ -54,6 +54,11 @@ export default async function PrivacyPage() {
         guardamos IP, nome ou qualquer dado que identifique quem visita. Números pequenos (abaixo de
         5) nunca são exibidos.
       </p>
+      <p>
+        Nas páginas do site do {brand.name} (página inicial, páginas de cada área, preços, guias,
+        cadastro e entrada) usamos também o Google Analytics, que grava cookies próprios para medir
+        visitas de forma agregada. Ele não roda no link de agendamento dos negócios nem no painel.
+      </p>
       <h2>4. Compartilhamento</h2>
       <p>
         Usamos fornecedores para hospedagem, banco de dados, envio de e-mails, armazenamento de

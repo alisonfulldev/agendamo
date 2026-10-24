@@ -1,17 +1,21 @@
 import type { Metadata, Viewport } from "next";
 import Link from "next/link";
 
-import { getBrandBaseUrl, PLATFORM } from "@/brands";
+import { getBrandBaseUrl, NICHES, PLATFORM } from "@/brands";
 import { fontVariables } from "@/brands/fonts";
 import { FONT_KEYS } from "@/brands/schema";
 import { getCurrentBrand } from "@/brands/server";
 import { brandThemeStyle } from "@/brands/theme";
 import { hasRealDomain } from "@/brands/urls";
 import { BrandProvider } from "@/components/brand-provider";
+import { GoogleTag } from "@/components/google-tag";
 import { toClientBrand } from "@/components/brand-scope";
 import { isDemoMode } from "@/lib/demo/mode";
 
 import "./globals.css";
+
+/** Niche pages (/barbearia…), where the Google tag runs together with the rest of the site. */
+const NICHE_ROUTES = NICHES.map((brand) => brand.niche!.route);
 
 export async function generateMetadata(): Promise<Metadata> {
   const brand = await getCurrentBrand();
@@ -69,6 +73,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="flex min-h-full flex-col">
         <BrandProvider brand={toClientBrand(brand)}>{children}</BrandProvider>
+        {isDemoMode() ? null : <GoogleTag nicheRoutes={NICHE_ROUTES} />}
         {isDemoMode() ? (
           <Link
             href="/demo"
