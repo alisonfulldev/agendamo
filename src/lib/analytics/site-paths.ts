@@ -5,6 +5,10 @@
  */
 export const GOOGLE_TAG_ID = "G-C0JT6XWNSM";
 
+/** Google Ads account (search campaign, 2026-10-24) and its "Cadastro MeetChat" conversion. */
+export const GOOGLE_ADS_ID = "AW-18534935387";
+export const SIGNUP_CONVERSION = `${GOOGLE_ADS_ID}/avnUCIKqnqgdENvWkoZF`;
+
 /** First path segments of the sales site that are not niche pages. */
 export const SITE_SECTIONS = [
   "agendamento",

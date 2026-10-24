@@ -5,6 +5,7 @@ import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 import { getBrand, getNiche, NICHES, PLATFORM } from "@/brands";
 import { brandThemeStyle } from "@/brands/theme";
+import { trackSignup } from "@/components/google-tag";
 import { nichesByGroup } from "@/components/sales/niche-cards";
 import { CREATION, detectNiche } from "@/content/creation";
 import { siteContext, siteLanding } from "@/components/seo/site-tracker";
@@ -449,6 +450,8 @@ export function Conversation({ photos }: { photos: boolean }) {
       whatsapp: state.whatsapp,
     }).catch(() => ({ ok: false as const, error: "failed" as const }));
     if (result.ok && result.outcome === "created") {
+      // Google Ads / Analytics sign-up, once per new account (never for an existing one).
+      trackSignup();
       update({ phase: "created", created: result }, [
         system(fill(SU.created, { nome: result.name })),
         ...(result.trial === "used" ? [system(SU.trialUsed)] : []),

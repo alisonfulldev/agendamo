@@ -4,7 +4,12 @@ import { usePathname } from "next/navigation";
 import Script from "next/script";
 import { useEffect } from "react";
 
-import { GOOGLE_TAG_ID, isSitePath } from "@/lib/analytics/site-paths";
+import {
+  GOOGLE_ADS_ID,
+  GOOGLE_TAG_ID,
+  isSitePath,
+  SIGNUP_CONVERSION,
+} from "@/lib/analytics/site-paths";
 
 declare global {
   interface Window {
@@ -24,8 +29,21 @@ function gtag(...args: unknown[]) {
     };
     window.gtag("js", new Date());
     window.gtag("config", GOOGLE_TAG_ID, { send_page_view: false });
+    // Only the sign-up conversion: no remarketing lists or ad personalization from the site.
+    window.gtag("config", GOOGLE_ADS_ID, { allow_ad_personalization_signals: false });
   }
   window.gtag(...args);
+}
+
+/**
+ * An account was just created in the creation conversation: one sign-up for Analytics and one
+ * "Cadastro MeetChat" conversion for Google Ads. Nothing about the person is sent. Only where the
+ * tag already runs (the sales site); anywhere else it does nothing.
+ */
+export function trackSignup() {
+  if (!window.gtag) return;
+  window.gtag("event", "sign_up", { method: "creation_chat" });
+  window.gtag("event", "conversion", { send_to: SIGNUP_CONVERSION });
 }
 
 /**

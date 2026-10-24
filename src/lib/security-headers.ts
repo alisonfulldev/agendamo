@@ -33,6 +33,15 @@ function origin(url: string | undefined): string | null {
   }
 }
 
+/** Where the Google Ads conversion ("Cadastro MeetChat") is sent from the sales site. */
+const GOOGLE_ADS_HOSTS = [
+  "https://www.googleadservices.com",
+  "https://googleads.g.doubleclick.net",
+  "https://*.doubleclick.net",
+  "https://www.google.com",
+  "https://www.google.com.br",
+];
+
 export function contentSecurityPolicy(path: string): string {
   const supabase = origin(process.env.NEXT_PUBLIC_SUPABASE_URL);
   const r2Public = origin(process.env.R2_PUBLIC_URL);
@@ -49,6 +58,7 @@ export function contentSecurityPolicy(path: string): string {
     "https://*.google-analytics.com",
     "https://*.analytics.google.com",
     "https://*.googletagmanager.com",
+    ...GOOGLE_ADS_HOSTS,
   ].filter(Boolean);
   const images = [
     "'self'",
@@ -57,11 +67,12 @@ export function contentSecurityPolicy(path: string): string {
     r2Public,
     "https://*.google-analytics.com",
     "https://*.googletagmanager.com",
+    ...GOOGLE_ADS_HOSTS,
   ].filter(Boolean);
   return [
     "default-src 'self'",
     // Next.js inline bootstrap scripts need 'unsafe-inline' without a nonce setup.
-    `script-src 'self' 'unsafe-inline' https://www.googletagmanager.com${dev ? " 'unsafe-eval'" : ""}`,
+    `script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.googleadservices.com https://googleads.g.doubleclick.net${dev ? " 'unsafe-eval'" : ""}`,
     "style-src 'self' 'unsafe-inline'",
     `img-src ${images.join(" ")}`,
     "font-src 'self'",
@@ -69,7 +80,8 @@ export function contentSecurityPolicy(path: string): string {
     // blob: for the HEIC decoder's worker (heic-to, loaded only for HEIC photos).
     "worker-src 'self' blob:",
     "manifest-src 'self'",
-    "frame-src 'self'",
+    // Google Ads conversion measurement (sales site only).
+    "frame-src 'self' https://td.doubleclick.net",
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
