@@ -8,13 +8,24 @@ import {
   GOOGLE_ADS_ID,
   GOOGLE_TAG_ID,
   isSitePath,
+  META_PIXEL_ID,
   SIGNUP_CONVERSION,
 } from "@/lib/analytics/site-paths";
+
+type Fbq = ((...args: unknown[]) => void) & {
+  callMethod?: (...args: unknown[]) => void;
+  queue: unknown[];
+  push: Fbq;
+  loaded: boolean;
+  version: string;
+};
 
 declare global {
   interface Window {
     dataLayer?: unknown[];
     gtag?: (...args: unknown[]) => void;
+    fbq?: Fbq;
+    _fbq?: Fbq;
   }
 }
 
@@ -35,21 +46,43 @@ function gtag(...args: unknown[]) {
   window.gtag(...args);
 }
 
-/**
- * An account was just created in the creation conversation: one sign-up for Analytics and one
- * "Cadastro MeetChat" conversion for Google Ads. Nothing about the person is sent. Only where the
- * tag already runs (the sales site); anywhere else it does nothing.
- */
-export function trackSignup() {
-  if (!window.gtag) return;
-  window.gtag("event", "sign_up", { method: "creation_chat" });
-  window.gtag("event", "conversion", { send_to: SIGNUP_CONVERSION });
+/** The standard Meta pixel queue (as in Meta's snippet): calls wait until fbevents.js loads. */
+function fbq(...args: unknown[]) {
+  if (!window.fbq) {
+    const queued = function (...call: unknown[]) {
+      if (queued.callMethod) queued.callMethod(...call);
+      else queued.queue.push(call);
+    } as Fbq;
+    queued.queue = [];
+    queued.push = queued;
+    queued.loaded = true;
+    queued.version = "2.0";
+    window.fbq = queued;
+    window._fbq = window._fbq ?? queued;
+    // No automatic events or form reading: only the page views and the sign-up below.
+    queued("set", "autoConfig", false, META_PIXEL_ID);
+    queued("init", META_PIXEL_ID);
+  }
+  window.fbq(...args);
 }
 
 /**
- * Google tag (gtag.js) on the sales site only (src/lib/analytics/site-paths.ts). Loaded the first
- * time a site page opens; a page view goes out on each navigation to a site page, so moving into a
- * business link or the panel in the same tab is never measured.
+ * An account was just created in the creation conversation: one sign-up for Analytics, one
+ * "Cadastro MeetChat" conversion for Google Ads and one CompleteRegistration for Meta. Nothing
+ * about the person is sent. Only where the tags already run (the sales site); elsewhere nothing.
+ */
+export function trackSignup() {
+  if (window.gtag) {
+    window.gtag("event", "sign_up", { method: "creation_chat" });
+    window.gtag("event", "conversion", { send_to: SIGNUP_CONVERSION });
+  }
+  window.fbq?.("track", "CompleteRegistration");
+}
+
+/**
+ * Google tag (gtag.js) and Meta pixel on the sales site only (src/lib/analytics/site-paths.ts).
+ * Loaded the first time a site page opens; a page view goes out on each navigation to a site page,
+ * so moving into a business link or the panel in the same tab is never measured.
  */
 export function GoogleTag({ nicheRoutes }: { nicheRoutes: readonly string[] }) {
   const pathname = usePathname();
@@ -60,13 +93,17 @@ export function GoogleTag({ nicheRoutes }: { nicheRoutes: readonly string[] }) {
       page_location: window.location.origin + pathname,
       page_title: document.title,
     });
+    fbq("track", "PageView");
   }, [onSite, pathname]);
 
-  // next/script loads gtag.js once per page load, even if the tag leaves and comes back.
+  // next/script loads each script once per page load, even if the tags leave and come back.
   return onSite ? (
-    <Script
-      src={`https://www.googletagmanager.com/gtag/js?id=${GOOGLE_TAG_ID}`}
-      strategy="afterInteractive"
-    />
+    <>
+      <Script
+        src={`https://www.googletagmanager.com/gtag/js?id=${GOOGLE_TAG_ID}`}
+        strategy="afterInteractive"
+      />
+      <Script src="https://connect.facebook.net/en_US/fbevents.js" strategy="afterInteractive" />
+    </>
   ) : null;
 }

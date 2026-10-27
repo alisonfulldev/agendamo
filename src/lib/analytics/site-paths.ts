@@ -9,6 +9,9 @@ export const GOOGLE_TAG_ID = "G-C0JT6XWNSM";
 export const GOOGLE_ADS_ID = "AW-18534935387";
 export const SIGNUP_CONVERSION = `${GOOGLE_ADS_ID}/avnUCIKqnqgdENvWkoZF`;
 
+/** Meta (Facebook/Instagram ads) pixel, same pages and same sign-up event (2026-10-27). */
+export const META_PIXEL_ID = "3760458420790268";
+
 /** First path segments of the sales site that are not niche pages. */
 export const SITE_SECTIONS = [
   "agendamento",

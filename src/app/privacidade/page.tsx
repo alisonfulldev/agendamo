@@ -56,10 +56,10 @@ export default async function PrivacyPage() {
       </p>
       <p>
         Nas páginas do site do {brand.name} (página inicial, páginas de cada área, preços, guias,
-        cadastro e entrada) usamos também o Google Analytics e o Google Ads, que gravam cookies
-        próprios para medir visitas de forma agregada e saber quantas contas foram criadas a partir
-        dos nossos anúncios. Nenhum nome, e-mail ou telefone é enviado a eles. Eles não rodam no link
-        de agendamento dos negócios nem no painel.
+        cadastro e entrada) usamos também o Google Analytics, o Google Ads e o pixel da Meta
+        (Facebook e Instagram), que gravam cookies próprios para medir visitas de forma agregada e
+        saber quantas contas foram criadas a partir dos nossos anúncios. Nenhum nome, e-mail ou
+        telefone é enviado a eles. Eles não rodam no link de agendamento dos negócios nem no painel.
       </p>
       <h2>4. Compartilhamento</h2>
       <p>
