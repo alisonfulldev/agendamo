@@ -13,6 +13,7 @@ import {
 } from "@/lib/admin-metrics";
 import type { Business, Subscription } from "@/lib/db/types";
 import { formatBRL } from "@/lib/money";
+import { signupOrigin, type SignupSource } from "@/lib/signup-origin";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 import { BusinessActions } from "../../admin-actions";
@@ -32,19 +33,38 @@ export default async function AdminBusinessesPage({ searchParams }: PageProps<"/
   const focus = typeof params.id === "string" ? params.id : "";
 
   const db = createAdminClient();
-  const [businessesResult, subscriptionsResult, bookingsResult, viewsResult, emails] =
-    await Promise.all([
-      db.from("businesses").select("*").order("created_at", { ascending: false }).limit(5000),
-      db.from("subscriptions").select("*"),
-      db.from("appointments").select("business_id").gte("created_at", daysAgoIso(30)).limit(50000),
-      db
-        .from("page_events")
-        .select("business_id")
-        .eq("type", "view")
-        .gte("occurred_at", daysAgoIso(7))
-        .limit(50000),
-      ownerEmails(),
-    ]);
+  const [
+    businessesResult,
+    subscriptionsResult,
+    bookingsResult,
+    viewsResult,
+    emails,
+    createdResult,
+  ] = await Promise.all([
+    db.from("businesses").select("*").order("created_at", { ascending: false }).limit(5000),
+    db.from("subscriptions").select("*"),
+    db.from("appointments").select("business_id").gte("created_at", daysAgoIso(30)).limit(50000),
+    db
+      .from("page_events")
+      .select("business_id")
+      .eq("type", "view")
+      .gte("occurred_at", daysAgoIso(7))
+      .limit(50000),
+    ownerEmails(),
+    // Where each account came from: saved with the sign-up in the conversation.
+    db
+      .from("audit_log")
+      .select("business_id, details")
+      .eq("action", "business.created")
+      .limit(10000),
+  ]);
+  const origins = new Map<string, SignupSource>();
+  for (const row of (createdResult.data ?? []) as {
+    business_id: string;
+    details: { source?: SignupSource | null } | null;
+  }[]) {
+    if (row.details?.source) origins.set(row.business_id, row.details.source);
+  }
   const now = new Date();
   const subs = new Map(
     ((subscriptionsResult.data ?? []) as Subscription[]).map((s) => [s.business_id, s]),
@@ -157,6 +177,7 @@ export default async function AdminBusinessesPage({ searchParams }: PageProps<"/
                   <th className="py-2 pr-3 font-medium">Negócio</th>
                   <th className="py-2 pr-3 font-medium">Situação</th>
                   <th className="py-2 pr-3 font-medium">Cadastro</th>
+                  <th className="py-2 pr-3 font-medium">Origem</th>
                   <th className="py-2 pr-3 font-medium">Teste até / próxima cobrança</th>
                   <th className="py-2 pr-3 text-right font-medium">Agend. 30d</th>
                   <th className="py-2 pr-3 text-right font-medium">Visitas 7d</th>
@@ -168,6 +189,7 @@ export default async function AdminBusinessesPage({ searchParams }: PageProps<"/
                   const brand = getNiche(b.brand_key);
                   const sub = subs.get(b.id);
                   const situation = adminStatus(b, now);
+                  const origin = signupOrigin(origins.get(b.id));
                   return (
                     <tr key={b.id} className="align-top">
                       <td className="max-w-[24rem] py-2.5 pr-3">
@@ -194,6 +216,14 @@ export default async function AdminBusinessesPage({ searchParams }: PageProps<"/
                         ) : null}
                       </td>
                       <td className="py-2.5 pr-3 tabular-nums">{date(b.created_at)}</td>
+                      <td className="max-w-[14rem] py-2.5 pr-3">
+                        <span className="font-medium">{origin.label}</span>
+                        {origin.detail ? (
+                          <span className="block truncate text-xs text-muted-foreground">
+                            {origin.detail}
+                          </span>
+                        ) : null}
+                      </td>
                       <td className="py-2.5 pr-3 tabular-nums">
                         {situation === "subscribed"
                           ? date(sub?.current_period_end)

@@ -6,6 +6,7 @@ import type { SiteTemplate } from "@/lib/tracking/site-events";
 
 const SESSION_KEY = "mc_site_session";
 const LANDING_KEY = "mc_site_landing";
+const ARRIVAL_KEY = "mc_site_arrival";
 
 /** Template and niche of the page on screen, for the CTA click and the sign-up source. */
 let current: { template: SiteTemplate; niche: string | null; experiment: string | null } = {
@@ -33,6 +34,54 @@ export function siteLanding(): string | null {
     return sessionStorage.getItem(LANDING_KEY);
   } catch {
     return null;
+  }
+}
+
+/**
+ * How this visit arrived, kept from its first page (in-site navigation loses it): the referring
+ * site's domain and whether the address had an ad click id. Only domains, never full URLs.
+ */
+export interface SiteArrival {
+  referrer?: string;
+  click?: "google" | "meta";
+}
+
+function readArrival(): SiteArrival {
+  let referrer: string | undefined;
+  try {
+    const host = document.referrer ? new URL(document.referrer).host : "";
+    referrer = host && host !== window.location.host ? host.slice(0, 200) : undefined;
+  } catch {
+    referrer = undefined;
+  }
+  const params = new URLSearchParams(window.location.search);
+  const click =
+    params.has("gclid") || params.has("gbraid") || params.has("wbraid")
+      ? "google"
+      : params.has("fbclid")
+        ? "meta"
+        : undefined;
+  return { referrer, click };
+}
+
+/** The visit's arrival (first page of this tab's session), or the current page's own. */
+export function siteArrival(): SiteArrival {
+  try {
+    const saved = sessionStorage.getItem(ARRIVAL_KEY);
+    if (saved) return JSON.parse(saved) as SiteArrival;
+  } catch {
+    // Blocked storage: use what this page knows.
+  }
+  return readArrival();
+}
+
+function rememberArrival() {
+  try {
+    if (!sessionStorage.getItem(ARRIVAL_KEY)) {
+      sessionStorage.setItem(ARRIVAL_KEY, JSON.stringify(readArrival()));
+    }
+  } catch {
+    // Private mode: no attribution.
   }
 }
 
@@ -75,6 +124,7 @@ export function SiteTracker({
 }) {
   useEffect(() => {
     current = { template, niche, experiment };
+    rememberArrival();
     trackSiteEvent("page_view");
   }, [template, niche, experiment]);
   return null;

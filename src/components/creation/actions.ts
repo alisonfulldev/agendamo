@@ -40,6 +40,8 @@ const sourceSchema = z
       .optional(),
     page: z.string().max(200).optional(),
     referrer: z.string().max(200).optional(),
+    /** Ad click id seen when the visit arrived (gclid → google, fbclid → meta). */
+    click: z.enum(["google", "meta"]).optional(),
     /** First page of the visitor's session and the template of the page (SEO funnel). */
     landing: z.string().max(200).optional(),
     template: z.enum(SITE_TEMPLATES).optional(),

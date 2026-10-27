@@ -8,7 +8,7 @@ import { brandThemeStyle } from "@/brands/theme";
 import { trackSignup } from "@/components/google-tag";
 import { nichesByGroup } from "@/components/sales/niche-cards";
 import { CREATION, detectNiche } from "@/content/creation";
-import { siteContext, siteLanding } from "@/components/seo/site-tracker";
+import { siteArrival, siteContext, siteLanding } from "@/components/seo/site-tracker";
 import { isReservedBusinessName } from "@/lib/business/reserved-names";
 import { EMAIL_PATTERN, suggestEmailFix } from "@/lib/email-typos";
 import { compressImage } from "@/lib/images/compress";
@@ -197,12 +197,8 @@ function fakeTimes(dayLabel: string): string[] {
 function sourceInfo(viaName: boolean, viaNiche: boolean) {
   const params = new URLSearchParams(window.location.search);
   const pick = (k: string) => params.get(k)?.slice(0, 100) || undefined;
-  let referrer: string | undefined;
-  try {
-    referrer = document.referrer ? new URL(document.referrer).host : undefined;
-  } catch {
-    referrer = undefined;
-  }
+  // From the visit's first page: in-site navigation loses the outside referrer and click ids.
+  const { referrer, click } = siteArrival();
   return {
     utm_source: pick("utm_source"),
     utm_medium: pick("utm_medium"),
@@ -213,6 +209,7 @@ function sourceInfo(viaName: boolean, viaNiche: boolean) {
     experiment: siteContext().experiment ?? undefined,
     page: window.location.pathname.slice(0, 200),
     referrer,
+    click,
     // Funnel attribution (Fase 9): the session's first page and the template of this one.
     landing: siteLanding() ?? undefined,
     template: siteContext().template,
