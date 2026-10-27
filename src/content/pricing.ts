@@ -29,7 +29,6 @@ export const PRICING = {
         { included: false, text: "Horário reservado automaticamente na sua agenda" },
         { included: false, text: "Lembretes automáticos" },
         { included: false, text: "Agenda, clientes e financeiro no painel" },
-        { included: false, text: "Sem o selo “Agende também com o MeetChat”" },
       ],
     },
     {
@@ -50,7 +49,7 @@ export const PRICING = {
           included: true,
           text: `1 profissional incluso; cada profissional a mais custa ${PRICE_TEXT.extraProfessional} (${reais(PLAN_PRICES.extraProfessional.yearly)}/ano no anual)`,
         },
-        { included: true, text: "Sem o selo “Agende também com o MeetChat”" },
+        { included: true, text: "Marca MeetChat discreta, em uma linha pequena no rodapé" },
       ],
     },
   ],

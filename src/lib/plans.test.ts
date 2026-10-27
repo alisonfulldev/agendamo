@@ -28,7 +28,7 @@ describe("getPlanFeatures (Completo, 14-day trial, waiting mode)", () => {
       trialActive: true,
       subscribed: false,
       trialDaysLeft: 10,
-      removeBranding: true,
+      discreetBadge: true,
       reminders: true,
       embed: true,
       finance: true,
@@ -63,7 +63,7 @@ describe("getPlanFeatures (Completo, 14-day trial, waiting mode)", () => {
       status: "waiting",
       active: false,
       trialActive: false,
-      removeBranding: false,
+      discreetBadge: false,
       reminders: false,
       customers: false,
       deposits: false,
@@ -93,7 +93,7 @@ describe("getPlanFeatures (Completo, 14-day trial, waiting mode)", () => {
       active: true,
       subscribed: true,
       trialActive: false,
-      removeBranding: true,
+      discreetBadge: true,
       professionalLimit: 3,
     });
     expect(planLabel(f)).toBe("Completo");

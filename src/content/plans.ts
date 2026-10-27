@@ -26,7 +26,6 @@ export const PLAN_CARD: PlanCard = {
     "Chat de agendamento no seu site e no Instagram",
     "Clientes, financeiro, vendas e estatísticas",
     "Equipe e Google Agenda",
-    "Sem a marca MeetChat no seu chat",
   ],
   cta: `Testar ${TRIAL_DAYS} dias grátis`,
 };

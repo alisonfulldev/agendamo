@@ -52,13 +52,12 @@ export default async function EmbeddedBookingPage({
         avatarUrl={publicUrl(page.page?.avatar_key)}
         embedded={embed === "1"}
         branding={
-          features.removeBranding ? null : (
-            <MeetChatBadge
-              href={nicheHubUrl(brand)}
-              logo={PLATFORM.logo}
-              niche={brand.niche?.name}
-            />
-          )
+          <MeetChatBadge
+            href={nicheHubUrl(brand)}
+            logo={PLATFORM.logo}
+            niche={brand.niche?.name}
+            discreet={features.discreetBadge}
+          />
         }
       />
     </BrandScope>

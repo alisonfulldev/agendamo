@@ -281,11 +281,14 @@ export function ProfileView({
         </Card>
       ) : null}
 
-      {loaded.features.removeBranding ? null : (
-        <div className="flex justify-center pt-2">
-          <MeetChatBadge href={nicheHubUrl(brand)} logo={PLATFORM.logo} niche={brand.niche?.name} />
-        </div>
-      )}
+      <div className="flex justify-center pt-2">
+        <MeetChatBadge
+          href={nicheHubUrl(brand)}
+          logo={PLATFORM.logo}
+          niche={brand.niche?.name}
+          discreet={loaded.features.discreetBadge}
+        />
+      </div>
       <p className="text-center text-xs text-muted-foreground">
         <a
           href={reportProfileHref(canonicalUrl(brand, `/${data.business.slug}/perfil`))}

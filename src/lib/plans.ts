@@ -2,7 +2,7 @@ import type { Business } from "@/lib/db/types";
 import { formatBRL } from "@/lib/money";
 
 /**
- * One plan, Completo (2026-10-12): unlimited bookings, reminders, no brand footer, chat on
+ * One plan, Completo (2026-10-12): unlimited bookings, reminders, a discreet brand line, chat on
  * external sites, team, finance, deposit / full payment by Pix with a receipt and everything else. Every sign-up starts with a 14-day trial of
  * it (no card, once per person). Without a trial or an active subscription the account is in
  * "waiting mode": the public chat keeps working but ends on WhatsApp (nothing is booked), with
@@ -87,8 +87,11 @@ export interface PlanFeatures {
   trialEndsAt: Date | null;
   /** Days left in the trial, counting today (14 right after starting, 1 on the last day). */
   trialDaysLeft: number | null;
-  /** "Agende também com o MeetChat" only shows in waiting mode. */
-  removeBranding: boolean;
+  /**
+   * The MeetChat badge shows on every business link (2026-10-27): the full "Agende também com o
+   * MeetChat" card in waiting mode, a small discreet line in the trial and the paid plan.
+   */
+  discreetBadge: boolean;
   // Server checks of each feature (rule 6): all of them follow `active` (one plan).
   agenda: boolean;
   reminders: boolean;
@@ -136,7 +139,7 @@ export function getPlanFeatures(business: PlanFields, now: Date = new Date()): P
     trialDaysLeft: trialActive
       ? Math.max(1, Math.ceil((trialEndsAt!.getTime() - now.getTime()) / 86_400_000))
       : null,
-    removeBranding: active,
+    discreetBadge: active,
     agenda: active,
     reminders: active,
     customers: active,

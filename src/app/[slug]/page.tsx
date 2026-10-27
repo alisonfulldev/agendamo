@@ -68,14 +68,13 @@ export default async function BusinessChatPage({ params, searchParams }: PagePro
         initialDate={initialDate}
         openProfile={param("perfil") === "1"}
         branding={
-          // Only in waiting mode (trial and subscription have no brand footer).
-          loaded.features.removeBranding ? null : (
-            <MeetChatBadge
-              href={nicheHubUrl(brand)}
-              logo={PLATFORM.logo}
-              niche={brand.niche?.name}
-            />
-          )
+          // Always shown; discreet in the trial and the paid plan.
+          <MeetChatBadge
+            href={nicheHubUrl(brand)}
+            logo={PLATFORM.logo}
+            niche={brand.niche?.name}
+            discreet={loaded.features.discreetBadge}
+          />
         }
         profile={
           <ProfileView
