@@ -685,6 +685,14 @@ export function Conversation({ photos }: { photos: boolean }) {
           >
             {CREATION.shortcuts.app.label}
           </ShortcutChip>
+          {/* Whoever lands straight in the conversation (an ad link) can see the site first. */}
+          <button
+            type="button"
+            onClick={closeCreation}
+            className="shrink-0 rounded-full border px-3.5 py-2 text-sm font-medium whitespace-nowrap"
+          >
+            {CREATION.shortcuts.site.label}
+          </button>
           <a
             href={CREATION.shortcuts.account.href}
             className="shrink-0 rounded-full border px-3.5 py-2 text-sm font-medium whitespace-nowrap"

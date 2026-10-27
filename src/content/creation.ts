@@ -82,6 +82,8 @@ export const CREATION = {
       label: "Meu cliente precisa baixar app?",
       answer: "Não! O link abre direto no navegador do celular, como uma conversa.",
     },
+    /** Closes the conversation and shows the site behind it (for people who came from an ad). */
+    site: { label: "Ver site" },
     account: { label: "Já tenho conta", href: "/entrar" },
   },
   /** Chips when the niche is not detected (niche keys), plus "Outro" and "Ver todos". */
