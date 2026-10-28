@@ -24,6 +24,17 @@ const date = (iso: string | null | undefined) =>
   iso ? formatInTimeZone(new Date(iso), TZ, "dd/MM/yy") : "—";
 const STATUSES: AdminStatus[] = ["trial", "subscribed", "waiting", "suspended"];
 
+/** "hoje", "ontem", "há 5 dias" (calendar days in São Paulo) + date and time. */
+function lastSeen(iso: string | null, now: Date): { label: string; detail: string | null } {
+  if (!iso) return { label: "—", detail: null };
+  const day = (d: Date) => Date.parse(formatInTimeZone(d, TZ, "yyyy-MM-dd"));
+  const days = Math.round((day(now) - day(new Date(iso))) / 86_400_000);
+  return {
+    label: days <= 0 ? "hoje" : days === 1 ? "ontem" : `há ${days} dias`,
+    detail: formatInTimeZone(new Date(iso), TZ, "dd/MM/yy HH:mm"),
+  };
+}
+
 /** Businesses: search, filters by situation and niche, and the admin actions. */
 export default async function AdminBusinessesPage({ searchParams }: PageProps<"/admin/negocios">) {
   const params = await searchParams;
@@ -177,6 +188,7 @@ export default async function AdminBusinessesPage({ searchParams }: PageProps<"/
                   <th className="py-2 pr-3 font-medium">Negócio</th>
                   <th className="py-2 pr-3 font-medium">Situação</th>
                   <th className="py-2 pr-3 font-medium">Cadastro</th>
+                  <th className="py-2 pr-3 font-medium">Último acesso</th>
                   <th className="py-2 pr-3 font-medium">Origem</th>
                   <th className="py-2 pr-3 font-medium">Teste até / próxima cobrança</th>
                   <th className="py-2 pr-3 text-right font-medium">Agend. 30d</th>
@@ -190,6 +202,7 @@ export default async function AdminBusinessesPage({ searchParams }: PageProps<"/
                   const sub = subs.get(b.id);
                   const situation = adminStatus(b, now);
                   const origin = signupOrigin(origins.get(b.id));
+                  const seen = lastSeen(b.owner_last_seen_at, now);
                   return (
                     <tr key={b.id} className="align-top">
                       <td className="max-w-[24rem] py-2.5 pr-3">
@@ -216,6 +229,14 @@ export default async function AdminBusinessesPage({ searchParams }: PageProps<"/
                         ) : null}
                       </td>
                       <td className="py-2.5 pr-3 tabular-nums">{date(b.created_at)}</td>
+                      <td className="py-2.5 pr-3 whitespace-nowrap">
+                        <span className="font-medium">{seen.label}</span>
+                        {seen.detail ? (
+                          <span className="block text-xs text-muted-foreground tabular-nums">
+                            {seen.detail}
+                          </span>
+                        ) : null}
+                      </td>
                       <td className="max-w-[14rem] py-2.5 pr-3">
                         <span className="font-medium">{origin.label}</span>
                         {origin.detail ? (

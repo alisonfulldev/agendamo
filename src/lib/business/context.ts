@@ -1,12 +1,14 @@
 import "server-only";
 
 import { notFound, redirect } from "next/navigation";
+import { after } from "next/server";
 import { cache } from "react";
 
 import { type BrandConfig, getNiche } from "@/brands";
 import { getPlanFeatures } from "@/lib/plans";
 import { requireUser, type SessionUser } from "@/lib/auth/session";
 import type { Business, Member } from "@/lib/db/types";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 export interface BusinessContext {
@@ -18,6 +20,24 @@ export interface BusinessContext {
   /** Set for staff: the professional they manage. */
   professionalId: string | null;
   isOwner: boolean;
+}
+
+const SEEN_EVERY_MS = 60 * 60 * 1000;
+
+/**
+ * Last panel visit of the owner, for the admin list of businesses. At most once an hour, after the
+ * response (never slows the page down) and with the service role (owners cannot write it).
+ */
+function recordOwnerSeen(business: Business) {
+  const last = business.owner_last_seen_at ? Date.parse(business.owner_last_seen_at) : 0;
+  if (Date.now() - last < SEEN_EVERY_MS) return;
+  after(async () => {
+    const { error } = await createAdminClient()
+      .from("businesses")
+      .update({ owner_last_seen_at: new Date().toISOString() })
+      .eq("id", business.id);
+    if (error) console.error("owner last seen update failed", error.message);
+  });
 }
 
 /** First membership of the signed-in user, or null before onboarding. Cached per request. */
@@ -35,6 +55,7 @@ export const getBusinessContext = cache(async (): Promise<BusinessContext | null
   if (!data?.business) return null;
 
   const business = data.business as unknown as Business;
+  if (data.role === "owner") recordOwnerSeen(business);
   return {
     user,
     business,

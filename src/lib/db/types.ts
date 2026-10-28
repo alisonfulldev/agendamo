@@ -32,6 +32,8 @@ export interface Business {
   plan: Plan;
   trial_started_at: string | null;
   trial_ends_at: string | null;
+  /** Last time the owner opened the panel (updated at most once an hour). */
+  owner_last_seen_at: string | null;
   slot_interval_minutes: 15 | 30 | 60;
   min_notice_minutes: number;
   max_days_ahead: number;
