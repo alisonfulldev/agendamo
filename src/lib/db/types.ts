@@ -312,9 +312,17 @@ export interface Subscription {
   billing_cycle: "monthly" | "yearly";
   /** Professionals paid beyond the one included. */
   extra_professionals: number;
+  /** Only Pix since 2026-10-28; "credit_card" remains on older rows. */
   billing_type: "pix" | "credit_card";
   card_last4: string | null;
   card_brand: string | null;
+  /** Latest Pix Automático authorization at Asaas. */
+  pix_automatic_id: string | null;
+  pix_automatic_status: "created" | "active" | "refused" | "cancelled" | "expired" | null;
+  /** First payment (QR that authorizes) already applied to the period. */
+  pix_automatic_first_payment_id: string | null;
+  /** Recurring value with the coupon applied (null on older rows). */
+  value_cents: number | null;
   /** Each add-on is its own Asaas subscription. */
   addons: {
     featured?: {

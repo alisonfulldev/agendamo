@@ -7,7 +7,6 @@ import { AsaasError, isAsaasConfigured } from "@/lib/billing/asaas";
 import {
   cancelAddon,
   cancelPlan,
-  changePaymentMethod,
   pendingPix,
   subscribeAddon,
   subscribePlan,
@@ -15,12 +14,12 @@ import {
 } from "@/lib/billing/service";
 import { requireOwner } from "@/lib/business/context";
 import { validCnpj, validCpf } from "@/lib/pix";
-import { getClientIp, rateLimitRequest } from "@/lib/rate-limit";
+import { rateLimitRequest } from "@/lib/rate-limit";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 /*
- * Own checkout: card data goes from this server straight to Asaas (tokenization) and is never
- * stored, logged or returned. Errors are mapped to friendly messages without the input.
+ * Own checkout, Pix only (2026-10-28): the first payment's QR also authorizes the Pix Automático,
+ * so the next charges are debited by themselves. Errors are mapped to friendly messages.
  */
 
 const digits = (v: string) => v.replace(/\D/g, "");
@@ -37,67 +36,8 @@ const payerSchema = z.object({
   }),
 });
 
-function luhn(number: string): boolean {
-  let sum = 0;
-  let double = false;
-  for (let i = number.length - 1; i >= 0; i--) {
-    let d = Number(number[i]);
-    if (double) {
-      d *= 2;
-      if (d > 9) d -= 9;
-    }
-    sum += d;
-    double = !double;
-  }
-  return sum % 10 === 0;
-}
-
-const cardSchema = z.object({
-  holderName: z.string().trim().min(3, "Nome como está no cartão").max(80),
-  number: z
-    .string()
-    .transform(digits)
-    .refine((v) => v.length >= 13 && v.length <= 19 && luhn(v), "Número do cartão inválido"),
-  expiry: z.string().transform((v, ctx) => {
-    const match = /^(\d{2})\s*\/\s*(\d{2}|\d{4})$/.exec(v.trim());
-    const month = match ? Number(match[1]) : 0;
-    const year = match ? Number(match[2]!.length === 2 ? `20${match[2]}` : match[2]) : 0;
-    const now = new Date();
-    const expired =
-      year < now.getFullYear() || (year === now.getFullYear() && month < now.getMonth() + 1);
-    if (!match || month < 1 || month > 12 || expired) {
-      ctx.addIssue({ code: "custom", message: "Validade inválida (MM/AA)" });
-      return z.NEVER;
-    }
-    return { month: String(month).padStart(2, "0"), year: String(year) };
-  }),
-  ccv: z.string().regex(/^\d{3,4}$/, "Código de segurança inválido"),
-  postalCode: z
-    .string()
-    .transform(digits)
-    .refine((v) => v.length === 8, "CEP inválido"),
-  addressNumber: z.string().trim().min(1, "Número do endereço").max(10),
-  phone: z
-    .string()
-    .transform(digits)
-    .refine((v) => v.length >= 10 && v.length <= 11, "Telefone com DDD"),
-});
-
-function cardPayment(card: z.infer<typeof cardSchema>) {
-  return {
-    card: {
-      holderName: card.holderName,
-      number: card.number,
-      expiryMonth: card.expiry.month,
-      expiryYear: card.expiry.year,
-      ccv: card.ccv,
-    },
-    holder: { postalCode: card.postalCode, addressNumber: card.addressNumber, phone: card.phone },
-  };
-}
-
 export type CheckoutResult =
-  | { ok: true; kind: "changed" | "card" | "method_changed"; message: string }
+  | { ok: true; kind: "changed"; message: string }
   | { ok: true; kind: "pix"; pix: PixCharge; message: string }
   | { ok: false; message: string };
 
@@ -108,8 +48,14 @@ function billingError(error: unknown): { ok: false; message: string } {
     return { ok: false, message: "Você já tem Destaque nessa cidade." };
   if (error instanceof Error && error.message === "no_plan")
     return { ok: false, message: "Assine antes de contratar adicionais." };
+  if (error instanceof Error && error.message === "automatic_pending")
+    return {
+      ok: false,
+      message:
+        "Seu banco ainda está confirmando o Pix Automático. Tente de novo em alguns minutos.",
+    };
   if (error instanceof AsaasError)
-    return { ok: false, message: `Não foi possível concluir o pagamento: ${error.message}` };
+    return { ok: false, message: `Não foi possível gerar o Pix: ${error.message}` };
   console.error("billing failed", error instanceof Error ? error.message : "unknown error");
   return { ok: false, message: "Não foi possível concluir agora. Tente de novo." };
 }
@@ -120,8 +66,6 @@ const checkoutSchema = z.object({
   cpfCnpj: z.string().max(30).default(""),
   cycle: z.enum(["monthly", "yearly"]),
   extraProfessionals: z.number().int().min(0).max(49),
-  paymentMethod: z.enum(["pix", "credit_card"]).default("pix"),
-  card: cardSchema.optional(),
   coupon: z.string().trim().max(30).optional(),
 });
 
@@ -144,8 +88,6 @@ export async function checkoutAction(input: unknown): Promise<CheckoutResult> {
     if (!payer.success) return { ok: false, message: payer.error.issues[0]!.message };
     data.name = payer.data.name;
     data.cpfCnpj = payer.data.cpfCnpj;
-    if (data.paymentMethod === "credit_card" && !data.card)
-      return { ok: false, message: "Preencha os dados do cartão." };
   }
   try {
     const result = await subscribePlan({
@@ -155,9 +97,6 @@ export async function checkoutAction(input: unknown): Promise<CheckoutResult> {
       cycle: data.cycle,
       extraProfessionals: data.extraProfessionals,
       payer: { name: data.name, cpfCnpj: data.cpfCnpj, email: user.email },
-      paymentMethod: data.paymentMethod,
-      cardPayment: data.card ? cardPayment(data.card) : undefined,
-      remoteIp: await getClientIp(),
       couponCode: data.coupon || null,
     });
     revalidatePath("/painel", "layout");
@@ -166,69 +105,28 @@ export async function checkoutAction(input: unknown): Promise<CheckoutResult> {
         ok: true,
         kind: "pix",
         pix: result.pix,
-        message: "Pague o Pix abaixo. A assinatura ativa assim que o pagamento cair.",
-      };
-    if (result.kind === "card")
-      return {
-        ok: true,
-        kind: "card",
-        message: `Cartão ${result.brand} final ${result.last4} cadastrado. Estamos confirmando o pagamento…`,
+        message:
+          "Pague pelo app do banco e confirme o Pix Automático. A assinatura ativa assim que o pagamento cair.",
       };
     return {
       ok: true,
       kind: "changed",
-      message: "Assinatura alterada. O novo valor vale a partir da próxima cobrança.",
+      message: result.reauthorize
+        ? "Assinatura alterada. O novo valor vale a partir da próxima mensalidade: ela aparece aqui para pagar pelo Pix, e ao pagar você confirma o Pix Automático com o novo valor."
+        : "Assinatura alterada. O novo valor vale a partir da próxima cobrança.",
     };
   } catch (error) {
     return billingError(error);
   }
 }
 
-const methodSchema = payerSchema.extend({
-  paymentMethod: z.enum(["pix", "credit_card"]),
-  card: cardSchema.optional(),
-});
-
-/** Switch between Pix and card (or a new card) on an active subscription. */
-export async function changePaymentMethodAction(input: unknown): Promise<CheckoutResult> {
-  const { business, user } = await requireOwner({ allowWaiting: true });
-  if (!isAsaasConfigured()) return { ok: false, message: "Cobrança ainda não configurada." };
-  if (!(await rateLimitRequest("publicAction", `checkout:${business.id}`)))
-    return { ok: false, message: "Muitas tentativas. Espere um pouco e tente de novo." };
-  const parsed = methodSchema.safeParse(input);
-  if (!parsed.success) return { ok: false, message: parsed.error.issues[0]!.message };
-  const data = parsed.data;
-  if (data.paymentMethod === "credit_card" && !data.card)
-    return { ok: false, message: "Preencha os dados do cartão." };
-  try {
-    await changePaymentMethod({
-      business,
-      userId: user.id,
-      payer: { name: data.name, email: user.email, cpfCnpj: data.cpfCnpj },
-      paymentMethod: data.paymentMethod,
-      cardPayment: data.card ? cardPayment(data.card) : undefined,
-      remoteIp: await getClientIp(),
-    });
-    revalidatePath("/painel/plano");
-    return {
-      ok: true,
-      kind: "method_changed",
-      message:
-        data.paymentMethod === "pix"
-          ? "Pronto: as próximas mensalidades serão por Pix."
-          : "Pronto: as próximas mensalidades serão no novo cartão.",
-    };
-  } catch (error) {
-    return billingError(error);
-  }
-}
-
-/** Pix of the open charge (first payment, renewal or overdue). */
+/** Pix of the open charge (renewal or overdue); without the automatic debit, it also authorizes it. */
 export async function pendingPixAction(): Promise<PixCharge | null> {
-  const { business } = await requireOwner({ allowWaiting: true });
+  const { business, brand } = await requireOwner({ allowWaiting: true });
   if (!isAsaasConfigured()) return null;
+  if (!(await rateLimitRequest("publicAction", `checkout:${business.id}`))) return null;
   try {
-    return await pendingPix(business.id);
+    return await pendingPix(business.id, brand.name);
   } catch (error) {
     console.error("pending pix failed", error instanceof Error ? error.message : "unknown");
     return null;

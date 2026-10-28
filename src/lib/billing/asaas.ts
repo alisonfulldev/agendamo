@@ -16,7 +16,6 @@ const BASE_URLS = {
 } as const;
 
 export type AsaasCycle = "MONTHLY" | "YEARLY";
-export type AsaasBillingType = "PIX" | "CREDIT_CARD";
 
 export interface AsaasSubscription {
   id: string;
@@ -31,6 +30,7 @@ export interface AsaasSubscription {
 
 export interface AsaasPayment {
   id: string;
+  customer?: string;
   subscription?: string;
   status: string;
   value: number;
@@ -48,21 +48,23 @@ export interface AsaasPixQrCode {
   expirationDate: string;
 }
 
-export interface CardInput {
-  holderName: string;
-  number: string;
-  expiryMonth: string;
-  expiryYear: string;
-  ccv: string;
-}
-
-export interface CardHolderInput {
-  name: string;
-  email: string;
-  cpfCnpj: string;
-  postalCode: string;
-  addressNumber: string;
-  phone: string;
+/**
+ * Pix Automático authorization (journey 3: the first payment's QR also authorizes the next ones).
+ * With paymentCreationMode SUBSCRIPTION, Asaas creates a subscription once it is ACTIVE.
+ */
+export interface AsaasPixAutomaticAuthorization {
+  id: string;
+  status: "CREATED" | "ACTIVE" | "CANCELLED" | "REFUSED" | "EXPIRED";
+  customerId?: string;
+  value?: number | null;
+  subscriptionId?: string | null;
+  payload?: string | null;
+  encodedImage?: string | null;
+  immediateQrCode?: {
+    payload?: string | null;
+    encodedImage?: string | null;
+    expirationDate?: string | null;
+  } | null;
 }
 
 export class AsaasError extends Error {
@@ -93,13 +95,12 @@ async function request<T>(
     },
     body: body === undefined ? undefined : JSON.stringify(body),
     cache: "no-store",
-    // Asaas asks for a 60 s timeout on card operations (and no blind retries).
     signal: AbortSignal.timeout(60_000),
   });
   const text = await response.text();
   const json = text ? (JSON.parse(text) as Record<string, unknown>) : {};
   if (!response.ok) {
-    // Never include the request body here: it may carry card data.
+    // Never include the request body here: it carries the payer's CPF/CNPJ.
     const errors = (json.errors as { description?: string }[] | undefined)
       ?.map((e) => e.description)
       .join("; ");
@@ -123,7 +124,7 @@ interface DemoStore {
 const demoStore = globalThis as DemoStore;
 const demoPayments = () => (demoStore.__livelyDemoAsaas ??= new Map());
 
-function demoPayment(subscriptionId: string, cents: number, billingType: string): AsaasPayment {
+function demoPayment(subscriptionId: string, cents: number): AsaasPayment {
   const payment: AsaasPayment = {
     id: `pay_demo_${randomUUID().slice(0, 8)}`,
     subscription: subscriptionId,
@@ -131,7 +132,7 @@ function demoPayment(subscriptionId: string, cents: number, billingType: string)
     value: reais(cents),
     dueDate: new Date().toISOString().slice(0, 10),
     invoiceUrl: "",
-    billingType,
+    billingType: "PIX",
   };
   demoPayments().set(subscriptionId, [payment, ...(demoPayments().get(subscriptionId) ?? [])]);
   return payment;
@@ -154,30 +155,7 @@ export function createCustomer(input: {
   });
 }
 
-/** Stores the card at Asaas and returns a token bound to the customer (card data never kept here). */
-export async function tokenizeCreditCard(input: {
-  customer: string;
-  card: CardInput;
-  holder: CardHolderInput;
-  remoteIp: string;
-}): Promise<{ creditCardToken: string; creditCardNumber: string; creditCardBrand: string }> {
-  if (isDemoMode()) {
-    if (input.card.number.endsWith("0000"))
-      throw new AsaasError("Cartão recusado (simulação).", 400);
-    return {
-      creditCardToken: `tok_demo_${randomUUID().slice(0, 8)}`,
-      creditCardNumber: input.card.number.slice(-4),
-      creditCardBrand: input.card.number.startsWith("4") ? "VISA" : "MASTERCARD",
-    };
-  }
-  return request("POST", "/creditCard/tokenizeCreditCard", {
-    customer: input.customer,
-    creditCard: input.card,
-    creditCardHolderInfo: input.holder,
-    remoteIp: input.remoteIp,
-  });
-}
-
+/** Regular Pix subscription: each charge is paid with its own QR (fallback and add-ons). */
 export async function createSubscription(input: {
   customer: string;
   valueCents: number;
@@ -185,13 +163,10 @@ export async function createSubscription(input: {
   nextDueDate: string;
   description: string;
   externalReference: string;
-  billingType: AsaasBillingType;
-  creditCardToken?: string;
-  remoteIp?: string;
 }): Promise<AsaasSubscription> {
   if (isDemoMode()) {
     const id = `sub_demo_${randomUUID().slice(0, 8)}`;
-    demoPayment(id, input.valueCents, input.billingType);
+    demoPayment(id, input.valueCents);
     return {
       id,
       customer: input.customer,
@@ -199,49 +174,102 @@ export async function createSubscription(input: {
       value: reais(input.valueCents),
       nextDueDate: input.nextDueDate,
       cycle: input.cycle,
-      billingType: input.billingType,
+      billingType: "PIX",
     };
   }
   return request<AsaasSubscription>("POST", "/subscriptions", {
     customer: input.customer,
-    billingType: input.billingType,
+    billingType: "PIX",
     value: reais(input.valueCents),
     nextDueDate: input.nextDueDate,
     cycle: input.cycle,
     description: input.description,
     externalReference: input.externalReference,
-    ...(input.billingType === "CREDIT_CARD"
-      ? { creditCardToken: input.creditCardToken, remoteIp: input.remoteIp }
-      : {}),
   });
 }
 
 export function updateSubscription(
   id: string,
-  input: {
-    valueCents?: number;
-    cycle?: AsaasCycle;
-    description?: string;
-    billingType?: AsaasBillingType;
-  },
+  input: { valueCents?: number; cycle?: AsaasCycle; description?: string },
 ) {
   if (isDemoMode()) return Promise.resolve({ id } as AsaasSubscription);
   return request<AsaasSubscription>("PUT", `/subscriptions/${id}`, {
     ...(input.valueCents !== undefined ? { value: reais(input.valueCents) } : {}),
     ...(input.cycle ? { cycle: input.cycle } : {}),
     ...(input.description ? { description: input.description } : {}),
-    ...(input.billingType ? { billingType: input.billingType } : {}),
     updatePendingPayments: true,
   });
 }
 
-/** New card for an existing subscription, without charging now (next charges use it). */
-export function updateSubscriptionCard(
-  id: string,
-  input: { creditCardToken: string; remoteIp: string },
-) {
-  if (isDemoMode()) return Promise.resolve({ id } as AsaasSubscription);
-  return request<AsaasSubscription>("PUT", `/subscriptions/${id}/creditCard`, input);
+// ---------------------------------------------------------------------------
+// Pix Automático (docs.asaas.com/docs/pix-automatico-implementacao)
+
+const DEMO_PIX_PAYLOAD = (id: string) =>
+  `00020126580014br.gov.bcb.pix0136demo-${id}5204000053039865802BR5913LIVELY DEMO6009SAO PAULO6304ABCD`;
+
+/**
+ * Creates the authorization and the QR of its first payment (value of the first charge). Once the
+ * payer pays and the bank confirms, it turns ACTIVE and Asaas generates the next charges (from
+ * startDate) through its own subscription, debited automatically.
+ */
+export async function createPixAutomaticAuthorization(input: {
+  customerId: string;
+  /** Recurring value (fixed: a new value needs a new authorization). */
+  valueCents: number;
+  /** Value of the first payment, paid with the QR. */
+  firstValueCents: number;
+  cycle: AsaasCycle;
+  /** First automatic debit (yyyy-MM-dd). */
+  startDate: string;
+  description: string;
+}): Promise<AsaasPixAutomaticAuthorization> {
+  // Asaas limits contractId and description to 35 characters.
+  const contractId = randomUUID().replace(/-/g, "");
+  const description = input.description.slice(0, 35);
+  if (isDemoMode()) {
+    const id = `aut_demo_${randomUUID().slice(0, 8)}`;
+    const subscriptionId = `sub_demo_${randomUUID().slice(0, 8)}`;
+    demoPayment(subscriptionId, input.firstValueCents);
+    const dataUrl = await QRCode.toDataURL(DEMO_PIX_PAYLOAD(id), { width: 320, margin: 1 });
+    return {
+      id,
+      status: "CREATED",
+      customerId: input.customerId,
+      value: reais(input.valueCents),
+      // The simulation links the subscription at once so /demo can confirm the payment.
+      subscriptionId,
+      payload: DEMO_PIX_PAYLOAD(id),
+      encodedImage: dataUrl.replace(/^data:image\/png;base64,/, ""),
+      immediateQrCode: { expirationDate: new Date(Date.now() + 86_400_000).toISOString() },
+    };
+  }
+  return request<AsaasPixAutomaticAuthorization>("POST", "/pix/automatic/authorizations", {
+    customerId: input.customerId,
+    frequency: input.cycle === "YEARLY" ? "ANNUALLY" : "MONTHLY",
+    contractId,
+    startDate: input.startDate,
+    value: reais(input.valueCents),
+    description,
+    paymentCreationMode: "SUBSCRIPTION",
+    // The payer's bank may try again on the following days when the debit fails.
+    retryPolicy: "ALLOW_THREE_IN_SEVEN_DAYS",
+    immediateQrCode: {
+      expirationSeconds: 86_400,
+      originalValue: reais(input.firstValueCents),
+      description,
+    },
+  });
+}
+
+export function getPixAutomaticAuthorization(id: string) {
+  if (isDemoMode())
+    return Promise.resolve({ id, status: "ACTIVE" } as AsaasPixAutomaticAuthorization);
+  return request<AsaasPixAutomaticAuthorization>("GET", `/pix/automatic/authorizations/${id}`);
+}
+
+export function cancelPixAutomaticAuthorization(id: string) {
+  if (isDemoMode()) return Promise.resolve({ id, status: "CANCELLED" });
+  return request<AsaasPixAutomaticAuthorization>("DELETE", `/pix/automatic/authorizations/${id}`);
 }
 
 export function deleteSubscription(id: string) {
@@ -258,7 +286,7 @@ export async function listSubscriptionPayments(id: string): Promise<AsaasPayment
 /** QR code and "copia e cola" of a Pix charge. */
 export async function getPixQrCode(paymentId: string): Promise<AsaasPixQrCode> {
   if (isDemoMode()) {
-    const payload = `00020126580014br.gov.bcb.pix0136demo-${paymentId}5204000053039865802BR5913LIVELY DEMO6009SAO PAULO6304ABCD`;
+    const payload = DEMO_PIX_PAYLOAD(paymentId);
     const dataUrl = await QRCode.toDataURL(payload, { width: 320, margin: 1 });
     return {
       encodedImage: dataUrl.replace(/^data:image\/png;base64,/, ""),
@@ -280,11 +308,7 @@ export function confirmDemoPayment(subscriptionId: string): AsaasPayment | null 
   return payment;
 }
 
-/** Demo only: a new pending charge (renewal / change of payment method). */
-export function createDemoPendingPayment(
-  subscriptionId: string,
-  cents: number,
-  billingType: AsaasBillingType,
-): AsaasPayment {
-  return demoPayment(subscriptionId, cents, billingType);
+/** Demo only: a new pending charge (renewal). */
+export function createDemoPendingPayment(subscriptionId: string, cents: number): AsaasPayment {
+  return demoPayment(subscriptionId, cents);
 }

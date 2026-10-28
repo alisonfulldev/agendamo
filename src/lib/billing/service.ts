@@ -10,18 +10,18 @@ import { recordTrialClaims } from "@/lib/trial";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 import {
+  cancelPixAutomaticAuthorization,
   createCustomer,
+  createPixAutomaticAuthorization,
   createSubscription,
   deleteSubscription,
+  getPixAutomaticAuthorization,
   getPixQrCode,
   listSubscriptionPayments,
-  tokenizeCreditCard,
   updateSubscription,
-  updateSubscriptionCard,
   type AsaasCycle,
   type AsaasPayment,
-  type CardHolderInput,
-  type CardInput,
+  type AsaasPixAutomaticAuthorization,
 } from "./asaas";
 
 export type { Cycle };
@@ -63,45 +63,110 @@ async function ensureCustomer(
   return customer.id;
 }
 
-export type PaymentMethod = "pix" | "credit_card";
-
 export interface PixCharge {
   /** data:image/png;base64,… */
   image: string;
   payload: string;
   expiresAt: string;
   valueCents: number;
+  /** Paying this QR also authorizes the Pix Automático (next charges debited by themselves). */
+  automatic: boolean;
 }
 
 export type SubscribeResult =
-  | { kind: "changed" }
-  | { kind: "pix"; pix: PixCharge }
-  | { kind: "card"; last4: string; brand: string };
+  { kind: "changed"; reauthorize: boolean } | { kind: "pix"; pix: PixCharge };
 
-interface CardPayment {
-  card: CardInput;
-  holder: Omit<CardHolderInput, "name" | "email" | "cpfCnpj">;
+const dateOnly = (iso: string) => iso.slice(0, 10);
+const cents = (reais: number) => Math.round(reais * 100);
+
+function planDescription(brandName: string, cycle: Cycle, extras: number): string {
+  return `${brandName} ${PLAN_NAME} · ${cycle === "yearly" ? "anual" : "mensal"}${
+    extras > 0 ? ` · ${extras + 1} profissionais` : ""
+  }`;
+}
+
+/** Recurring value of a row (coupon included when known). */
+function recurringValue(row: Subscription): number {
+  return row.value_cents ?? subscriptionPrice(row.billing_cycle, row.extra_professionals ?? 0);
+}
+
+/**
+ * Date the period being paid starts from: today for a new subscription, the current period end
+ * for a renewal (paying late keeps the schedule, as the regular Asaas subscription does).
+ */
+export function periodBase(
+  row: Pick<Subscription, "status" | "current_period_end">,
+  now: string = today(),
+): string {
+  const renewing = row.status === "active" || row.status === "overdue";
+  return renewing && row.current_period_end ? dateOnly(row.current_period_end) : now;
+}
+
+async function pixOfPayment(payment: AsaasPayment): Promise<PixCharge> {
+  const qr = await getPixQrCode(payment.id);
+  return {
+    image: `data:image/png;base64,${qr.encodedImage}`,
+    payload: qr.payload,
+    expiresAt: qr.expirationDate,
+    valueCents: cents(payment.value),
+    automatic: false,
+  };
 }
 
 async function pixOfPendingPayment(subscriptionId: string): Promise<PixCharge | null> {
   const payments = await listSubscriptionPayments(subscriptionId);
   const pending = payments.find((p) => p.status === "PENDING" || p.status === "OVERDUE");
-  if (!pending) return null;
-  const qr = await getPixQrCode(pending.id);
+  return pending ? pixOfPayment(pending) : null;
+}
+
+function pixOfAuthorization(
+  authorization: AsaasPixAutomaticAuthorization,
+  firstValueCents: number,
+): PixCharge {
+  const image = authorization.encodedImage ?? authorization.immediateQrCode?.encodedImage;
+  const payload = authorization.payload ?? authorization.immediateQrCode?.payload;
+  if (!image || !payload) throw new Error("pix_unavailable");
   return {
-    image: `data:image/png;base64,${qr.encodedImage}`,
-    payload: qr.payload,
-    expiresAt: qr.expirationDate,
-    valueCents: Math.round(pending.value * 100),
+    image: `data:image/png;base64,${image}`,
+    payload,
+    expiresAt:
+      authorization.immediateQrCode?.expirationDate ??
+      new Date(Date.now() + 86_400_000).toISOString(),
+    valueCents: firstValueCents,
+    automatic: true,
   };
 }
 
 /**
- * Own checkout (Asaas behind the scenes). Subscribes to the Completo plan paying by Pix (returns
- * the QR code of the first charge) or card (tokenized at Asaas, charged right away); the billing
- * cycle starts on that day, with no proportional charge. The webhook activates the plan on
- * payment. On an active subscription, cycle and extra professionals change (new value from the
- * next charge).
+ * New Pix Automático authorization for a row: its QR pays the current period (new subscription or
+ * open renewal) and authorizes the next charges, debited from the end of that period. Any earlier
+ * authorization still waiting for payment is cancelled, so there is never more than one.
+ */
+async function startPixAutomatic(
+  row: Subscription,
+  input: { brandName: string; valueCents: number; firstValueCents: number },
+): Promise<{ authorization: AsaasPixAutomaticAuthorization; pix: PixCharge }> {
+  if (!row.provider_customer_id) throw new Error("no_customer");
+  if (row.pix_automatic_id && row.pix_automatic_status === "created") {
+    await cancelPixAutomaticAuthorization(row.pix_automatic_id).catch(() => undefined);
+  }
+  const authorization = await createPixAutomaticAuthorization({
+    customerId: row.provider_customer_id,
+    valueCents: input.valueCents,
+    firstValueCents: input.firstValueCents,
+    cycle: CYCLES[row.billing_cycle],
+    startDate: dateOnly(addPeriod(periodBase(row), row.billing_cycle)),
+    description: planDescription(input.brandName, row.billing_cycle, row.extra_professionals ?? 0),
+  });
+  return { authorization, pix: pixOfAuthorization(authorization, input.firstValueCents) };
+}
+
+/**
+ * Own checkout (Asaas behind the scenes), Pix only (2026-10-28). A new subscription gets a Pix
+ * Automático QR: paying it starts the plan (cycle from that day, no proportional charge) and
+ * authorizes the next charges. On an active subscription, cycle and extra professionals change
+ * from the next charge; with the Pix Automático active, a new value cancels the authorization
+ * (the payer only authorized the old one) and the next charge is paid by QR, authorizing again.
  */
 export async function subscribePlan(input: {
   business: Business;
@@ -110,18 +175,13 @@ export async function subscribePlan(input: {
   cycle: Cycle;
   extraProfessionals: number;
   payer: { name: string; cpfCnpj: string; email: string };
-  paymentMethod: PaymentMethod;
-  cardPayment?: CardPayment;
-  remoteIp: string;
   couponCode?: string | null;
 }): Promise<SubscribeResult> {
   const admin = createAdminClient();
   const existing = await loadSubscription(input.business.id);
   const extras = Math.max(0, Math.min(49, Math.floor(input.extraProfessionals)));
   const seats = extras + 1;
-  const description = `${input.brand.name} ${PLAN_NAME} · ${
-    input.cycle === "yearly" ? "anual" : "mensal"
-  }${extras > 0 ? ` · ${seats} profissionais` : ""}`;
+  const description = planDescription(input.brand.name, input.cycle, extras);
 
   let discount = 0;
   if (input.couponCode) {
@@ -140,21 +200,35 @@ export async function subscribePlan(input: {
   }).catch(() => undefined);
 
   // Change on an active subscription: update it and apply the seats right away.
-  if (
-    existing?.provider_subscription_id &&
-    (existing.status === "active" || existing.status === "overdue")
-  ) {
-    // The new value applies from the next charge (no proportional charge now).
-    await updateSubscription(existing.provider_subscription_id, {
-      valueCents: value,
-      cycle: CYCLES[input.cycle],
-      description,
-    });
+  if (existing && (existing.status === "active" || existing.status === "overdue")) {
+    // Between the first payment of a renewal by QR and the bank's confirmation there is no
+    // subscription to change yet (a few minutes at most).
+    if (!existing.provider_subscription_id) throw new Error("automatic_pending");
+    const sameTerms = value === recurringValue(existing) && input.cycle === existing.billing_cycle;
+    const reauthorize = existing.pix_automatic_status === "active" && !sameTerms;
+    if (reauthorize) {
+      // The new value applies from the next charge, paid by QR (which authorizes again).
+      await fallbackToRegularPix(existing, {
+        valueCents: value,
+        cycle: input.cycle,
+        description,
+        status: "cancelled",
+        notify: false,
+      });
+    } else {
+      // The new value applies from the next charge (no proportional charge now).
+      await updateSubscription(existing.provider_subscription_id, {
+        valueCents: value,
+        cycle: CYCLES[input.cycle],
+        description,
+      });
+    }
     await admin
       .from("subscriptions")
       .update({
         billing_cycle: input.cycle,
         extra_professionals: extras,
+        value_cents: value,
         needs_reprice: false,
         updated_at: new Date().toISOString(),
       })
@@ -168,9 +242,9 @@ export async function subscribePlan(input: {
       businessId: input.business.id,
       userId: input.userId,
       action: "plan.changed",
-      details: { cycle: input.cycle, seats, value_cents: value },
+      details: { cycle: input.cycle, seats, value_cents: value, reauthorize },
     });
-    return { kind: "changed" };
+    return { kind: "changed", reauthorize };
   }
 
   // A pending (unpaid) attempt is replaced, so a new choice never leaves two subscriptions.
@@ -179,46 +253,58 @@ export async function subscribePlan(input: {
   }
 
   const customerId = await ensureCustomer(input.business, existing, input.payer);
-  let card: { creditCardToken: string; creditCardNumber: string; creditCardBrand: string } | null =
-    null;
-  if (input.paymentMethod === "credit_card") {
-    if (!input.cardPayment) throw new Error("card_missing");
-    card = await tokenizeCreditCard({
+  const draft: Subscription = {
+    ...(existing ?? ({} as Subscription)),
+    business_id: input.business.id,
+    provider_customer_id: customerId,
+    billing_cycle: input.cycle,
+    extra_professionals: extras,
+    status: "pending",
+    current_period_end: null,
+  };
+  let started: Awaited<ReturnType<typeof startPixAutomatic>> | null = null;
+  let regular: { id: string } | null = null;
+  try {
+    started = await startPixAutomatic(draft, {
+      brandName: input.brand.name,
+      valueCents: value,
+      firstValueCents: value,
+    });
+  } catch (error) {
+    // Asaas could not create the authorization: the subscription starts on the regular Pix and
+    // the next charge offers the Pix Automático again.
+    console.error(
+      "pix automatic unavailable on subscribe, regular pix used",
+      error instanceof Error ? error.message.slice(0, 120) : "unknown",
+    );
+    regular = await createSubscription({
       customer: customerId,
-      card: input.cardPayment.card,
-      holder: {
-        ...input.cardPayment.holder,
-        name: input.payer.name,
-        email: input.payer.email,
-        cpfCnpj: input.payer.cpfCnpj,
-      },
-      remoteIp: input.remoteIp,
+      valueCents: value,
+      cycle: CYCLES[input.cycle],
+      nextDueDate: today(),
+      description,
+      externalReference: `${input.business.id}:plan`,
     });
   }
-  const subscription = await createSubscription({
-    customer: customerId,
-    valueCents: value,
-    cycle: CYCLES[input.cycle],
-    nextDueDate: today(),
-    description,
-    externalReference: `${input.business.id}:plan`,
-    billingType: card ? "CREDIT_CARD" : "PIX",
-    creditCardToken: card?.creditCardToken,
-    remoteIp: input.remoteIp,
-  });
+  const authorization = started?.authorization ?? null;
   const { error } = await admin.from("subscriptions").upsert(
     {
       business_id: input.business.id,
       provider: "asaas",
       provider_customer_id: customerId,
-      provider_subscription_id: subscription.id,
+      // Asaas creates the subscription once the bank confirms (the simulation links it at once).
+      provider_subscription_id: regular?.id ?? authorization?.subscriptionId ?? null,
       plan: "complete",
       needs_reprice: false,
       billing_cycle: input.cycle,
       extra_professionals: extras,
-      billing_type: card ? "credit_card" : "pix",
-      card_last4: card?.creditCardNumber ?? null,
-      card_brand: card?.creditCardBrand ?? null,
+      value_cents: value,
+      billing_type: "pix",
+      card_last4: null,
+      card_brand: null,
+      pix_automatic_id: authorization?.id ?? null,
+      pix_automatic_status: authorization ? "created" : null,
+      pix_automatic_first_payment_id: null,
       addons: existing?.addons ?? {},
       status: "pending",
       updated_at: new Date().toISOString(),
@@ -235,82 +321,158 @@ export async function subscribePlan(input: {
       cycle: input.cycle,
       seats,
       value_cents: value,
-      method: input.paymentMethod,
+      method: authorization ? "pix_automatic" : "pix",
       coupon: input.couponCode ?? null,
     },
   });
-
-  if (card) return { kind: "card", last4: card.creditCardNumber, brand: card.creditCardBrand };
-  const pix = await pixOfPendingPayment(subscription.id);
+  if (started) return { kind: "pix", pix: started.pix };
+  const pix = await pixOfPendingPayment(regular!.id);
   if (!pix) throw new Error("pix_unavailable");
   return { kind: "pix", pix };
 }
 
-/** Pix of the open charge (first payment, renewal or overdue), shown inside the panel. */
-export async function pendingPix(businessId: string): Promise<PixCharge | null> {
-  const existing = await loadSubscription(businessId);
-  if (!existing?.provider_subscription_id || existing.status === "cancelled") return null;
-  return pixOfPendingPayment(existing.provider_subscription_id);
+/**
+ * Pix of the open charge (renewal or overdue), shown inside the panel. Without an active Pix
+ * Automático, the QR is a new authorization that pays this charge and the next ones by itself;
+ * the regular QR of the charge is only the fallback (debit refused, or Asaas unavailable).
+ */
+export async function pendingPix(businessId: string, brandName: string): Promise<PixCharge | null> {
+  const row = await loadSubscription(businessId);
+  if (!row?.provider_subscription_id || row.status === "cancelled") return null;
+  const payments = await listSubscriptionPayments(row.provider_subscription_id);
+  const pending = payments.find((p) => p.status === "PENDING" || p.status === "OVERDUE");
+  if (!pending) return null;
+  if (row.pix_automatic_status !== "active" && row.status !== "pending") {
+    try {
+      const { authorization, pix } = await startPixAutomatic(row, {
+        brandName,
+        valueCents: recurringValue(row),
+        firstValueCents: cents(pending.value),
+      });
+      await createAdminClient()
+        .from("subscriptions")
+        .update({
+          pix_automatic_id: authorization.id,
+          pix_automatic_status: "created",
+          pix_automatic_first_payment_id: null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", row.id);
+      return pix;
+    } catch (error) {
+      console.error(
+        "pix automatic unavailable, regular pix shown",
+        error instanceof Error ? error.message.slice(0, 120) : "unknown",
+      );
+    }
+  }
+  return pixOfPayment(pending);
 }
 
-/** Switches how an active subscription is paid: Pix, or a (new) card. No charge right now. */
-export async function changePaymentMethod(input: {
-  business: Business;
-  userId: string;
-  payer: { name: string; email: string; cpfCnpj: string };
-  paymentMethod: PaymentMethod;
-  cardPayment?: CardPayment;
-  remoteIp: string;
-}): Promise<void> {
-  const existing = await loadSubscription(input.business.id);
-  if (!existing?.provider_subscription_id || !existing.provider_customer_id)
-    throw new Error("no_plan");
+/**
+ * The Pix Automático stopped (bank refused or the payer cancelled it, or the value changed): the
+ * plan goes on with a regular Pix subscription from the end of the paid period, each charge paid
+ * by QR in the panel, where the next one authorizes the automatic debit again.
+ */
+async function fallbackToRegularPix(
+  row: Subscription,
+  input: {
+    status: "refused" | "cancelled" | "expired";
+    notify: boolean;
+    valueCents?: number;
+    cycle?: Cycle;
+    description?: string;
+  },
+): Promise<void> {
   const admin = createAdminClient();
-  if (input.paymentMethod === "pix") {
-    await updateSubscription(existing.provider_subscription_id, { billingType: "PIX" });
-    await admin
-      .from("subscriptions")
-      .update({ billing_type: "pix", card_last4: null, card_brand: null })
-      .eq("id", existing.id);
-  } else {
-    if (!input.cardPayment) throw new Error("card_missing");
-    const card = await tokenizeCreditCard({
-      customer: existing.provider_customer_id,
-      card: input.cardPayment.card,
-      holder: { ...input.cardPayment.holder, ...input.payer },
-      remoteIp: input.remoteIp,
+  const cycle = input.cycle ?? row.billing_cycle;
+  const automaticSubscription =
+    row.pix_automatic_status === "active" ? row.provider_subscription_id : null;
+  let providerSubscriptionId = row.provider_subscription_id;
+  if (row.status !== "cancelled" && (automaticSubscription || !providerSubscriptionId)) {
+    const business = await businessOf(row.business_id);
+    const end = row.current_period_end ? dateOnly(row.current_period_end) : today();
+    const subscription = await createSubscription({
+      customer: row.provider_customer_id!,
+      valueCents: input.valueCents ?? recurringValue(row),
+      cycle: CYCLES[cycle],
+      nextDueDate: end > today() ? end : today(),
+      description:
+        input.description ??
+        planDescription(getNiche(business?.brand_key).name, cycle, row.extra_professionals ?? 0),
+      externalReference: `${row.business_id}:plan`,
     });
-    await updateSubscription(existing.provider_subscription_id, { billingType: "CREDIT_CARD" });
-    await updateSubscriptionCard(existing.provider_subscription_id, {
-      creditCardToken: card.creditCardToken,
-      remoteIp: input.remoteIp,
-    });
-    await admin
-      .from("subscriptions")
-      .update({
-        billing_type: "credit_card",
-        card_last4: card.creditCardNumber,
-        card_brand: card.creditCardBrand,
-      })
-      .eq("id", existing.id);
+    providerSubscriptionId = subscription.id;
+  }
+  // The row points to the new subscription before the old one is removed: its deletion webhook
+  // then finds nothing to cancel.
+  await admin
+    .from("subscriptions")
+    .update({
+      provider_subscription_id: providerSubscriptionId,
+      pix_automatic_status: input.status,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", row.id);
+  if (automaticSubscription && automaticSubscription !== providerSubscriptionId) {
+    await deleteSubscription(automaticSubscription).catch(() => undefined);
+  }
+  if (row.pix_automatic_id && input.status === "cancelled") {
+    await cancelPixAutomaticAuthorization(row.pix_automatic_id).catch(() => undefined);
   }
   await audit({
-    businessId: input.business.id,
-    userId: input.userId,
+    businessId: row.business_id,
+    userId: null,
     action: "plan.changed",
-    details: { payment_method: input.paymentMethod },
+    details: { pix_automatic: input.status, fallback: "regular_pix" },
   });
+  if (input.notify && row.status !== "cancelled") {
+    await notifyTeam({
+      businessId: row.business_id,
+      type: "account",
+      subject: "O Pix Automático da sua assinatura foi desativado",
+      content: {
+        heading: "Seu Pix Automático foi desativado",
+        paragraphs: [
+          "Seu plano continua ativo. A próxima mensalidade aparece no painel, em Assinatura, para pagar pelo Pix.",
+          "Ao pagar por lá, você ativa o Pix Automático de novo e as seguintes voltam a ser debitadas sozinhas.",
+        ],
+        cta: { label: "Ver assinatura", url: "/painel/plano" },
+      },
+      push: {
+        title: "Pix Automático desativado",
+        body: "Seu plano continua ativo. Pague a próxima mensalidade pelo painel.",
+        url: "/painel/plano",
+      },
+    });
+  }
 }
 
 /** Stops future charges. The plan stays until the paid period ends (the billing cron downgrades). */
 export async function cancelPlan(business: Business, userId: string): Promise<void> {
   const existing = await loadSubscription(business.id);
-  if (!existing?.provider_subscription_id || existing.status === "cancelled") return;
-  await deleteSubscription(existing.provider_subscription_id);
+  if (!existing || existing.status === "cancelled") return;
+  if (!existing.provider_subscription_id && !existing.pix_automatic_id) return;
+  // Marked first: the deletion webhooks then see a plan cancelled by the owner, not a lost debit.
   await createAdminClient()
     .from("subscriptions")
-    .update({ status: "cancelled", updated_at: new Date().toISOString() })
+    .update({
+      status: "cancelled",
+      pix_automatic_status:
+        existing.pix_automatic_status === "active" || existing.pix_automatic_status === "created"
+          ? "cancelled"
+          : existing.pix_automatic_status,
+      updated_at: new Date().toISOString(),
+    })
     .eq("id", existing.id);
+  if (existing.provider_subscription_id)
+    await deleteSubscription(existing.provider_subscription_id);
+  if (
+    existing.pix_automatic_id &&
+    (existing.pix_automatic_status === "active" || existing.pix_automatic_status === "created")
+  ) {
+    await cancelPixAutomaticAuthorization(existing.pix_automatic_id).catch(() => undefined);
+  }
   await audit({
     businessId: business.id,
     userId,
@@ -369,8 +531,6 @@ export async function subscribeAddon(input: {
     nextDueDate: today(),
     description: `${input.brand.name} · ${isFeatured ? `Destaque no portal (${city})` : "Domínio próprio"}`,
     externalReference: `${input.business.id}:${isFeatured ? `featured:${city}` : "domain"}`,
-    // Add-ons are paid by Pix inside the panel (no card token is kept on our side).
-    billingType: "PIX",
   });
 
   const next: Addons = isFeatured
@@ -466,6 +626,15 @@ export interface AsaasEvent {
   event: string;
   payment?: AsaasPayment;
   subscription?: { id: string; status?: string };
+  /** Pix Automático authorization events. */
+  authorization?: { id: string; status?: string; subscriptionId?: string | null };
+  /** Pix Automático debit of one charge. */
+  paymentInstruction?: {
+    id: string;
+    status?: string;
+    paymentId?: string | null;
+    authorization?: { id: string } | null;
+  };
 }
 
 async function findBySubscription(
@@ -492,6 +661,15 @@ async function findBySubscription(
   return domain ? { row: domain as Subscription, kind: "addon" } : null;
 }
 
+async function findByAuthorization(authorizationId: string): Promise<Subscription | null> {
+  const { data } = await createAdminClient()
+    .from("subscriptions")
+    .select("*")
+    .eq("pix_automatic_id", authorizationId)
+    .maybeSingle();
+  return (data as Subscription | null) ?? null;
+}
+
 async function businessOf(businessId: string): Promise<Business | null> {
   const { data } = await createAdminClient()
     .from("businesses")
@@ -501,16 +679,180 @@ async function businessOf(businessId: string): Promise<Business | null> {
   return (data as Business | null) ?? null;
 }
 
+/** The plan is paid: Completo on, with the paid seats. */
+async function activateBusinessPlan(row: Subscription): Promise<void> {
+  const admin = createAdminClient();
+  const plan = "complete";
+  const business = await businessOf(row.business_id);
+  if (!business) return;
+  await admin.rpc("apply_professional_seats", {
+    p_business_id: business.id,
+    p_seats: (row.extra_professionals ?? 0) + 1,
+  });
+  if (business.plan !== plan) {
+    await admin.from("businesses").update({ plan }).eq("id", business.id);
+    await audit({
+      businessId: business.id,
+      userId: null,
+      action: "plan.changed",
+      details: {
+        from: business.plan,
+        to: plan,
+        via: "payment",
+        // Admin metrics: a subscription right after (or during) the trial.
+        after_trial: business.trial_ends_at !== null,
+      },
+    });
+    invalidatePublicPage(business.slug);
+  }
+}
+
+/**
+ * First payment of a Pix Automático authorization (its QR pays the current period): applied once,
+ * whichever comes first, the payment event or the confirmation from the bank. On a renewal, the
+ * regular subscription that had the open charge is removed; the authorization's own takes over.
+ */
+async function applyAutomaticFirstPayment(row: Subscription, reference: string): Promise<void> {
+  if (row.pix_automatic_first_payment_id) return;
+  const admin = createAdminClient();
+  const paidUntil = addPeriod(periodBase(row), row.billing_cycle);
+  const regularToDrop = row.status !== "pending" ? row.provider_subscription_id : null;
+  await admin
+    .from("subscriptions")
+    .update({
+      status: "active",
+      plan: "complete",
+      current_period_end: paidUntil,
+      pix_automatic_first_payment_id: reference,
+      provider_subscription_id: regularToDrop ? null : row.provider_subscription_id,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", row.id);
+  if (regularToDrop) await deleteSubscription(regularToDrop).catch(() => undefined);
+  await activateBusinessPlan(row);
+}
+
+const AUTHORIZATION_END: Record<string, "refused" | "cancelled" | "expired"> = {
+  PIX_AUTOMATIC_RECURRING_AUTHORIZATION_REFUSED: "refused",
+  PIX_AUTOMATIC_RECURRING_AUTHORIZATION_CANCELLED: "cancelled",
+  PIX_AUTOMATIC_RECURRING_AUTHORIZATION_EXPIRED: "expired",
+};
+
+async function handleAuthorizationEvent(event: AsaasEvent): Promise<string> {
+  const authorization = event.authorization!;
+  const row = await findByAuthorization(authorization.id);
+  // An older authorization (replaced or cancelled on our side) is no longer followed.
+  if (!row) return "ignored: unknown authorization";
+  const admin = createAdminClient();
+
+  if (event.event === "PIX_AUTOMATIC_RECURRING_AUTHORIZATION_ACTIVATED") {
+    if (row.pix_automatic_status === "active" || row.status === "cancelled") return "ignored";
+    await applyAutomaticFirstPayment(row, "activation");
+    const subscriptionId =
+      authorization.subscriptionId ??
+      (await getPixAutomaticAuthorization(authorization.id).catch(() => null))?.subscriptionId ??
+      null;
+    await admin
+      .from("subscriptions")
+      .update({
+        pix_automatic_status: "active",
+        ...(subscriptionId ? { provider_subscription_id: subscriptionId } : {}),
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", row.id);
+    if (!subscriptionId) console.error("pix automatic active without subscription", row.id);
+    return "pix automatic active";
+  }
+
+  const status = AUTHORIZATION_END[event.event];
+  if (!status) return `ignored: ${event.event}`;
+  if (row.pix_automatic_status === status) return "ignored: repeated";
+  const fresh = (await loadSubscription(row.business_id)) ?? row;
+  const paid = fresh.status === "active" || fresh.status === "overdue";
+  // Paid plan without the automatic debit any more: next charges by QR in the panel.
+  if (paid && (fresh.pix_automatic_status === "active" || !fresh.provider_subscription_id)) {
+    await fallbackToRegularPix(fresh, { status, notify: true });
+    return `pix automatic ${status}: regular pix`;
+  }
+  // Not paid (QR expired or never confirmed): the owner generates a new QR in the panel.
+  await admin
+    .from("subscriptions")
+    .update({ pix_automatic_status: status, updated_at: new Date().toISOString() })
+    .eq("id", row.id);
+  return `pix automatic ${status}`;
+}
+
+/** The bank did not debit a charge: the owner can pay it by QR in the panel (retries may follow). */
+async function handleDebitRefused(event: AsaasEvent): Promise<string> {
+  const authorizationId = event.paymentInstruction?.authorization?.id;
+  const row = authorizationId ? await findByAuthorization(authorizationId) : null;
+  const reference = event.paymentInstruction?.paymentId ?? event.paymentInstruction?.id;
+  if (!row || !reference || row.status === "cancelled") return "ignored: debit refused";
+  if (await claimNotification(row.business_id, "billing_debit_refused", reference)) {
+    await notifyTeam({
+      businessId: row.business_id,
+      type: "account",
+      subject: "O débito da sua mensalidade não foi feito",
+      content: {
+        heading: "Não conseguimos debitar sua mensalidade",
+        paragraphs: [
+          "O Pix Automático da sua assinatura não foi debitado pelo banco (por exemplo, por falta de saldo). O banco pode tentar de novo nos próximos dias.",
+          "Para não pausar sua agenda, você também pode pagar agora pelo Pix no painel, em Assinatura.",
+        ],
+        cta: { label: "Pagar com Pix", url: "/painel/plano" },
+      },
+      push: {
+        title: "Mensalidade não debitada",
+        body: "Pague pelo Pix no painel para não pausar sua agenda.",
+        url: "/painel/plano",
+      },
+    });
+  }
+  return "debit refused";
+}
+
+const formatValue = (valueCents: number) => `R$ ${(valueCents / 100).toFixed(2).replace(".", ",")}`;
+
 /** Applies one Asaas event. Callers guarantee each event id is handled once. */
 export async function handleAsaasEvent(event: AsaasEvent): Promise<string> {
   const admin = createAdminClient();
+
+  if (event.authorization?.id && event.event.startsWith("PIX_AUTOMATIC_RECURRING_AUTHORIZATION")) {
+    return handleAuthorizationEvent(event);
+  }
+  if (event.event === "PIX_AUTOMATIC_RECURRING_PAYMENT_INSTRUCTION_REFUSED") {
+    return handleDebitRefused(event);
+  }
+
   const subscriptionId = event.payment?.subscription ?? event.subscription?.id;
+  const found = subscriptionId ? await findBySubscription(subscriptionId) : null;
+
+  // First payment of a Pix Automático QR: Asaas has not linked it to our subscription yet.
+  if (
+    !found &&
+    event.payment?.customer &&
+    (event.event === "PAYMENT_CONFIRMED" || event.event === "PAYMENT_RECEIVED")
+  ) {
+    const { data } = await admin
+      .from("subscriptions")
+      .select("*")
+      .eq("provider_customer_id", event.payment.customer)
+      .eq("pix_automatic_status", "created")
+      .maybeSingle();
+    if (data) {
+      await applyAutomaticFirstPayment(data as Subscription, event.payment.id);
+      return "plan active (pix automatic first payment)";
+    }
+  }
   if (!subscriptionId) return "ignored: no subscription";
-  const found = await findBySubscription(subscriptionId);
   if (!found) return "ignored: unknown subscription";
   const { row, kind } = found;
 
   if (event.event === "PAYMENT_CONFIRMED" || event.event === "PAYMENT_RECEIVED") {
+    if (kind === "plan" && row.pix_automatic_status === "created") {
+      await applyAutomaticFirstPayment(row, event.payment!.id);
+      return "plan active (pix automatic first payment)";
+    }
     const cycle: Cycle = kind === "plan" ? row.billing_cycle : "monthly";
     const paidUntil = addPeriod(event.payment!.dueDate, cycle);
     if (kind === "addon") {
@@ -523,65 +865,60 @@ export async function handleAsaasEvent(event: AsaasEvent): Promise<string> {
       );
       return "addon active";
     }
-    const plan = "complete";
     await admin
       .from("subscriptions")
       .update({
         status: "active",
-        plan,
+        plan: "complete",
         current_period_end: paidUntil,
         updated_at: new Date().toISOString(),
       })
       .eq("id", row.id);
-    const business = await businessOf(row.business_id);
-    if (business) {
-      await admin.rpc("apply_professional_seats", {
-        p_business_id: business.id,
-        p_seats: (row.extra_professionals ?? 0) + 1,
-      });
-    }
-    if (business && business.plan !== plan) {
-      await admin.from("businesses").update({ plan }).eq("id", business.id);
-      await audit({
-        businessId: business.id,
-        userId: null,
-        action: "plan.changed",
-        details: {
-          from: business.plan,
-          to: plan,
-          via: "payment",
-          // Admin metrics: a subscription right after (or during) the trial.
-          after_trial: business.trial_ends_at !== null,
-        },
-      });
-      invalidatePublicPage(business.slug);
-    }
+    await activateBusinessPlan(row);
     return "plan active";
   }
 
-  // Renewal by Pix: our own e-mail with the link to pay inside the panel (Asaas e-mails are off).
+  // Renewal: our own e-mail (Asaas e-mails are off). With the Pix Automático it only tells the
+  // date of the debit; otherwise it points to the QR in the panel (which authorizes the debit).
   if (event.event === "PAYMENT_CREATED") {
-    if (kind === "plan" && row.status === "active" && row.billing_type === "pix" && event.payment) {
+    if (kind === "plan" && row.status === "active" && event.payment) {
       if (await claimNotification(row.business_id, "billing_renewal", event.payment.id)) {
         const due = event.payment.dueDate.split("-").reverse().join("/");
-        const value = Math.round(event.payment.value * 100);
+        const value = formatValue(cents(event.payment.value));
+        const automatic = row.pix_automatic_status === "active";
         await notifyTeam({
           businessId: row.business_id,
           type: "account",
-          subject: `Sua mensalidade vence em ${due}`,
-          content: {
-            heading: "Sua mensalidade está disponível",
-            paragraphs: [
-              `A mensalidade de R$ ${(value / 100).toFixed(2).replace(".", ",")} vence em ${due}.`,
-              "Pague pelo Pix no seu painel, em Assinatura. Leva menos de um minuto.",
-            ],
-            cta: { label: "Pagar com Pix", url: "/painel/plano" },
-          },
-          push: {
-            title: "Mensalidade disponível",
-            body: `Vence em ${due}. Pague pelo Pix no painel.`,
-            url: "/painel/plano",
-          },
+          subject: automatic
+            ? `Sua mensalidade será debitada em ${due}`
+            : `Sua mensalidade vence em ${due}`,
+          content: automatic
+            ? {
+                heading: "Sua mensalidade será debitada pelo Pix Automático",
+                paragraphs: [
+                  `A mensalidade de ${value} será debitada da sua conta em ${due}, pelo Pix Automático. Você não precisa fazer nada.`,
+                ],
+                cta: { label: "Ver assinatura", url: "/painel/plano" },
+              }
+            : {
+                heading: "Sua mensalidade está disponível",
+                paragraphs: [
+                  `A mensalidade de ${value} vence em ${due}.`,
+                  "Pague pelo Pix no seu painel, em Assinatura. Ao pagar, você ativa o Pix Automático e as próximas são debitadas sozinhas.",
+                ],
+                cta: { label: "Pagar com Pix", url: "/painel/plano" },
+              },
+          push: automatic
+            ? {
+                title: "Mensalidade no Pix Automático",
+                body: `${value} será debitado em ${due}.`,
+                url: "/painel/plano",
+              }
+            : {
+                title: "Mensalidade disponível",
+                body: `Vence em ${due}. Pague pelo Pix no painel.`,
+                url: "/painel/plano",
+              },
         });
       }
     }
@@ -621,6 +958,12 @@ export async function handleAsaasEvent(event: AsaasEvent): Promise<string> {
     if (kind === "addon") {
       await applyAddonStatus(row, subscriptionId, "cancelled");
       return "addon cancelled";
+    }
+    // The subscription of an active Pix Automático ended without the owner cancelling (the payer
+    // revoked the authorization at the bank): the plan goes on, paid by QR.
+    if (row.status !== "cancelled" && row.pix_automatic_status === "active") {
+      await fallbackToRegularPix(row, { status: "cancelled", notify: true });
+      return "pix automatic ended: regular pix";
     }
     const stillPaid = row.current_period_end && new Date(row.current_period_end) > new Date();
     await admin
@@ -673,15 +1016,26 @@ export async function processBillingExpirations(): Promise<{
   for (const row of (stale ?? []) as Subscription[]) {
     if (!row.provider_subscription_id) continue;
     const business = await businessOf(row.business_id);
-    await updateSubscription(row.provider_subscription_id, {
-      valueCents: subscriptionPrice(row.billing_cycle, row.extra_professionals ?? 0),
-      description: `${getNiche(business?.brand_key).name} ${PLAN_NAME} · ${
-        row.billing_cycle === "yearly" ? "anual" : "mensal"
-      }`,
-    });
+    const valueCents = subscriptionPrice(row.billing_cycle, row.extra_professionals ?? 0);
+    const description = planDescription(
+      getNiche(business?.brand_key).name,
+      row.billing_cycle,
+      row.extra_professionals ?? 0,
+    );
+    if (row.pix_automatic_status === "active") {
+      // The payer authorized the old value: the next charge goes by QR and authorizes the new one.
+      await fallbackToRegularPix(row, {
+        valueCents,
+        description,
+        status: "cancelled",
+        notify: true,
+      });
+    } else {
+      await updateSubscription(row.provider_subscription_id, { valueCents, description });
+    }
     await admin
       .from("subscriptions")
-      .update({ needs_reprice: false, updated_at: now })
+      .update({ needs_reprice: false, value_cents: valueCents, updated_at: now })
       .eq("id", row.id);
     repriced++;
   }

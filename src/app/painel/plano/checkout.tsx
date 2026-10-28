@@ -20,15 +20,7 @@ import {
   checkoutAction,
   previewPlatformCouponAction,
 } from "./actions";
-import {
-  CardFields,
-  CardProcessing,
-  EMPTY_CARD,
-  MethodSwitch,
-  PixPanel,
-  type CardFormValue,
-  type PaymentMethod,
-} from "./payment";
+import { PixPanel } from "./payment";
 
 function PayerFields({
   name,
@@ -91,10 +83,7 @@ export function PlanCheckout({
   const [pending, startTransition] = useTransition();
   const [addon, setAddon] = useState<"featured" | "custom_domain" | null>(null);
   const [city, setCity] = useState("");
-  const [method, setMethod] = useState<PaymentMethod>("pix");
-  const [card, setCard] = useState<CardFormValue>(EMPTY_CARD);
   const [pix, setPix] = useState<{ charge: PixCharge; plan: boolean } | null>(null);
-  const [cardProcessing, setCardProcessing] = useState(false);
 
   const extras = professionals - 1;
   const total = subscriptionPrice(cycle, extras, discount ?? 0);
@@ -111,11 +100,10 @@ export function PlanCheckout({
     setMessage({ ok: result.ok, text: result.message });
     if (!result.ok) return;
     if ("pix" in result && result.pix) setPix({ charge: result.pix, plan });
-    else if (result.kind === "card") setCardProcessing(true);
     else router.refresh();
   };
 
-  // While paying (Pix shown or card being confirmed) the checkout gives way to that panel.
+  // While paying, the checkout gives way to the Pix panel.
   if (pix) {
     return (
       <div className="flex flex-col gap-3">
@@ -131,7 +119,6 @@ export function PlanCheckout({
       </div>
     );
   }
-  if (cardProcessing) return <CardProcessing />;
 
   return (
     <div className="flex flex-col gap-6">
@@ -258,12 +245,10 @@ export function PlanCheckout({
                 Aplicar
               </Button>
             </div>
-            <MethodSwitch value={method} onChange={setMethod} />
-            {method === "credit_card" ? <CardFields value={card} onChange={setCard} /> : null}
             <p className="text-sm text-muted-foreground">
-              {method === "pix"
-                ? "Você paga pelo QR code aqui mesmo. A assinatura ativa assim que o pagamento cair."
-                : "Cobramos agora e a cada renovação no cartão. Cancele quando quiser."}
+              Pagamento pelo <strong>Pix Automático</strong>: você paga a primeira mensalidade pelo
+              QR code e confirma no app do banco. As próximas são debitadas sozinhas, e você pode
+              cancelar quando quiser.
             </p>
           </>
         ) : (
@@ -283,8 +268,6 @@ export function PlanCheckout({
                   extraProfessionals: extras,
                   name,
                   cpfCnpj: document,
-                  paymentMethod: method,
-                  card: method === "credit_card" ? card : undefined,
                   coupon: discount !== null ? coupon : undefined,
                 }),
               );
@@ -295,9 +278,7 @@ export function PlanCheckout({
             ? "Processando…"
             : hasActiveSubscription
               ? "Salvar alteração"
-              : method === "pix"
-                ? `Gerar Pix de ${formatBRL(total)}`
-                : `Pagar ${formatBRL(total)} no cartão`}
+              : `Gerar Pix de ${formatBRL(total)}`}
         </Button>
       </div>
 

@@ -18,6 +18,7 @@ import { DEMO_DATA_DIR, DEMO_SESSION_COOKIE, isDemoMode } from "@/lib/demo/mode"
 import { DEMO_PERSONAS } from "@/lib/demo/seed";
 import { encodeDemoSession } from "@/lib/demo/session";
 import { getServerEnv } from "@/lib/env";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 function guard() {
   if (!isDemoMode()) notFound();
@@ -191,6 +192,19 @@ export async function demoConfirmPaymentAction(formData: FormData): Promise<void
       event: "PAYMENT_CONFIRMED",
       payment,
     });
+    // The bank confirms the Pix Automático right after the first payment.
+    const { data: row } = await createAdminClient()
+      .from("subscriptions")
+      .select("pix_automatic_id, pix_automatic_status")
+      .eq("provider_subscription_id", subscriptionId)
+      .maybeSingle();
+    if (row?.pix_automatic_id && row.pix_automatic_status === "created") {
+      await handleAsaasEvent({
+        id: `evt_demo_auth_${row.pix_automatic_id}`,
+        event: "PIX_AUTOMATIC_RECURRING_AUTHORIZATION_ACTIVATED",
+        authorization: { id: row.pix_automatic_id, status: "ACTIVE", subscriptionId },
+      });
+    }
   }
   redirect(`/demo?ok=${payment ? "pagamento" : "sem-cobranca"}#assinaturas`);
 }

@@ -345,7 +345,7 @@ test("waiting mode: the chat collects service, day and period for WhatsApp", asy
   ).toBeVisible();
 });
 
-test("own checkout: Pix QR inside the panel, the payment activates the subscription", async ({
+test("own checkout: Pix Automático QR inside the panel, the payment activates the subscription", async ({
   page,
 }) => {
   await setPlan(page, "Barbearia Navalha", "Modo de espera");
@@ -362,6 +362,7 @@ test("own checkout: Pix QR inside the panel, the payment activates the subscript
   await page.getByLabel("CPF ou CNPJ").fill("529.982.247-25");
   await page.getByRole("button", { name: /^Gerar Pix de/ }).click();
   await expect(page.getByRole("img", { name: "QR code do Pix" })).toBeVisible();
+  await expect(page.getByText(/confirme o Pix Automático/)).toBeVisible();
   await expect(page.getByText(/Aguardando o pagamento/)).toBeVisible();
 
   // The Asaas webhook confirms the payment (simulated in demo mode).
@@ -376,33 +377,8 @@ test("own checkout: Pix QR inside the panel, the payment activates the subscript
   await expect(confirm.getByText(/Pagamento confirmado: a assinatura foi ativada/)).toBeVisible();
 
   await expect(page.getByText("Pagamento confirmado! 🎉")).toBeVisible({ timeout: 20_000 });
+  await page.goto("/painel/plano");
+  await expect(page.getByText(/Pix Automático \(debitado sozinho/)).toBeVisible();
   await page.goto("/painel/agenda");
   await expect(page).toHaveURL(/\/painel\/agenda/);
-});
-
-test("own checkout: card refused shows the error, a valid card is accepted", async ({ page }) => {
-  await page.goto("/demo");
-  await page
-    .locator("form", { hasText: "psi@demo.com" })
-    .getByRole("button", { name: "Entrar" })
-    .click();
-  await page.waitForURL(/\/painel/);
-  await page.goto("/painel/plano");
-  await page.getByLabel(/Nome ou razão social/).fill("Espaço Escuta");
-  await page.getByLabel("CPF ou CNPJ").fill("529.982.247-25");
-  await page.getByRole("button", { name: /Cartão de crédito/ }).click();
-  const fill = async (number: string) => {
-    await page.getByLabel("Número do cartão").fill(number);
-    await page.getByLabel("Nome impresso no cartão").fill("ANA PSI");
-    await page.getByLabel("Validade (MM/AA)").fill("12/30");
-    await page.getByLabel("Código (CVV)").fill("123");
-    await page.getByLabel("Telefone com DDD").fill("31999990004");
-    await page.getByLabel("CEP da fatura do cartão").fill("30140-071");
-    await page.getByLabel("Número do endereço").fill("800");
-    await page.getByRole("button", { name: /no cartão$/ }).click();
-  };
-  await fill("4000 0000 0000 0000".replace(/0000$/, "0000"));
-  await expect(page.getByRole("alert").filter({ hasText: /cart/i }).first()).toBeVisible();
-  await fill("4111 1111 1111 1111");
-  await expect(page.getByText(/Confirmando o pagamento com o cartão/)).toBeVisible();
 });

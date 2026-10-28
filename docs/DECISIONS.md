@@ -256,3 +256,13 @@ Revise antes de aplicar no Supabase de produção.
 
 - Mensal baixou de R$ 29,90 para R$ 23,90; anual de R$ 298,80 para R$ 238,80 (R$ 19,90/mês). Profissional extra continua R$ 9/mês (R$ 90/ano).
 - Assinantes existentes passam ao valor novo a partir da próxima cobrança (needs_reprice, tarefa diária do cron trial), como na mudança de 2026-10-12.
+
+## Assinatura só por Pix, com Pix Automático (2026-10-28)
+
+- Decisão da dona do produto: sem cartão (valor baixo; o Pix custa R$ 1,99 por pagamento no Asaas, contra 2,99% + R$ 0,49 no cartão) e sem opção de "pagar à mão" (quem pode escolher esquece de pagar). Havia uma assinatura ativa, por Pix; nenhuma por cartão.
+- Asaas, Pix Automático jornada 3 (docs.asaas.com/docs/pix-automatico-implementacao): `POST /v3/pix/automatic/authorizations` com `paymentCreationMode: SUBSCRIPTION`, `value` fixo, `frequency` MONTHLY/ANNUALLY, `startDate` = fim do período pago, `retryPolicy: ALLOW_THREE_IN_SEVEN_DAYS` e `immediateQrCode` (QR da primeira mensalidade, 24 h). Ativa depois do pagamento e da confirmação do banco; então o Asaas cria a assinatura (`subscriptionId`) que gera e debita as próximas cobranças. Cancelar: `DELETE /v3/pix/automatic/authorizations/{id}`. Exige conta PJ aprovada, com chave Pix e CNPJ ativo há 6 meses (conta habilitada em 2026-10-28).
+- Webhooks tratados: `PIX_AUTOMATIC_RECURRING_AUTHORIZATION_ACTIVATED | REFUSED | CANCELLED | EXPIRED` (objeto `authorization`) e `PIX_AUTOMATIC_RECURRING_PAYMENT_INSTRUCTION_REFUSED` (objeto `paymentInstruction`, aviso por e-mail e push). O primeiro pagamento vale uma vez (`pix_automatic_first_payment_id`), venha antes o evento de pagamento (achado pelo cliente Asaas) ou a ativação.
+- Socorro: sem débito automático (autorização recusada depois de paga, cancelada no banco, expirada, ou assinatura do Asaas encerrada sem a dona cancelar), o plano segue com uma assinatura Pix comum a partir do fim do período, e a dona é avisada. A mensalidade em aberto no painel gera o QR de uma nova autorização (paga e reativa); o QR comum da cobrança só aparece com a autorização ativa (débito recusado) ou se o Asaas falhar.
+- Valor novo (profissionais, ciclo, reajuste por needs_reprice) com Pix Automático ativo: a autorização é cancelada e a próxima mensalidade é paga pelo QR, que autoriza o valor novo (o pagador só autorizou o valor antigo).
+- Migration `20261028100000_pix_automatic`: `pix_automatic_id`, `pix_automatic_status`, `pix_automatic_first_payment_id` e `value_cents` (valor recorrente com cupom) em `subscriptions`. `billing_type` continua aceitando `credit_card` só pelo histórico.
+- Removidos: tokenização e troca de cartão, formulário de cartão no painel e o teste e2e do cartão.

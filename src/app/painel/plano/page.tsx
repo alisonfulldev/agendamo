@@ -16,7 +16,7 @@ import { getPlanFeatures, PLAN_NAME, PLAN_PRICES, planLabel, PRICE_TEXT } from "
 import { createClient } from "@/lib/supabase/server";
 
 import { CancelAddonButton, CancelPlanButton, PlanCheckout } from "./checkout";
-import { PaymentMethodSection, PendingPixButton } from "./payment";
+import { PendingPixButton } from "./payment";
 
 export const metadata: Metadata = { title: "Assinatura" };
 
@@ -60,6 +60,7 @@ export default async function PlanPage() {
     );
   }
   const active = subscription?.status === "active" || subscription?.status === "overdue";
+  const automatic = subscription?.pix_automatic_status === "active";
   const pendingInvoice = payments.find((p) => p.status === "PENDING" || p.status === "OVERDUE");
   const date = (iso: string) =>
     formatInTimeZone(
@@ -130,34 +131,27 @@ export default async function PlanPage() {
               </>
             ) : null}
           </dl>
-          {pendingInvoice && subscription.billing_type === "pix" ? (
+          {active ? (
+            <p className="mt-3 text-sm">
+              Forma de pagamento:{" "}
+              <span className="font-medium">
+                {automatic
+                  ? "Pix Automático (debitado sozinho na data de cada mensalidade)"
+                  : "Pix (você paga pelo QR code). Ao pagar a próxima mensalidade, você ativa o Pix Automático."}
+              </span>
+            </p>
+          ) : null}
+          {pendingInvoice && active ? (
             <div className="mt-3 flex flex-col gap-1">
               <p className="text-sm">
                 Mensalidade em aberto: {formatBRL(Math.round(pendingInvoice.value * 100))} (vence{" "}
                 {date(pendingInvoice.dueDate)})
+                {automatic && pendingInvoice.status === "PENDING"
+                  ? ". Será debitada pelo Pix Automático; se preferir, pague agora."
+                  : null}
               </p>
-              <PendingPixButton label="Pagar com Pix" />
-            </div>
-          ) : null}
-          {pendingInvoice &&
-          subscription.billing_type === "credit_card" &&
-          pendingInvoice.status === "OVERDUE" ? (
-            <p className="mt-3 text-sm text-destructive">
-              A cobrança no cartão não foi aprovada. Troque o cartão ou mude para Pix abaixo.
-            </p>
-          ) : null}
-          {active || subscription.status === "pending" ? (
-            <div className="mt-4">
-              <PaymentMethodSection
-                method={subscription.billing_type}
-                cardLabel={
-                  subscription.card_last4
-                    ? `Cartão ${subscription.card_brand ?? ""} final ${subscription.card_last4}`.replace(
-                        "  ",
-                        " ",
-                      )
-                    : "Cartão de crédito"
-                }
+              <PendingPixButton
+                label={automatic ? "Pagar agora com Pix" : "Pagar e ativar o Pix Automático"}
               />
             </div>
           ) : null}

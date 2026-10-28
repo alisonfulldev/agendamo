@@ -14,6 +14,7 @@ const eventSchema = z
     payment: z
       .object({
         id: z.string(),
+        customer: z.string().optional(),
         subscription: z.string().optional(),
         status: z.string(),
         value: z.number(),
@@ -25,6 +26,27 @@ const eventSchema = z
       .optional(),
     subscription: z
       .object({ id: z.string(), status: z.string().optional() })
+      .passthrough()
+      .optional(),
+    // Pix Automático (docs.asaas.com/docs/eventos-para-pix-automático).
+    authorization: z
+      .object({
+        id: z.string().min(1).max(100),
+        status: z.string().optional(),
+        subscriptionId: z.string().max(100).nullish(),
+      })
+      .passthrough()
+      .optional(),
+    paymentInstruction: z
+      .object({
+        id: z.string().min(1).max(100),
+        status: z.string().optional(),
+        paymentId: z.string().max(100).nullish(),
+        authorization: z
+          .object({ id: z.string().max(100) })
+          .passthrough()
+          .nullish(),
+      })
       .passthrough()
       .optional(),
   })
