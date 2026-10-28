@@ -1,5 +1,8 @@
 import { nicheBrand } from "./niche";
 
+/** Bright color of the landing blocks for brands without their own (2026-10-28: MeetChat lime). */
+export const LANDING_HIGHLIGHT = "#CBEF4A";
+
 /**
  * The MeetChat product itself: generic home page (/) that sells to every niche and links to the
  * niche pages (/beleza, /psicologia, /banho-e-tosa…). Not a niche: no business ever belongs to it.
@@ -20,6 +23,9 @@ export const platform = nicheBrand({
     danger: "#B42318",
     success: "#1F7A4D",
     warning: "#9A5B00",
+    // Landing blocks: lime + deep indigo (2026-10-28).
+    highlight: LANDING_HIGHLIGHT,
+    deep: "#1B1464",
     headingFont: "fraunces",
     bodyFont: "figtree",
     radius: "1rem",

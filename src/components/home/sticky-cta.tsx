@@ -49,7 +49,7 @@ export function StickyCta({
       <OpenCreationLink
         niche={niche}
         tabIndex={visible ? 0 : -1}
-        className="flex h-12 w-full items-center justify-center rounded-xl bg-primary text-base font-semibold text-primary-foreground"
+        className="flex h-12 w-full items-center justify-center rounded-full bg-primary text-base font-bold text-primary-foreground"
       >
         {label}
       </OpenCreationLink>

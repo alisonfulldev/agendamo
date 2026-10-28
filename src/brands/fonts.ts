@@ -1,4 +1,13 @@
-import { Figtree, Fraunces, Inter, Lora, Nunito, Oswald, Poppins } from "next/font/google";
+import {
+  Bricolage_Grotesque,
+  Figtree,
+  Fraunces,
+  Inter,
+  Lora,
+  Nunito,
+  Oswald,
+  Poppins,
+} from "next/font/google";
 
 import type { FontKey } from "./schema";
 
@@ -64,7 +73,17 @@ const fonts: Record<FontKey, { variable: string }> = {
   figtree,
 };
 
-/** className that defines the CSS variables of the given fonts. */
+/**
+ * Display face of the landing pages' big titles (home and niche pages, 2026-10-28): heavy and
+ * tight, readable at large sizes on phones. One weight (800), preloaded: the H1 is the LCP.
+ */
+const bricolage = Bricolage_Grotesque({
+  variable: "--font-bricolage",
+  weight: ["800"],
+  subsets: ["latin"],
+});
+
+/** className that defines the CSS variables of the given fonts (plus the landing display face). */
 export function fontVariables(keys: FontKey[]): string {
-  return [...new Set(keys)].map((key) => fonts[key].variable).join(" ");
+  return [...[...new Set(keys)].map((key) => fonts[key].variable), bricolage.variable].join(" ");
 }

@@ -6,11 +6,55 @@ import { INTENT_PAGES } from "@/content/intent-pages";
 import { TOOLS } from "@/content/tools";
 
 /** Top bar of the MeetChat site: logo, a short menu and "Entrar". Niche pages show their logo and name. */
-export function SiteHeader({ badge, logo = PLATFORM.logo }: { badge?: string; logo?: string }) {
+export function SiteHeader({
+  badge,
+  logo = PLATFORM.logo,
+  pill = false,
+}: {
+  badge?: string;
+  logo?: string;
+  /** Landing pages: floating rounded bar over the first color block, "Entrar" as a dark pill. */
+  pill?: boolean;
+}) {
   const base =
     "min-h-11 items-center rounded-xl px-3 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground";
   const item = `inline-flex ${base}`;
   const wide = `hidden md:inline-flex ${base}`;
+  if (pill) {
+    return (
+      <div className="mx-auto w-full max-w-6xl px-3 pt-3 sm:px-8 sm:pt-4">
+        <header className="lp-plain flex h-16 items-center justify-between gap-2 rounded-full bg-[color:var(--brand-surface)] pr-2 pl-4 shadow-sm sm:pl-6">
+          <Link href="/" className="flex min-h-11 items-center gap-2 text-lg font-bold">
+            {/* eslint-disable-next-line @next/next/no-img-element -- small static SVG logo */}
+            <img src={logo} alt="" width={30} height={30} />
+            MeetChat
+            {badge ? (
+              <span className="hidden rounded-full border px-2.5 py-0.5 text-xs font-medium text-muted-foreground sm:inline">
+                {badge}
+              </span>
+            ) : null}
+          </Link>
+          <nav aria-label="Principal" className="flex items-center gap-1">
+            <Link href="/#profissoes" className={wide}>
+              Para quem
+            </Link>
+            <Link href="/agendamento" className={wide}>
+              Guias
+            </Link>
+            <Link href="/precos" className={item}>
+              Preços
+            </Link>
+            <Link
+              href="/entrar"
+              className="inline-flex min-h-12 items-center rounded-full bg-[color:var(--lp-deep)] px-5 text-sm font-bold text-[color:var(--brand-ink-light)] transition-opacity hover:opacity-90"
+            >
+              Entrar
+            </Link>
+          </nav>
+        </header>
+      </div>
+    );
+  }
   return (
     <header className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-2 px-5 sm:px-8">
       <Link

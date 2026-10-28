@@ -183,6 +183,10 @@ export const brandConfigSchema = z.object({
     success: hexColor.optional(),
     /** Warnings. Optional: without it, warnings use the danger color. */
     warning: hexColor.optional(),
+    /** Landing pages: bright block and title color (default: the shared lime of theme.ts). */
+    highlight: hexColor.optional(),
+    /** Landing pages: darkest block (default: the brand color mixed with the darkest ink). */
+    deep: hexColor.optional(),
     headingFont: z.enum(FONT_KEYS),
     bodyFont: z.enum(FONT_KEYS),
     radius: z.string().regex(/^\d+(\.\d+)?rem$/, "Use rem, e.g. 0.75rem"),

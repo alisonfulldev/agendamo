@@ -266,3 +266,9 @@ Revise antes de aplicar no Supabase de produção.
 - Valor novo (profissionais, ciclo, reajuste por needs_reprice) com Pix Automático ativo: a autorização é cancelada e a próxima mensalidade é paga pelo QR, que autoriza o valor novo (o pagador só autorizou o valor antigo).
 - Migration `20261028100000_pix_automatic`: `pix_automatic_id`, `pix_automatic_status`, `pix_automatic_first_payment_id` e `value_cents` (valor recorrente com cupom) em `subscriptions`. `billing_type` continua aceitando `credit_card` só pelo histórico.
 - Removidos: tokenização e troca de cartão, formulário de cartão no painel e o teste e2e do cartão.
+
+## Landing em blocos de cor, inspirada na Linktree (2026-10-28)
+
+- Home e páginas de nicho passam a ter seções em blocos de cor de largura total (`.lp-lime`, `.lp-deep`, `.lp-brand`, `.lp-soft` em globals.css), títulos grandes em Bricolage Grotesque 800 (`.lp-title`, fonte só da landing, pré-carregada para o H1), centralizados no celular, botões em pílula e cabeçalho flutuante em pílula. Inspiração no estilo da Linktree sem copiar marca, fonte (Link Sans é exclusiva) nem paleta: roxo do MeetChat + verde-limão.
+- Cores só nos arquivos de marca: `theme.highlight` (limão, padrão `LANDING_HIGHLIGHT` em platform.ts) e `theme.deep` (MeetChat: #1B1464); sem `deep`, o bloco escuro é a cor da marca misturada com a tinta mais escura do tema (funciona nos temas escuros, como barbearia e tatuagem). O título sobre a cor da marca usa o limão só quando contrasta (≥ 3:1).
+- SEO intocado: mesmos textos, H1/H2/H3, links, metadados e JSON-LD (comparados com produção em /, /beleza e /barbearia antes do deploy). Mockups e o celular animado mantêm as cores do tema (`.lp-plain`).

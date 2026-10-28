@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 
+import { LANDING_HIGHLIGHT } from "./platform";
 import { FONT_CSS_VARIABLES, type BrandConfig } from "./schema";
 
 function relativeLuminance(hex: string): number {
@@ -30,7 +31,19 @@ export function themeInk(theme: BrandConfig["theme"]): { dark: string; light: st
 /** Brand theme as CSS custom properties, applied on <html>. globals.css maps them to Tailwind/shadcn tokens. */
 export function brandThemeStyle(brand: BrandConfig): CSSProperties {
   const { theme } = brand;
+  // Brands without their own bright color use the MeetChat lime.
+  const highlight = theme.highlight ?? LANDING_HIGHLIGHT;
+  const ink = themeInk(theme);
+  const onPrimary = readableOn(theme.primary, theme);
   return {
+    // Landing blocks (globals.css .lp-lime/.lp-deep/.lp-brand): the bright color, the darkest
+    // block and a title color that reads on the brand color (the highlight when it contrasts).
+    "--brand-highlight": highlight,
+    "--brand-ink-dark": ink.dark,
+    "--brand-ink-light": ink.light,
+    ...(theme.deep ? { "--brand-deep": theme.deep } : {}),
+    "--brand-on-primary-heading":
+      contrastRatio(highlight, theme.primary) >= 3 ? highlight : onPrimary,
     "--brand-primary": theme.primary,
     "--brand-primary-foreground": readableOn(theme.primary, theme),
     "--brand-background": theme.background,

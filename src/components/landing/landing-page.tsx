@@ -83,11 +83,16 @@ export function LandingPage({
       style={brandThemeStyle(brand)}
       className="flex min-h-full flex-col bg-background font-sans text-foreground"
     >
-      <SiteHeader badge={niche?.name} logo={brand.logo} />
+      {/* The header floats over the first color block (same block as the hero). */}
+      <div className="lp-lime">
+        <SiteHeader badge={niche?.name} logo={brand.logo} pill />
+      </div>
       <main className="flex-1">
         {niche ? (
-          <div className={`${container} pt-1`}>
-            <Breadcrumbs items={[{ name: niche.name, path: `/${niche.route}` }]} />
+          <div className="lp-lime">
+            <div className={`${container} pt-3`}>
+              <Breadcrumbs items={[{ name: niche.name, path: `/${niche.route}` }]} />
+            </div>
           </div>
         ) : null}
         <Hero copy={copy} niche={niche?.route} brand={brand} />
@@ -139,11 +144,11 @@ export function LandingPage({
 /** Niche hub: guides, tools, cities and related areas, as compact link groups. */
 function ExtraLinks({ groups }: { groups: LinkGroup[] }) {
   return (
-    <section aria-label="Guias, ferramentas e áreas próximas" className="lp-warm py-16 sm:py-20">
+    <section aria-label="Guias, ferramentas e áreas próximas" className="lp-soft py-16 sm:py-20">
       <div className={`${container} grid gap-10 sm:grid-cols-2 lg:grid-cols-4`}>
         {groups.map((group) => (
           <nav key={group.title} aria-label={group.title}>
-            <h2 className="font-heading text-xl font-semibold">{group.title}</h2>
+            <h2 className="lp-title text-2xl">{group.title}</h2>
             <ul className="mt-4 flex flex-col gap-2">
               {group.links.map((link) => (
                 <li key={link.href}>
