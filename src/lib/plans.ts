@@ -112,7 +112,8 @@ export interface PlanFeatures {
   professionalLimit: number;
 }
 
-export const PHOTO_LIMIT = 60;
+/** Gallery photos per business (60 until 2026-10-27; 20 is plenty for a profile). */
+export const PHOTO_LIMIT = 20;
 
 type PlanFields = Pick<Business, "plan" | "trial_ends_at"> & {
   trial_started_at?: string | null;

@@ -73,7 +73,7 @@ export async function POST(request: Request) {
     if (error) return NextResponse.json({ error: "Tente de novo." }, { status: 500 });
     if ((count ?? 0) >= photoLimit) {
       return NextResponse.json(
-        { error: `Seu plano permite até ${photoLimit} fotos. Exclua alguma ou mude de plano.` },
+        { error: `O limite é de ${photoLimit} fotos. Exclua alguma para adicionar outra.` },
         { status: 403 },
       );
     }

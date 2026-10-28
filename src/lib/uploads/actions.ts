@@ -100,7 +100,10 @@ async function saveImage(
     const visible = (photos ?? []).filter((p) => !p.hidden).length;
     if (visible >= photoLimit) {
       await deleteObject(key);
-      return { ok: false, error: `Seu plano permite até ${photoLimit} fotos.` };
+      return {
+        ok: false,
+        error: `O limite é de ${photoLimit} fotos. Exclua alguma para adicionar outra.`,
+      };
     }
     const position = Math.max(-1, ...(photos ?? []).map((p) => p.position as number)) + 1;
     // Inserted with the service role: page_photos has no insert policy for users.
