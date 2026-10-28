@@ -10,6 +10,7 @@ import {
   pendingPix,
   subscribeAddon,
   subscribePlan,
+  syncPixAutomatic,
   type PixCharge,
 } from "@/lib/billing/service";
 import { requireOwner } from "@/lib/business/context";
@@ -136,6 +137,10 @@ export async function pendingPixAction(): Promise<PixCharge | null> {
 /** Polled by the checkout while waiting for the payment (the webhook updates the status). */
 export async function subscriptionStatusAction(): Promise<string | null> {
   const { business } = await requireOwner({ allowWaiting: true });
+  // Does not depend only on the webhook: the bank's confirmation is read from Asaas too.
+  await syncPixAutomatic(business.id).catch((error) =>
+    console.error("pix automatic sync failed", error instanceof Error ? error.message : "unknown"),
+  );
   const { data } = await createAdminClient()
     .from("subscriptions")
     .select("status")

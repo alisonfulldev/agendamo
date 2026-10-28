@@ -8,7 +8,8 @@ import {
   type AsaasPayment,
 } from "@/lib/billing/asaas";
 import { requireOwner } from "@/lib/business/context";
-import type { Subscription } from "@/lib/db/types";
+import { syncPixAutomatic } from "@/lib/billing/service";
+import type { Business, Subscription } from "@/lib/db/types";
 import { formatBRL } from "@/lib/money";
 import { handoffsThisMonth } from "@/lib/handoffs";
 import { trialCounter } from "@/lib/plan-text";
@@ -35,9 +36,31 @@ const PAYMENT_STATUS: Record<string, string> = {
   RECEIVED_IN_CASH: "Pago",
 };
 
+/** Applies a Pix Automático confirmed at Asaas and returns the business plan after it. */
+async function syncedPlan(businessId: string) {
+  await syncPixAutomatic(businessId).catch((error) =>
+    console.error("pix automatic sync failed", error instanceof Error ? error.message : "unknown"),
+  );
+  const { data } = await (
+    await createClient()
+  )
+    .from("businesses")
+    .select("plan")
+    .eq("id", businessId)
+    .maybeSingle();
+  return (data?.plan as Business["plan"] | undefined) ?? null;
+}
+
 export default async function PlanPage() {
   // Open in waiting mode: it is the only panel screen then.
-  const { business } = await requireOwner({ allowWaiting: true });
+  const { business: loaded } = await requireOwner({ allowWaiting: true });
+  // A payment confirmed at the bank but not yet seen here (webhook late or missing) is applied
+  // before the screen is drawn.
+  let business = loaded;
+  if (isAsaasConfigured()) {
+    const before = await syncedPlan(loaded.id);
+    if (before !== loaded.plan && before) business = { ...loaded, plan: before };
+  }
   const features = getPlanFeatures(business);
   const handoffs = features.active ? 0 : await handoffsThisMonth(business);
   const supabase = await createClient();

@@ -65,7 +65,7 @@ vi.mock("./asaas", () => ({
   updateSubscription: vi.fn(),
 }));
 
-const { handleAsaasEvent, periodBase } = await import("./service");
+const { handleAsaasEvent, periodBase, syncPixAutomatic } = await import("./service");
 
 const NOW = new Date("2026-10-28T15:00:00Z");
 
@@ -223,6 +223,25 @@ describe("Pix Automático webhook", () => {
       status: "active",
       provider_subscription_id: "sub_regular_new",
     });
+  });
+
+  it("without the webhook, reading the authorization at Asaas activates the plan", async () => {
+    // The first payment arrives as a loose Pix (another customer), so only the bank's
+    // confirmation can activate it.
+    db.subscriptions = [subscription({})];
+    asaas.getPixAutomaticAuthorization.mockResolvedValueOnce({
+      id: "aut_1",
+      status: "ACTIVE",
+      subscriptionId: "sub_auto",
+    } as never);
+    await syncPixAutomatic("biz_1");
+    expect(row()).toMatchObject({
+      status: "active",
+      pix_automatic_status: "active",
+      provider_subscription_id: "sub_auto",
+      current_period_end: "2026-11-28T12:00:00.000Z",
+    });
+    expect(db.businesses[0]!.plan).toBe("complete");
   });
 
   it("QR never paid: refusal only marks the authorization", async () => {

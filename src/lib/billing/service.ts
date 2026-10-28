@@ -4,6 +4,7 @@ import { getNiche, type BrandConfig } from "@/brands";
 import { audit } from "@/lib/audit";
 import { invalidatePublicPage } from "@/lib/cache";
 import type { Business, Subscription } from "@/lib/db/types";
+import { isDemoMode } from "@/lib/demo/mode";
 import { claimNotification, notifyTeam } from "@/lib/notifications/owner";
 import { PLAN_NAME, PLAN_PRICES, subscriptionPrice, type Cycle } from "@/lib/plans";
 import { recordTrialClaims } from "@/lib/trial";
@@ -446,6 +447,37 @@ async function fallbackToRegularPix(
       },
     });
   }
+}
+
+const AUTHORIZATION_EVENT: Record<string, string> = {
+  ACTIVE: "PIX_AUTOMATIC_RECURRING_AUTHORIZATION_ACTIVATED",
+  REFUSED: "PIX_AUTOMATIC_RECURRING_AUTHORIZATION_REFUSED",
+  CANCELLED: "PIX_AUTOMATIC_RECURRING_AUTHORIZATION_CANCELLED",
+  EXPIRED: "PIX_AUTOMATIC_RECURRING_AUTHORIZATION_EXPIRED",
+};
+
+/**
+ * Asks Asaas for the state of an authorization still waiting on our side and applies it as the
+ * webhook would. Called while the owner waits for the payment and when the subscription screen
+ * opens: the first payment of the QR arrives at Asaas as a loose Pix (another customer, no link to
+ * the subscription), so the confirmation from the bank is what activates the plan.
+ */
+export async function syncPixAutomatic(businessId: string): Promise<void> {
+  if (isDemoMode()) return;
+  const row = await loadSubscription(businessId);
+  if (!row?.pix_automatic_id || row.pix_automatic_status !== "created") return;
+  const authorization = await getPixAutomaticAuthorization(row.pix_automatic_id);
+  const event = AUTHORIZATION_EVENT[authorization.status];
+  if (!event) return;
+  await handleAsaasEvent({
+    id: `sync_${authorization.id}_${authorization.status}`,
+    event,
+    authorization: {
+      id: authorization.id,
+      status: authorization.status,
+      subscriptionId: authorization.subscriptionId ?? null,
+    },
+  });
 }
 
 /** Stops future charges. The plan stays until the paid period ends (the billing cron downgrades). */
