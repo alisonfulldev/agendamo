@@ -80,16 +80,17 @@ export function LandingPage({
   return (
     <div
       data-theme-scope=""
+      data-lp={niche ? "niche" : "home"}
       style={brandThemeStyle(brand)}
       className="flex min-h-full flex-col bg-background font-sans text-foreground"
     >
       {/* The header floats over the first color block (same block as the hero). */}
-      <div className="lp-lime">
+      <div className="lp-lime lp-hero">
         <SiteHeader badge={niche?.name} logo={brand.logo} pill />
       </div>
       <main className="flex-1">
         {niche ? (
-          <div className="lp-lime">
+          <div className="lp-lime lp-hero">
             <div className={`${container} pt-3`}>
               <Breadcrumbs items={[{ name: niche.name, path: `/${niche.route}` }]} />
             </div>

@@ -419,7 +419,12 @@
     background-color: var(--lp-deep);
     color: var(--brand-ink-light);
   }
-  .lp-brand {
+  /*
+   * First block (header + hero) is .lp-lime .lp-hero: the MeetChat lime on the home; on a niche
+   * page (data-lp="niche" on the page) it takes the niche's own color instead.
+   */
+  .lp-brand,
+  [data-lp="niche"] .lp-hero {
     --foreground: var(--brand-primary-foreground);
     --card-foreground: var(--brand-primary-foreground);
     --muted-foreground: color-mix(
@@ -431,8 +436,8 @@
     --border: color-mix(in oklch, var(--brand-primary-foreground) 22%, transparent);
     --lp-heading: var(--brand-on-primary-heading);
     --lp-link: var(--brand-on-primary-heading);
-    --lp-cta-bg: var(--brand-on-primary-heading);
-    --lp-cta-fg: var(--lp-deep);
+    --lp-cta-bg: var(--brand-primary-foreground);
+    --lp-cta-fg: var(--brand-primary);
     background-color: var(--brand-primary);
     color: var(--brand-primary-foreground);
   }
@@ -538,4 +543,15 @@
   .lp-slot-cycle-free {
     opacity: 1;
   }
+}
+
+/*
+ * Creation conversation while it is still the MeetChat chat (2026-10-28 palette): deep indigo
+ * with lime. Unlayered like the theme tokens it overrides (same element as data-theme-scope).
+ * Once it becomes the business chat, the niche theme takes over again.
+ */
+[data-creation][data-palette="meetchat"] {
+  --primary: var(--brand-deep);
+  --primary-foreground: var(--brand-highlight);
+  --ring: var(--brand-deep);
 }

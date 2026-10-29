@@ -1,4 +1,5 @@
 import {
+  ArrowRight,
   Bell,
   CalendarCheck,
   CalendarX,
@@ -93,76 +94,90 @@ export function HomePage({
       : content.hero;
   const route = niche?.route;
   const demo = niche ? heroDemoFor(brand) : HOME_DEMO;
+  // Color blocks of the landing pages (globals.css .lp-*): only the look changed, same headings,
+  // texts and links as before (SEO). On a niche page every block uses the niche palette.
+  const container = "mx-auto w-full max-w-6xl px-5 sm:px-8";
+  const h2 = "lp-title text-[2.2rem] leading-[1.03] text-balance sm:text-5xl";
+  const cta =
+    "lp-press inline-flex min-h-[56px] w-full items-center justify-center gap-2 rounded-full bg-[color:var(--lp-cta-bg)] px-7 text-center text-[17px] font-bold text-[color:var(--lp-cta-fg)] transition-opacity hover:opacity-90 sm:w-auto";
+  const chip =
+    "lp-lift inline-flex min-h-11 items-center rounded-full bg-card px-4 text-sm font-semibold";
   return (
     <div
       data-theme-scope=""
+      data-lp={niche ? "niche" : "home"}
       style={brandThemeStyle(brand)}
       className="flex min-h-full flex-col bg-background font-sans text-foreground"
     >
-      <SiteHeader badge={niche?.name} logo={brand.logo} />
+      <div className="lp-lime lp-hero">
+        <SiteHeader badge={niche?.name} logo={brand.logo} pill />
+      </div>
 
       <main className="flex-1">
         {niche ? (
-          <div className="mx-auto max-w-6xl px-5 pt-1">
-            <Breadcrumbs items={[{ name: niche.name, path: `/${niche.route}` }]} />
+          <div className="lp-lime lp-hero">
+            <div className={`${container} pt-3`}>
+              <Breadcrumbs items={[{ name: niche.name, path: `/${niche.route}` }]} />
+            </div>
           </div>
         ) : null}
         {/* Top: what it is in 3 seconds, the product working and one main button. */}
-        <section id="topo">
-          <div className="mx-auto grid max-w-6xl items-start gap-8 px-5 pt-2 pb-12 md:items-center md:gap-12 md:pt-12 md:pb-16 lg:grid-cols-[1.1fr_0.9fr]">
-            <div className="flex flex-col items-start">
-              <p className="text-sm font-semibold text-primary">{hero.eyebrow}</p>
-              <h1 className="mt-2 font-heading text-[2rem] leading-[1.12] font-bold tracking-tight text-balance sm:text-4xl md:text-5xl lg:text-[3.5rem]">
+        <section id="topo" className="lp-lime lp-hero">
+          <div
+            className={`${container} grid items-center gap-12 pt-8 pb-16 sm:pt-12 lg:grid-cols-[1.1fr_0.9fr] lg:gap-14 lg:pb-24`}
+          >
+            <div className="flex flex-col items-center text-center lg:items-start lg:text-left">
+              <p className="inline-flex items-center gap-2 rounded-full border bg-card/70 px-3 py-1 text-sm font-semibold">
+                {hero.eyebrow}
+              </p>
+              <h1 className="lp-title mt-5 text-[2.75rem] leading-[0.98] text-balance sm:text-6xl lg:text-[4.5rem]">
                 {hero.title}
               </h1>
-              <p className="mt-3 max-w-xl text-[17px] leading-relaxed text-pretty text-muted-foreground md:text-lg">
+              <p className="mt-6 max-w-xl text-lg leading-relaxed font-medium text-pretty sm:text-xl">
                 {hero.subtitle}
               </p>
-              <div id="cta-topo" className="mt-5 w-full sm:w-auto">
-                <OpenCreationLink
-                  niche={route}
-                  className="flex min-h-[52px] w-full items-center justify-center rounded-xl bg-primary px-7 text-base font-semibold text-primary-foreground shadow-sm transition-opacity hover:opacity-90 sm:w-auto"
-                >
+              <div id="cta-topo" className="mt-8 w-full sm:w-auto">
+                <OpenCreationLink niche={route} className={cta}>
                   {hero.primaryCta}
+                  <ArrowRight className="size-5" aria-hidden />
                 </OpenCreationLink>
               </div>
-              <p className="mt-2.5 text-[13px] text-muted-foreground sm:text-sm">{hero.note}</p>
+              <p className="mt-3 max-w-md text-sm text-muted-foreground">{hero.note}</p>
               <a
                 href="#como-funciona"
-                className="mt-1.5 text-sm font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+                className="mt-2 text-sm font-semibold underline underline-offset-4"
               >
                 Ver como funciona
               </a>
-              <ul className="mt-8 hidden flex-col gap-3 text-lg md:flex">
+              <ul className="mt-8 hidden flex-col gap-3 text-lg font-medium md:flex">
                 {hero.points.map((point, i) => {
                   const Icon = [Clock, Bell, MessageCircle][i % 3]!;
                   return (
                     <li key={point} className="flex items-center gap-3">
-                      <Icon className="size-5 shrink-0 text-primary" aria-hidden />
+                      <Icon className="size-5 shrink-0" aria-hidden />
                       {point}
                     </li>
                   );
                 })}
               </ul>
             </div>
-            <PhoneDemo demo={demo} logo={PLATFORM.logo} />
+            <div className="lp-plain">
+              <PhoneDemo demo={demo} logo={PLATFORM.logo} />
+            </div>
           </div>
         </section>
 
         {/* Niches */}
-        <section aria-labelledby="nichos" className="border-y bg-muted/40">
-          <div className="mx-auto max-w-6xl px-5 py-10 text-center">
-            <h2 id="nichos" className="text-xl font-bold tracking-tight text-balance sm:text-2xl">
+        <section aria-labelledby="nichos" className="lp-deep">
+          <div className={`${container} py-16 text-center sm:py-20`}>
+            <h2 id="nichos" className={h2}>
               {content.audience.title}
             </h2>
-            <ul className="mt-5 flex flex-wrap justify-center gap-2.5">
-              {content.audience.chips.map((chip) => (
-                <li key={chip.label}>
-                  <Link
-                    href={chip.href}
-                    className="inline-flex h-10 items-center rounded-full border bg-card px-4 text-sm font-medium transition-colors hover:border-primary hover:text-primary"
-                  >
-                    {chip.label}
+            <ul className="mt-8 flex flex-wrap justify-center gap-2.5">
+              {content.audience.chips.map((item) => (
+                <li key={item.label}>
+                  <Link href={item.href} className={chip}>
+                    {item.label}
                   </Link>
                 </li>
               ))}
@@ -174,100 +189,107 @@ export function HomePage({
         <section
           id="como-funciona"
           aria-labelledby="como"
-          className="below-fold mx-auto max-w-6xl scroll-mt-4 px-5 py-16"
+          className="below-fold lp-soft scroll-mt-4"
         >
-          <h2 id="como" className="text-center text-3xl font-bold tracking-tight text-balance">
-            {content.steps.title}
-          </h2>
-          <ol className="mt-10 grid gap-6 md:grid-cols-3">
-            {content.steps.items.map((text, index) => (
-              <li key={text} className="flex flex-col items-center gap-3 text-center">
-                <span className="flex size-12 items-center justify-center rounded-full bg-primary text-lg font-bold text-primary-foreground">
-                  {index + 1}
-                </span>
-                <p className="max-w-xs text-lg font-medium text-pretty">{text}</p>
-              </li>
-            ))}
-          </ol>
+          <div className={`${container} py-20 sm:py-28`}>
+            <h2 id="como" className={`${h2} text-center`}>
+              {content.steps.title}
+            </h2>
+            <ol className="mt-12 grid gap-6 md:grid-cols-3">
+              {content.steps.items.map((text, index) => (
+                <li
+                  key={text}
+                  className="flex flex-col items-center gap-4 rounded-[2rem] bg-card p-7 text-center"
+                >
+                  <span className="lp-title flex size-14 items-center justify-center rounded-full bg-[color:var(--lp-cta-bg)] text-2xl text-[color:var(--lp-cta-fg)]">
+                    {index + 1}
+                  </span>
+                  <p className="max-w-xs text-lg font-semibold text-pretty">{text}</p>
+                </li>
+              ))}
+            </ol>
+          </div>
         </section>
 
         {content.intro ? (
-          <section aria-labelledby="sobre" className="below-fold mx-auto max-w-3xl px-5 pb-14">
-            <h2 id="sobre" className="text-2xl font-bold tracking-tight text-balance sm:text-3xl">
-              {content.intro.title}
-            </h2>
-            {content.intro.paragraphs.map((paragraph) => (
-              <p
-                key={paragraph}
-                className="mt-4 text-lg leading-relaxed text-pretty text-muted-foreground"
-              >
-                {paragraph}
-              </p>
-            ))}
+          <section aria-labelledby="sobre" className="below-fold">
+            <div className={`${container} max-w-3xl py-20 sm:py-24`}>
+              <h2 id="sobre" className={h2}>
+                {content.intro.title}
+              </h2>
+              {content.intro.paragraphs.map((paragraph) => (
+                <p
+                  key={paragraph}
+                  className="mt-5 text-lg leading-relaxed text-pretty text-muted-foreground"
+                >
+                  {paragraph}
+                </p>
+              ))}
+            </div>
           </section>
         ) : null}
 
         {content.notes ? (
-          <section aria-labelledby="nicho" className="below-fold mx-auto max-w-3xl px-5 pb-14">
-            <h2 id="nicho" className="text-2xl font-bold tracking-tight text-balance sm:text-3xl">
-              {content.notes.title}
-            </h2>
-            <ul className="mt-5 flex list-disc flex-col gap-3 pl-6 text-lg leading-relaxed text-muted-foreground marker:text-primary">
-              {content.notes.items.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
+          <section aria-labelledby="nicho" className="below-fold lp-lime">
+            <div className={`${container} max-w-3xl py-20 sm:py-24`}>
+              <h2 id="nicho" className={h2}>
+                {content.notes.title}
+              </h2>
+              <ul className="mt-6 flex list-disc flex-col gap-3 pl-6 text-lg leading-relaxed">
+                {content.notes.items.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </div>
           </section>
         ) : null}
 
         {/* Gains */}
-        <section aria-labelledby="ganhos" className="below-fold mx-auto max-w-6xl px-5 py-16">
-          <h2 id="ganhos" className="text-center text-3xl font-bold tracking-tight text-balance">
-            {content.gains.title}
-          </h2>
-          <ul className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {content.gains.items.map((item) => {
-              const Icon = ICONS[item.icon]!;
-              return (
-                <li
-                  key={item.text}
-                  className="flex items-center gap-4 rounded-2xl border bg-card p-5"
-                >
-                  <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                    <Icon className="size-5" aria-hidden />
-                  </span>
-                  <p className="font-medium text-pretty">{item.text}</p>
-                </li>
-              );
-            })}
-          </ul>
+        <section aria-labelledby="ganhos" className="below-fold lp-brand">
+          <div className={`${container} py-20 sm:py-28`}>
+            <h2 id="ganhos" className={`${h2} text-center`}>
+              {content.gains.title}
+            </h2>
+            <ul className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {content.gains.items.map((item) => {
+                const Icon = ICONS[item.icon]!;
+                return (
+                  <li
+                    key={item.text}
+                    className="flex items-center gap-4 rounded-[2rem] bg-card p-6"
+                  >
+                    <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-[color:var(--lp-cta-bg)] text-[color:var(--lp-cta-fg)]">
+                      <Icon className="size-5" aria-hidden />
+                    </span>
+                    <p className="text-[17px] font-semibold text-pretty">{item.text}</p>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
         </section>
 
         {/* Reminders */}
-        <section
-          aria-labelledby="lembrete"
-          className="below-fold mx-auto max-w-3xl px-5 pb-16 text-center"
-        >
-          <h2 id="lembrete" className="text-2xl font-bold tracking-tight text-balance sm:text-3xl">
-            {content.reminders.title}
-          </h2>
-          <p className="mt-4 text-lg leading-relaxed text-pretty text-muted-foreground">
-            {content.reminders.text}
-          </p>
+        <section aria-labelledby="lembrete" className="below-fold lp-soft">
+          <div className={`${container} max-w-3xl py-20 text-center sm:py-24`}>
+            <h2 id="lembrete" className={h2}>
+              {content.reminders.title}
+            </h2>
+            <p className="mt-5 text-lg leading-relaxed text-pretty text-muted-foreground">
+              {content.reminders.text}
+            </p>
+          </div>
         </section>
 
         {content.cities ? (
-          <nav aria-labelledby="cidades" className="mx-auto max-w-3xl px-5 pb-16">
-            <h2 id="cidades" className="text-2xl font-bold tracking-tight text-balance">
+          <nav aria-labelledby="cidades" className={`${container} max-w-3xl pt-20`}>
+            <h2 id="cidades" className="lp-title text-3xl">
               {content.cities.title}
             </h2>
             <ul className="mt-5 flex flex-wrap gap-2.5">
               {content.cities.links.map((link) => (
                 <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className="inline-flex h-10 items-center rounded-full border bg-card px-4 text-sm font-medium transition-colors hover:border-primary hover:text-primary"
-                  >
+                  <Link href={link.href} className={`${chip} border`}>
                     {link.label}
                   </Link>
                 </li>
@@ -277,8 +299,8 @@ export function HomePage({
         ) : null}
 
         {content.guides ? (
-          <nav aria-labelledby="guias" className="mx-auto max-w-3xl px-5 pb-16">
-            <h2 id="guias" className="text-2xl font-bold tracking-tight text-balance">
+          <nav aria-labelledby="guias" className={`${container} max-w-3xl pt-20`}>
+            <h2 id="guias" className="lp-title text-3xl">
               {content.guides.title}
             </h2>
             <ul className="mt-5 grid gap-3 sm:grid-cols-3">
@@ -286,7 +308,7 @@ export function HomePage({
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="flex h-full items-center rounded-2xl border bg-card p-4 font-medium transition-colors hover:border-primary hover:text-primary"
+                    className="lp-lift flex h-full items-center rounded-3xl bg-muted p-5 font-semibold"
                   >
                     {link.label}
                   </Link>
@@ -297,21 +319,21 @@ export function HomePage({
         ) : null}
 
         {/* FAQ */}
-        <section aria-labelledby="faq" className="mx-auto max-w-3xl px-5 py-16">
-          <h2 id="faq" className="text-center text-3xl font-bold tracking-tight">
+        <section aria-labelledby="faq" className={`${container} max-w-3xl py-20 sm:py-28`}>
+          <h2 id="faq" className={`${h2} text-center`}>
             {content.faq.title}
           </h2>
-          <div className="mt-8 flex flex-col divide-y rounded-2xl border bg-card px-5">
+          <div className="mt-10 flex flex-col gap-3">
             {content.faq.items.map((item) => (
-              <details key={item.question} className="group py-4">
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-semibold [&::-webkit-details-marker]:hidden">
+              <details key={item.question} className="group rounded-3xl bg-muted px-5 py-2 sm:px-7">
+                <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 text-lg font-bold [&::-webkit-details-marker]:hidden">
                   {item.question}
                   <ChevronDown
                     className="site-chevron size-5 shrink-0 text-muted-foreground transition-transform"
                     aria-hidden
                   />
                 </summary>
-                <p className="mt-2 leading-relaxed text-pretty text-muted-foreground">
+                <p className="pb-4 leading-relaxed text-pretty text-muted-foreground">
                   {item.answer}
                 </p>
               </details>
@@ -320,17 +342,19 @@ export function HomePage({
         </section>
 
         {/* Closing */}
-        <section id="cta-final" className="mx-auto max-w-6xl px-5 pb-20">
-          <div className="site-cta-panel flex flex-col items-center gap-6 rounded-3xl px-6 py-14 text-center text-primary-foreground">
-            <h2 className="max-w-xl text-3xl font-bold tracking-tight text-balance sm:text-4xl">
+        <section id="cta-final" className="lp-deep">
+          <div
+            className={`${container} flex flex-col items-center gap-7 py-20 text-center sm:py-28`}
+          >
+            <h2 className="lp-title max-w-3xl text-[2.75rem] leading-[1] text-balance sm:text-7xl">
               {content.closing.title}
             </h2>
-            <OpenCreationLink
-              niche={route}
-              className="flex h-12 items-center justify-center rounded-xl bg-background px-7 text-base font-semibold text-foreground shadow-lg"
-            >
-              {content.closing.cta}
-            </OpenCreationLink>
+            <div className="w-full sm:w-auto">
+              <OpenCreationLink niche={route} className={cta}>
+                {content.closing.cta}
+                <ArrowRight className="size-5" aria-hidden />
+              </OpenCreationLink>
+            </div>
           </div>
         </section>
       </main>

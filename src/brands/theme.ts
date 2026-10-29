@@ -1,6 +1,5 @@
 import type { CSSProperties } from "react";
 
-import { LANDING_HIGHLIGHT } from "./platform";
 import { FONT_CSS_VARIABLES, type BrandConfig } from "./schema";
 
 function relativeLuminance(hex: string): number {
@@ -28,22 +27,47 @@ export function themeInk(theme: BrandConfig["theme"]): { dark: string; light: st
     : { dark: theme.background, light: theme.text };
 }
 
+/** Mixes two #RRGGBB colors in sRGB (`amount` of `a`). */
+export function mixHex(a: string, b: string, amount: number): string {
+  const channel = (hex: string, start: number) => parseInt(hex.slice(start, start + 2), 16);
+  return `#${[1, 3, 5]
+    .map((start) =>
+      Math.round(channel(a, start) * amount + channel(b, start) * (1 - amount))
+        .toString(16)
+        .padStart(2, "0"),
+    )
+    .join("")}`;
+}
+
+/**
+ * Colors of the landing color blocks (globals.css .lp-lime/.lp-deep/.lp-brand/.lp-hero), always
+ * from the brand's own palette: a light tint and a dark shade of its color, unless the brand sets
+ * them (MeetChat: lime + deep indigo; the lime never shows on a niche page).
+ */
+export function landingColors(theme: BrandConfig["theme"]) {
+  const ink = themeInk(theme);
+  const highlight = theme.highlight ?? mixHex(theme.primary, ink.light, 0.28);
+  const deep = theme.deep ?? mixHex(theme.primary, ink.dark, 0.42);
+  const onPrimary = readableOn(theme.primary, theme);
+  return {
+    highlight,
+    deep,
+    ink,
+    // Titles on the brand color: the highlight when it reads well there.
+    onPrimaryHeading: contrastRatio(highlight, theme.primary) >= 4.5 ? highlight : onPrimary,
+  };
+}
+
 /** Brand theme as CSS custom properties, applied on <html>. globals.css maps them to Tailwind/shadcn tokens. */
 export function brandThemeStyle(brand: BrandConfig): CSSProperties {
   const { theme } = brand;
-  // Brands without their own bright color use the MeetChat lime.
-  const highlight = theme.highlight ?? LANDING_HIGHLIGHT;
-  const ink = themeInk(theme);
-  const onPrimary = readableOn(theme.primary, theme);
+  const landing = landingColors(theme);
   return {
-    // Landing blocks (globals.css .lp-lime/.lp-deep/.lp-brand): the bright color, the darkest
-    // block and a title color that reads on the brand color (the highlight when it contrasts).
-    "--brand-highlight": highlight,
-    "--brand-ink-dark": ink.dark,
-    "--brand-ink-light": ink.light,
-    ...(theme.deep ? { "--brand-deep": theme.deep } : {}),
-    "--brand-on-primary-heading":
-      contrastRatio(highlight, theme.primary) >= 3 ? highlight : onPrimary,
+    "--brand-highlight": landing.highlight,
+    "--brand-deep": landing.deep,
+    "--brand-ink-dark": landing.ink.dark,
+    "--brand-ink-light": landing.ink.light,
+    "--brand-on-primary-heading": landing.onPrimaryHeading,
     "--brand-primary": theme.primary,
     "--brand-primary-foreground": readableOn(theme.primary, theme),
     "--brand-background": theme.background,

@@ -488,6 +488,8 @@ export function Conversation({ photos }: { photos: boolean }) {
     <div
       data-creation=""
       data-theme-scope=""
+      // Before it becomes the business chat: the MeetChat palette (deep indigo + lime).
+      data-palette={ownChat ? undefined : "meetchat"}
       style={theme}
       className={
         "flex h-full w-full flex-col overflow-hidden bg-background font-sans text-foreground transition-colors duration-500 md:h-[min(780px,92vh)] md:w-[400px] md:rounded-[2.4rem] md:border-[10px] md:border-foreground md:shadow-2xl"

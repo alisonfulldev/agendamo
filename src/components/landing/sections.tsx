@@ -65,7 +65,7 @@ export function Hero({
   // Long headlines get a slightly smaller size so they keep 3–4 lines.
   const long = hero.title.length > 48;
   return (
-    <section className="lp-lime relative overflow-hidden">
+    <section className="lp-lime lp-hero relative overflow-hidden">
       <div
         className={`${container} grid items-center gap-12 pt-8 pb-16 sm:pt-12 lg:grid-cols-[1.1fr_0.9fr] lg:gap-14 lg:pb-24`}
       >
