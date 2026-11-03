@@ -557,7 +557,7 @@
 }
 
 /* Panel help chat: "Ir para lá" highlights the section or field it points to. */
-.help-flash {
+[data-help-flash] {
   border-radius: var(--radius);
   animation: help-flash 2.4s ease-out;
 }
@@ -571,7 +571,7 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .help-flash {
+  [data-help-flash] {
     animation: none;
     box-shadow: 0 0 0 4px color-mix(in oklch, var(--primary) 55%, transparent);
   }

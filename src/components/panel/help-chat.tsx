@@ -11,7 +11,7 @@ import {
   type SupportItem,
   type SupportTarget,
 } from "@/content/support";
-import { searchSupport, suggestionsFor, visibleSupport } from "@/lib/support-search";
+import { suggestionsFor, understand, visibleSupport } from "@/lib/support-search";
 
 /** Screens that stay open in waiting mode (subscription and account). */
 const WAITING_OPEN = ["/painel/plano", "/painel/conta"];
@@ -70,11 +70,16 @@ export function HelpChat({ isOwner, waiting }: { isOwner: boolean; waiting: bool
       setPending(null);
       if (!el) return;
       el.scrollIntoView({ behavior: "smooth", block: "center" });
-      el.classList.remove("help-flash");
-      void el.offsetWidth;
-      el.classList.add("help-flash");
-      if (el.matches("input, select, textarea")) el.focus({ preventScroll: true });
-      setTimeout(() => el.classList.remove("help-flash"), 2600);
+      // An attribute React does not manage (a class would be overwritten when the new screen
+      // finishes rendering), set a moment later for the same reason.
+      setTimeout(() => {
+        const target = findTarget(pending) ?? el;
+        target.removeAttribute("data-help-flash");
+        void target.offsetWidth;
+        target.setAttribute("data-help-flash", "");
+        if (target.matches("input, select, textarea")) target.focus({ preventScroll: true });
+        setTimeout(() => target.removeAttribute("data-help-flash"), 2600);
+      }, 250);
     }, 150);
     return () => clearInterval(timer);
   }, [pending, pathname]);
@@ -84,10 +89,8 @@ export function HelpChat({ isOwner, waiting }: { isOwner: boolean; waiting: bool
   }, [messages]);
 
   function start() {
-    setMessages([
-      { from: "bot", text: SUPPORT_COPY.greeting },
-      { from: "choices", items: suggestionsFor(items, pathname) },
-    ]);
+    // Only the greeting: the person writes first (options come up only when they help).
+    if (!messages.length) setMessages([{ from: "bot", text: SUPPORT_COPY.greeting }]);
     setOpen(true);
   }
 
@@ -109,22 +112,28 @@ export function HelpChat({ isOwner, waiting }: { isOwner: boolean; waiting: bool
     const typed = text.trim();
     if (!typed) return;
     setQuery("");
-    const found = searchSupport(items, typed);
-    if (found.length) {
-      answer(found[0]!, typed, found.slice(1));
+    const result = understand(items, typed);
+    if (result.kind === "answer") {
+      answer(result.item, typed, result.others);
       return;
     }
     setLastQuestion(typed);
-    setMessages((m) => [
-      ...m,
-      { from: "user", text: typed },
-      {
-        from: "choices",
-        text: SUPPORT_COPY.notFound,
-        items: suggestionsFor(items, pathname),
-        contact: true,
-      },
-    ]);
+    const reply: Message =
+      result.kind === "choose"
+        ? { from: "choices", text: SUPPORT_COPY.choose, items: result.items }
+        : result.kind === "greeting"
+          ? { from: "bot", text: SUPPORT_COPY.hello }
+          : result.kind === "thanks"
+            ? { from: "bot", text: SUPPORT_COPY.thanks }
+            : result.kind === "vague"
+              ? { from: "bot", text: SUPPORT_COPY.vague }
+              : {
+                  from: "choices",
+                  text: SUPPORT_COPY.notFound,
+                  items: suggestionsFor(items, pathname),
+                  contact: true,
+                };
+    setMessages((m) => [...m, { from: "user", text: typed }, reply]);
   }
 
   function go(item: SupportItem) {

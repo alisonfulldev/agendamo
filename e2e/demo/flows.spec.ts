@@ -397,12 +397,17 @@ test("panel help chat: finds the answer and highlights the field", async ({ page
   await page.reload();
   await page.getByRole("button", { name: "Ajuda" }).click();
   const chat = page.getByRole("dialog", { name: "Ajuda" });
+  // Opens with the greeting only: the person writes first.
+  await expect(chat.getByText(/com as suas palavras/)).toBeVisible();
+  await expect(chat.getByRole("button", { name: /Onde está o meu link/ })).toHaveCount(0);
   await chat.getByLabel("Sua dúvida").fill("errei o nome, quero mudar o nome");
   await chat.getByRole("button", { name: "Enviar" }).click();
   await expect(chat.getByText(/Nome do negócio/)).toBeVisible();
   await chat.getByRole("button", { name: "Ir para lá" }).click();
   await page.waitForURL(/\/painel\/configuracoes/);
-  await expect(page.locator('[name="name"]')).toHaveClass(/help-flash/, { timeout: 8000 });
+  await expect(page.locator('[name="name"]')).toHaveAttribute("data-help-flash", "", {
+    timeout: 8000,
+  });
 
   // Unknown question: suggestions and the e-mail to the support.
   await page.getByRole("button", { name: "Ajuda" }).click();

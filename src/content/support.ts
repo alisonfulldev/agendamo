@@ -34,9 +34,15 @@ export const SUPPORT_EMAIL = "contato@brandcodesolutions.com.br";
 
 export const SUPPORT_COPY = {
   title: "Ajuda",
-  subtitle: "Pergunte ou toque numa dúvida",
-  greeting: "Oi! Me diga o que você quer fazer que eu te mostro onde fica.",
-  placeholder: "Ex.: mudar o nome, bloquear horário…",
+  subtitle: "Escreva do seu jeito",
+  greeting:
+    "Oi! Me conta, com as suas palavras, o que você quer fazer no painel. Por exemplo: “mudar o nome”, “bloquear sábado” ou “cobrar sinal no Pix”.",
+  placeholder: "Escreva sua dúvida…",
+  hello: "Oi! 😊 Me conta o que você quer fazer que eu te mostro onde fica.",
+  thanks: "Por nada! Se precisar de mais alguma coisa, é só escrever.",
+  vague:
+    "Me conta um pouco mais: o que você quer mudar ou encontrar? Por exemplo, o nome, a foto, um horário ou um serviço.",
+  choose: "Você quis dizer:",
   go: "Ir para lá",
   article: "Ver passo a passo",
   notFound: "Não encontrei essa. Tente com outras palavras ou veja estas:",
@@ -281,6 +287,8 @@ export const SUPPORT_ITEMS: SupportItem[] = [
     keywords: [
       "horario",
       "horarios",
+      "horario de funcionamento",
+      "horario de atendimento",
       "expediente",
       "dias",
       "funcionamento",
@@ -535,6 +543,9 @@ export const SUPPORT_ITEMS: SupportItem[] = [
       "financeiro",
       "lancar",
       "receita",
+      "quanto ganhei",
+      "ganhei no mes",
+      "mes",
       "custo",
       "despesa",
       "gasto",
