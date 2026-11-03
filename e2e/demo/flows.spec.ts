@@ -382,3 +382,34 @@ test("own checkout: Pix Automático QR inside the panel, the payment activates t
   await page.goto("/painel/agenda");
   await expect(page).toHaveURL(/\/painel\/agenda/);
 });
+
+test("panel help chat: finds the answer and highlights the field", async ({ page }) => {
+  await page.goto("/demo");
+  await page
+    .locator("form", { hasText: "psi@demo.com" })
+    .getByRole("button", { name: "Entrar" })
+    .click();
+  await page.waitForURL(/\/painel/);
+  // The photo reminder would open over the panel: snooze it, as "Agora não" does.
+  await page.evaluate(() =>
+    localStorage.setItem("mc_photo_prompt_until", String(Date.now() + 86_400_000)),
+  );
+  await page.reload();
+  await page.getByRole("button", { name: "Ajuda" }).click();
+  const chat = page.getByRole("dialog", { name: "Ajuda" });
+  await chat.getByLabel("Sua dúvida").fill("errei o nome, quero mudar o nome");
+  await chat.getByRole("button", { name: "Enviar" }).click();
+  await expect(chat.getByText(/Nome do negócio/)).toBeVisible();
+  await chat.getByRole("button", { name: "Ir para lá" }).click();
+  await page.waitForURL(/\/painel\/configuracoes/);
+  await expect(page.locator('[name="name"]')).toHaveClass(/help-flash/, { timeout: 8000 });
+
+  // Unknown question: suggestions and the e-mail to the support.
+  await page.getByRole("button", { name: "Ajuda" }).click();
+  await chat.getByLabel("Sua dúvida").fill("previsão do tempo para amanhã");
+  await chat.getByRole("button", { name: "Enviar" }).click();
+  await expect(chat.getByRole("link", { name: /Falar com o suporte/ })).toHaveAttribute(
+    "href",
+    /^mailto:contato@brandcodesolutions\.com\.br/,
+  );
+});

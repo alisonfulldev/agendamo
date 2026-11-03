@@ -8,6 +8,7 @@ import { signOutAction } from "@/app/(auth)/actions";
 import { getCurrentBrand, getRequestPath } from "@/brands/server";
 import { brandThemeStyle } from "@/brands/theme";
 import { brandUrl, isProductionDeployment } from "@/brands/urls";
+import { HelpChat } from "@/components/panel/help-chat";
 import { Button } from "@/components/ui/button";
 import { requireUser } from "@/lib/auth/session";
 import { getBusinessContext } from "@/lib/business/context";
@@ -115,6 +116,7 @@ export default async function PanelLayout({ children }: LayoutProps<"/painel">) 
         <main className="min-w-0 flex-1">{children}</main>
       </div>
       <MobileNav {...nav} customersLabel={customersLabel} />
+      <HelpChat isOwner={context.isOwner} waiting={!features.active} />
       {context.isOwner && features.active ? (
         <Suspense>
           <PanelTour />

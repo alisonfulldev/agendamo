@@ -555,3 +555,24 @@
   --primary-foreground: var(--brand-highlight);
   --ring: var(--brand-deep);
 }
+
+/* Panel help chat: "Ir para lá" highlights the section or field it points to. */
+.help-flash {
+  border-radius: var(--radius);
+  animation: help-flash 2.4s ease-out;
+}
+@keyframes help-flash {
+  0%,
+  40% {
+    box-shadow: 0 0 0 4px color-mix(in oklch, var(--primary) 55%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 4px transparent;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .help-flash {
+    animation: none;
+    box-shadow: 0 0 0 4px color-mix(in oklch, var(--primary) 55%, transparent);
+  }
+}

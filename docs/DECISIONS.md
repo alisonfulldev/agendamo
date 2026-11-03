@@ -273,3 +273,9 @@ Revise antes de aplicar no Supabase de produção.
 - Cores só nos arquivos de marca: `theme.highlight` (limão, padrão `LANDING_HIGHLIGHT` em platform.ts) e `theme.deep` (MeetChat: #1B1464); sem `deep`, o bloco escuro é a cor da marca misturada com a tinta mais escura do tema (funciona nos temas escuros, como barbearia e tatuagem). O título sobre a cor da marca usa o limão só quando contrasta (≥ 3:1).
 - SEO intocado: mesmos textos, H1/H2/H3, links, metadados e JSON-LD (comparados com produção em /, /beleza e /barbearia antes do deploy). Mockups e o celular animado mantêm as cores do tema (`.lp-plain`).
 - Ajuste no mesmo dia: o verde-limão é só da MeetChat (home e chat de criação antes de virar o chat do negócio). Cada página de nicho usa só a própria paleta: o topo na cor do nicho e os blocos num tom claro e num tom escuro derivados dela (`landingColors` em theme.ts). O modelo antigo de nicho (`HomePage`, nichos sem texto próprio em landing.ts) ganhou os mesmos blocos. Chat de criação, entrar/cadastro e painel continuam como antes; o chat de criação começa em roxo + limão e muda para a cor do negócio.
+
+## Chat de ajuda no painel (2026-11-03)
+
+- Botão "Ajuda" flutuante em todas as telas do painel (dona e equipe), sem IA: respostas prontas em `src/content/support.ts` (pergunta, palavras-chave, resposta, tela e alvo), busca no navegador (`src/lib/support-search.ts`: sem acento, ignora palavras vazias, tolera um erro de digitação, exige que boa parte das palavras combine). "Ir para lá" abre a tela e destaca a seção (pelo título) ou o campo (pelo name) com `.help-flash`.
+- Sugestões conforme a tela; a equipe só vê respostas marcadas `staff`; no modo de espera, telas fechadas levam à assinatura. Sem resposta: sugestões e "Falar com o suporte" (mailto para o e-mail de suporte, com a pergunta e a tela).
+- Sem medição por enquanto (a lista de dúvidas sem resposta exigiria tabela nova; fica para depois, com aprovação).
