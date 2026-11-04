@@ -125,16 +125,16 @@ describe("prices", () => {
 });
 
 describe("Site + Agenda offer", () => {
-  it("first payment is the site + first month, plus the domain's first year when asked", async () => {
+  it("first payment is the first month (no setup fee), plus the domain's first year when asked", async () => {
     const { siteFirstPrice, siteMonthlyPrice } = await import("./plans");
-    expect(siteFirstPrice(0)).toBe(9700);
-    expect(siteFirstPrice(0, 0, true)).toBe(18_800);
-    expect(siteFirstPrice(1)).toBe(10_600);
-    expect(siteMonthlyPrice(0)).toBe(3900);
-    expect(siteMonthlyPrice(2)).toBe(5700);
+    expect(siteFirstPrice(0)).toBe(4900);
+    expect(siteFirstPrice(0, 0, true)).toBe(14_000);
+    expect(siteFirstPrice(1)).toBe(5800);
+    expect(siteMonthlyPrice(0)).toBe(4900);
+    expect(siteMonthlyPrice(2)).toBe(6700);
     // The coupon does not touch the domain.
-    expect(siteFirstPrice(0, 10, true)).toBe(8730 + 9100);
-    expect(siteMonthlyPrice(0, 10)).toBe(3510);
+    expect(siteFirstPrice(0, 10, true)).toBe(4410 + 9100);
+    expect(siteMonthlyPrice(0, 10)).toBe(4410);
   });
 
   it("delivers in 48 business hours (weekends skipped)", async () => {

@@ -282,8 +282,7 @@ export function PlanCheckout({
             </div>
             {today !== total ? (
               <p className="rounded-xl bg-accent px-3 py-2 text-sm text-accent-foreground">
-                <strong>Hoje: {formatBRL(today)}</strong> (criação do site + 1º mês
-                {offer?.wantsDomain ? " + domínio por 1 ano" : ""}). Depois:{" "}
+                <strong>Hoje: {formatBRL(today)}</strong> (1º mês + domínio por 1 ano). Depois:{" "}
                 <strong>{formatBRL(total)}/mês</strong>. Seu site fica pronto em até 48 horas úteis.
               </p>
             ) : null}

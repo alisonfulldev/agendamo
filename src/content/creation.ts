@@ -162,7 +162,7 @@ export const SITE_SALES = {
   seeHow: "Quero ver como funciona",
   toPrice: "Entendi, e o preço?",
   afterSimulation: "Viu? É assim que seu cliente agenda pelo site. Quer saber o preço?",
-  pitchPrice: `💰 ${price(SITE_OFFER.setupCents)} hoje (criação do site + 1º mês) e depois ${price(SITE_OFFER.monthlyCents)}/mês, debitados pelo Pix Automático. Sem fidelidade: cancele quando quiser.`,
+  pitchPrice: `💰 ${price(SITE_OFFER.monthlyCents)}/mês, sem taxa de criação: o site e a agenda já estão inclusos. Debitado pelo Pix Automático. Sem fidelidade: cancele quando quiser.`,
   want: "Quero meu site",
   doubts: "Ficou uma dúvida",
   doubtsIntro: "Pode escolher:",
@@ -174,6 +174,10 @@ export const SITE_SALES = {
     {
       q: "Posso mudar algo depois?",
       a: "Pode. Pequenos ajustes no site estão incluídos na mensalidade. É só pedir por e-mail.",
+    },
+    {
+      q: "Tem taxa para criar o site?",
+      a: `Não. Você paga só a mensalidade de ${price(SITE_OFFER.monthlyCents)}, e o site já está incluso.`,
     },
     {
       q: "Funciona no celular?",

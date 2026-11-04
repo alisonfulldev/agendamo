@@ -263,7 +263,7 @@ test("Site + Agenda link: sales conversation, domain, sign-up without trial and 
   await expect(dialog.getByText(/pronto em até 48 horas úteis/)).toBeVisible();
   await dialog.getByRole("button", { name: "Legal, e o que mais?" }).click();
   await dialog.getByRole("button", { name: "Entendi, e o preço?" }).click();
-  await expect(dialog.getByText(/R\$ 97 hoje/)).toBeVisible();
+  await expect(dialog.getByText(/R\$ 49\/mês, sem taxa de criação/)).toBeVisible();
   await expect(dialog.getByText(/grátis/i)).toHaveCount(0);
   await dialog.getByRole("button", { name: "Ficou uma dúvida" }).click();
   await dialog.getByRole("button", { name: "Preciso entender de site?" }).click();
@@ -285,14 +285,14 @@ test("Site + Agenda link: sales conversation, domain, sign-up without trial and 
   await dialog.getByRole("button", { name: "Enviar", exact: true }).click();
   await expect(dialog.getByText(/No painel, pague o Pix para ativar/)).toBeVisible();
 
-  // No trial: the panel opens the payment of the offer (site + 1st month + domain).
+  // No trial: the panel opens the payment of the offer (first month + domain).
   await dialog.getByRole("button", { name: "Entrar no meu painel" }).click();
   await page.waitForURL(/\/painel\/plano/);
   await expect(page.getByText("Falta só o pagamento para criarmos o seu site 🚀")).toBeVisible();
   await expect(page.getByText(/Domínio barbeariasiteteste\.com\.br por 1 ano/)).toBeVisible();
   await page.getByLabel(/Nome ou razão social/).fill("Barbearia Site LTDA");
   await page.getByLabel("CPF ou CNPJ").fill("529.982.247-25");
-  await page.getByRole("button", { name: "Gerar Pix de R$ 188,00" }).click();
+  await page.getByRole("button", { name: "Gerar Pix de R$ 140,00" }).click();
   await expect(page.getByRole("img", { name: "QR code do Pix" })).toBeVisible();
 
   // The payment arrives (simulated): plan on, site order with its deadline.
@@ -325,7 +325,7 @@ test("Site + Agenda link: the booking simulation goes back to the price", async 
     .click();
   await expect(dialog.getByText(/Viu\? É assim que seu cliente agenda/)).toBeVisible();
   await dialog.getByRole("button", { name: "Entendi, e o preço?" }).click();
-  await expect(dialog.getByText(/R\$ 97 hoje/)).toBeVisible();
+  await expect(dialog.getByText(/R\$ 49\/mês, sem taxa de criação/)).toBeVisible();
   // No "Criar minha conta grátis" anywhere in the offer.
   await expect(dialog.getByRole("button", { name: /grátis/i })).toHaveCount(0);
 });

@@ -37,16 +37,15 @@ export const PLAN_PRICES = {
 export const PLAN_NAME = "Completo";
 
 /**
- * "Site + Agenda" (2026-11-04): sold by its own sign-up link (?criar=1&oferta=site). Same
- * features as Completo plus a site built by hand within 48 business hours. No trial, monthly
- * only, coupons apply (not to the domain). The domain is optional and renews yearly.
+ * "Site + Agenda" (2026-11-04; R$ 49/month with no setup fee since 2026-11-04): sold by its own
+ * sign-up link (?criar=1&oferta=site). Same features as Completo plus a site built by hand within
+ * 48 business hours. No trial, monthly only, coupons apply (not to the domain). The domain is
+ * optional and renews yearly.
  */
 export const SITE_OFFER = {
   key: "site",
   name: "Site + Agenda",
-  /** First payment: building the site + the first month. */
-  setupCents: 9700,
-  monthlyCents: 3900,
+  monthlyCents: 4900,
   extraProfessionalCents: 900,
   /** .com.br domain, per year (first year with the first payment). */
   domainYearlyCents: 9100,
@@ -59,15 +58,14 @@ export function siteMonthlyPrice(extraProfessionals: number, discountPercent = 0
   return Math.round((base * (100 - discountPercent)) / 100);
 }
 
-/** First payment: site + first month (+ extras), coupon applied, plus the domain's first year. */
+/** First payment: the first month (no setup fee), plus the domain's first year when asked. */
 export function siteFirstPrice(
   extraProfessionals: number,
   discountPercent = 0,
   wantsDomain = false,
 ): number {
-  const base = SITE_OFFER.setupCents + SITE_OFFER.extraProfessionalCents * extraProfessionals;
   return (
-    Math.round((base * (100 - discountPercent)) / 100) +
+    siteMonthlyPrice(extraProfessionals, discountPercent) +
     (wantsDomain ? SITE_OFFER.domainYearlyCents : 0)
   );
 }

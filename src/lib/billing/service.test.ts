@@ -306,7 +306,7 @@ describe("Site + Agenda", () => {
       id: "pay_first",
       customer: "cus_1",
       status: "RECEIVED",
-      value: 188,
+      value: 140,
       dueDate: "2026-10-28",
       invoiceUrl: "",
       billingType: "PIX",

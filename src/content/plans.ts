@@ -33,7 +33,7 @@ export const PLAN_CARD: PlanCard = {
 /** "Site + Agenda" (SITE_OFFER), shown on the payment screen of who came by its link. */
 export const SITE_OFFER_CARD = {
   name: SITE_OFFER.name,
-  tagline: `Site profissional feito por nós + agenda online. ${reais(SITE_OFFER.setupCents)} hoje, depois ${reais(SITE_OFFER.monthlyCents)}/mês. Sem fidelidade.`,
+  tagline: `Site profissional feito por nós + agenda online por ${reais(SITE_OFFER.monthlyCents)}/mês. Sem taxa de criação e sem fidelidade.`,
   includes: [
     "Site profissional feito por nós, pronto em até 48 horas úteis",
     "Botões de agendar do site levam ao seu chat",
