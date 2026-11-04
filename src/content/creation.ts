@@ -1,3 +1,5 @@
+import { reais, SITE_OFFER } from "@/lib/plans";
+
 /** Texts of the creation conversation (opens over the site from the home page). */
 export const CREATION = {
   intro: "Oi! Vamos montar seu link de agendamento? Leva 1 minuto.",
@@ -142,3 +144,62 @@ export function detectNiche(name: string): string | null {
   const normalized = name.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
   return NICHE_KEYWORDS.find(([, pattern]) => pattern.test(normalized))?.[0] ?? null;
 }
+
+const price = (cents: number) => reais(cents);
+
+/**
+ * "Site + Agenda" sales conversation (link ?criar=1&oferta=site, 2026-11-04): the chat explains the
+ * offer step by step with buttons, and "Falar com o consultor" opens the sales WhatsApp. No trial
+ * and no "grátis" here: it is a paid offer.
+ */
+export const SITE_SALES = {
+  intro: `Oi! 👋 Vou te mostrar como ter um site profissional + agenda online para o seu negócio. Leva 1 minuto.`,
+  askName: "Pra começar, qual o nome do seu negócio?",
+  pitchSite: `Perfeito, {nome}! A gente cria um site profissional para você, com seus serviços, fotos, localização e Instagram. Fica pronto em até 48 horas úteis.`,
+  nextAgenda: "Legal, e o que mais?",
+  pitchAgenda:
+    "E o melhor: todo botão de “Agendar” do site abre o seu chat de agendamento. O cliente escolhe o serviço e um horário livre e já cai na sua agenda, 24h, sem você responder mensagem. E você recebe o aviso no celular.",
+  seeHow: "Quero ver como funciona",
+  toPrice: "Entendi, e o preço?",
+  afterSimulation: "Viu? É assim que seu cliente agenda pelo site. Quer saber o preço?",
+  pitchPrice: `💰 ${price(SITE_OFFER.setupCents)} hoje (criação do site + 1º mês) e depois ${price(SITE_OFFER.monthlyCents)}/mês, debitados pelo Pix Automático. Sem fidelidade: cancele quando quiser.`,
+  want: "Quero meu site",
+  doubts: "Ficou uma dúvida",
+  doubtsIntro: "Pode escolher:",
+  faq: [
+    {
+      q: "Preciso entender de site?",
+      a: "Não. A gente faz tudo: você só confere e pede ajustes se quiser.",
+    },
+    {
+      q: "Posso mudar algo depois?",
+      a: "Pode. Pequenos ajustes no site estão incluídos na mensalidade. É só pedir por e-mail.",
+    },
+    {
+      q: "Funciona no celular?",
+      a: "Sim. O site e o chat de agendamento foram feitos para o celular, e funcionam no computador também.",
+    },
+    {
+      q: "E se eu cancelar?",
+      a: "Sem multa nem fidelidade. Tudo segue até o fim do mês pago; depois o site sai do ar e o seu link continua recebendo pedidos pelo WhatsApp.",
+    },
+    {
+      q: "O que vocês precisam de mim?",
+      a: "Só o cadastro. Usamos as informações e fotos do seu perfil e, se faltar algo, falamos com você.",
+    },
+  ],
+  askDomain: `Quer um endereço próprio, tipo seunegocio.com.br? São +${price(SITE_OFFER.domainYearlyCents)} por ano.`,
+  wantDomain: "Quero meu domínio",
+  noDomain: "Agora não",
+  askDomainName:
+    "Qual endereço você prefere? Ex.: studiolumi.com.br. A gente confere se está livre.",
+  domainPlaceholder: "seunegocio.com.br",
+  invalidDomain: "Esse endereço não parece certo. Escreve só o nome, tipo studiolumi.com.br.",
+  toSignup: "Ótimo! Agora é só criar sua conta e pagar para a gente começar.",
+  created:
+    "🎉 Conta criada, {nome}! No painel, pague o Pix para ativar. Assim que cair, sua agenda é liberada e começamos o seu site.",
+  consultant: "Falar com o consultor",
+  /** Sales WhatsApp (a regular wa.me link the person opens; no API). */
+  consultantPhone: "5518996742364",
+  consultantMessage: "Oi! Vim pelo MeetChat e quero saber mais sobre o Site + Agenda.{negocio}",
+} as const;

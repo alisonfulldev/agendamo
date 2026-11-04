@@ -35,8 +35,8 @@ describe("convertToWebp (server fallback)", () => {
   });
 
   it("refuses something that is not an image", async () => {
-    await expect(convertToWebp(new TextEncoder().encode("%PDF-1.4"), "avatar")).rejects.toBeInstanceOf(
-      ConvertError,
-    );
+    await expect(
+      convertToWebp(new TextEncoder().encode("%PDF-1.4"), "avatar"),
+    ).rejects.toBeInstanceOf(ConvertError);
   });
 });

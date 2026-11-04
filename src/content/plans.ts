@@ -1,4 +1,4 @@
-import { PLAN_NAME, PLAN_PRICES, PRICE_TEXT, reais, TRIAL_DAYS } from "@/lib/plans";
+import { PLAN_NAME, PLAN_PRICES, PRICE_TEXT, reais, SITE_OFFER, TRIAL_DAYS } from "@/lib/plans";
 
 export interface PlanCard {
   name: string;
@@ -29,3 +29,17 @@ export const PLAN_CARD: PlanCard = {
   ],
   cta: `Testar ${TRIAL_DAYS} dias grátis`,
 };
+
+/** "Site + Agenda" (SITE_OFFER), shown on the payment screen of who came by its link. */
+export const SITE_OFFER_CARD = {
+  name: SITE_OFFER.name,
+  tagline: `Site profissional feito por nós + agenda online. ${reais(SITE_OFFER.setupCents)} hoje, depois ${reais(SITE_OFFER.monthlyCents)}/mês. Sem fidelidade.`,
+  includes: [
+    "Site profissional feito por nós, pronto em até 48 horas úteis",
+    "Botões de agendar do site levam ao seu chat",
+    "Agendamentos ilimitados pelo chat, 24h",
+    "Lembretes automáticos para o cliente não faltar",
+    "Clientes, financeiro, vendas e estatísticas",
+    "Equipe e Google Agenda",
+  ],
+} as const;

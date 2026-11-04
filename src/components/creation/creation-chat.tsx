@@ -7,8 +7,13 @@ import { getBrand, getNiche, NICHES, PLATFORM } from "@/brands";
 import { brandThemeStyle } from "@/brands/theme";
 import { trackSignup } from "@/components/google-tag";
 import { nichesByGroup } from "@/components/sales/niche-cards";
-import { CREATION, detectNiche } from "@/content/creation";
-import { siteArrival, siteContext, siteLanding } from "@/components/seo/site-tracker";
+import { CREATION, detectNiche, SITE_SALES } from "@/content/creation";
+import {
+  siteArrival,
+  siteContext,
+  siteLanding,
+  trackSiteEvent,
+} from "@/components/seo/site-tracker";
 import { isReservedBusinessName } from "@/lib/business/reserved-names";
 import { EMAIL_PATTERN, suggestEmailFix } from "@/lib/email-typos";
 import { compressImage } from "@/lib/images/compress";
@@ -45,6 +50,13 @@ type Phase =
   | "day"
   | "time"
   | "done"
+  // "Site + Agenda" sales conversation (?oferta=site).
+  | "site-pitch"
+  | "site-agenda"
+  | "site-price"
+  | "site-faq"
+  | "site-domain"
+  | "site-domain-name"
   // Sign-up in the conversation (e-mail + 6-digit code).
   | "whatsapp"
   | "email"
@@ -97,7 +109,10 @@ interface CreationState {
   created: { name: string; slug: string; pageUrl: string; qr: string } | null;
   /** Photo added in the conversation (optional; it can also be added later in the panel). */
   photoUrl: string | null;
-  /** How the account starts: Grátis, or a 7-day trial of Agenda or Pro. */
+  /** "site": the "Site + Agenda" sales conversation (no trial, paid first). */
+  offer: "site" | null;
+  wantsDomain: boolean;
+  domainName: string | null;
 }
 
 const STORAGE_KEY = CREATION_STORAGE_KEY;
@@ -106,12 +121,18 @@ const BUILDING_MS = 2200;
 const TYPING_MS = 450;
 
 function fresh(): CreationState {
+  const offer = typeof window === "undefined" ? null : creationParams().offer;
   return {
     phase: "name",
-    log: [
-      { from: "system", text: CREATION.intro },
-      { from: "system", text: CREATION.askName },
-    ],
+    log: offer
+      ? [
+          { from: "system", text: SITE_SALES.intro },
+          { from: "system", text: SITE_SALES.askName },
+        ]
+      : [
+          { from: "system", text: CREATION.intro },
+          { from: "system", text: CREATION.askName },
+        ],
     name: "",
     detected: null,
     brandKey: null,
@@ -128,7 +149,33 @@ function fresh(): CreationState {
     codeSentAt: null,
     created: null,
     photoUrl: null,
+    offer,
+    wantsDomain: false,
+    domainName: null,
   };
+}
+
+/** "studio lumi" / "studiolumi" / "www.studiolumi.com.br" → "studiolumi.com.br" (null if invalid). */
+function domainFrom(text: string): string | null {
+  const plain = text
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/^https?:\/\//, "")
+    .replace(/^www\./, "")
+    .replace(/\/.*$/, "")
+    .replace(/\s+/g, "");
+  const domain = plain.includes(".") ? plain : `${plain}.com.br`;
+  return /^[a-z0-9][a-z0-9-]{1,60}(\.[a-z]{2,6}){1,2}$/.test(domain) ? domain : null;
+}
+
+/** "Falar com o consultor": the sales WhatsApp with a ready message (counted, anonymously). */
+function consultantUrl(name: string, nicheKey: string | null): string {
+  const niche = nicheKey ? getNiche(nicheKey).niche?.name : null;
+  const business = name ? ` Meu negócio: ${name}${niche ? ` (${niche})` : ""}.` : "";
+  const text = fill(SITE_SALES.consultantMessage, { negocio: business });
+  return `https://wa.me/${SITE_SALES.consultantPhone}?text=${encodeURIComponent(text)}`;
 }
 
 function load(): CreationState | null {
@@ -213,6 +260,7 @@ function sourceInfo(viaName: boolean, viaNiche: boolean) {
     // Funnel attribution (Fase 9): the session's first page and the template of this one.
     landing: siteLanding() ?? undefined,
     template: siteContext().template,
+    offer: creationParams().offer ?? undefined,
   };
 }
 
@@ -231,7 +279,9 @@ export function Conversation({ photos }: { photos: boolean }) {
   const area = useVisibleArea();
   const [state, setState] = useState<CreationState>(() => {
     const saved = load();
-    if (saved && saved.name && saved.phase !== "name") {
+    // A conversation saved in the other flow (regular × Site + Agenda) is not resumed.
+    const sameFlow = (saved?.offer ?? null) === creationParams().offer;
+    if (saved && sameFlow && saved.name && saved.phase !== "name") {
       return {
         ...saved,
         phase: "resume",
@@ -311,13 +361,23 @@ export function Conversation({ photos }: { photos: boolean }) {
     if (left > 0) await new Promise((resolve) => setTimeout(resolve, left));
     // The transformation: the chat is hers, and she chooses between signing up and the simulation.
     setRevealed(0);
-    setState((s) => ({
-      ...s,
-      phase: "ready",
-      demoId: result.id,
-      suggestedSlug: result.suggestedSlug,
-      log: [],
-    }));
+    setState((s) =>
+      s.offer
+        ? {
+            ...s,
+            phase: "site-pitch",
+            demoId: result.id,
+            suggestedSlug: result.suggestedSlug,
+            log: [{ from: "system", text: fill(SITE_SALES.pitchSite, { nome: s.name }) }],
+          }
+        : {
+            ...s,
+            phase: "ready",
+            demoId: result.id,
+            suggestedSlug: result.suggestedSlug,
+            log: [],
+          },
+    );
   }
 
   /** "Ver como meu cliente vai agendar": the simulation of her chat. */
@@ -381,8 +441,43 @@ export function Conversation({ photos }: { photos: boolean }) {
   }
 
   /** "Criar minha conta grátis": the sign-up goes on right here. */
-  function claim() {
-    update({ phase: "whatsapp" }, [user(CREATION.claim), system(SU.askWhatsapp)]);
+  function claim(label: string = state.offer ? SITE_SALES.want : CREATION.claim) {
+    update({ phase: "whatsapp" }, [
+      user(label),
+      ...(state.offer ? [system(SITE_SALES.toSignup)] : []),
+      system(SU.askWhatsapp),
+    ]);
+  }
+
+  /** Sales steps of the offer (buttons). */
+  function sales(step: "agenda" | "price" | "faq" | "domain") {
+    if (step === "agenda") {
+      update({ phase: "site-agenda" }, [
+        user(SITE_SALES.nextAgenda),
+        system(SITE_SALES.pitchAgenda),
+      ]);
+    } else if (step === "price") {
+      update({ phase: "site-price" }, [user(SITE_SALES.toPrice), system(SITE_SALES.pitchPrice)]);
+    } else if (step === "faq") {
+      update({ phase: "site-faq" }, [user(SITE_SALES.doubts), system(SITE_SALES.doubtsIntro)]);
+    } else {
+      update({ phase: "site-domain" }, [user(SITE_SALES.want), system(SITE_SALES.askDomain)]);
+    }
+  }
+
+  function submitDomain(text: string) {
+    const domain = domainFrom(text);
+    if (!domain) {
+      update({}, [user(text.trim()), system(SITE_SALES.invalidDomain)]);
+      return;
+    }
+    setState((s) => ({
+      ...s,
+      wantsDomain: true,
+      domainName: domain,
+      phase: "whatsapp",
+      log: [...s.log, user(domain), system(SITE_SALES.toSignup), system(SU.askWhatsapp)],
+    }));
   }
 
   function submitWhatsapp(text: string | null) {
@@ -445,12 +540,17 @@ export function Conversation({ photos }: { photos: boolean }) {
       email: state.email,
       code,
       whatsapp: state.whatsapp,
+      offer: state.offer
+        ? { key: state.offer, wantsDomain: state.wantsDomain, domainName: state.domainName }
+        : null,
     }).catch(() => ({ ok: false as const, error: "failed" as const }));
     if (result.ok && result.outcome === "created") {
       // Google Ads / Analytics sign-up, once per new account (never for an existing one).
       trackSignup();
       update({ phase: "created", created: result }, [
-        system(fill(SU.created, { nome: result.name })),
+        system(
+          fill(result.trial === "offer" ? SITE_SALES.created : SU.created, { nome: result.name }),
+        ),
         ...(result.trial === "used" ? [system(SU.trialUsed)] : []),
       ]);
     } else if (result.ok) {
@@ -550,7 +650,9 @@ export function Conversation({ photos }: { photos: boolean }) {
       ) : null}
 
       {state.phase === "building" ? <BuildingScreen /> : null}
-      {state.phase === "ready" ? <ReadyScreen onSignup={claim} onPreview={preview} /> : null}
+      {state.phase === "ready" ? (
+        <ReadyScreen onSignup={() => claim()} onPreview={preview} />
+      ) : null}
 
       <div
         ref={scrollRef}
@@ -646,7 +748,17 @@ export function Conversation({ photos }: { photos: boolean }) {
               ]);
               if (state.demoId) void recordTestBookingAction(state.demoId);
             }}
-            onClaim={claim}
+            onClaim={() => claim()}
+            onSales={sales}
+            onFaq={(q, a) => update({}, [user(q), system(a)])}
+            onNoDomain={() => claim(SITE_SALES.noDomain)}
+            onWantDomain={() =>
+              update({ phase: "site-domain-name" }, [
+                user(SITE_SALES.wantDomain),
+                system(SITE_SALES.askDomainName),
+              ])
+            }
+            onPreview={preview}
             onRestart={restart}
             onWhatsappLater={() => submitWhatsapp(null)}
             onEmailFix={(accept) => {
@@ -665,11 +777,11 @@ export function Conversation({ photos }: { photos: boolean }) {
         )}
       </div>
 
-      {ownChat && state.phase !== "done" && state.phase !== "ready" && !signup ? (
+      {ownChat && !state.offer && state.phase !== "done" && state.phase !== "ready" && !signup ? (
         <div className="border-t bg-card px-3 py-2">
           <button
             type="button"
-            onClick={claim}
+            onClick={() => claim()}
             className="h-10 w-full rounded-xl bg-primary text-sm font-semibold text-primary-foreground"
           >
             {CREATION.claim}
@@ -677,7 +789,21 @@ export function Conversation({ photos }: { photos: boolean }) {
         </div>
       ) : null}
 
-      {!ownChat ? (
+      {state.offer && state.phase !== "created" && state.phase !== "has_business" ? (
+        <div className="flex gap-2 overflow-x-auto border-t bg-card px-3 pt-2 pb-1">
+          <a
+            href={consultantUrl(state.name, state.brandKey)}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => trackSiteEvent("cta_click", "/oferta-site/consultor")}
+            className="shrink-0 rounded-full border border-primary px-3.5 py-2 text-sm font-semibold whitespace-nowrap text-primary"
+          >
+            💬 {SITE_SALES.consultant}
+          </a>
+        </div>
+      ) : null}
+
+      {!ownChat && !state.offer ? (
         <div className="flex gap-2 overflow-x-auto border-t bg-card px-3 pt-2 pb-1">
           <ShortcutChip
             onClick={() => shortcut(CREATION.shortcuts.app.label, CREATION.shortcuts.app.answer)}
@@ -717,7 +843,8 @@ export function Conversation({ photos }: { photos: boolean }) {
                 ...state,
                 log: [...state.log, user(description)],
               });
-            } else if (state.phase === "whatsapp") submitWhatsapp(text.trim());
+            } else if (state.phase === "site-domain-name") submitDomain(text);
+            else if (state.phase === "whatsapp") submitWhatsapp(text.trim());
             else if (state.phase === "email") submitEmail(text);
             else if (state.phase === "code") void verify(text.replace(/\D/g, ""));
           }}
@@ -756,6 +883,8 @@ function composerFor(phase: Phase): ComposerSettings | null {
       return { placeholder: CREATION.namePlaceholder, autoComplete: "organization" };
     case "other":
       return { placeholder: CREATION.otherPlaceholder, maxLength: 200 };
+    case "site-domain-name":
+      return { placeholder: SITE_SALES.domainPlaceholder, maxLength: 100, autoComplete: "url" };
     case "whatsapp":
       return {
         placeholder: SU.whatsappPlaceholder,
@@ -946,6 +1075,11 @@ function Options({
   onDay,
   onTime,
   onClaim,
+  onSales,
+  onFaq,
+  onNoDomain,
+  onWantDomain,
+  onPreview,
   onRestart,
   onWhatsappLater,
   onEmailFix,
@@ -962,6 +1096,11 @@ function Options({
   onDay: (label: string) => void;
   onTime: (time: string) => void;
   onClaim: () => void;
+  onSales: (step: "agenda" | "price" | "faq" | "domain") => void;
+  onFaq: (question: string, answer: string) => void;
+  onNoDomain: () => void;
+  onWantDomain: () => void;
+  onPreview: () => void;
   onRestart: () => void;
   onWhatsappLater: () => void;
   onEmailFix: (accept: boolean) => void;
@@ -1084,7 +1223,96 @@ function Options({
         )),
         3,
       );
+    case "site-pitch":
+      return wrap(
+        <button
+          type="button"
+          className={"h-12 rounded-xl bg-primary text-base font-semibold text-primary-foreground"}
+          onClick={() => onSales("agenda")}
+        >
+          {SITE_SALES.nextAgenda}
+        </button>,
+      );
+    case "site-agenda":
+      return wrap(
+        <>
+          <button type="button" className={OPTION} onClick={onPreview}>
+            {SITE_SALES.seeHow}
+          </button>
+          <button
+            type="button"
+            className={"h-12 rounded-xl bg-primary text-base font-semibold text-primary-foreground"}
+            onClick={() => onSales("price")}
+          >
+            {SITE_SALES.toPrice}
+          </button>
+        </>,
+      );
+    case "site-price":
+    case "site-faq":
+      return (
+        <div className="mt-1 flex flex-col gap-2">
+          {state.phase === "site-faq"
+            ? SITE_SALES.faq.map((item) => (
+                <button
+                  key={item.q}
+                  type="button"
+                  className={OPTION}
+                  onClick={() => onFaq(item.q, item.a)}
+                >
+                  {item.q}
+                </button>
+              ))
+            : null}
+          <button
+            type="button"
+            className={"h-12 rounded-xl bg-primary text-base font-semibold text-primary-foreground"}
+            onClick={() => onSales("domain")}
+          >
+            {SITE_SALES.want}
+          </button>
+          {state.phase === "site-price" ? (
+            <button
+              type="button"
+              className={`${OPTION} text-center`}
+              onClick={() => onSales("faq")}
+            >
+              {SITE_SALES.doubts}
+            </button>
+          ) : null}
+        </div>
+      );
+    case "site-domain":
+      return wrap(
+        <>
+          <button type="button" className={OPTION} onClick={onWantDomain}>
+            {SITE_SALES.wantDomain}
+          </button>
+          <button type="button" className={OPTION} onClick={onNoDomain}>
+            {SITE_SALES.noDomain}
+          </button>
+        </>,
+        2,
+      );
     case "done":
+      if (state.offer) {
+        // After the simulation, the sale goes on to the price.
+        return (
+          <div className="mt-1 flex flex-col gap-3">
+            <ArrivesPreview state={state} />
+            <p className="text-center text-[15px] font-medium">{SITE_SALES.afterSimulation}</p>
+            <button
+              type="button"
+              className={
+                "h-12 rounded-xl bg-primary text-base font-semibold text-primary-foreground"
+              }
+              onClick={() => onSales("price")}
+            >
+              {SITE_SALES.toPrice}
+            </button>
+          </div>
+        );
+      }
       return (
         <div className="mt-1 flex flex-col gap-3">
           <ArrivesPreview state={state} />

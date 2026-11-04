@@ -161,7 +161,11 @@ export async function copyObject(from: string, to: string): Promise<void> {
 }
 
 /** Writes a finished image (the server fallback's WebP) under a public, immutable key. */
-export async function writeObject(key: string, body: Uint8Array, contentType: string): Promise<void> {
+export async function writeObject(
+  key: string,
+  body: Uint8Array,
+  contentType: string,
+): Promise<void> {
   if (isDemoMode()) return writeDemoObject(key, Buffer.from(body));
   const { client, bucket } = r2();
   await client.send(
@@ -186,7 +190,9 @@ export async function deleteOlderThan(prefix: string, before: Date): Promise<num
       new ListObjectsV2Command({ Bucket: bucket, Prefix: prefix, ContinuationToken: token }),
     );
     const keys = (page.Contents ?? []).flatMap((object) =>
-      object.Key && object.LastModified && object.LastModified < before ? [{ Key: object.Key }] : [],
+      object.Key && object.LastModified && object.LastModified < before
+        ? [{ Key: object.Key }]
+        : [],
     );
     if (keys.length > 0) {
       await client.send(

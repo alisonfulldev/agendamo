@@ -34,6 +34,8 @@ export interface Business {
   trial_ends_at: string | null;
   /** Last time the owner opened the panel (updated at most once an hour). */
   owner_last_seen_at: string | null;
+  /** Came by the "Site + Agenda" sign-up link (no trial; own prices in SITE_OFFER). */
+  offer?: "site" | null;
   slot_interval_minutes: 15 | 30 | 60;
   min_notice_minutes: number;
   max_days_ahead: number;
@@ -299,6 +301,20 @@ export interface Review {
   comment: string | null;
   reply: string | null;
   hidden: boolean;
+  created_at: string;
+}
+
+/** Site built by hand for the "Site + Agenda" offer. */
+export interface SiteOrder {
+  id: string;
+  business_id: string;
+  status: "awaiting_payment" | "paid" | "delivered";
+  wants_domain: boolean;
+  domain_name: string | null;
+  paid_at: string | null;
+  due_at: string | null;
+  delivered_at: string | null;
+  reminder_sent_at: string | null;
   created_at: string;
 }
 

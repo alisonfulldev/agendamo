@@ -91,9 +91,10 @@ export function siteContext() {
 }
 
 /** Sends an anonymous funnel event (beacon, never blocks the page). */
-export function trackSiteEvent(type: "page_view" | "cta_click") {
+export function trackSiteEvent(type: "page_view" | "cta_click", pathOverride?: string) {
   if (typeof window === "undefined" || navigator.webdriver) return;
-  const path = window.location.pathname.slice(0, 200);
+  // A fixed path names a click that is not a page ("/oferta-site/consultor").
+  const path = (pathOverride ?? window.location.pathname).slice(0, 200);
   const sessionId = stored(SESSION_KEY, () => crypto.randomUUID());
   if (!sessionId) return;
   const landing = stored(LANDING_KEY, () => path);

@@ -88,7 +88,7 @@ export type VerifySignupResult =
       pageUrl: string;
       qr: string;
       /** "used": this person already had a trial, so the account starts in waiting mode. */
-      trial: "started" | "used";
+      trial: "started" | "used" | "offer";
     }
   | { ok: true; outcome: "has_business" }
   | { ok: false; error: "expired" | "too_many" | "wrong" | "invalid" | "rate_limited" | "failed" };
@@ -105,6 +105,21 @@ export async function verifySignupCodeAction(input: unknown): Promise<VerifySign
       email,
       code: z.string().regex(/^\d{4}$/),
       whatsapp: z.string().max(30).nullable().default(null),
+      // "Site + Agenda" link: no trial, a site order (with the domain the owner asked for).
+      offer: z
+        .object({
+          key: z.literal("site"),
+          wantsDomain: z.boolean(),
+          domainName: z
+            .string()
+            .trim()
+            .toLowerCase()
+            .regex(/^[a-z0-9][a-z0-9.-]{1,98}[a-z0-9]$/)
+            .nullable()
+            .default(null),
+        })
+        .nullable()
+        .default(null),
     })
     .safeParse(input);
   if (!parsed.success) return { ok: false, error: "invalid" };
@@ -199,19 +214,32 @@ export async function verifySignupCodeAction(input: unknown): Promise<VerifySign
   });
   await admin.from("demos").delete().eq("id", demo.id);
 
-  // Every account starts with the 14-day trial of Completo (once per person: e-mail and phone).
-  const { data: created } = await admin
-    .from("businesses")
-    .select("*")
-    .eq("id", businessId)
-    .single();
-  const started = await startTrial({
-    business: created as Business,
-    identity: { email: parsed.data.email, phone: parsed.data.whatsapp },
-    userId: verified.userId,
-    via: "signup",
-  });
-  const trial = started.ok ? "started" : "used";
+  const offer = parsed.data.offer;
+  let trial: "started" | "used" | "offer";
+  if (offer) {
+    // Paid from the start: no trial (waiting mode opens the payment screen) and a site order.
+    await admin.from("businesses").update({ offer: offer.key }).eq("id", businessId);
+    await admin.from("site_orders").insert({
+      business_id: businessId,
+      wants_domain: offer.wantsDomain,
+      domain_name: offer.wantsDomain ? offer.domainName : null,
+    });
+    trial = "offer";
+  } else {
+    // Every account starts with the 14-day trial of Completo (once per person: e-mail and phone).
+    const { data: created } = await admin
+      .from("businesses")
+      .select("*")
+      .eq("id", businessId)
+      .single();
+    const started = await startTrial({
+      business: created as Business,
+      identity: { email: parsed.data.email, phone: parsed.data.whatsapp },
+      userId: verified.userId,
+      via: "signup",
+    });
+    trial = started.ok ? "started" : "used";
+  }
 
   const pageUrl = businessUrl(niche, `/${slug}`);
   await notifyAdminsOfSignup({
@@ -220,7 +248,7 @@ export async function verifySignupCodeAction(input: unknown): Promise<VerifySign
     email: parsed.data.email,
     whatsapp: normalizeBrPhone(parsed.data.whatsapp),
     pageUrl,
-    via: "conversa",
+    via: offer ? "Site + Agenda (aguardando pagamento)" : "conversa",
     trial,
   });
   return {

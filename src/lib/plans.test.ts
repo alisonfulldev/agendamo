@@ -123,3 +123,28 @@ describe("prices", () => {
     expect(PRICE_TEXT.trial).toBe("14 dias grátis, sem cartão");
   });
 });
+
+describe("Site + Agenda offer", () => {
+  it("first payment is the site + first month, plus the domain's first year when asked", async () => {
+    const { siteFirstPrice, siteMonthlyPrice } = await import("./plans");
+    expect(siteFirstPrice(0)).toBe(9700);
+    expect(siteFirstPrice(0, 0, true)).toBe(18_800);
+    expect(siteFirstPrice(1)).toBe(10_600);
+    expect(siteMonthlyPrice(0)).toBe(3900);
+    expect(siteMonthlyPrice(2)).toBe(5700);
+    // The coupon does not touch the domain.
+    expect(siteFirstPrice(0, 10, true)).toBe(8730 + 9100);
+    expect(siteMonthlyPrice(0, 10)).toBe(3510);
+  });
+
+  it("delivers in 48 business hours (weekends skipped)", async () => {
+    const { addBusinessHours } = await import("./plans");
+    const at = (iso: string) => addBusinessHours(new Date(iso)).toISOString();
+    // Monday 10:00 (São Paulo) → Wednesday 10:00.
+    expect(at("2026-11-02T13:00:00Z")).toBe("2026-11-04T13:00:00.000Z");
+    // Thursday 15:00 → Monday 15:00.
+    expect(at("2026-11-05T18:00:00Z")).toBe("2026-11-09T18:00:00.000Z");
+    // Saturday 11:00 → counts from Monday 11:00 → Wednesday 11:00.
+    expect(at("2026-11-07T14:00:00Z")).toBe("2026-11-11T14:00:00.000Z");
+  });
+});

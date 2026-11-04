@@ -6,7 +6,7 @@ import { invalidatePublicPage } from "@/lib/cache";
 import { cronRoute } from "@/lib/cron";
 import type { Business } from "@/lib/db/types";
 import { claimNotification, notifyTeam } from "@/lib/notifications/owner";
-import { getPlanFeatures, PLAN_NAME, PRICE_TEXT, TRIAL_DAYS } from "@/lib/plans";
+import { getPlanFeatures, PLAN_NAME, PRICE_TEXT, SITE_OFFER, TRIAL_DAYS } from "@/lib/plans";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 const DAY = 86_400_000;
@@ -157,5 +157,53 @@ export const POST = cronRoute(async () => {
     }
   }
   const billing = await processBillingExpirations();
-  return { ...result, billing };
+  const sitePaymentReminders = await remindUnpaidSiteOrders();
+  return { ...result, billing, sitePaymentReminders };
 });
+
+/**
+ * "Site + Agenda" sign-ups that did not pay after a day get one e-mail (and push) with the way to
+ * pay. Once per order (reminder_sent_at), so the daily run is idempotent.
+ */
+async function remindUnpaidSiteOrders(): Promise<number> {
+  const admin = createAdminClient();
+  const { data } = await admin
+    .from("site_orders")
+    .select("id, business_id")
+    .eq("status", "awaiting_payment")
+    .is("reminder_sent_at", null)
+    .lt("created_at", new Date(Date.now() - 86_400_000).toISOString())
+    .limit(200);
+  let sent = 0;
+  for (const order of data ?? []) {
+    // Claimed first: a second run (or a retry) never sends it twice.
+    const { data: claimed } = await admin
+      .from("site_orders")
+      .update({ reminder_sent_at: new Date().toISOString() })
+      .eq("id", order.id)
+      .is("reminder_sent_at", null)
+      .select("id")
+      .maybeSingle();
+    if (!claimed) continue;
+    await notifyTeam({
+      businessId: order.business_id as string,
+      type: "account",
+      subject: `Falta só o pagamento para criarmos o seu site`,
+      content: {
+        heading: "Seu site está esperando por você 🚀",
+        paragraphs: [
+          `Sua conta do ${SITE_OFFER.name} já está criada. Assim que o Pix cair, sua agenda online é liberada na hora e o seu site fica pronto em até 48 horas úteis.`,
+          "É só entrar no painel e pagar pelo Pix em Assinatura.",
+        ],
+        cta: { label: "Pagar e ativar", url: "/painel/plano" },
+      },
+      push: {
+        title: "Falta só o pagamento",
+        body: "Pague o Pix para ativar sua agenda e começarmos o seu site.",
+        url: "/painel/plano",
+      },
+    });
+    sent++;
+  }
+  return sent;
+}

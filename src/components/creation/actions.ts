@@ -42,6 +42,8 @@ const sourceSchema = z
     referrer: z.string().max(200).optional(),
     /** Ad click id seen when the visit arrived (gclid → google, fbclid → meta). */
     click: z.enum(["google", "meta"]).optional(),
+    // Came by the "Site + Agenda" sign-up link.
+    offer: z.literal("site").optional(),
     /** First page of the visitor's session and the template of the page (SEO funnel). */
     landing: z.string().max(200).optional(),
     template: z.enum(SITE_TEMPLATES).optional(),

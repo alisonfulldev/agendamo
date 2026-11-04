@@ -48,7 +48,16 @@ export function closeCreation(): void {
 }
 
 /** ?nome= / ?ramo= of a prospecting link, read once when the conversation starts. */
-export function creationParams(): { name: string | null; niche: string | null } {
+export function creationParams(): {
+  name: string | null;
+  niche: string | null;
+  /** "site": the "Site + Agenda" sales conversation (?oferta=site). */
+  offer: "site" | null;
+} {
   const params = new URLSearchParams(window.location.search);
-  return { name: params.get("nome")?.trim().slice(0, 120) || null, niche: params.get("ramo") };
+  return {
+    name: params.get("nome")?.trim().slice(0, 120) || null,
+    niche: params.get("ramo"),
+    offer: params.get("oferta") === "site" ? "site" : null,
+  };
 }

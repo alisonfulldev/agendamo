@@ -36,7 +36,8 @@ export async function convertToWebp(
         .clone()
         .webp({ quality })
         .toBuffer({ resolveWithObject: true });
-      if (data.length <= MAX_UPLOAD_BYTES) return { bytes: data, width: info.width, height: info.height };
+      if (data.length <= MAX_UPLOAD_BYTES)
+        return { bytes: data, width: info.width, height: info.height };
     }
   } catch (error) {
     throw new ConvertError(error instanceof Error ? error.message : "unreadable");

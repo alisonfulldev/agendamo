@@ -240,3 +240,92 @@ test("first access on the phone: bottom tabs and the tutorial, tapping like a ga
   await page.getByRole("link", { name: "Ver tutorial" }).click();
   await expect(tour.getByText("Este é o seu painel!")).toBeVisible();
 });
+
+test("Site + Agenda link: sales conversation, domain, sign-up without trial and the site order", async ({
+  page,
+}) => {
+  const name = `Barbearia Site ${unique()}`;
+  const user = `site-${unique()}`;
+  const email = `${user}@gmail.com`;
+  await page.goto("/?criar=1&oferta=site");
+  const dialog = page.locator("[data-creation]");
+  await expect(dialog.getByText(/site profissional \+ agenda online/)).toBeVisible();
+  // The consultant is one tap away, with a ready message.
+  await expect(dialog.getByRole("link", { name: /Falar com o consultor/ })).toHaveAttribute(
+    "href",
+    /^https:\/\/wa\.me\/5518996742364\?text=/,
+  );
+  await dialog.getByLabel("Nome do negócio").fill(name);
+  await page.waitForTimeout(1600);
+  await dialog.getByRole("button", { name: "Enviar", exact: true }).click();
+  await dialog.getByRole("button", { name: "Isso mesmo" }).click();
+
+  await expect(dialog.getByText(/pronto em até 48 horas úteis/)).toBeVisible();
+  await dialog.getByRole("button", { name: "Legal, e o que mais?" }).click();
+  await dialog.getByRole("button", { name: "Entendi, e o preço?" }).click();
+  await expect(dialog.getByText(/R\$ 97 hoje/)).toBeVisible();
+  await expect(dialog.getByText(/grátis/i)).toHaveCount(0);
+  await dialog.getByRole("button", { name: "Ficou uma dúvida" }).click();
+  await dialog.getByRole("button", { name: "Preciso entender de site?" }).click();
+  await expect(dialog.getByText(/A gente faz tudo/)).toBeVisible();
+  await dialog.getByRole("button", { name: "Quero meu site" }).click();
+  await dialog.getByRole("button", { name: "Quero meu domínio" }).click();
+  await dialog.getByLabel("seunegocio.com.br").fill("Barbearia Site Teste");
+  await dialog.getByRole("button", { name: "Enviar", exact: true }).click();
+
+  await expect(dialog.getByText(/Qual o seu WhatsApp\?/)).toBeVisible();
+  await dialog.getByLabel("(11) 99999-8888").fill(`119${Date.now().toString().slice(-8)}`);
+  await dialog.getByRole("button", { name: "Enviar", exact: true }).click();
+  await dialog.getByLabel("seu@email.com").fill(email);
+  await dialog.getByRole("button", { name: "Enviar", exact: true }).click();
+  const before = codes(email).length;
+  await dialog.getByRole("button", { name: "Aceito, enviar o código" }).click();
+  const code = await newCode(email, before);
+  await dialog.getByLabel("Código de 4 números").fill(code);
+  await dialog.getByRole("button", { name: "Enviar", exact: true }).click();
+  await expect(dialog.getByText(/No painel, pague o Pix para ativar/)).toBeVisible();
+
+  // No trial: the panel opens the payment of the offer (site + 1st month + domain).
+  await dialog.getByRole("button", { name: "Entrar no meu painel" }).click();
+  await page.waitForURL(/\/painel\/plano/);
+  await expect(page.getByText("Falta só o pagamento para criarmos o seu site 🚀")).toBeVisible();
+  await expect(page.getByText(/Domínio barbeariasiteteste\.com\.br por 1 ano/)).toBeVisible();
+  await page.getByLabel(/Nome ou razão social/).fill("Barbearia Site LTDA");
+  await page.getByLabel("CPF ou CNPJ").fill("529.982.247-25");
+  await page.getByRole("button", { name: "Gerar Pix de R$ 188,00" }).click();
+  await expect(page.getByRole("img", { name: "QR code do Pix" })).toBeVisible();
+
+  // The payment arrives (simulated): plan on, site order with its deadline.
+  const confirm = await page.context().newPage();
+  await confirm.goto("/demo#assinaturas");
+  await confirm
+    .locator("form", { hasText: name })
+    .getByRole("button", { name: "Confirmar pagamento" })
+    .first()
+    .click();
+  await expect(page.getByText("Pagamento confirmado! 🎉")).toBeVisible({ timeout: 20_000 });
+  await page.goto("/painel/plano");
+  await expect(page.getByText(/Pagamento recebido! Seu site fica pronto até/)).toBeVisible();
+});
+
+test("Site + Agenda link: the booking simulation goes back to the price", async ({ page }) => {
+  await page.goto("/?criar=1&oferta=site");
+  const dialog = page.locator("[data-creation]");
+  await dialog.getByLabel("Nome do negócio").fill(`Barbearia Demo ${unique()}`);
+  await page.waitForTimeout(1600);
+  await dialog.getByRole("button", { name: "Enviar", exact: true }).click();
+  await dialog.getByRole("button", { name: "Isso mesmo" }).click();
+  await dialog.getByRole("button", { name: "Legal, e o que mais?" }).click();
+  await dialog.getByRole("button", { name: "Quero ver como funciona" }).click();
+  await dialog.getByRole("button", { name: /Corte/ }).first().click();
+  await dialog.getByRole("button", { name: /^Hoje/ }).click();
+  await dialog
+    .getByRole("button", { name: /^\d{2}:\d{2}$/ })
+    .first()
+    .click();
+  await expect(dialog.getByText(/Viu\? É assim que seu cliente agenda/)).toBeVisible();
+  await dialog.getByRole("button", { name: "Entendi, e o preço?" }).click();
+  await expect(dialog.getByText(/R\$ 97 hoje/)).toBeVisible();
+  // No "Criar minha conta grátis" anywhere in the offer.
+  await expect(dialog.getByRole("button", { name: /grátis/i })).toHaveCount(0);
+});

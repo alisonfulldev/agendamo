@@ -115,3 +115,30 @@ export async function createCouponAction(
   revalidatePath("/admin", "layout");
   return { ok: true, message: `Cupom ${parsed.data.code} criado.` };
 }
+
+/** "Site + Agenda": the site was built and handed over (or back to "paid" to undo). */
+export async function setSiteDeliveredAction(
+  businessId: string,
+  delivered: boolean,
+): Promise<{ ok: boolean }> {
+  const admin = await requireAdmin();
+  const id = z.uuid().parse(businessId);
+  const db = createAdminClient();
+  const { error } = await db
+    .from("site_orders")
+    .update({
+      status: delivered ? "delivered" : "paid",
+      delivered_at: delivered ? new Date().toISOString() : null,
+    })
+    .eq("business_id", id)
+    .in("status", delivered ? ["paid"] : ["delivered"]);
+  if (error) return { ok: false };
+  await audit({
+    businessId: id,
+    userId: admin.id,
+    action: "plan.changed",
+    details: { site_order: delivered ? "delivered" : "reopened", by: admin.email },
+  });
+  revalidatePath("/admin/sites");
+  return { ok: true };
+}

@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // In-memory tables behind the admin client: enough of the query builder for the webhook.
 type Row = Record<string, unknown>;
-const db: Record<string, Row[]> = { subscriptions: [], businesses: [] };
+const db: Record<string, Row[]> = { subscriptions: [], businesses: [], site_orders: [] };
 
 function query(table: string) {
   const filters: ((row: Row) => boolean)[] = [];
@@ -28,7 +28,7 @@ function query(table: string) {
     },
     maybeSingle: async () => {
       const rows = run();
-      return { data: patch ? null : (structuredClone(rows[0]) ?? null), error: null };
+      return { data: structuredClone(rows[0]) ?? null, error: null };
     },
     then: (resolve: (value: { data: null; error: null }) => void) => {
       run();
@@ -46,6 +46,8 @@ vi.mock("@/lib/audit", () => ({ audit: vi.fn(async () => undefined) }));
 vi.mock("@/lib/cache", () => ({ invalidatePublicPage: vi.fn() }));
 vi.mock("@/lib/trial", () => ({ recordTrialClaims: vi.fn(async () => undefined) }));
 const notifyTeam = vi.fn(async () => undefined);
+const notifyAdminsOfPaidSite = vi.fn(async () => undefined);
+vi.mock("@/lib/notifications/admin-signup", () => ({ notifyAdminsOfPaidSite }));
 vi.mock("@/lib/notifications/owner", () => ({
   claimNotification: vi.fn(async () => true),
   notifyTeam,
@@ -96,6 +98,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   db.businesses = [{ id: "biz_1", plan: "free", slug: "studio", trial_ends_at: null }];
   db.subscriptions = [];
+  db.site_orders = [];
 });
 
 describe("periodBase", () => {
@@ -271,5 +274,60 @@ describe("Pix Automático webhook", () => {
     });
     expect(asaas.createSubscription).not.toHaveBeenCalled();
     expect(row().status).toBe("cancelled");
+  });
+});
+
+describe("Site + Agenda", () => {
+  it("first payment starts the site order (deadline, yearly domain charge, admin e-mail) once", async () => {
+    db.businesses = [
+      {
+        id: "biz_1",
+        plan: "free",
+        slug: "studio",
+        trial_ends_at: null,
+        offer: "site",
+        brand_key: "beauty",
+        name: "Studio",
+      },
+    ];
+    db.site_orders = [
+      {
+        id: "ord_1",
+        business_id: "biz_1",
+        status: "awaiting_payment",
+        wants_domain: true,
+        domain_name: "studio.com.br",
+      },
+    ];
+    db.page_settings = [];
+    db.members = [];
+    db.subscriptions = [subscription({})];
+    const payment = {
+      id: "pay_first",
+      customer: "cus_1",
+      status: "RECEIVED",
+      value: 188,
+      dueDate: "2026-10-28",
+      invoiceUrl: "",
+      billingType: "PIX",
+    };
+    await handleAsaasEvent({ id: "e1", event: "PAYMENT_RECEIVED", payment });
+    expect(db.site_orders[0]).toMatchObject({ status: "paid" });
+    // Wednesday 12:00 (São Paulo) + 48 business hours = Friday 12:00.
+    expect(db.site_orders[0]!.due_at).toBe("2026-10-30T15:00:00.000Z");
+    expect(asaas.createSubscription).toHaveBeenCalledWith(
+      expect.objectContaining({ valueCents: 9100, cycle: "YEARLY", nextDueDate: "2027-10-28" }),
+    );
+    expect(row().addons).toMatchObject({ custom_domain: { subscription_id: "sub_regular_new" } });
+    expect(notifyAdminsOfPaidSite).toHaveBeenCalledOnce();
+
+    // The confirmation from the bank afterwards does not start it again.
+    await handleAsaasEvent({
+      id: "e2",
+      event: "PIX_AUTOMATIC_RECURRING_AUTHORIZATION_ACTIVATED",
+      authorization: { id: "aut_1", status: "ACTIVE", subscriptionId: "sub_auto" },
+    });
+    expect(notifyAdminsOfPaidSite).toHaveBeenCalledOnce();
+    expect(asaas.createSubscription).toHaveBeenCalledOnce();
   });
 });

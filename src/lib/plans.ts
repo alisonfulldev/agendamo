@@ -36,6 +36,62 @@ export const PLAN_PRICES = {
 
 export const PLAN_NAME = "Completo";
 
+/**
+ * "Site + Agenda" (2026-11-04): sold by its own sign-up link (?criar=1&oferta=site). Same
+ * features as Completo plus a site built by hand within 48 business hours. No trial, monthly
+ * only, coupons apply (not to the domain). The domain is optional and renews yearly.
+ */
+export const SITE_OFFER = {
+  key: "site",
+  name: "Site + Agenda",
+  /** First payment: building the site + the first month. */
+  setupCents: 9700,
+  monthlyCents: 3900,
+  extraProfessionalCents: 900,
+  /** .com.br domain, per year (first year with the first payment). */
+  domainYearlyCents: 9100,
+  deliveryBusinessHours: 48,
+} as const;
+
+/** Monthly value of the offer with extra professionals and a coupon. */
+export function siteMonthlyPrice(extraProfessionals: number, discountPercent = 0): number {
+  const base = SITE_OFFER.monthlyCents + SITE_OFFER.extraProfessionalCents * extraProfessionals;
+  return Math.round((base * (100 - discountPercent)) / 100);
+}
+
+/** First payment: site + first month (+ extras), coupon applied, plus the domain's first year. */
+export function siteFirstPrice(
+  extraProfessionals: number,
+  discountPercent = 0,
+  wantsDomain = false,
+): number {
+  const base = SITE_OFFER.setupCents + SITE_OFFER.extraProfessionalCents * extraProfessionals;
+  return (
+    Math.round((base * (100 - discountPercent)) / 100) +
+    (wantsDomain ? SITE_OFFER.domainYearlyCents : 0)
+  );
+}
+
+/**
+ * Delivery deadline: `hours` business hours after `from`, counting whole weekdays (Monday to
+ * Friday, in São Paulo). Paid on a weekend, the count starts on Monday at the same hour.
+ */
+export function addBusinessHours(
+  from: Date,
+  hours: number = SITE_OFFER.deliveryBusinessHours,
+): Date {
+  const weekday = (d: Date) =>
+    new Intl.DateTimeFormat("en-US", { timeZone: "America/Sao_Paulo", weekday: "short" }).format(d);
+  const result = new Date(from);
+  while (["Sat", "Sun"].includes(weekday(result))) result.setTime(result.getTime() + 86_400_000);
+  let days = Math.ceil(hours / 24);
+  while (days > 0) {
+    result.setTime(result.getTime() + 86_400_000);
+    if (!["Sat", "Sun"].includes(weekday(result))) days--;
+  }
+  return result;
+}
+
 export type Cycle = "monthly" | "yearly";
 
 /** Subscription value in cents for the cycle, with extra professionals and a coupon. */

@@ -1,12 +1,23 @@
 import "server-only";
 
 import { getNiche, type BrandConfig } from "@/brands";
+import { businessUrl } from "@/brands/urls";
 import { audit } from "@/lib/audit";
 import { invalidatePublicPage } from "@/lib/cache";
-import type { Business, Subscription } from "@/lib/db/types";
+import type { Business, SiteOrder, Subscription } from "@/lib/db/types";
 import { isDemoMode } from "@/lib/demo/mode";
+import { notifyAdminsOfPaidSite } from "@/lib/notifications/admin-signup";
 import { claimNotification, notifyTeam } from "@/lib/notifications/owner";
-import { PLAN_NAME, PLAN_PRICES, subscriptionPrice, type Cycle } from "@/lib/plans";
+import {
+  addBusinessHours,
+  PLAN_NAME,
+  PLAN_PRICES,
+  SITE_OFFER,
+  siteFirstPrice,
+  siteMonthlyPrice,
+  subscriptionPrice,
+  type Cycle,
+} from "@/lib/plans";
 import { recordTrialClaims } from "@/lib/trial";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -38,6 +49,15 @@ function addPeriod(date: string, cycle: Cycle): string {
   if (cycle === "yearly") d.setUTCFullYear(d.getUTCFullYear() + 1);
   else d.setUTCMonth(d.getUTCMonth() + 1);
   return d.toISOString();
+}
+
+async function loadSiteOrder(businessId: string): Promise<SiteOrder | null> {
+  const { data } = await createAdminClient()
+    .from("site_orders")
+    .select("*")
+    .eq("business_id", businessId)
+    .maybeSingle();
+  return (data as SiteOrder | null) ?? null;
 }
 
 async function loadSubscription(businessId: string): Promise<Subscription | null> {
@@ -182,7 +202,12 @@ export async function subscribePlan(input: {
   const existing = await loadSubscription(input.business.id);
   const extras = Math.max(0, Math.min(49, Math.floor(input.extraProfessionals)));
   const seats = extras + 1;
-  const description = planDescription(input.brand.name, input.cycle, extras);
+  // "Site + Agenda" (SITE_OFFER): monthly only, its own prices, the site + first month up front.
+  const siteOffer = input.business.offer === "site";
+  const cycle: Cycle = siteOffer ? "monthly" : input.cycle;
+  const description = siteOffer
+    ? `${input.brand.name} ${SITE_OFFER.name}${extras > 0 ? ` · ${seats} profissionais` : ""}`
+    : planDescription(input.brand.name, cycle, extras);
 
   let discount = 0;
   if (input.couponCode) {
@@ -193,7 +218,9 @@ export async function subscribePlan(input: {
     if (data === null || data === undefined) throw new Error("coupon_invalid");
     discount = data as number;
   }
-  const value = subscriptionPrice(input.cycle, extras, discount);
+  const value = siteOffer
+    ? siteMonthlyPrice(extras, discount)
+    : subscriptionPrice(cycle, extras, discount);
   // The CPF/CNPJ informed here also counts for the one-trial-per-person rule.
   await recordTrialClaims(input.business.id, {
     email: input.payer.email,
@@ -205,13 +232,13 @@ export async function subscribePlan(input: {
     // Between the first payment of a renewal by QR and the bank's confirmation there is no
     // subscription to change yet (a few minutes at most).
     if (!existing.provider_subscription_id) throw new Error("automatic_pending");
-    const sameTerms = value === recurringValue(existing) && input.cycle === existing.billing_cycle;
+    const sameTerms = value === recurringValue(existing) && cycle === existing.billing_cycle;
     const reauthorize = existing.pix_automatic_status === "active" && !sameTerms;
     if (reauthorize) {
       // The new value applies from the next charge, paid by QR (which authorizes again).
       await fallbackToRegularPix(existing, {
         valueCents: value,
-        cycle: input.cycle,
+        cycle: cycle,
         description,
         status: "cancelled",
         notify: false,
@@ -220,14 +247,14 @@ export async function subscribePlan(input: {
       // The new value applies from the next charge (no proportional charge now).
       await updateSubscription(existing.provider_subscription_id, {
         valueCents: value,
-        cycle: CYCLES[input.cycle],
+        cycle: CYCLES[cycle],
         description,
       });
     }
     await admin
       .from("subscriptions")
       .update({
-        billing_cycle: input.cycle,
+        billing_cycle: cycle,
         extra_professionals: extras,
         value_cents: value,
         needs_reprice: false,
@@ -243,7 +270,7 @@ export async function subscribePlan(input: {
       businessId: input.business.id,
       userId: input.userId,
       action: "plan.changed",
-      details: { cycle: input.cycle, seats, value_cents: value, reauthorize },
+      details: { cycle: cycle, seats, value_cents: value, reauthorize },
     });
     return { kind: "changed", reauthorize };
   }
@@ -258,20 +285,29 @@ export async function subscribePlan(input: {
     ...(existing ?? ({} as Subscription)),
     business_id: input.business.id,
     provider_customer_id: customerId,
-    billing_cycle: input.cycle,
+    billing_cycle: cycle,
     extra_professionals: extras,
     status: "pending",
     current_period_end: null,
   };
+  // The site is paid once: the first charge of a new offer subscription carries it (and the
+  // domain's first year); subscribing again later starts at the monthly value.
+  const order = siteOffer ? await loadSiteOrder(input.business.id) : null;
+  const firstValue =
+    order?.status === "awaiting_payment"
+      ? siteFirstPrice(extras, discount, order.wants_domain)
+      : value;
   let started: Awaited<ReturnType<typeof startPixAutomatic>> | null = null;
   let regular: { id: string } | null = null;
   try {
     started = await startPixAutomatic(draft, {
       brandName: input.brand.name,
       valueCents: value,
-      firstValueCents: value,
+      firstValueCents: firstValue,
     });
   } catch (error) {
+    // The regular Pix cannot charge a different first value: the offer waits for Asaas.
+    if (firstValue !== value) throw error;
     // Asaas could not create the authorization: the subscription starts on the regular Pix and
     // the next charge offers the Pix Automático again.
     console.error(
@@ -281,7 +317,7 @@ export async function subscribePlan(input: {
     regular = await createSubscription({
       customer: customerId,
       valueCents: value,
-      cycle: CYCLES[input.cycle],
+      cycle: CYCLES[cycle],
       nextDueDate: today(),
       description,
       externalReference: `${input.business.id}:plan`,
@@ -297,7 +333,7 @@ export async function subscribePlan(input: {
       provider_subscription_id: regular?.id ?? authorization?.subscriptionId ?? null,
       plan: "complete",
       needs_reprice: false,
-      billing_cycle: input.cycle,
+      billing_cycle: cycle,
       extra_professionals: extras,
       value_cents: value,
       billing_type: "pix",
@@ -319,7 +355,7 @@ export async function subscribePlan(input: {
     action: "subscription.created",
     details: {
       plan: "complete",
-      cycle: input.cycle,
+      cycle: cycle,
       seats,
       value_cents: value,
       method: authorization ? "pix_automatic" : "pix",
@@ -737,6 +773,103 @@ async function activateBusinessPlan(row: Subscription): Promise<void> {
     });
     invalidatePublicPage(business.slug);
   }
+  if (business.offer === "site") await startSiteOrder(business, row);
+}
+
+/**
+ * "Site + Agenda" paid: the site order gets its deadline (48 business hours), the domain its
+ * yearly renewal charge, and the admins an e-mail with what to build. Runs once: only an order
+ * still awaiting payment moves on.
+ */
+async function startSiteOrder(business: Business, row: Subscription): Promise<void> {
+  const admin = createAdminClient();
+  const now = new Date();
+  const due = addBusinessHours(now);
+  const { data: moved } = await admin
+    .from("site_orders")
+    .update({ status: "paid", paid_at: now.toISOString(), due_at: due.toISOString() })
+    .eq("business_id", business.id)
+    .eq("status", "awaiting_payment")
+    .select("*")
+    .maybeSingle();
+  const order = moved as SiteOrder | null;
+  if (!order) return;
+
+  if (order.wants_domain && row.provider_customer_id) {
+    // The first year was in the first payment: the yearly charge starts a year from now.
+    const nextYear = new Date(now);
+    nextYear.setUTCFullYear(nextYear.getUTCFullYear() + 1);
+    try {
+      const domain = await createSubscription({
+        customer: row.provider_customer_id,
+        valueCents: SITE_OFFER.domainYearlyCents,
+        cycle: "YEARLY",
+        nextDueDate: dateOnly(nextYear.toISOString()),
+        description: `Domínio ${order.domain_name ?? ""}`.trim().slice(0, 80),
+        externalReference: `${business.id}:domain`,
+      });
+      const fresh = (await loadSubscription(business.id)) ?? row;
+      await admin
+        .from("subscriptions")
+        .update({
+          addons: {
+            ...(fresh.addons ?? {}),
+            custom_domain: {
+              subscription_id: domain.id,
+              status: "active",
+              paid_until: nextYear.toISOString(),
+            },
+          },
+          updated_at: now.toISOString(),
+        })
+        .eq("id", fresh.id);
+    } catch (error) {
+      // The site order is paid either way; the renewal can be created by hand.
+      console.error(
+        "domain renewal subscription failed",
+        error instanceof Error ? error.message : "unknown",
+      );
+    }
+  }
+
+  await audit({
+    businessId: business.id,
+    userId: null,
+    action: "plan.changed",
+    details: { site_order: "paid", due_at: due.toISOString(), domain: order.domain_name },
+  });
+  await notifyAdminsOfSiteOrder(business, order, due);
+}
+
+async function notifyAdminsOfSiteOrder(business: Business, order: SiteOrder, due: Date) {
+  const admin = createAdminClient();
+  const niche = getNiche(business.brand_key);
+  const [{ data: page }, { data: owner }] = await Promise.all([
+    admin
+      .from("page_settings")
+      .select("whatsapp_number")
+      .eq("business_id", business.id)
+      .maybeSingle(),
+    admin
+      .from("members")
+      .select("user_id")
+      .eq("business_id", business.id)
+      .eq("role", "owner")
+      .maybeSingle(),
+  ]);
+  const user = owner?.user_id
+    ? (await admin.auth.admin.getUserById(owner.user_id as string)).data.user
+    : null;
+  await notifyAdminsOfPaidSite({
+    businessName: business.name,
+    nicheName: niche.niche?.name ?? "Outro",
+    email: user?.email ?? null,
+    whatsapp: (page?.whatsapp_number as string | null) ?? null,
+    pageUrl: businessUrl(niche, `/${business.slug}`),
+    domainName: order.domain_name,
+    wantsDomain: order.wants_domain,
+    dueAt: due,
+  });
 }
 
 /**
@@ -885,7 +1018,13 @@ export async function handleAsaasEvent(event: AsaasEvent): Promise<string> {
       await applyAutomaticFirstPayment(row, event.payment!.id);
       return "plan active (pix automatic first payment)";
     }
-    const cycle: Cycle = kind === "plan" ? row.billing_cycle : "monthly";
+    // Add-ons are monthly, except the domain of the Site + Agenda offer (yearly).
+    const cycle: Cycle =
+      kind === "plan"
+        ? row.billing_cycle
+        : row.addons?.custom_domain?.subscription_id === subscriptionId
+          ? "yearly"
+          : "monthly";
     const paidUntil = addPeriod(event.payment!.dueDate, cycle);
     if (kind === "addon") {
       // A few days of tolerance until the next charge is paid.
@@ -1048,6 +1187,11 @@ export async function processBillingExpirations(): Promise<{
   for (const row of (stale ?? []) as Subscription[]) {
     if (!row.provider_subscription_id) continue;
     const business = await businessOf(row.business_id);
+    // The Site + Agenda price is its own: a Completo price change never touches it.
+    if (business?.offer === "site") {
+      await admin.from("subscriptions").update({ needs_reprice: false }).eq("id", row.id);
+      continue;
+    }
     const valueCents = subscriptionPrice(row.billing_cycle, row.extra_professionals ?? 0);
     const description = planDescription(
       getNiche(business?.brand_key).name,
