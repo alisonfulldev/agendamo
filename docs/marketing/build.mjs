@@ -220,6 +220,16 @@ const CLASSIC_NICHES = [
     tag: "para psicólogos",
     perks: ["pronto para o Google", "pacientes agendam sozinhos 24h", "menos faltas com lembrete automático"],
   },
+  {
+    file: "nutricao",
+    tag: "para nutricionistas",
+    perks: ["pronto para o Google", "pacientes agendam sozinhos 24h", "menos faltas com lembrete automático"],
+  },
+  {
+    file: "estetica",
+    tag: "para clínicas de estética",
+    perks: ["pronto para o Google", "clientes agendam sozinhas 24h", "menos faltas com sinal pelo Pix"],
+  },
 ];
 function classic(fmt, niche = null) {
   const f = CLASSIC_FORMATS[fmt];
