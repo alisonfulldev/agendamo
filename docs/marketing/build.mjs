@@ -164,12 +164,14 @@ const ads = {
 };
 
 // ---------------------------------------------------------------------------------------------
-// "Oferta" por ramo (2026-11-06): a mesma peça do feed-oferta, falando com o ramo, em 3 formatos.
+// "Oferta" por ramo (2026-11-06): a peça do feed-oferta, falando com o ramo, em 3 formatos, nas
+// cores da TopSite (a conta que anuncia): amarelo e preto, sem o logo do MeetChat.
+const T = { bg: "#FCD901", ink: "#111111" };
 const NICHE_ADS = [
   {
     file: "psicologia",
-    title: `Site + agenda online<br/>para <span style="color:${C.lime}">psicólogos</span>`,
-    sub: "Seus pacientes agendam sozinhos, 24h · Pronto hoje",
+    title: `Site + agenda online<br/>para <span class="hl">psicólogos</span>`,
+    sub: "Seus pacientes agendam sozinhos, 24 horas",
     shots: ["site-psicologia", "site-psicologia-elegante"],
   },
 ];
@@ -182,15 +184,16 @@ const FORMATS = {
 
 function nicheOffer(n, fmt) {
   const f = FORMATS[fmt];
-  return `<div class="slide" style="width:${f.width}px;height:${f.height}px;background:${C.deep};color:#fff;padding:${f.top ?? f.pad}px ${f.pad}px ${f.pad}px">
-    <div class="brand" style="color:#fff">${logo}MeetChat</div>
-    <h1 class="title" style="font-size:${f.title}px;margin-top:${fmt === "quadrado" ? 26 : 40}px">${n.title}</h1>
-    <p class="title" style="font-size:${f.price}px;color:${C.lime};margin-top:${fmt === "quadrado" ? 14 : 24}px">${PRICE.site}<span style="font-size:${Math.round(f.price * 0.4)}px">/mês</span></p>
-    <p style="font-size:${f.sub}px;font-weight:600;margin-top:14px;opacity:.9">${n.sub}</p>
-    ${fmt === "story" ? `<div class="pill" style="margin-top:36px;align-self:flex-start;background:${C.lime};color:${C.deep};font-size:36px;padding:24px 36px">Toque e chame no WhatsApp →</div>` : ""}
-    <div class="phone" style="position:absolute;left:${fmt === "quadrado" ? 120 : fmt === "story" ? 60 : 100}px;bottom:${f.phoneBottom - 40}px;width:${f.phone}px;transform:rotate(-5deg)"><img src="${img(n.shots[0])}"/></div>
-    <div class="phone" style="position:absolute;right:${fmt === "quadrado" ? 120 : fmt === "story" ? 60 : 100}px;bottom:${f.phoneBottom}px;width:${f.phone}px;transform:rotate(5deg)"><img src="${img(n.shots[1])}"/></div>
-    <span class="pill" style="position:absolute;right:${f.pad}px;top:${(f.top ?? f.pad) + 6}px;background:${C.lime};color:${C.deep};font-size:28px;padding:14px 26px">Sem fidelidade</span>
+  const side = fmt === "quadrado" ? 120 : fmt === "story" ? 60 : 100;
+  return `<div class="slide" style="width:${f.width}px;height:${f.height}px;background:${T.bg};color:${T.ink};padding:${f.top ?? f.pad}px ${f.pad}px ${f.pad}px">
+    <style>.hl { background: ${T.ink}; color: ${T.bg}; padding: 0 .14em; border-radius: .12em; }</style>
+    <span class="pill" style="align-self:flex-start;background:${T.ink};color:${T.bg};font-size:28px;padding:14px 26px">Sem fidelidade · Pronto hoje</span>
+    <h1 class="title" style="font-size:${f.title}px;margin-top:${fmt === "quadrado" ? 26 : 40}px;line-height:1.06">${n.title}</h1>
+    <p class="title" style="font-size:${f.price}px;margin-top:${fmt === "quadrado" ? 14 : 24}px">${PRICE.site}<span style="font-size:${Math.round(f.price * 0.4)}px">/mês</span></p>
+    <p style="font-size:${f.sub}px;font-weight:700;margin-top:14px">${n.sub}</p>
+    ${fmt === "story" ? `<div class="pill" style="margin-top:36px;align-self:flex-start;background:${T.ink};color:${T.bg};font-size:36px;padding:24px 36px">Toque e chame no WhatsApp →</div>` : ""}
+    <div class="phone" style="position:absolute;left:${side}px;bottom:${f.phoneBottom - 40}px;width:${f.phone}px;transform:rotate(-5deg)"><img src="${img(n.shots[0])}"/></div>
+    <div class="phone" style="position:absolute;right:${side}px;bottom:${f.phoneBottom}px;width:${f.phone}px;transform:rotate(5deg)"><img src="${img(n.shots[1])}"/></div>
   </div>`;
 }
 
