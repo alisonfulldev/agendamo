@@ -136,6 +136,29 @@ async function saveImage(
     }
     const previous = (current as Record<string, string | null> | null)?.[column];
     if (previous) await deleteObject(previous);
+  } else if (kind === "site_hero") {
+    if (!getPlanFeatures(business).site) {
+      await deleteObject(key);
+      return { ok: false, error: "O site faz parte do plano Site + Agenda." };
+    }
+    // site_settings is written by the server only (no write policy for users).
+    const admin = createAdminClient();
+    const { data: current } = await admin
+      .from("site_settings")
+      .select("hero_image_key")
+      .eq("business_id", business.id)
+      .maybeSingle();
+    const { error } = await admin.from("site_settings").upsert({
+      business_id: business.id,
+      hero_image_key: key,
+      updated_at: new Date().toISOString(),
+    });
+    if (error) {
+      console.error("upload register refused", { reason: "save_failed", kind, code: error.code });
+      await deleteObject(key);
+      return { ok: false, error: "Não foi possível salvar a imagem." };
+    }
+    if (current?.hero_image_key) await deleteObject(current.hero_image_key as string);
   } else {
     const { data: current } = await supabase
       .from("professionals")

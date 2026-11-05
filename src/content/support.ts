@@ -138,6 +138,25 @@ export const SUPPORT_ITEMS: SupportItem[] = [
     suggestOn: ["/painel/configuracoes", "/painel/pagina"],
   },
   {
+    id: "site",
+    question: "Como edito o meu site?",
+    answer:
+      "Em Meu site (no menu). Ali você muda as cores, a foto do topo, os textos e as seções, e vê como está no ar. Fotos, serviços e endereço vêm do Meu perfil. O site faz parte do teste e do plano Site + Agenda.",
+    keywords: [
+      "site",
+      "meu site",
+      "editar site",
+      "mudar site",
+      "pagina do negocio",
+      "landing",
+      "cor do site",
+      "foto do site",
+      "google",
+    ],
+    href: "/painel/site",
+    suggestOn: ["/painel/site", "/painel"],
+  },
+  {
     id: "photo",
     question: "Como coloco foto de perfil e capa?",
     answer:

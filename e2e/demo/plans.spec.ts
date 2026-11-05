@@ -73,6 +73,17 @@ async function signUp(page: Page, name: string, email: string, phone: string) {
   return dialog;
 }
 
+// The panel photo prompt (demo businesses have no photo) would cover the screens under test.
+test.beforeEach(async ({ context }) => {
+  await context.addInitScript(() => {
+    try {
+      localStorage.setItem("mc_photo_prompt_until", String(Date.now() + 86_400_000));
+    } catch {
+      // No storage: the prompt may show.
+    }
+  });
+});
+
 test("trial ends without payment: waiting mode, nothing deleted, subscribing brings it back", async ({
   page,
 }) => {
@@ -91,6 +102,22 @@ test("trial ends without payment: waiting mode, nothing deleted, subscribing bri
     "href",
     "/espaco-escuta",
   );
+  // "Meu site": the owner changes the title and hides a section; the site shows it.
+  await page.goto("/painel/site");
+  await page.getByLabel("Título", { exact: true }).fill("Psicoterapia com escuta de verdade");
+  await page.getByRole("checkbox", { name: "Dúvidas" }).uncheck();
+  await page.getByRole("button", { name: "Salvar e publicar" }).click();
+  await expect(page.getByText("Site atualizado. Já está no ar.")).toBeVisible();
+  await page.goto("/espaco-escuta/site");
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Psicoterapia com escuta de verdade" }),
+  ).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Dúvidas" })).toHaveCount(0);
+  await page.goto("/painel/site");
+  await page.getByLabel("Título", { exact: true }).fill("");
+  await page.getByRole("checkbox", { name: "Dúvidas" }).check();
+  await page.getByRole("button", { name: "Salvar e publicar" }).click();
+  await expect(page.getByText("Site atualizado. Já está no ar.")).toBeVisible();
 
   // The trial ends: the panel opens only the subscription screen (menu: Assinatura and Conta).
   await setPlan(page, "Espaço Escuta", "Modo de espera");

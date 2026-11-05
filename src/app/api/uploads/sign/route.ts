@@ -79,6 +79,14 @@ export async function POST(request: Request) {
     }
   }
 
+  // The site's top photo only with the site (trial or "Site + Agenda", rule 6).
+  if (kind === "site_hero" && !getPlanFeatures(business).site) {
+    return NextResponse.json(
+      { error: "O site faz parte do plano Site + Agenda." },
+      { status: 403 },
+    );
+  }
+
   if (kind === "professional") {
     if (!professionalId)
       return NextResponse.json({ error: "Profissional não informado." }, { status: 400 });

@@ -226,6 +226,11 @@ export default async function PanelHomePage({ searchParams }: PageProps<"/painel
             {features.trialActive ? ` Incluso no teste e no plano ${SITE_PLAN_NAME}.` : ""}
           </p>
           <CopyLink url={siteUrl} qrHref={SITE_QR_PNG_DOWNLOAD_URL} tour={false} />
+          {isOwner ? (
+            <Button asChild variant="outline" size="sm" className="mt-2">
+              <Link href="/painel/site">Editar meu site</Link>
+            </Button>
+          ) : null}
         </div>
       ) : isOwner ? (
         <Link

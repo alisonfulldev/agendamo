@@ -27,6 +27,12 @@ export const PANEL_NAV: NavItem[] = [
     hint: "Foto, serviços e preços",
   },
   {
+    href: "/painel/site",
+    label: "Meu site",
+    group: "business",
+    hint: "Cores, foto e textos do site",
+  },
+  {
     href: "/painel/vendas",
     label: "Vendas",
     group: "business",
