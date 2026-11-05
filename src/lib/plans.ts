@@ -36,6 +36,8 @@ export const PLAN_PRICES = {
   customDomain: { monthly: 1900 },
   /** Own .br domain sold with "Site + Agenda" (2026-11-06): first year in the first Pix. */
   domainYearly: 9100,
+  /** Custom site (2026-11-06): the creation; with the first month of "Site + Agenda" = R$ 197. */
+  customSite: 14800,
 } as const;
 
 export const PLAN_NAME = "Completo";

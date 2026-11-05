@@ -8,7 +8,7 @@ import { notFound, redirect } from "next/navigation";
 import { z } from "zod";
 
 import { getRequestOrigin } from "@/brands/server";
-import { confirmDemoPayment } from "@/lib/billing/asaas";
+import { confirmDemoPayment, confirmDemoSinglePayment } from "@/lib/billing/asaas";
 import { handleAsaasEvent } from "@/lib/billing/service";
 import { invalidatePublicPage } from "@/lib/cache";
 import { resetDemoDb, getDemoDb } from "@/lib/demo/db";
@@ -112,6 +112,11 @@ export async function demoSetPlanAction(formData: FormData): Promise<void> {
     "update public.page_settings set deposit_policy_text = null where business_id = $1",
     [businessId],
   );
+  // Open custom site orders are closed, so tests start from the same state.
+  await db.query(
+    "update public.custom_site_orders set cancelled_at = now() where business_id = $1 and finished_at is null and cancelled_at is null",
+    [businessId],
+  );
   // A fresh trial starts without the link bonuses already earned (+7 days each).
   if (plan === "trial") {
     await db.query(
@@ -212,6 +217,17 @@ export async function demoConfirmPaymentAction(formData: FormData): Promise<void
         authorization: { id: row.pix_automatic_id, status: "ACTIVE", subscriptionId },
       });
     }
+  }
+  redirect(`/demo?ok=${payment ? "pagamento" : "sem-cobranca"}#assinaturas`);
+}
+
+/** One-off Pix (custom site of a subscriber): what Asaas sends when it is paid. */
+export async function demoConfirmSinglePaymentAction(formData: FormData): Promise<void> {
+  guard();
+  const paymentId = z.string().min(1).max(100).parse(formData.get("paymentId"));
+  const payment = confirmDemoSinglePayment(paymentId);
+  if (payment) {
+    await handleAsaasEvent({ id: `evt_demo_${payment.id}`, event: "PAYMENT_CONFIRMED", payment });
   }
   redirect(`/demo?ok=${payment ? "pagamento" : "sem-cobranca"}#assinaturas`);
 }

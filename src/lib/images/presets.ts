@@ -1,6 +1,13 @@
 // Shared by the browser (compression) and the server (validation of the signed upload).
 
-export const IMAGE_KINDS = ["avatar", "cover", "photo", "professional", "site_hero"] as const;
+export const IMAGE_KINDS = [
+  "avatar",
+  "cover",
+  "photo",
+  "professional",
+  "site_hero",
+  "briefing",
+] as const;
 export type ImageKind = (typeof IMAGE_KINDS)[number];
 
 export interface ImagePreset {
@@ -18,6 +25,8 @@ export const IMAGE_PRESETS: Record<ImageKind, ImagePreset> = {
   photo: { maxWidth: 800, maxHeight: 800 },
   /** Top photo of the business site ("Site + Agenda"). */
   site_hero: { maxWidth: 1200, maxHeight: 1500 },
+  /** Photos and logo sent with the custom site briefing. */
+  briefing: { maxWidth: 1600, maxHeight: 1600 },
 };
 
 /** Original photo picked by the user (never uploaded: only the compressed WebP is). */

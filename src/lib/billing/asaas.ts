@@ -297,6 +297,47 @@ export async function getPixQrCode(paymentId: string): Promise<AsaasPixQrCode> {
   return request<AsaasPixQrCode>("GET", `/payments/${paymentId}/pixQrCode`);
 }
 
+/**
+ * One-off Pix charge (not a subscription): the custom site for a subscriber. Demo mode keeps it
+ * under "single:<id>" so /demo can confirm it.
+ */
+export async function createPixPayment(input: {
+  customer: string;
+  valueCents: number;
+  dueDate: string;
+  description: string;
+  externalReference: string;
+}): Promise<AsaasPayment> {
+  if (isDemoMode()) {
+    const key = `single:${randomUUID().slice(0, 8)}`;
+    const payment = demoPayment(key, input.valueCents);
+    payment.subscription = undefined;
+    return payment;
+  }
+  return request<AsaasPayment>("POST", "/payments", {
+    customer: input.customer,
+    billingType: "PIX",
+    value: reais(input.valueCents),
+    dueDate: input.dueDate,
+    description: input.description,
+    externalReference: input.externalReference,
+  });
+}
+
+/** Demo only: confirms a one-off charge by its id. */
+export function confirmDemoSinglePayment(paymentId: string): AsaasPayment | null {
+  for (const [key, list] of demoPayments()) {
+    if (!key.startsWith("single:")) continue;
+    const payment = list.find((p: AsaasPayment) => p.id === paymentId && p.status === "PENDING");
+    if (payment) {
+      payment.status = "CONFIRMED";
+      payment.paymentDate = new Date().toISOString().slice(0, 10);
+      return payment;
+    }
+  }
+  return null;
+}
+
 /** Demo only: marks the latest pending charge of a subscription as paid. */
 export function confirmDemoPayment(subscriptionId: string): AsaasPayment | null {
   const payment = (demoPayments().get(subscriptionId) ?? []).find(

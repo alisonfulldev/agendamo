@@ -5,6 +5,8 @@ import { z } from "zod";
 
 import { NICHES } from "@/brands";
 import { requireAdmin } from "@/lib/admin";
+import { audit } from "@/lib/audit";
+import { adminOrderStep } from "@/lib/custom-site/orders";
 import { SITE_TEMPLATES } from "@/lib/db/types";
 import { normalizeBrPhone } from "@/lib/phone";
 import { validCnpj, validCpf } from "@/lib/pix";
@@ -41,6 +43,7 @@ const saleSchema = z.object({
     .trim()
     .max(40)
     .transform((v) => (v ? v.toUpperCase() : null)),
+  customSite: z.boolean().default(false),
   domain: z
     .string()
     .trim()
@@ -132,4 +135,22 @@ export async function domainStepAction(
           }));
   revalidatePath("/admin/vendas/dominios");
   return result;
+}
+
+/** Admin › Sites personalizados: delivered, finished (after the adjustment) or cancelled. */
+export async function customSiteStepAction(
+  id: string,
+  step: "deliver" | "finish" | "cancel",
+): Promise<{ ok: boolean; message: string }> {
+  const admin = await requireAdmin();
+  if (!z.uuid().safeParse(id).success) return { ok: false, message: "Pedido inválido." };
+  const message = await adminOrderStep(id, step);
+  await audit({
+    businessId: null,
+    userId: admin.id,
+    action: "admin.custom_site",
+    details: { order: id, step, by: admin.email },
+  });
+  revalidatePath("/admin/sites");
+  return { ok: true, message };
 }

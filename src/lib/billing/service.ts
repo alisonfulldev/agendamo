@@ -8,6 +8,7 @@ import { isDemoMode } from "@/lib/demo/mode";
 import { claimNotification, notifyTeam } from "@/lib/notifications/owner";
 import { PLAN_PRICES, subscriptionPrice, TIER_NAME, type Cycle, type Tier } from "@/lib/plans";
 import { recordTrialClaims } from "@/lib/trial";
+import { markPlanOrderPaid, markSingleOrderPaid } from "@/lib/custom-site/paid";
 import { completeAssistedSale } from "@/lib/sales/assisted-paid";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -110,6 +111,11 @@ export function periodBase(
 ): string {
   const renewing = row.status === "active" || row.status === "overdue";
   return renewing && row.current_period_end ? dateOnly(row.current_period_end) : now;
+}
+
+/** Pix of a one-off charge (custom site of a subscriber). */
+export function pixOfSinglePayment(payment: AsaasPayment): Promise<PixCharge> {
+  return pixOfPayment(payment);
 }
 
 async function pixOfPayment(payment: AsaasPayment): Promise<PixCharge> {
@@ -798,6 +804,10 @@ async function activateBusinessPlan(row: Subscription): Promise<void> {
   await activatePaidDomain(business.id, row).catch((error) =>
     console.error("paid domain activation failed", error),
   );
+  // A custom site paid with this first payment (R$ 197 with the first month).
+  await markPlanOrderPaid(business.id).catch((error) =>
+    console.error("custom site order (plan) failed", error),
+  );
   // A WhatsApp sale waiting for this payment: the customer gets the access e-mail.
   await completeAssistedSale(business.id).catch((error) =>
     console.error("assisted sale completion failed", error),
@@ -988,6 +998,14 @@ export async function handleAsaasEvent(event: AsaasEvent): Promise<string> {
       await applyAutomaticFirstPayment(data as Subscription, event.payment.id);
       return "plan active (pix automatic first payment)";
     }
+  }
+  // One-off Pix (custom site of a subscriber): no subscription behind it.
+  if (
+    !subscriptionId &&
+    event.payment?.id &&
+    (event.event === "PAYMENT_CONFIRMED" || event.event === "PAYMENT_RECEIVED")
+  ) {
+    if (await markSingleOrderPaid(event.payment.id)) return "custom site paid";
   }
   if (!subscriptionId) return "ignored: no subscription";
   if (!found) return "ignored: unknown subscription";

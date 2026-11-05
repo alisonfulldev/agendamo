@@ -18,12 +18,15 @@ export function SaleForm({
   niches,
   prices,
   domainPrice,
+  customSitePrice,
 }: {
   niches: Option[];
   /** Price labels of each plan and cycle ("R$ 49,00/mês"…). */
   prices: Record<"site" | "complete", Record<"monthly" | "yearly", string>>;
   /** "R$ 91,00/ano" */
   domainPrice: string;
+  /** "R$ 148,00" */
+  customSitePrice: string;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -31,6 +34,7 @@ export function SaleForm({
   const [tier, setTier] = useState<"site" | "complete">("site");
   const [cycle, setCycle] = useState<"monthly" | "yearly">("monthly");
   const [withDomain, setWithDomain] = useState(false);
+  const [customSite, setCustomSite] = useState(false);
   const [domain, setDomain] = useState("");
   const [availability, setAvailability] = useState<string | null>(null);
   const [checking, startCheck] = useTransition();
@@ -57,6 +61,7 @@ export function SaleForm({
         template: form.get("template") ?? "vibrant",
         couponCode: form.get("couponCode"),
         domain: withDomain ? domain : "",
+        customSite: tier === "site" && customSite,
       });
       if (result.ok) router.push(`/admin/vendas/${result.saleId}`);
       else setError(result.message);
@@ -144,6 +149,17 @@ export function SaleForm({
             <input type="radio" name="template" value="elegant" /> Elegante
           </label>
         </fieldset>
+      ) : null}
+      {tier === "site" ? (
+        <label className="flex items-center gap-2 text-sm font-medium sm:col-span-2">
+          <input
+            type="checkbox"
+            checked={customSite}
+            onChange={(e) => setCustomSite(e.target.checked)}
+          />
+          Site personalizado (+{customSitePrice} no primeiro Pix; o cliente responde o briefing no
+          painel)
+        </label>
       ) : null}
       <fieldset className="flex flex-col gap-2 sm:col-span-2">
         <label className="flex items-center gap-2 text-sm font-medium">

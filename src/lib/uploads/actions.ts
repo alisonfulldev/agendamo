@@ -20,6 +20,7 @@ import {
   UPLOAD_CONTENT_TYPE,
   type ImageKind,
 } from "@/lib/images/presets";
+import { attachBriefingPhoto } from "@/lib/custom-site/orders";
 import { getPlanFeatures } from "@/lib/plans";
 import { deleteObject, objectSize, readObject, writeObject } from "@/lib/storage/r2";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -136,6 +137,11 @@ async function saveImage(
     }
     const previous = (current as Record<string, string | null> | null)?.[column];
     if (previous) await deleteObject(previous);
+  } else if (kind === "briefing") {
+    if (!(await attachBriefingPhoto(business.id, key))) {
+      await deleteObject(key);
+      return { ok: false, error: "Não dá para enviar mais fotos." };
+    }
   } else if (kind === "site_hero") {
     if (!getPlanFeatures(business).site) {
       await deleteObject(key);

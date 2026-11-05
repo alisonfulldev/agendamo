@@ -1,4 +1,4 @@
-import { CheckCircle2, Circle, Globe } from "lucide-react";
+import { CheckCircle2, Circle, Globe, Sparkles } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -130,6 +130,21 @@ export default async function SiteEditorPage() {
           </Button>
         )}
       </section>
+
+      <Link
+        href="/painel/site/personalizado"
+        className="flex items-center gap-3 rounded-xl border border-dashed bg-card p-5 hover:bg-accent"
+      >
+        <Sparkles className="size-5 shrink-0 text-primary" aria-hidden />
+        <span className="flex-1">
+          <span className="block font-medium">Quer um site com a sua cara?</span>
+          <span className="block text-sm text-muted-foreground">
+            Criamos um site personalizado para você em até 5 dias úteis, a partir das suas
+            respostas.
+          </span>
+        </span>
+        <span className="font-medium text-primary">Ver</span>
+      </Link>
 
       <SiteEditor
         initial={{

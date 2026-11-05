@@ -14,6 +14,7 @@ import {
   type PixCharge,
 } from "@/lib/billing/service";
 import { requireOwner } from "@/lib/business/context";
+import { forgetPlanOrderPix } from "@/lib/custom-site/paid";
 import { validCnpj, validCpf } from "@/lib/pix";
 import { rateLimitRequest } from "@/lib/rate-limit";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -102,6 +103,8 @@ export async function checkoutAction(input: unknown): Promise<CheckoutResult> {
       payer: { name: data.name, cpfCnpj: data.cpfCnpj, email: user.email },
       couponCode: data.coupon || null,
     });
+    // A custom site Pix started before is replaced by this one (the creation is not in it).
+    if (result.kind === "pix") await forgetPlanOrderPix(business.id).catch(() => undefined);
     revalidatePath("/painel", "layout");
     if (result.kind === "pix")
       return {

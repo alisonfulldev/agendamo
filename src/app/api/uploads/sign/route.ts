@@ -13,6 +13,8 @@ import {
   objectKey,
   UPLOAD_CONTENT_TYPE,
 } from "@/lib/images/presets";
+import { BRIEFING_MAX_PHOTOS } from "@/lib/custom-site/briefing";
+import { openOrderOf } from "@/lib/custom-site/paid";
 import { getPlanFeatures } from "@/lib/plans";
 import { rateLimit } from "@/lib/rate-limit";
 import { createPrivateUploadUrl, createUploadUrl, isStorageConfigured } from "@/lib/storage/r2";
@@ -85,6 +87,18 @@ export async function POST(request: Request) {
       { error: "O site faz parte do plano Site + Agenda." },
       { status: 403 },
     );
+  }
+
+  // Briefing photos only while the custom site briefing is open (not sent yet).
+  if (kind === "briefing") {
+    const order = await openOrderOf(business.id);
+    if (
+      !order ||
+      order.briefing_sent_at ||
+      (order.briefing.photos?.length ?? 0) >= BRIEFING_MAX_PHOTOS
+    ) {
+      return NextResponse.json({ error: "Não dá para enviar mais fotos." }, { status: 403 });
+    }
   }
 
   if (kind === "professional") {

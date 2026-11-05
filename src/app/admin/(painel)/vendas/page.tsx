@@ -60,6 +60,7 @@ export default async function AdminSalesPage() {
           niches={niches}
           prices={prices}
           domainPrice={`${brl(PLAN_PRICES.domainYearly)}/ano`}
+          customSitePrice={brl(PLAN_PRICES.customSite)}
         />
       </AdminSection>
       <AdminSection title={`Vendas (${sales.length})`}>

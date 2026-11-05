@@ -48,6 +48,8 @@ export interface NewSaleInput {
   couponCode: string | null;
   /** Own .br domain (first year in the first Pix). */
   domain: string | null;
+  /** Custom site (its creation in the first Pix; the customer fills the briefing in the panel). */
+  customSite: boolean;
 }
 
 export type NewSaleResult =
@@ -186,7 +188,9 @@ export async function createAssistedSale(
       tier: input.tier,
       payer: { name: input.payerName, cpfCnpj: input.cpfCnpj, email },
       couponCode: input.couponCode,
-      firstExtraCents: input.domain ? PLAN_PRICES.domainYearly : 0,
+      firstExtraCents:
+        (input.domain ? PLAN_PRICES.domainYearly : 0) +
+        (input.customSite ? PLAN_PRICES.customSite : 0),
     });
     if (result.kind !== "pix") throw new Error("unexpected_change");
     pix = result.pix;
@@ -220,6 +224,16 @@ export async function createAssistedSale(
     console.error("assisted sale insert failed", saleError?.message);
     return { ok: false, error: "failed" };
   }
+  if (input.customSite) {
+    // Paid with the first payment (markPlanOrderPaid); the briefing comes from the panel.
+    await admin.from("custom_site_orders").insert({
+      business_id: business.id,
+      payment_kind: "with_plan",
+      price_cents: PLAN_PRICES.site.monthly + PLAN_PRICES.customSite,
+      pix_payload: pix.payload,
+      pix_expires_at: pix.expiresAt,
+    });
+  }
   await audit({
     businessId: business.id,
     userId: seller.id,
@@ -252,6 +266,15 @@ export async function renewSalePix(
     .select("*")
     .eq("id", sale.business_id)
     .single();
+  // A custom site sold with it: its creation goes in the new Pix too.
+  const { data: order } = await admin
+    .from("custom_site_orders")
+    .select("id")
+    .eq("business_id", sale.business_id)
+    .eq("payment_kind", "with_plan")
+    .is("paid_at", null)
+    .is("cancelled_at", null)
+    .maybeSingle();
   const result = await subscribePlan({
     business: business as Business,
     brand: getNiche((business as Business).brand_key),
@@ -262,9 +285,15 @@ export async function renewSalePix(
     // The Asaas customer already exists: its document is not asked again.
     payer: { name: sale.payer_name, cpfCnpj: "", email: sale.payer_email },
     couponCode: sale.coupon_code,
-    firstExtraCents: sale.domain_cents,
+    firstExtraCents: sale.domain_cents + (order ? PLAN_PRICES.customSite : 0),
   });
   if (result.kind !== "pix") return false;
+  if (order) {
+    await admin
+      .from("custom_site_orders")
+      .update({ pix_payload: result.pix.payload, pix_expires_at: result.pix.expiresAt })
+      .eq("id", order.id);
+  }
   await admin
     .from("assisted_sales")
     .update({ value_cents: result.pix.valueCents, ...PIX_FIELDS(result.pix) })

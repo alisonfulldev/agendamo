@@ -11,7 +11,7 @@ import { formatBRL } from "@/lib/money";
 import { TIER_NAME } from "@/lib/plans";
 import { pixExpired, saleByToken } from "@/lib/sales/assisted";
 
-import { RefreshWhilePending } from "./refresh-while-pending";
+import { RefreshWhilePending } from "@/components/refresh-while-pending";
 
 export const metadata: Metadata = { title: "Pagamento", robots: { index: false } };
 

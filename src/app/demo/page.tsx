@@ -18,6 +18,7 @@ import { getPlanFeatures } from "@/lib/plans";
 import {
   demoClearEmailsAction,
   demoConfirmPaymentAction,
+  demoConfirmSinglePaymentAction,
   demoResetAction,
   demoEnableDepositsAction,
   demoExpireDepositHoldsAction,
@@ -97,6 +98,15 @@ export default async function DemoPage({ searchParams }: PageProps<"/demo">) {
          from public.subscriptions s join public.businesses b on b.id = s.business_id
         where s.provider_subscription_id like 'sub_demo_%'
         order by s.updated_at desc`,
+    )
+  ).rows;
+  // One-off Pix of custom sites (subscribers), waiting to be paid.
+  const singlePayments = (
+    await db.query<{ name: string; payment_id: string }>(
+      `select b.name, o.payment_id
+         from public.custom_site_orders o join public.businesses b on b.id = o.business_id
+        where o.payment_kind = 'single' and o.payment_id is not null and o.paid_at is null
+        order by o.updated_at desc`,
     )
   ).rows;
   const emails = listDemoEmails().slice(0, 40);
@@ -300,6 +310,20 @@ export default async function DemoPage({ searchParams }: PageProps<"/demo">) {
               </form>
             ))
           )}
+          {singlePayments.map((p) => (
+            <form
+              key={p.payment_id}
+              action={demoConfirmSinglePaymentAction}
+              className="flex flex-wrap items-center gap-2"
+            >
+              <input type="hidden" name="paymentId" value={p.payment_id} />
+              <span className="min-w-44 font-medium">{p.name}</span>
+              <Badge variant="outline">Site personalizado · Pix avulso</Badge>
+              <Button size="sm" variant="outline">
+                Confirmar Pix avulso
+              </Button>
+            </form>
+          ))}
         </CardContent>
       </Card>
 
