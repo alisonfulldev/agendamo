@@ -164,6 +164,37 @@ const ads = {
 };
 
 // ---------------------------------------------------------------------------------------------
+// "Oferta" por ramo (2026-11-06): a mesma peça do feed-oferta, falando com o ramo, em 3 formatos.
+const NICHE_ADS = [
+  {
+    file: "psicologia",
+    title: `Site + agenda online<br/>para <span style="color:${C.lime}">psicólogos</span>`,
+    sub: "Seus pacientes agendam sozinhos, 24h · Pronto hoje",
+    shots: ["site-psicologia", "site-psicologia-elegante"],
+  },
+];
+
+const FORMATS = {
+  quadrado: { width: 1080, height: 1080, title: 76, price: 104, sub: 30, phone: 360, phoneBottom: -300, pad: 70 },
+  retrato: { width: 1080, height: 1350, title: 88, price: 120, sub: 34, phone: 420, phoneBottom: -200, pad: 80 },
+  story: { width: 1080, height: 1920, title: 96, price: 140, sub: 38, phone: 430, phoneBottom: -40, pad: 80, top: 250 },
+};
+
+function nicheOffer(n, fmt) {
+  const f = FORMATS[fmt];
+  return `<div class="slide" style="width:${f.width}px;height:${f.height}px;background:${C.deep};color:#fff;padding:${f.top ?? f.pad}px ${f.pad}px ${f.pad}px">
+    <div class="brand" style="color:#fff">${logo}MeetChat</div>
+    <h1 class="title" style="font-size:${f.title}px;margin-top:${fmt === "quadrado" ? 26 : 40}px">${n.title}</h1>
+    <p class="title" style="font-size:${f.price}px;color:${C.lime};margin-top:${fmt === "quadrado" ? 14 : 24}px">${PRICE.site}<span style="font-size:${Math.round(f.price * 0.4)}px">/mês</span></p>
+    <p style="font-size:${f.sub}px;font-weight:600;margin-top:14px;opacity:.9">${n.sub}</p>
+    ${fmt === "story" ? `<div class="pill" style="margin-top:36px;align-self:flex-start;background:${C.lime};color:${C.deep};font-size:36px;padding:24px 36px">Toque e chame no WhatsApp →</div>` : ""}
+    <div class="phone" style="position:absolute;left:${fmt === "quadrado" ? 120 : fmt === "story" ? 60 : 100}px;bottom:${f.phoneBottom - 40}px;width:${f.phone}px;transform:rotate(-5deg)"><img src="${img(n.shots[0])}"/></div>
+    <div class="phone" style="position:absolute;right:${fmt === "quadrado" ? 120 : fmt === "story" ? 60 : 100}px;bottom:${f.phoneBottom}px;width:${f.phone}px;transform:rotate(5deg)"><img src="${img(n.shots[1])}"/></div>
+    <span class="pill" style="position:absolute;right:${f.pad}px;top:${(f.top ?? f.pad) + 6}px;background:${C.lime};color:${C.deep};font-size:28px;padding:14px 26px">Sem fidelidade</span>
+  </div>`;
+}
+
+// ---------------------------------------------------------------------------------------------
 const browser = await chromium.launch({ channel: "chrome" });
 const page = await browser.newPage({ deviceScaleFactor: 1 });
 async function render(html, width, height, file) {
@@ -173,22 +204,30 @@ async function render(html, width, height, file) {
   await page.screenshot({ path: file, clip: { x: 0, y: 0, width, height } });
 }
 
+// ONLY=nichos gera só as peças por ramo.
+const onlyNiches = process.env.ONLY === "nichos";
 mkdirSync("docs/marketing/apresentacao", { recursive: true });
 mkdirSync("docs/marketing/anuncios", { recursive: true });
-for (const [i, html] of deck.entries()) {
+for (const [i, html] of onlyNiches ? [] : deck.entries()) {
   await render(html, 1080, 1350, `docs/marketing/apresentacao/${String(i + 1).padStart(2, "0")}.png`);
 }
 // The deck as one PDF too (one slide per page).
-await page.setContent(
+if (!onlyNiches) await page.setContent(
   `<html><head><style>${CSS} @page { size: 1080px 1350px; margin: 0 } .slide { page-break-after: always }</style></head><body>${deck.join("")}</body></html>`,
   { waitUntil: "networkidle" },
 );
-await page.evaluate(() => document.fonts.ready);
-await page.pdf({ path: "docs/marketing/apresentacao/MeetChat-apresentacao.pdf", width: "1080px", height: "1350px", printBackground: true });
+if (!onlyNiches) await page.evaluate(() => document.fonts.ready);
+if (!onlyNiches) await page.pdf({ path: "docs/marketing/apresentacao/MeetChat-apresentacao.pdf", width: "1080px", height: "1350px", printBackground: true });
 
-for (const [name, html] of Object.entries(ads)) {
+for (const [name, html] of onlyNiches ? [] : Object.entries(ads)) {
   const height = name === "stories" ? 1920 : 1350;
   await render(html, 1080, height, `docs/marketing/anuncios/${name}.png`);
+}
+mkdirSync("docs/marketing/anuncios/nichos", { recursive: true });
+for (const n of NICHE_ADS) {
+  for (const [fmt, f] of Object.entries(FORMATS)) {
+    await render(nicheOffer(n, fmt), f.width, f.height, `docs/marketing/anuncios/nichos/${n.file}-${fmt}.png`);
+  }
 }
 await browser.close();
 console.log("ok");
