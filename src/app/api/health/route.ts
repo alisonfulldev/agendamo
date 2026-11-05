@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { hasSupabaseEnv } from "@/lib/env";
+import { pushKeysStatus } from "@/lib/push/keys";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
@@ -18,7 +19,18 @@ export async function GET() {
     }
   }
   return NextResponse.json(
-    { ok: database, database, ms: Date.now() - started, time: new Date().toISOString() },
+    {
+      ok: database,
+      database,
+      // Shape of the push keys only (never their values).
+      push: pushKeysStatus({
+        publicKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
+        privateKey: process.env.VAPID_PRIVATE_KEY,
+        subject: process.env.VAPID_SUBJECT,
+      }),
+      ms: Date.now() - started,
+      time: new Date().toISOString(),
+    },
     { status: database ? 200 : 503, headers: { "Cache-Control": "no-store" } },
   );
 }

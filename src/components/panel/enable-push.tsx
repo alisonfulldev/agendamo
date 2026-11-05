@@ -59,6 +59,8 @@ export function EnablePush({ vapidPublicKey }: { vapidPublicKey: string | null }
 
   async function enable() {
     setError(null);
+    // Which step failed, so the message says what to do.
+    let step: "worker" | "subscribe" | "save" = "worker";
     try {
       const permission = await Notification.requestPermission();
       if (permission !== "granted") {
@@ -67,10 +69,12 @@ export function EnablePush({ vapidPublicKey }: { vapidPublicKey: string | null }
       }
       const registration = await navigator.serviceWorker.register("/sw.js");
       await navigator.serviceWorker.ready;
+      step = "subscribe";
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: base64UrlToBytes(vapidPublicKey!),
       });
+      step = "save";
       const response = await fetch("/api/push/subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -78,8 +82,16 @@ export function EnablePush({ vapidPublicKey }: { vapidPublicKey: string | null }
       });
       if (!response.ok) throw new Error();
       setStatus("on");
-    } catch {
-      setError("Não foi possível ativar. Tente de novo.");
+    } catch (cause) {
+      const name = cause instanceof Error ? cause.name : "";
+      setError(
+        step === "worker"
+          ? "Não foi possível preparar os avisos neste navegador. Atualize a página e tente de novo."
+          : step === "subscribe"
+            ? `O navegador recusou a inscrição dos avisos (${name || "erro"}). Se estiver no celular, abra pelo app instalado ou pelo Chrome/Safari e tente de novo.`
+            : "Os avisos foram ativados no aparelho, mas não foram salvos. Tente de novo.",
+      );
+      console.error("push enable failed", { step, name });
     }
   }
 
