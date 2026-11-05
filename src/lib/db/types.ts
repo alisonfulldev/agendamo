@@ -415,6 +415,10 @@ export interface DepositReceipt {
   extracted: Record<string, unknown> | null;
 }
 
+/** Site templates (2026-11-06). */
+export const SITE_TEMPLATES = ["vibrant", "elegant"] as const;
+export type SiteTemplate = (typeof SITE_TEMPLATES)[number];
+
 /** Owner's edits of the landing page (/<slug>/site); null = default from the business data. */
 export interface SiteSettings {
   business_id: string;
@@ -424,6 +428,8 @@ export interface SiteSettings {
   hero_subtitle: string | null;
   cta_label: string | null;
   hero_image_key: string | null;
+  /** "vibrant" (color blocks) or "elegant" (light, serif titles). */
+  template: SiteTemplate;
   sections: { key: string; visible: boolean }[] | null;
   updated_at: string;
 }

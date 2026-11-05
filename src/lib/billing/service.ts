@@ -8,6 +8,7 @@ import { isDemoMode } from "@/lib/demo/mode";
 import { claimNotification, notifyTeam } from "@/lib/notifications/owner";
 import { PLAN_PRICES, subscriptionPrice, TIER_NAME, type Cycle, type Tier } from "@/lib/plans";
 import { recordTrialClaims } from "@/lib/trial";
+import { completeAssistedSale } from "@/lib/sales/assisted-paid";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 import {
@@ -784,6 +785,10 @@ async function activateBusinessPlan(row: Subscription): Promise<void> {
     });
     invalidatePublicPage(business.slug);
   }
+  // A WhatsApp sale waiting for this payment: the customer gets the access e-mail.
+  await completeAssistedSale(business.id).catch((error) =>
+    console.error("assisted sale completion failed", error),
+  );
 }
 
 /**

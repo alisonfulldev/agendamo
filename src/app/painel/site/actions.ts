@@ -5,6 +5,7 @@ import { z } from "zod";
 
 import { requireOwner } from "@/lib/business/context";
 import { invalidatePublicPage } from "@/lib/cache";
+import { SITE_TEMPLATES } from "@/lib/db/types";
 import { getPlanFeatures } from "@/lib/plans";
 import { SITE_SECTION_KEYS } from "@/lib/public/site";
 import { notifyProfileChanged } from "@/lib/seo/profile-indexnow";
@@ -30,6 +31,7 @@ const text = (min: number, max: number, label: string) =>
     .refine((value) => value === null || value.length >= min, `${label}: escreva um pouco mais.`);
 
 const siteSchema = z.object({
+  template: z.enum(SITE_TEMPLATES),
   primary_color: color,
   accent_color: color,
   hero_title: text(2, 90, "Título"),

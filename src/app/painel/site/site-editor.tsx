@@ -9,10 +9,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ImageUploadButton } from "@/components/uploads/image-upload-button";
+import type { SiteTemplate } from "@/lib/db/types";
 
 import { removeSiteHeroAction, saveSiteAction } from "./actions";
 
 export interface SiteEditorValues {
+  template: SiteTemplate;
   primary_color: string | null;
   accent_color: string | null;
   hero_title: string;
@@ -21,7 +23,12 @@ export interface SiteEditorValues {
   sections: { key: string; label: string; hint?: string; visible: boolean }[];
 }
 
-/** "Meu site": colors, top photo, texts and sections, with the live site beside it. */
+const TEMPLATES: { key: SiteTemplate; name: string; hint: string }[] = [
+  { key: "vibrant", name: "Vibrante", hint: "Blocos de cor e títulos grandes" },
+  { key: "elegant", name: "Elegante", hint: "Fundo claro, foto grande e títulos finos" },
+];
+
+/** "Meu site": template, colors, top photo, texts and sections, with the live site beside it. */
 export function SiteEditor({
   initial,
   defaults,
@@ -56,6 +63,7 @@ export function SiteEditor({
   const save = () =>
     startTransition(async () => {
       const result = await saveSiteAction({
+        template: values.template,
         primary_color: values.primary_color,
         accent_color: values.accent_color,
         hero_title: values.hero_title,
@@ -82,6 +90,43 @@ export function SiteEditor({
   return (
     <div className="flex flex-col gap-6 xl:flex-row xl:items-start">
       <div className="flex min-w-0 flex-1 flex-col gap-6">
+        <fieldset className="flex flex-col gap-3 rounded-xl border bg-card p-5">
+          <legend className="px-1 font-semibold">Modelo</legend>
+          <div className="grid grid-cols-2 gap-3">
+            {TEMPLATES.map((t) => (
+              <label
+                key={t.key}
+                className={`flex cursor-pointer flex-col gap-2 rounded-xl border p-3 ${values.template === t.key ? "ring-2 ring-primary" : ""}`}
+              >
+                <input
+                  type="radio"
+                  name="template"
+                  value={t.key}
+                  checked={values.template === t.key}
+                  onChange={() => set("template", t.key)}
+                  className="sr-only"
+                />
+                <span
+                  aria-hidden
+                  className={`flex h-24 flex-col gap-1.5 overflow-hidden rounded-lg p-2 ${t.key === "vibrant" ? "bg-primary" : "border bg-background"}`}
+                >
+                  <span
+                    className={`h-3 w-2/3 rounded-sm ${t.key === "vibrant" ? "bg-primary-foreground/90" : "bg-foreground/80"}`}
+                  />
+                  <span
+                    className={`h-2 w-1/2 rounded-sm ${t.key === "vibrant" ? "bg-primary-foreground/60" : "bg-foreground/30"}`}
+                  />
+                  <span
+                    className={`mt-auto h-4 w-1/3 rounded-full ${t.key === "vibrant" ? "bg-primary-foreground" : "bg-primary"}`}
+                  />
+                </span>
+                <span className="font-medium">{t.name}</span>
+                <span className="text-xs text-muted-foreground">{t.hint}</span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+
         <fieldset className="flex flex-col gap-4 rounded-xl border bg-card p-5">
           <legend className="px-1 font-semibold">Cores</legend>
           {(

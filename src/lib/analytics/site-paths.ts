@@ -41,8 +41,10 @@ export const UNTRACKED_SECTIONS = [
   "cancelar",
   "demo",
   "descadastrar",
+  "exemplo",
   "icons",
   "og",
+  "pagar",
   "painel",
   "sitemap",
 ] as const;

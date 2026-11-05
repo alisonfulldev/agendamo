@@ -129,6 +129,7 @@ export default async function SiteEditorPage() {
 
       <SiteEditor
         initial={{
+          template: settings?.template ?? "vibrant",
           primary_color: settings?.primary_color ?? null,
           accent_color: settings?.accent_color ?? null,
           hero_title: settings?.hero_title ?? "",

@@ -1,0 +1,102 @@
+import { readFileSync } from "node:fs";
+import path from "node:path";
+
+import { expect, test } from "@playwright/test";
+
+/** WhatsApp sales (2026-11-06): example sites, Nova venda, payment page and release on payment. */
+
+const EMAILS = path.join(process.cwd(), ".demo-data", "emails.json");
+const subjectsTo = (to: string): string[] => {
+  try {
+    const all = JSON.parse(readFileSync(EMAILS, "utf8")) as { to: string[]; subject: string }[];
+    return all.filter((e) => e.to.includes(to)).map((e) => e.subject);
+  } catch {
+    return [];
+  }
+};
+
+test("example sites: both templates, out of search engines, booking opens the simulation", async ({
+  page,
+}) => {
+  await page.goto("/exemplo/beleza");
+  await expect(page.getByText("Site de exemplo · Modelo Vibrante")).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Studio Bela" })).toBeVisible();
+  await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
+  await page.getByRole("link", { name: "Ver modelo Elegante" }).click();
+  await expect(page.getByText("Site de exemplo · Modelo Elegante")).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Studio Bela" })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Agendar horário/ }).first()).toHaveAttribute(
+    "href",
+    /\/\?criar=1&ramo=beleza/,
+  );
+});
+
+test("Nova venda: account and Pix, payment page, paid releases the account and the site", async ({
+  page,
+  browser,
+}) => {
+  const stamp = Date.now().toString(36);
+  const name = `Venda ${stamp}`;
+  const email = `venda-${stamp}@exemplo.com`;
+
+  await page.goto("/demo");
+  await page
+    .locator("form", { hasText: "admin@demo.com" })
+    .getByRole("button", { name: "Entrar" })
+    .click();
+  await page.waitForURL(/\/admin/);
+  await page.goto("/admin/vendas");
+  await page.getByLabel("Nome do negócio").fill(name);
+  await page.getByLabel("Ramo").selectOption("beauty");
+  await page.getByLabel(/Nome completo/).fill("Maria Venda Teste");
+  await page.getByLabel("CPF ou CNPJ").fill("529.982.247-25");
+  await page.getByLabel(/E-mail/).fill(email);
+  await page.getByLabel("WhatsApp").fill("(11) 98888-7777");
+  await page.getByLabel("Elegante").check();
+  await page.getByRole("button", { name: "Criar conta e gerar Pix" }).click();
+
+  await page.waitForURL(/\/admin\/vendas\/[0-9a-f-]{36}$/);
+  await expect(page.getByRole("heading", { name: "5. Mandar o Pix" })).toBeVisible();
+  await expect(page.getByText("Aguardando Pix")).toBeVisible();
+  const message = await page.locator("pre").first().innerText();
+  const payPath = message.match(/\/pagar\/[A-Za-z0-9_-]+/)?.[0];
+  expect(payPath).toBeTruthy();
+
+  // The customer opens the payment page.
+  const visitor = await browser.newContext();
+  const pay = await visitor.newPage();
+  await pay.goto(payPath!);
+  await expect(pay.getByRole("heading", { level: 1, name })).toBeVisible();
+  await expect(pay.getByText("R$ 49,00")).toBeVisible();
+  await expect(pay.getByRole("img", { name: "QR code do Pix" })).toBeVisible();
+
+  // The Asaas webhook confirms the payment (simulated in demo mode).
+  const confirm = await page.context().newPage();
+  await confirm.goto("/demo#assinaturas");
+  await confirm
+    .locator("form", { hasText: name })
+    .filter({ has: confirm.getByRole("button", { name: "Confirmar pagamento" }) })
+    .first()
+    .getByRole("button", { name: "Confirmar pagamento" })
+    .click();
+  await expect(confirm.getByText(/Pagamento confirmado: a assinatura foi ativada/)).toBeVisible();
+
+  await expect(pay.getByText("Pagamento confirmado!")).toBeVisible({ timeout: 20_000 });
+  await expect
+    .poll(() => subjectsTo(email).some((s) => s.startsWith("Sua conta está pronta")))
+    .toBe(true);
+
+  await page.reload();
+  await expect(page.getByText("Paga", { exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "6. Depois do pagamento" })).toBeVisible();
+
+  // The site is live, in the template chosen in the sale.
+  const siteUrl = (await page.locator("pre").first().innerText()).match(
+    /https?:\/\/\S+\/site/,
+  )?.[0];
+  expect(siteUrl).toBeTruthy();
+  await pay.goto(new URL(siteUrl!).pathname);
+  await expect(pay.getByRole("heading", { level: 1, name })).toBeVisible();
+  await expect(pay.getByText("Perguntas frequentes")).toBeVisible();
+  await visitor.close();
+});

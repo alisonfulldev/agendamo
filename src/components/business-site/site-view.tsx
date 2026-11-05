@@ -69,24 +69,51 @@ export function siteTexts(data: PublicPage, brand: BrandConfig, settings: SiteSe
   };
 }
 
-const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
+export const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
+
+/** What both templates show, from the business data and the owner's edits. */
+export function siteContent(data: PublicPage, brand: BrandConfig, settings: SiteSettings | null) {
+  const { page } = data;
+  const terms = brand.terms;
+  return {
+    texts: siteTexts(data, brand, settings),
+    heroImage:
+      publicUrl(settings?.hero_image_key) ??
+      publicUrl(page?.cover_key) ??
+      publicUrl(data.photos[0]?.key) ??
+      publicUrl(page?.avatar_key),
+    avatar: publicUrl(page?.avatar_key),
+    sections: resolveSections(settings?.sections ?? null).filter((s) => s.visible),
+    showPrices: page?.show_prices ?? true,
+    whatsapp: page?.whatsapp_number
+      ? `https://wa.me/${page.whatsapp_number.replace(/\D/g, "")}`
+      : null,
+    place: [page?.address, page?.neighborhood, page?.city].filter(Boolean).join(", "),
+    faq: [
+      {
+        q: "Preciso baixar algum aplicativo?",
+        a: `Não. Você agenda pelo navegador do celular, numa conversa rápida: escolhe o ${terms.service.singular}, o dia e um horário livre.`,
+      },
+      {
+        q: "Recebo confirmação?",
+        a: "Sim. Você recebe a confirmação na hora e um lembrete antes do horário, com opção de remarcar ou cancelar.",
+      },
+      {
+        q: "Posso agendar fora do horário comercial?",
+        a: "Pode. A agenda fica aberta 24 horas e só mostra horários realmente livres.",
+      },
+    ],
+  };
+}
 
 export function SiteView({ data, brand, settings, chatHref, badgeHref, logo }: SiteViewProps) {
   const { business, page } = data;
-  const texts = siteTexts(data, brand, settings);
-  const heroImage =
-    publicUrl(settings?.hero_image_key) ??
-    publicUrl(page?.cover_key) ??
-    publicUrl(data.photos[0]?.key) ??
-    publicUrl(page?.avatar_key);
-  const avatar = publicUrl(page?.avatar_key);
-  const sections = resolveSections(settings?.sections ?? null).filter((s) => s.visible);
-  const showPrices = page?.show_prices ?? true;
+  const { texts, heroImage, avatar, sections, showPrices, whatsapp, place, faq } = siteContent(
+    data,
+    brand,
+    settings,
+  );
   const terms = brand.terms;
-  const whatsapp = page?.whatsapp_number
-    ? `https://wa.me/${page.whatsapp_number.replace(/\D/g, "")}`
-    : null;
-  const place = [page?.address, page?.neighborhood, page?.city].filter(Boolean).join(", ");
 
   // Blocks alternate colors in the order the owner chose.
   const tones = ["lp-soft", "lp-deep", "lp-lime", "lp-brand"];
@@ -281,20 +308,7 @@ export function SiteView({ data, brand, settings, chatHref, badgeHref, logo }: S
           Dúvidas
         </h2>
         <div className="mt-10 flex flex-col gap-3">
-          {[
-            {
-              q: "Preciso baixar algum aplicativo?",
-              a: `Não. Você agenda pelo navegador do celular, numa conversa rápida: escolhe o ${terms.service.singular}, o dia e um horário livre.`,
-            },
-            {
-              q: "Recebo confirmação?",
-              a: "Sim. Você recebe a confirmação na hora e um lembrete antes do horário, com opção de remarcar ou cancelar.",
-            },
-            {
-              q: "Posso agendar fora do horário comercial?",
-              a: "Pode. A agenda fica aberta 24 horas e só mostra horários realmente livres.",
-            },
-          ].map((item) => (
+          {faq.map((item) => (
             <details key={item.q} className="group rounded-3xl bg-muted px-5 py-2 sm:px-7">
               <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 text-lg font-bold [&::-webkit-details-marker]:hidden">
                 {item.q}

@@ -4,7 +4,8 @@ import { permanentRedirect, redirect } from "next/navigation";
 import { PLATFORM } from "@/brands";
 import { brandUrl, nicheHubUrl } from "@/brands/urls";
 import { BrandScope } from "@/components/brand-scope";
-import { SiteView, siteTexts } from "@/components/business-site/site-view";
+import { BusinessSite } from "@/components/business-site/business-site";
+import { siteTexts } from "@/components/business-site/site-view";
 import { JsonLd } from "@/components/seo/json-ld";
 import { isIndexable } from "@/lib/public/indexable";
 import { getSiteSettings } from "@/lib/public/site";
@@ -64,7 +65,7 @@ export default async function BusinessSitePage({
     <BrandScope brand={brand} current={domainBrand}>
       <JsonLd nodes={businessStructuredData(loaded, { breadcrumb: true })} />
       <PageTracker businessId={data.business.id} />
-      <SiteView
+      <BusinessSite
         data={data}
         brand={brand}
         settings={settings}
