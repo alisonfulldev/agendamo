@@ -205,6 +205,7 @@ const Y = "#FCD901";
 const ICON = {
   search: `<svg viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>`,
   calendar: `<svg viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18M8 15l2.5 2.5L16 13"/></svg>`,
+  bell: `<svg viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>`,
   chart: `<svg viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V14M10 20V10M16 20V12M22 20H2M3 9l6-5 4 4 8-6M17 2h4v4"/></svg>`,
 };
 const CLASSIC_FORMATS = {
@@ -212,7 +213,15 @@ const CLASSIC_FORMATS = {
   retrato: { width: 1080, height: 1350, scale: 1.18, top: 0, center: true },
   story: { width: 1080, height: 1920, scale: 1.22, top: 0, center: true },
 };
-function classic(fmt) {
+// Versões do clássico por ramo: um selo pequeno em cima e as vantagens na linguagem do ramo.
+const CLASSIC_NICHES = [
+  {
+    file: "psicologia",
+    tag: "para psicólogos",
+    perks: ["pronto para o Google", "pacientes agendam sozinhos 24h", "menos faltas com lembrete automático"],
+  },
+];
+function classic(fmt, niche = null) {
   const f = CLASSIC_FORMATS[fmt];
   const k = f.scale;
   const serif = "font-family:'Playfair Display',serif;font-weight:900;letter-spacing:-0.015em;color:#111;text-shadow:7px 7px 0 " + Y;
@@ -220,6 +229,7 @@ function classic(fmt) {
   return `<div class="slide" style="width:${f.width}px;height:${f.height}px;padding:${f.top}px 60px 60px;align-items:center;text-align:center;${f.center ? "justify-content:center;" : ""}
       background:radial-gradient(120% 60% at 50% 0%, #ffffff 0%, #f1f1f1 55%, #e9e9e9 100%)">
     <div style="position:absolute;inset:-200px;background:repeating-radial-gradient(ellipse at 50% -10%, rgba(0,0,0,.035) 0 2px, transparent 2px 60px);pointer-events:none"></div>
+    ${niche ? `<span class="pill" style="background:#111;color:${Y};font-size:${30 * k}px;padding:${12 * k}px ${30 * k}px;margin-bottom:${22 * k}px;text-transform:uppercase;letter-spacing:.06em">${niche.tag}</span>` : ""}
     <p style="${serif};font-size:${150 * k}px;line-height:.95">Seu SITE</p>
     <p style="${serif};font-size:${86 * k}px;line-height:1;margin-top:${6 * k}px">+ agenda online</p>
     <p style="font-family:'Playfair Display',serif;font-weight:800;font-size:${64 * k}px;color:#111;margin-top:${18 * k}px;line-height:1;display:inline-block;padding-bottom:10px;background:linear-gradient(${Y},${Y}) bottom/100% 12px no-repeat">por apenas</p>
@@ -231,9 +241,9 @@ function classic(fmt) {
     </div>
     <p style="font-size:${30 * k}px;font-weight:700;color:#111;margin-top:${18 * k}px">sem fidelidade · cancele quando quiser</p>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:28px;margin-top:${46 * k}px;width:100%;text-align:left">
-      ${perk(ICON.search, "pronto para o Google")}
-      ${perk(ICON.calendar, "clientes agendam sozinhos 24h")}
-      ${perk(ICON.chart, "sua empresa vendendo mais")}
+      ${perk(ICON.search, niche?.perks[0] ?? "pronto para o Google")}
+      ${perk(ICON.calendar, niche?.perks[1] ?? "clientes agendam sozinhos 24h")}
+      ${perk(niche ? ICON.bell : ICON.chart, niche?.perks[2] ?? "sua empresa vendendo mais")}
     </div>
     ${fmt === "story" ? `<div class="pill" style="margin-top:60px;background:#111;color:${Y};font-size:40px;padding:28px 44px">Toque e chame no WhatsApp →</div>` : ""}
   </div>`;
@@ -251,8 +261,8 @@ async function render(html, width, height, file) {
 
 // ONLY=nichos gera só as peças por ramo.
 // ONLY=classico gera só o anúncio clássico.
-const onlyNiches = process.env.ONLY === "nichos" || process.env.ONLY === "classico";
-const skipNiches = process.env.ONLY === "classico";
+const onlyNiches = ["nichos", "classico", "classico-nichos"].includes(process.env.ONLY ?? "");
+const skipNiches = ["classico", "classico-nichos"].includes(process.env.ONLY ?? "");
 mkdirSync("docs/marketing/apresentacao", { recursive: true });
 mkdirSync("docs/marketing/anuncios", { recursive: true });
 for (const [i, html] of onlyNiches ? [] : deck.entries()) {
@@ -277,7 +287,11 @@ for (const n of skipNiches ? [] : NICHE_ADS) {
   }
 }
 for (const [fmt, f] of Object.entries(CLASSIC_FORMATS)) {
-  await render(classic(fmt), f.width, f.height, `docs/marketing/anuncios/classico-${fmt}.png`);
+  if (process.env.ONLY !== "classico-nichos")
+    await render(classic(fmt), f.width, f.height, `docs/marketing/anuncios/classico-${fmt}.png`);
+  for (const n of CLASSIC_NICHES) {
+    await render(classic(fmt, n), f.width, f.height, `docs/marketing/anuncios/nichos/classico-${n.file}-${fmt}.png`);
+  }
 }
 await browser.close();
 console.log("ok");
