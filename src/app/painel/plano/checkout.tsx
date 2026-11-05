@@ -7,17 +7,9 @@ import { useState, useTransition } from "react";
 import { FieldShell } from "@/components/forms/field";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { PLAN_CARD, SITE_OFFER_CARD } from "@/content/plans";
+import { PLAN_CARDS } from "@/content/plans";
 import { formatBRL } from "@/lib/money";
-import {
-  PLAN_NAME,
-  SITE_OFFER,
-  siteFirstPrice,
-  siteMonthlyPrice,
-  subscriptionPrice,
-  yearlySavings,
-  type Cycle,
-} from "@/lib/plans";
+import { subscriptionPrice, TIER_NAME, yearlySavings, type Cycle, type Tier } from "@/lib/plans";
 
 import type { PixCharge } from "@/lib/billing/service";
 
@@ -67,22 +59,23 @@ function PayerFields({
 export function PlanCheckout({
   initialCycle,
   initialExtras,
+  initialTier = "site",
   activeProfessionals,
   hasActiveSubscription,
   addonPrices,
-  offer = null,
 }: {
   initialCycle: Cycle;
+  /** Plan shown selected: the current one, or "Site + Agenda" for a new subscription. */
+  initialTier?: Tier;
   initialExtras: number;
   /** Active professionals today (suggested number of seats). */
   activeProfessionals: number;
   hasActiveSubscription: boolean;
   addonPrices: { featured: number };
-  /** "Site + Agenda": monthly only, its own prices; the first charge carries the site (and domain). */
-  offer?: { wantsDomain: boolean; domainName: string | null; firstCharge: boolean } | null;
 }) {
   const router = useRouter();
   const [cycle, setCycle] = useState<Cycle>(initialCycle);
+  const [tier, setTier] = useState<Tier>(initialTier);
   const [professionals, setProfessionals] = useState(
     Math.max(initialExtras + 1, hasActiveSubscription ? 1 : activeProfessionals, 1),
   );
@@ -97,20 +90,15 @@ export function PlanCheckout({
   const [pix, setPix] = useState<{ charge: PixCharge; plan: boolean } | null>(null);
 
   const extras = professionals - 1;
-  const total = offer
-    ? siteMonthlyPrice(extras, discount ?? 0)
-    : subscriptionPrice(cycle, extras, discount ?? 0);
-  // What the first Pix charges: the site + first month (+ the domain's first year) on the offer.
-  const today =
-    offer?.firstCharge && !hasActiveSubscription
-      ? siteFirstPrice(extras, discount ?? 0, offer.wantsDomain)
-      : total;
-  const savings = yearlySavings(extras);
-  const perExtra = offer
-    ? SITE_OFFER.extraProfessionalCents
-    : subscriptionPrice(cycle, 1) - subscriptionPrice(cycle, 0);
+  const total = subscriptionPrice(cycle, extras, discount ?? 0, tier);
+  const savings = yearlySavings(extras, tier);
+  const perExtra = subscriptionPrice(cycle, 1) - subscriptionPrice(cycle, 0);
   const unit = cycle === "monthly" ? "mês" : "ano";
-  const unchanged = hasActiveSubscription && cycle === initialCycle && extras === initialExtras;
+  const unchanged =
+    hasActiveSubscription &&
+    cycle === initialCycle &&
+    extras === initialExtras &&
+    tier === initialTier;
 
   const finish = (
     result:
@@ -142,31 +130,41 @@ export function PlanCheckout({
 
   return (
     <div className="flex flex-col gap-6">
-      {offer ? (
-        <div className="rounded-2xl border-2 border-primary bg-card p-5">
-          <p className="font-semibold">{SITE_OFFER_CARD.name}</p>
-          <p className="text-sm text-muted-foreground">{SITE_OFFER_CARD.tagline}</p>
-          <ul className="mt-2 grid gap-1 text-sm sm:grid-cols-2">
-            {SITE_OFFER_CARD.includes.map((item) => (
-              <li key={item}>• {item}</li>
-            ))}
-            {offer.wantsDomain ? (
-              <li>• Domínio {offer.domainName ?? "próprio"} por 1 ano</li>
-            ) : null}
-          </ul>
-        </div>
-      ) : null}
-      <div className={offer ? "hidden" : "rounded-2xl border bg-card p-5"}>
-        <p className="font-semibold">{PLAN_CARD.name}</p>
-        <p className="text-sm text-muted-foreground">{PLAN_CARD.tagline}</p>
-        <ul className="mt-2 grid gap-1 text-sm sm:grid-cols-2">
-          {PLAN_CARD.includes.map((item) => (
-            <li key={item}>• {item}</li>
-          ))}
-        </ul>
+      <div className="grid gap-3 md:grid-cols-2" role="group" aria-label="Plano">
+        {(["site", "complete"] as const).map((t) => {
+          const card = PLAN_CARDS[t];
+          return (
+            <button
+              key={t}
+              type="button"
+              aria-pressed={tier === t}
+              onClick={() => setTier(t)}
+              className={`relative flex flex-col gap-1 rounded-2xl border bg-card p-5 text-left ${tier === t ? "ring-2 ring-primary" : ""}`}
+            >
+              {t === "site" ? (
+                <span className="absolute -top-2.5 right-4 rounded-full bg-primary px-2.5 py-0.5 text-xs font-medium text-primary-foreground">
+                  Com seu site
+                </span>
+              ) : null}
+              <span className="font-semibold">{card.name}</span>
+              <span>
+                <span className="font-heading text-3xl font-bold">
+                  {formatBRL(subscriptionPrice("monthly", extras, 0, t))}
+                </span>
+                <span className="text-muted-foreground">/mês</span>
+              </span>
+              <span className="text-sm text-muted-foreground">{card.tagline}</span>
+              <ul className="mt-2 grid gap-1 text-sm">
+                {card.includes.map((item) => (
+                  <li key={item}>• {item}</li>
+                ))}
+              </ul>
+            </button>
+          );
+        })}
       </div>
 
-      <div className={offer ? "hidden" : "grid gap-3 sm:grid-cols-2"}>
+      <div className="grid gap-3 sm:grid-cols-2">
         {(["monthly", "yearly"] as const).map((c) => (
           <button
             key={c}
@@ -183,14 +181,14 @@ export function PlanCheckout({
             <span className="font-semibold">{c === "monthly" ? "Mensal" : "Anual"}</span>
             <span>
               <span className="font-heading text-3xl font-bold">
-                {formatBRL(subscriptionPrice(c, extras))}
+                {formatBRL(subscriptionPrice(c, extras, 0, tier))}
               </span>
               <span className="text-muted-foreground">/{c === "monthly" ? "mês" : "ano"}</span>
             </span>
             <span className="text-sm text-muted-foreground">
               {c === "monthly"
                 ? "Cancele quando quiser"
-                : `Sai ${formatBRL(Math.round(subscriptionPrice("yearly", extras) / 12))}/mês: ${formatBRL(savings)} a menos que no mensal`}
+                : `Sai ${formatBRL(Math.round(subscriptionPrice("yearly", extras, 0, tier) / 12))}/mês: ${formatBRL(savings)} a menos que no mensal`}
             </span>
           </button>
         ))}
@@ -236,13 +234,19 @@ export function PlanCheckout({
 
       <div className="flex flex-col gap-4 rounded-2xl border bg-card p-5">
         <p className="text-lg">
-          {offer ? SITE_OFFER.name : PLAN_NAME} · Total:{" "}
-          <span className="font-bold">{formatBRL(total)}</span>
+          {TIER_NAME[tier]} · Total: <span className="font-bold">{formatBRL(total)}</span>
           <span className="text-muted-foreground">/{unit}</span>
           {discount ? (
             <span className="ml-2 text-sm text-primary">({discount}% de desconto do cupom)</span>
           ) : null}
         </p>
+        {hasActiveSubscription && tier !== initialTier ? (
+          <p className="rounded-xl bg-accent px-3 py-2 text-sm text-accent-foreground">
+            {tier === "site"
+              ? "Seu site é liberado assim que você salvar. O novo valor vale a partir da próxima cobrança."
+              : "Seu site continua no ar até o fim do período já pago e sai na próxima cobrança, que já vem no valor do Completo."}
+          </p>
+        ) : null}
         {hasActiveSubscription && professionals < activeProfessionals ? (
           <p className="text-sm text-destructive">
             Você tem {activeProfessionals} profissionais ativos. Os que passarem do novo número
@@ -280,17 +284,10 @@ export function PlanCheckout({
                 Aplicar
               </Button>
             </div>
-            {today !== total ? (
-              <p className="rounded-xl bg-accent px-3 py-2 text-sm text-accent-foreground">
-                <strong>Hoje: {formatBRL(today)}</strong> (1º mês + domínio por 1 ano). Depois:{" "}
-                <strong>{formatBRL(total)}/mês</strong>. Seu site fica pronto em até 48 horas úteis.
-              </p>
-            ) : null}
             <p className="text-sm text-muted-foreground">
-              Pagamento pelo <strong>Pix Automático</strong>: você paga{" "}
-              {today !== total ? "o valor de hoje" : "a primeira mensalidade"} pelo QR code e
-              confirma no app do banco. As próximas são debitadas sozinhas, e você pode cancelar
-              quando quiser.
+              Pagamento pelo <strong>Pix Automático</strong>: você paga a primeira mensalidade pelo
+              QR code e confirma no app do banco. As próximas são debitadas sozinhas, e você pode
+              cancelar quando quiser.
             </p>
           </>
         ) : (
@@ -308,6 +305,7 @@ export function PlanCheckout({
                 await checkoutAction({
                   cycle,
                   extraProfessionals: extras,
+                  tier,
                   name,
                   cpfCnpj: document,
                   coupon: discount !== null ? coupon : undefined,
@@ -320,7 +318,7 @@ export function PlanCheckout({
             ? "Processando…"
             : hasActiveSubscription
               ? "Salvar alteração"
-              : `Gerar Pix de ${formatBRL(today)}`}
+              : `Gerar Pix de ${formatBRL(total)}`}
         </Button>
       </div>
 

@@ -5,6 +5,7 @@ import { getCurrentBrand } from "@/brands/server";
 import { canonicalUrl, hasRealDomain } from "@/brands/urls";
 import { getDirectoryCities } from "@/lib/directory/data";
 import { indexableBusinessSlugs, indexablePortalPaths } from "@/lib/portal/seo";
+import { liveSiteSlugs } from "@/lib/public/site";
 import { siteUrl, withoutQuery } from "@/lib/site-url";
 
 import { SITE_PAGES } from "@/content/site-pages";
@@ -49,6 +50,11 @@ export async function sitemapFiles(): Promise<{
         ),
   ]);
 
+  // Complete profiles with a live site ("Site + Agenda" or trial) are listed by the site, their
+  // canonical URL; the others by the profile.
+  const businesses = businessLists.flat();
+  const withSite = await liveSiteSlugs(businesses.map((b) => b.slug));
+
   // A niche's own domain shows its sales page at "/" (no recorded date for it yet).
   const site = ownDomain
     ? [
@@ -71,9 +77,15 @@ export async function sitemapFiles(): Promise<{
     { name: "ajuda", urls: ownDomain ? [] : articleUrls(url, "ajuda") },
     {
       name: "perfis",
-      urls: businessLists
-        .flat()
+      urls: businesses
+        .filter((b) => !withSite.has(b.slug))
         .map((b) => ({ loc: url(`/${b.slug}/perfil`), lastmod: b.updatedAt })),
+    },
+    {
+      name: "sites",
+      urls: businesses
+        .filter((b) => withSite.has(b.slug))
+        .map((b) => ({ loc: url(`/${b.slug}/site`), lastmod: b.updatedAt })),
     },
     {
       name: "diretorio",

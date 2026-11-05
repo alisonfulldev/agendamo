@@ -37,6 +37,17 @@ async function setPlan(
   await page.waitForURL(/ok=plano/);
 }
 
+// The panel's photo prompt (demo businesses have no photo) would cover the screens under test.
+test.beforeEach(async ({ context }) => {
+  await context.addInitScript(() => {
+    try {
+      localStorage.setItem("mc_photo_prompt_until", String(Date.now() + 86_400_000));
+    } catch {
+      // No storage: the prompt may show.
+    }
+  });
+});
+
 test("sign up, confirm by the e-mail link and reach the business wizard", async ({ page }) => {
   const email = `teste-${unique()}@exemplo.com`;
   await page.goto("/cadastro?brand=barber");

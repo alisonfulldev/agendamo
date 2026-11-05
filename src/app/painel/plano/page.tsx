@@ -9,8 +9,7 @@ import {
 } from "@/lib/billing/asaas";
 import { requireOwner } from "@/lib/business/context";
 import { syncPixAutomatic } from "@/lib/billing/service";
-import { SUPPORT_EMAIL } from "@/content/support";
-import type { Business, SiteOrder, Subscription } from "@/lib/db/types";
+import type { Business, Subscription } from "@/lib/db/types";
 import { formatBRL } from "@/lib/money";
 import { handoffsThisMonth } from "@/lib/handoffs";
 import { trialCounter } from "@/lib/plan-text";
@@ -20,7 +19,8 @@ import {
   PLAN_PRICES,
   planLabel,
   PRICE_TEXT,
-  SITE_OFFER,
+  SITE_PRICE_TEXT,
+  TIER_NAME,
 } from "@/lib/plans";
 import { createClient } from "@/lib/supabase/server";
 
@@ -78,12 +78,6 @@ export default async function PlanPage() {
     .eq("business_id", business.id)
     .maybeSingle();
   const subscription = data as Subscription | null;
-  // "Site + Agenda": the site order (paid once with the first charge) and its status.
-  const siteOffer = business.offer === "site";
-  const { data: orderData } = siteOffer
-    ? await supabase.from("site_orders").select("*").eq("business_id", business.id).maybeSingle()
-    : { data: null };
-  const siteOrder = orderData as SiteOrder | null;
   const { count: activeProfessionals } = await supabase
     .from("professionals")
     .select("id", { count: "exact", head: true })
@@ -118,44 +112,7 @@ export default async function PlanPage() {
         </p>
       ) : null}
 
-      {siteOffer && siteOrder?.status === "awaiting_payment" && !features.active ? (
-        <section
-          aria-labelledby="site-pagamento"
-          className="rounded-2xl border-2 border-primary bg-card p-5 text-card-foreground"
-        >
-          <h2 id="site-pagamento" className="text-xl font-bold tracking-tight">
-            Falta só o pagamento para criarmos o seu site 🚀
-          </h2>
-          <p className="mt-2 text-pretty text-muted-foreground">
-            Assim que o Pix cair, sua agenda online é liberada na hora e o seu site fica pronto em
-            até 48 horas úteis. Você não precisa enviar nada agora: usamos as informações do seu
-            perfil e, se faltar algo, falamos com você.
-          </p>
-          <a
-            href="#assinar"
-            className="mt-4 inline-flex min-h-12 items-center justify-center rounded-xl bg-primary px-6 font-semibold text-primary-foreground"
-          >
-            Pagar e ativar
-          </a>
-        </section>
-      ) : null}
-
-      {siteOrder && siteOrder.status !== "awaiting_payment" ? (
-        <Section title="Seu site">
-          <p className="text-sm">
-            {siteOrder.status === "delivered"
-              ? `Seu site foi entregue${siteOrder.delivered_at ? ` em ${date(siteOrder.delivered_at)}` : ""}. Para pedir um ajuste, responda o e-mail de entrega ou escreva para ${SUPPORT_EMAIL}.`
-              : `Pagamento recebido! Seu site fica pronto até ${siteOrder.due_at ? formatInTimeZone(new Date(siteOrder.due_at), business.timezone, "dd/MM 'às' HH:mm") : "48 horas úteis"}.`}
-          </p>
-          {siteOrder.wants_domain ? (
-            <p className="mt-2 text-sm text-muted-foreground">
-              Domínio: {siteOrder.domain_name ?? "a combinar"} (renova uma vez por ano).
-            </p>
-          ) : null}
-        </Section>
-      ) : null}
-
-      {!features.active && !(siteOffer && siteOrder?.status === "awaiting_payment") ? (
+      {!features.active ? (
         <section
           aria-labelledby="espera"
           className="rounded-2xl border-2 border-primary bg-card p-5 text-card-foreground"
@@ -174,13 +131,14 @@ export default async function PlanPage() {
           </p>
           <p className="mt-2 text-sm text-muted-foreground">
             Agenda, clientes e configurações estão guardados, e os horários já marcados continuam
-            valendo. Assinando, tudo volta na hora: {PRICE_TEXT.summary}.
+            valendo. Assinando, tudo volta na hora: {PLAN_NAME} por {PRICE_TEXT.summary}, ou com o
+            seu site por {SITE_PRICE_TEXT.summary}.
           </p>
           <a
             href="#assinar"
             className="mt-4 inline-flex min-h-12 items-center justify-center rounded-xl bg-primary px-6 font-semibold text-primary-foreground"
           >
-            Assinar o {PLAN_NAME}
+            Escolher meu plano
           </a>
         </section>
       ) : null}
@@ -190,7 +148,8 @@ export default async function PlanPage() {
           <dl className="grid grid-cols-[10rem_1fr] gap-y-2 text-sm">
             <dt className="text-muted-foreground">Plano</dt>
             <dd>
-              {PLAN_NAME} · {subscription.billing_cycle === "yearly" ? "Anual" : "Mensal"} ·{" "}
+              {TIER_NAME[subscription.tier ?? "complete"]} ·{" "}
+              {subscription.billing_cycle === "yearly" ? "Anual" : "Mensal"} ·{" "}
               {(subscription.extra_professionals ?? 0) + 1} profissiona
               {(subscription.extra_professionals ?? 0) + 1 === 1 ? "l" : "is"}
             </dd>
@@ -311,29 +270,25 @@ export default async function PlanPage() {
         </Section>
       ) : null}
 
-      <Section
-        id="assinar"
-        title={
-          active ? "Alterar assinatura" : `Assinar o ${siteOffer ? SITE_OFFER.name : PLAN_NAME}`
-        }
-      >
+      {active && subscription?.next_tier === "complete" ? (
+        <p role="status" className="rounded-lg bg-accent px-3 py-2 text-sm text-accent-foreground">
+          Você escolheu o {PLAN_NAME}: seu site fica no ar até o fim do período pago e sai na
+          próxima cobrança.
+        </p>
+      ) : null}
+
+      <Section id="assinar" title={active ? "Alterar assinatura" : "Escolha seu plano"}>
         <PlanCheckout
           initialCycle={subscription?.billing_cycle ?? "monthly"}
           initialExtras={active ? (subscription?.extra_professionals ?? 0) : 0}
+          initialTier={
+            active ? (subscription?.next_tier ?? subscription?.tier ?? "complete") : "site"
+          }
           activeProfessionals={activeProfessionals ?? 1}
           hasActiveSubscription={active}
           addonPrices={{
             featured: PLAN_PRICES.featured.monthly,
           }}
-          offer={
-            siteOffer
-              ? {
-                  wantsDomain: siteOrder?.wants_domain ?? false,
-                  domainName: siteOrder?.domain_name ?? null,
-                  firstCharge: siteOrder?.status === "awaiting_payment",
-                }
-              : null
-          }
         />
       </Section>
     </div>

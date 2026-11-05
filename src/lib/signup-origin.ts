@@ -14,8 +14,6 @@ export interface SignupSource {
   page?: string;
   /** Ad click id seen in the address ("google" for gclid, "meta" for fbclid). */
   click?: string;
-  /** "site": the "Site + Agenda" sign-up link. */
-  offer?: string;
 }
 
 export interface SignupOrigin {
@@ -71,7 +69,6 @@ export function signupOrigin(source: SignupSource | null | undefined): SignupOri
       .filter(Boolean)
       .join(" · ") || null;
 
-  if (source.offer === "site") return { label: "Oferta Site + Agenda", detail };
   if (source.click === "google") return { label: "Anúncio Google", detail };
   if (source.click === "meta") {
     const paid = source.utm_medium && PAID.test(source.utm_medium);

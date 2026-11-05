@@ -29,85 +29,38 @@ const testPrice = TEST_PRICE > 0 ? Math.max(TEST_PRICE, ASAAS_MINIMUM_CENTS) : 0
 
 export const PLAN_PRICES = {
   complete: { monthly: testPrice || 2390, yearly: testPrice || 23880 },
+  /** "Site + Agenda" (2026-11-05): Completo + the landing page at /<slug>/site. */
+  site: { monthly: testPrice || 4900, yearly: testPrice || 49000 },
   extraProfessional: { monthly: 900, yearly: 9000 },
   featured: { monthly: 4900 },
   customDomain: { monthly: 1900 },
 } as const;
 
 export const PLAN_NAME = "Completo";
-
-/**
- * "Site + Agenda" (2026-11-04; R$ 49/month with no setup fee since 2026-11-04): sold by its own
- * sign-up link (?criar=1&oferta=site). Same features as Completo plus a site built by hand within
- * 48 business hours. No trial, monthly only, coupons apply (not to the domain). The domain is
- * optional and renews yearly.
- */
-export const SITE_OFFER = {
-  key: "site",
-  name: "Site + Agenda",
-  monthlyCents: 4900,
-  extraProfessionalCents: 900,
-  /** .com.br domain, per year (first year with the first payment). */
-  domainYearlyCents: 9100,
-  deliveryBusinessHours: 48,
-} as const;
-
-/** Monthly value of the offer with extra professionals and a coupon. */
-export function siteMonthlyPrice(extraProfessionals: number, discountPercent = 0): number {
-  const base = SITE_OFFER.monthlyCents + SITE_OFFER.extraProfessionalCents * extraProfessionals;
-  return Math.round((base * (100 - discountPercent)) / 100);
-}
-
-/** First payment: the first month (no setup fee), plus the domain's first year when asked. */
-export function siteFirstPrice(
-  extraProfessionals: number,
-  discountPercent = 0,
-  wantsDomain = false,
-): number {
-  return (
-    siteMonthlyPrice(extraProfessionals, discountPercent) +
-    (wantsDomain ? SITE_OFFER.domainYearlyCents : 0)
-  );
-}
-
-/**
- * Delivery deadline: `hours` business hours after `from`, counting whole weekdays (Monday to
- * Friday, in São Paulo). Paid on a weekend, the count starts on Monday at the same hour.
- */
-export function addBusinessHours(
-  from: Date,
-  hours: number = SITE_OFFER.deliveryBusinessHours,
-): Date {
-  const weekday = (d: Date) =>
-    new Intl.DateTimeFormat("en-US", { timeZone: "America/Sao_Paulo", weekday: "short" }).format(d);
-  const result = new Date(from);
-  while (["Sat", "Sun"].includes(weekday(result))) result.setTime(result.getTime() + 86_400_000);
-  let days = Math.ceil(hours / 24);
-  while (days > 0) {
-    result.setTime(result.getTime() + 86_400_000);
-    if (!["Sat", "Sun"].includes(weekday(result))) days--;
-  }
-  return result;
-}
+export const SITE_PLAN_NAME = "Site + Agenda";
 
 export type Cycle = "monthly" | "yearly";
+/** Which plan: "complete" (chat + agenda) or "site" (the same + the landing page). */
+export type Tier = "complete" | "site";
 
-/** Subscription value in cents for the cycle, with extra professionals and a coupon. */
+export const TIER_NAME: Record<Tier, string> = { complete: PLAN_NAME, site: SITE_PLAN_NAME };
+
+/** Subscription value in cents for the plan and cycle, with extra professionals and a coupon. */
 export function subscriptionPrice(
   cycle: Cycle,
   extraProfessionals: number,
   discountPercent = 0,
+  tier: Tier = "complete",
 ): number {
-  const base =
-    PLAN_PRICES.complete[cycle] + PLAN_PRICES.extraProfessional[cycle] * extraProfessionals;
+  const base = PLAN_PRICES[tier][cycle] + PLAN_PRICES.extraProfessional[cycle] * extraProfessionals;
   return Math.round((base * (100 - discountPercent)) / 100);
 }
 
 /** How much the yearly plan saves compared to paying monthly for 12 months. */
-export function yearlySavings(extraProfessionals = 0): number {
+export function yearlySavings(extraProfessionals = 0, tier: Tier = "complete"): number {
   return (
-    subscriptionPrice("monthly", extraProfessionals) * 12 -
-    subscriptionPrice("yearly", extraProfessionals)
+    subscriptionPrice("monthly", extraProfessionals, 0, tier) * 12 -
+    subscriptionPrice("yearly", extraProfessionals, 0, tier)
   );
 }
 
@@ -129,6 +82,16 @@ export const PRICE_TEXT = {
   trial: `${TRIAL_DAYS} dias grátis, sem cartão`,
 };
 
+const site = PLAN_PRICES.site;
+/** Prices of "Site + Agenda" (same rules as PRICE_TEXT). */
+export const SITE_PRICE_TEXT = {
+  monthly: `${reais(site.monthly)}/mês`,
+  yearly: `${reais(site.yearly)}/ano`,
+  yearlyPerMonth: `${reais(Math.round(site.yearly / 12))}/mês`,
+  summary: `${reais(site.monthly)}/mês ou ${reais(site.yearly)}/ano`,
+  yearlySavings: `economize ${reais(yearlySavings(0, "site"))} por ano`,
+};
+
 /** trial: the 14 days; subscribed: paying; waiting: neither (chat ends on WhatsApp). */
 export type PlanStatus = "trial" | "subscribed" | "waiting";
 
@@ -146,6 +109,13 @@ export interface PlanFeatures {
    * MeetChat" card in waiting mode, a small discreet line in the trial and the paid plan.
    */
   discreetBadge: boolean;
+  /** Paid plan (or the one being tested): "site" includes the landing page. */
+  tier: Tier;
+  /**
+   * The landing page at /<slug>/site: in the trial (everyone tries it) and on "Site + Agenda".
+   * Checked on the server for the page and the editor (rule 6).
+   */
+  site: boolean;
   // Server checks of each feature (rule 6): all of them follow `active` (one plan).
   agenda: boolean;
   reminders: boolean;
@@ -172,6 +142,7 @@ export const PHOTO_LIMIT = 20;
 type PlanFields = Pick<Business, "plan" | "trial_ends_at"> & {
   trial_started_at?: string | null;
   professional_seats?: number | null;
+  plan_tier?: Tier | null;
 };
 
 /**
@@ -195,6 +166,8 @@ export function getPlanFeatures(business: PlanFields, now: Date = new Date()): P
       ? Math.max(1, Math.ceil((trialEndsAt!.getTime() - now.getTime()) / 86_400_000))
       : null,
     discreetBadge: active,
+    tier: business.plan_tier ?? "complete",
+    site: trialActive || (subscribed && business.plan_tier === "site"),
     agenda: active,
     reminders: active,
     customers: active,
@@ -217,7 +190,7 @@ export function getPlanFeatures(business: PlanFields, now: Date = new Date()): P
 
 /** "Teste do Completo", "Completo", "Assinatura pendente". */
 export function planLabel(features: PlanFeatures): string {
-  if (features.status === "trial") return `Teste do ${PLAN_NAME}`;
-  if (features.status === "subscribed") return PLAN_NAME;
+  if (features.status === "trial") return "Teste grátis";
+  if (features.status === "subscribed") return TIER_NAME[features.tier];
   return "Assinatura pendente";
 }

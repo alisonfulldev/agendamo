@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // In-memory tables behind the admin client: enough of the query builder for the webhook.
 type Row = Record<string, unknown>;
-const db: Record<string, Row[]> = { subscriptions: [], businesses: [], site_orders: [] };
+const db: Record<string, Row[]> = { subscriptions: [], businesses: [] };
 
 function query(table: string) {
   const filters: ((row: Row) => boolean)[] = [];
@@ -28,7 +28,7 @@ function query(table: string) {
     },
     maybeSingle: async () => {
       const rows = run();
-      return { data: structuredClone(rows[0]) ?? null, error: null };
+      return { data: patch ? null : (structuredClone(rows[0]) ?? null), error: null };
     },
     then: (resolve: (value: { data: null; error: null }) => void) => {
       run();
@@ -46,8 +46,6 @@ vi.mock("@/lib/audit", () => ({ audit: vi.fn(async () => undefined) }));
 vi.mock("@/lib/cache", () => ({ invalidatePublicPage: vi.fn() }));
 vi.mock("@/lib/trial", () => ({ recordTrialClaims: vi.fn(async () => undefined) }));
 const notifyTeam = vi.fn(async () => undefined);
-const notifyAdminsOfPaidSite = vi.fn(async () => undefined);
-vi.mock("@/lib/notifications/admin-signup", () => ({ notifyAdminsOfPaidSite }));
 vi.mock("@/lib/notifications/owner", () => ({
   claimNotification: vi.fn(async () => true),
   notifyTeam,
@@ -98,7 +96,6 @@ beforeEach(() => {
   vi.clearAllMocks();
   db.businesses = [{ id: "biz_1", plan: "free", slug: "studio", trial_ends_at: null }];
   db.subscriptions = [];
-  db.site_orders = [];
 });
 
 describe("periodBase", () => {
@@ -277,57 +274,38 @@ describe("Pix Automático webhook", () => {
   });
 });
 
-describe("Site + Agenda", () => {
-  it("first payment starts the site order (deadline, yearly domain charge, admin e-mail) once", async () => {
+describe("Site + Agenda: moving down to Completo", () => {
+  it("keeps the site until the next payment, then turns it off", async () => {
     db.businesses = [
-      {
-        id: "biz_1",
-        plan: "free",
-        slug: "studio",
-        trial_ends_at: null,
-        offer: "site",
-        brand_key: "beauty",
-        name: "Studio",
-      },
+      { id: "biz_1", plan: "complete", plan_tier: "site", slug: "studio", trial_ends_at: null },
     ];
-    db.site_orders = [
-      {
-        id: "ord_1",
-        business_id: "biz_1",
-        status: "awaiting_payment",
-        wants_domain: true,
-        domain_name: "studio.com.br",
-      },
+    db.subscriptions = [
+      subscription({
+        status: "active",
+        provider_subscription_id: "sub_auto",
+        pix_automatic_status: "active",
+        pix_automatic_first_payment_id: "pay_first",
+        tier: "site",
+        next_tier: "complete",
+        current_period_end: "2026-11-28T12:00:00.000Z",
+      }),
     ];
-    db.page_settings = [];
-    db.members = [];
-    db.subscriptions = [subscription({})];
-    const payment = {
-      id: "pay_first",
-      customer: "cus_1",
-      status: "RECEIVED",
-      value: 140,
-      dueDate: "2026-10-28",
-      invoiceUrl: "",
-      billingType: "PIX",
-    };
-    await handleAsaasEvent({ id: "e1", event: "PAYMENT_RECEIVED", payment });
-    expect(db.site_orders[0]).toMatchObject({ status: "paid" });
-    // Wednesday 12:00 (São Paulo) + 48 business hours = Friday 12:00.
-    expect(db.site_orders[0]!.due_at).toBe("2026-10-30T15:00:00.000Z");
-    expect(asaas.createSubscription).toHaveBeenCalledWith(
-      expect.objectContaining({ valueCents: 9100, cycle: "YEARLY", nextDueDate: "2027-10-28" }),
-    );
-    expect(row().addons).toMatchObject({ custom_domain: { subscription_id: "sub_regular_new" } });
-    expect(notifyAdminsOfPaidSite).toHaveBeenCalledOnce();
-
-    // The confirmation from the bank afterwards does not start it again.
+    // Until the renewal the site stays (nothing changed on the business).
+    expect(db.businesses[0]!.plan_tier).toBe("site");
     await handleAsaasEvent({
-      id: "e2",
-      event: "PIX_AUTOMATIC_RECURRING_AUTHORIZATION_ACTIVATED",
-      authorization: { id: "aut_1", status: "ACTIVE", subscriptionId: "sub_auto" },
+      id: "e1",
+      event: "PAYMENT_RECEIVED",
+      payment: {
+        id: "pay_renewal",
+        subscription: "sub_auto",
+        status: "RECEIVED",
+        value: 23.9,
+        dueDate: "2026-11-28",
+        invoiceUrl: "",
+        billingType: "PIX",
+      },
     });
-    expect(notifyAdminsOfPaidSite).toHaveBeenCalledOnce();
-    expect(asaas.createSubscription).toHaveBeenCalledOnce();
+    expect(db.businesses[0]!.plan_tier).toBe("complete");
+    expect(row()).toMatchObject({ tier: "complete", next_tier: null });
   });
 });

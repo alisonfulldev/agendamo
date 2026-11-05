@@ -35,7 +35,7 @@ describe("getPlanFeatures (Completo, 14-day trial, waiting mode)", () => {
       deposits: true,
       professionalLimit: 10,
     });
-    expect(planLabel(f)).toBe("Teste do Completo");
+    expect(planLabel(f)).toBe("Teste grátis");
   });
 
   it("last day of the trial counts as 1 day left", () => {
@@ -124,27 +124,37 @@ describe("prices", () => {
   });
 });
 
-describe("Site + Agenda offer", () => {
-  it("first payment is the first month (no setup fee), plus the domain's first year when asked", async () => {
-    const { siteFirstPrice, siteMonthlyPrice } = await import("./plans");
-    expect(siteFirstPrice(0)).toBe(4900);
-    expect(siteFirstPrice(0, 0, true)).toBe(14_000);
-    expect(siteFirstPrice(1)).toBe(5800);
-    expect(siteMonthlyPrice(0)).toBe(4900);
-    expect(siteMonthlyPrice(2)).toBe(6700);
-    // The coupon does not touch the domain.
-    expect(siteFirstPrice(0, 10, true)).toBe(4410 + 9100);
-    expect(siteMonthlyPrice(0, 10)).toBe(4410);
+describe("Site + Agenda (2026-11-05)", () => {
+  const now = new Date("2026-11-05T12:00:00Z");
+  it("the site is on in the trial and on the Site + Agenda plan, off on Completo and in waiting", async () => {
+    const { getPlanFeatures } = await import("./plans");
+    const trial = { plan: "free" as const, trial_ends_at: "2026-11-10T00:00:00Z" };
+    expect(getPlanFeatures(trial, now).site).toBe(true);
+    expect(
+      getPlanFeatures({ plan: "complete", trial_ends_at: null, plan_tier: "site" }, now).site,
+    ).toBe(true);
+    expect(
+      getPlanFeatures({ plan: "complete", trial_ends_at: null, plan_tier: "complete" }, now).site,
+    ).toBe(false);
+    expect(getPlanFeatures({ plan: "complete", trial_ends_at: null }, now).site).toBe(false);
+    expect(
+      getPlanFeatures(
+        { plan: "free", trial_ends_at: "2026-11-01T00:00:00Z", plan_tier: "site" },
+        now,
+      ).site,
+    ).toBe(false);
   });
 
-  it("delivers in 48 business hours (weekends skipped)", async () => {
-    const { addBusinessHours } = await import("./plans");
-    const at = (iso: string) => addBusinessHours(new Date(iso)).toISOString();
-    // Monday 10:00 (São Paulo) → Wednesday 10:00.
-    expect(at("2026-11-02T13:00:00Z")).toBe("2026-11-04T13:00:00.000Z");
-    // Thursday 15:00 → Monday 15:00.
-    expect(at("2026-11-05T18:00:00Z")).toBe("2026-11-09T18:00:00.000Z");
-    // Saturday 11:00 → counts from Monday 11:00 → Wednesday 11:00.
-    expect(at("2026-11-07T14:00:00Z")).toBe("2026-11-11T14:00:00.000Z");
+  it("prices: R$ 49/month or R$ 490/year, extras on top, coupon applies", async () => {
+    const { subscriptionPrice, yearlySavings, planLabel, getPlanFeatures } =
+      await import("./plans");
+    expect(subscriptionPrice("monthly", 0, 0, "site")).toBe(4900);
+    expect(subscriptionPrice("yearly", 0, 0, "site")).toBe(49_000);
+    expect(subscriptionPrice("monthly", 1, 0, "site")).toBe(5800);
+    expect(subscriptionPrice("monthly", 0, 10, "site")).toBe(4410);
+    expect(yearlySavings(0, "site")).toBe(9800);
+    expect(
+      planLabel(getPlanFeatures({ plan: "complete", trial_ends_at: null, plan_tier: "site" }, now)),
+    ).toBe("Site + Agenda");
   });
 });

@@ -26,6 +26,7 @@ export interface PublicPage {
     | "segment"
     | "timezone"
     | "plan"
+    | "plan_tier"
     | "trial_started_at"
     | "trial_ends_at"
     | "created_at"
@@ -72,7 +73,7 @@ async function fetchPublicPage(slug: string): Promise<PublicPage | null> {
 
 type LivePlan = Pick<
   Business,
-  "plan" | "trial_started_at" | "trial_ends_at" | "created_at" | "portal_opt_out"
+  "plan" | "plan_tier" | "trial_started_at" | "trial_ends_at" | "created_at" | "portal_opt_out"
 >;
 
 /**
@@ -82,7 +83,7 @@ type LivePlan = Pick<
 async function fetchLivePlan(slug: string): Promise<LivePlan | null> {
   const { data, error } = await createAdminClient()
     .from("businesses")
-    .select("plan, trial_started_at, trial_ends_at, created_at, portal_opt_out")
+    .select("plan, plan_tier, trial_started_at, trial_ends_at, created_at, portal_opt_out")
     .eq("slug", slug.toLowerCase())
     .is("suspended_at", null)
     .maybeSingle();

@@ -84,12 +84,20 @@ test("trial ends without payment: waiting mode, nothing deleted, subscribing bri
   await expect(customers.first()).toBeVisible();
   const before = await customers.count();
 
+  // The trial includes the site (/<slug>/site): every "Agendar" opens the chat.
+  await page.goto("/espaco-escuta/site?brand=psychology");
+  await expect(page.getByRole("heading", { level: 1, name: "Espaço Escuta" })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Agendar horário/ }).first()).toHaveAttribute(
+    "href",
+    "/espaco-escuta",
+  );
+
   // The trial ends: the panel opens only the subscription screen (menu: Assinatura and Conta).
   await setPlan(page, "Espaço Escuta", "Modo de espera");
   await page.goto("/painel");
   await expect(page).toHaveURL(/\/painel\/plano/);
   await expect(page.getByRole("heading", { name: "Seu teste terminou" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Assinar o Completo" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Escolher meu plano" })).toBeVisible();
   await page.goto("/painel/clientes");
   await expect(page).toHaveURL(/\/painel\/plano/);
   const menu = page.getByRole("navigation", { name: "Painel" }).first();
@@ -108,6 +116,9 @@ test("trial ends without payment: waiting mode, nothing deleted, subscribing bri
   await page.goto("/espaco-escuta?brand=psychology");
   await expect(page.getByText(/Você está na agenda de/)).toBeVisible();
   await expect(page.getByRole("link", { name: /Agende também com o MeetChat/ })).toHaveCount(0);
+  // The Completo has no site: its address opens the chat.
+  await page.goto("/espaco-escuta/site?brand=psychology");
+  await expect(page).toHaveURL(/\/espaco-escuta$/);
 });
 
 test("waiting mode: the chat sends the request to WhatsApp and the owner sees how many", async ({

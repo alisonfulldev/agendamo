@@ -4,6 +4,7 @@ import { after } from "next/server";
 
 import { getNiche } from "@/brands";
 import { canonicalUrl } from "@/brands/urls";
+import { getPlanFeatures } from "@/lib/plans";
 import { isIndexable } from "@/lib/public/indexable";
 import { getPublicPage } from "@/lib/public/page";
 
@@ -26,9 +27,14 @@ export function notifyProfileChanged(
     const urls: string[] = [];
     if (data && isIndexable(data)) {
       urls.push(canonicalUrl(brand, `/${business.slug}/perfil`));
+      // The site (trial or "Site + Agenda") shows the same data and is the canonical URL.
+      if (getPlanFeatures(data.business).site) {
+        urls.push(canonicalUrl(brand, `/${business.slug}/site`));
+      }
     }
     if (previousSlug && previousSlug !== business.slug) {
       urls.push(canonicalUrl(brand, `/${previousSlug}/perfil`));
+      urls.push(canonicalUrl(brand, `/${previousSlug}/site`));
     }
     if (urls.length > 0) await submitIndexNow(urls);
   });

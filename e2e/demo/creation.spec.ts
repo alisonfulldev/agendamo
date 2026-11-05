@@ -47,7 +47,10 @@ test("the bottom button of the page opens the creation conversation too", async 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
   await page.getByRole("heading", { name: /Perguntas frequentes/ }).scrollIntoViewIfNeeded();
-  await page.getByRole("link", { name: "Criar meu link grátis" }).last().click();
+  await page
+    .getByRole("link", { name: /Comece grátis, sem cartão|Criar meu link grátis/ })
+    .last()
+    .click();
   await expect(
     page.locator('[role="dialog"] [data-creation]').getByText("Qual o nome do seu negócio?"),
   ).toBeVisible();

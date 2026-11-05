@@ -56,7 +56,16 @@ export function themeOverride(loaded: LoadedBusinessPage): CSSProperties | undef
     : undefined;
 }
 
-/** Same metadata for the chat and the profile; the profile is the canonical (indexable) URL. */
+/**
+ * The indexable URL of the business: its site (/<slug>/site) while the site is live (trial or
+ * "Site + Agenda"), else the profile.
+ */
+export function canonicalPath(loaded: LoadedBusinessPage): string {
+  const slug = loaded.data.business.slug;
+  return loaded.features.site ? `/${slug}/site` : `/${slug}/perfil`;
+}
+
+/** Same metadata for the chat and the profile; the canonical is the site or the profile. */
 export function businessMetadata(loaded: LoadedBusinessPage | null): Metadata {
   if (!loaded) return { title: "Página não encontrada", robots: { index: false } };
   const { data, brand } = loaded;
@@ -65,7 +74,7 @@ export function businessMetadata(loaded: LoadedBusinessPage | null): Metadata {
   return pageMetadata({
     title: `${data.business.name} · ${brand.name}`,
     description,
-    path: `/${data.business.slug}/perfil`,
+    path: canonicalPath(loaded),
     brand,
     siteName: brand.name,
     socialTitle: data.business.name,
@@ -82,7 +91,7 @@ export function businessStructuredData(
 ): JsonLdNode[] {
   const { data, brand } = loaded;
   const { business, page } = data;
-  const url = canonicalUrl(brand, `/${business.slug}/perfil`);
+  const url = canonicalUrl(brand, canonicalPath(loaded));
   const node = localBusinessNode(
     {
       name: business.name,

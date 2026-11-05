@@ -37,11 +37,3 @@ describe("signupOrigin", () => {
     expect(signupOrigin(null)).toEqual({ label: "—", detail: null });
   });
 });
-
-describe("signupOrigin (Site + Agenda)", () => {
-  it("names the offer link before any other source", () => {
-    expect(signupOrigin({ offer: "site", click: "meta", landing: "/" }).label).toBe(
-      "Oferta Site + Agenda",
-    );
-  });
-});

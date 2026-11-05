@@ -32,10 +32,10 @@ export interface Business {
   plan: Plan;
   trial_started_at: string | null;
   trial_ends_at: string | null;
+  /** Which plan (when paying, or tried): "complete" or "site" (with the landing page). */
+  plan_tier?: "complete" | "site";
   /** Last time the owner opened the panel (updated at most once an hour). */
   owner_last_seen_at: string | null;
-  /** Came by the "Site + Agenda" sign-up link (no trial; own prices in SITE_OFFER). */
-  offer?: "site" | null;
   slot_interval_minutes: 15 | 30 | 60;
   min_notice_minutes: number;
   max_days_ahead: number;
@@ -304,20 +304,6 @@ export interface Review {
   created_at: string;
 }
 
-/** Site built by hand for the "Site + Agenda" offer. */
-export interface SiteOrder {
-  id: string;
-  business_id: string;
-  status: "awaiting_payment" | "paid" | "delivered";
-  wants_domain: boolean;
-  domain_name: string | null;
-  paid_at: string | null;
-  due_at: string | null;
-  delivered_at: string | null;
-  reminder_sent_at: string | null;
-  created_at: string;
-}
-
 export interface Subscription {
   id: string;
   business_id: string;
@@ -325,6 +311,10 @@ export interface Subscription {
   provider_customer_id: string | null;
   provider_subscription_id: string | null;
   plan: "complete";
+  /** Plan paid: "complete" or "site". */
+  tier: "complete" | "site";
+  /** Moving down to "complete" at the end of the paid period. */
+  next_tier: "complete" | "site" | null;
   /** Price changed on our side: the next billing run updates the Asaas subscription value. */
   needs_reprice: boolean;
   billing_cycle: "monthly" | "yearly";
@@ -423,4 +413,17 @@ export interface DepositReceipt {
   /** Prepared for a future reading engine (nothing is read in this version). */
   extraction_status: "not_requested" | "pending" | "done" | "failed";
   extracted: Record<string, unknown> | null;
+}
+
+/** Owner's edits of the landing page (/<slug>/site); null = default from the business data. */
+export interface SiteSettings {
+  business_id: string;
+  primary_color: string | null;
+  accent_color: string | null;
+  hero_title: string | null;
+  hero_subtitle: string | null;
+  cta_label: string | null;
+  hero_image_key: string | null;
+  sections: { key: string; visible: boolean }[] | null;
+  updated_at: string;
 }

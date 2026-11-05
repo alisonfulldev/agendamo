@@ -1,4 +1,12 @@
-import { PLAN_NAME, PLAN_PRICES, PRICE_TEXT, reais, SITE_OFFER, TRIAL_DAYS } from "@/lib/plans";
+import {
+  PLAN_NAME,
+  PLAN_PRICES,
+  PRICE_TEXT,
+  reais,
+  SITE_PLAN_NAME,
+  SITE_PRICE_TEXT,
+  TRIAL_DAYS,
+} from "@/lib/plans";
 
 export interface PlanCard {
   name: string;
@@ -30,16 +38,22 @@ export const PLAN_CARD: PlanCard = {
   cta: `Testar ${TRIAL_DAYS} dias grátis`,
 };
 
-/** "Site + Agenda" (SITE_OFFER), shown on the payment screen of who came by its link. */
-export const SITE_OFFER_CARD = {
-  name: SITE_OFFER.name,
-  tagline: `Site profissional feito por nós + agenda online por ${reais(SITE_OFFER.monthlyCents)}/mês. Sem taxa de criação e sem fidelidade.`,
+/** "Site + Agenda" (2026-11-05): Completo + the landing page at /<slug>/site. */
+export const SITE_PLAN_CARD: PlanCard = {
+  name: SITE_PLAN_NAME,
+  price: reais(PLAN_PRICES.site.monthly),
+  period: "/mês",
+  note: `ou ${SITE_PRICE_TEXT.yearlyPerMonth} no anual (${SITE_PRICE_TEXT.yearly}, ${SITE_PRICE_TEXT.yearlySavings})`,
+  tagline: "Tudo do Completo + seu site profissional, pronto e no Google.",
   includes: [
-    "Site profissional feito por nós, pronto em até 48 horas úteis",
-    "Botões de agendar do site levam ao seu chat",
-    "Agendamentos ilimitados pelo chat, 24h",
-    "Lembretes automáticos para o cliente não faltar",
-    "Clientes, financeiro, vendas e estatísticas",
-    "Equipe e Google Agenda",
+    "Seu site pronto, na cor do seu negócio",
+    "Você muda cores, fotos e textos quando quiser",
+    "Feito para aparecer no Google",
+    "Todo botão de agendar abre o seu chat",
+    "Tudo do plano Completo",
   ],
-} as const;
+  cta: `Testar ${TRIAL_DAYS} dias grátis`,
+};
+
+/** Both plans, for the subscription screen. */
+export const PLAN_CARDS = { complete: PLAN_CARD, site: SITE_PLAN_CARD } as const;

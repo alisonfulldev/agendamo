@@ -76,6 +76,17 @@ function receiptPdf(): Buffer {
   );
 }
 
+// The panel's photo prompt (demo businesses have no photo) would cover the screens under test.
+test.beforeEach(async ({ context }) => {
+  await context.addInitScript(() => {
+    try {
+      localStorage.setItem("mc_photo_prompt_until", String(Date.now() + 86_400_000));
+    } catch {
+      // No storage: the prompt may show.
+    }
+  });
+});
+
 test("phone: pay by Pix, attach the optional receipt, the owner confirms", async ({ browser }) => {
   const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
   const page = await context.newPage();

@@ -67,6 +67,7 @@ const checkoutSchema = z.object({
   cpfCnpj: z.string().max(30).default(""),
   cycle: z.enum(["monthly", "yearly"]),
   extraProfessionals: z.number().int().min(0).max(49),
+  tier: z.enum(["complete", "site"]).default("complete"),
   coupon: z.string().trim().max(30).optional(),
 });
 
@@ -97,6 +98,7 @@ export async function checkoutAction(input: unknown): Promise<CheckoutResult> {
       userId: user.id,
       cycle: data.cycle,
       extraProfessionals: data.extraProfessionals,
+      tier: data.tier,
       payer: { name: data.name, cpfCnpj: data.cpfCnpj, email: user.email },
       couponCode: data.coupon || null,
     });
