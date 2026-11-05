@@ -35,6 +35,7 @@ export const SITE_SECTIONS = [
 export const UNTRACKED_SECTIONS = [
   "admin",
   "api",
+  "apresentacao",
   "auth",
   "avaliar",
   "avisos",

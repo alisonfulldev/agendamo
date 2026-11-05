@@ -12,7 +12,7 @@ const img = (name) => `data:image/png;base64,${readFileSync(`docs/marketing/shot
 const logo = `<svg viewBox="0 0 64 64" width="64" height="64"><rect width="64" height="64" rx="16" fill="${C.primary}"/><circle cx="18" cy="32" r="6" fill="${C.bg}"/><circle cx="32" cy="32" r="6" fill="${C.bg}"/><circle cx="46" cy="32" r="6" fill="${C.bg}"/></svg>`;
 
 const CSS = `
-@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,800&family=Figtree:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@800;900&family=Bricolage+Grotesque:opsz,wght@12..96,800&family=Figtree:wght@400;500;600;700;800&display=swap');
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: Figtree, sans-serif; }
 .slide { position: relative; overflow: hidden; display: flex; flex-direction: column; padding: 80px; }
@@ -198,6 +198,48 @@ function nicheOffer(n, fmt) {
 }
 
 // ---------------------------------------------------------------------------------------------
+// "Clássico" (2026-11-06): o anúncio que sempre converteu ("Seu SITE por apenas R$ 49/mês"), com
+// as informações novas: site + agenda online, sem fidelidade. Fundo claro, título serifado preto
+// com sombra amarela, selo amarelo e três vantagens com ícones.
+const Y = "#FCD901";
+const ICON = {
+  search: `<svg viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>`,
+  calendar: `<svg viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18M8 15l2.5 2.5L16 13"/></svg>`,
+  chart: `<svg viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V14M10 20V10M16 20V12M22 20H2M3 9l6-5 4 4 8-6M17 2h4v4"/></svg>`,
+};
+const CLASSIC_FORMATS = {
+  quadrado: { width: 1080, height: 1080, scale: 1, top: 70 },
+  retrato: { width: 1080, height: 1350, scale: 1.18, top: 0, center: true },
+  story: { width: 1080, height: 1920, scale: 1.22, top: 0, center: true },
+};
+function classic(fmt) {
+  const f = CLASSIC_FORMATS[fmt];
+  const k = f.scale;
+  const serif = "font-family:'Playfair Display',serif;font-weight:900;letter-spacing:-0.015em;color:#111;text-shadow:7px 7px 0 " + Y;
+  const perk = (icon, text) => `<div style="display:flex;align-items:center;gap:18px"><span style="width:70px;height:70px;flex:none">${icon}</span><span style="font-size:30px;font-weight:600;line-height:1.15;color:#111">${text}</span></div>`;
+  return `<div class="slide" style="width:${f.width}px;height:${f.height}px;padding:${f.top}px 60px 60px;align-items:center;text-align:center;${f.center ? "justify-content:center;" : ""}
+      background:radial-gradient(120% 60% at 50% 0%, #ffffff 0%, #f1f1f1 55%, #e9e9e9 100%)">
+    <div style="position:absolute;inset:-200px;background:repeating-radial-gradient(ellipse at 50% -10%, rgba(0,0,0,.035) 0 2px, transparent 2px 60px);pointer-events:none"></div>
+    <p style="${serif};font-size:${150 * k}px;line-height:.95">Seu SITE</p>
+    <p style="${serif};font-size:${86 * k}px;line-height:1;margin-top:${6 * k}px">+ agenda online</p>
+    <p style="font-family:'Playfair Display',serif;font-weight:800;font-size:${64 * k}px;color:#111;margin-top:${18 * k}px;line-height:1;display:inline-block;padding-bottom:10px;background:linear-gradient(${Y},${Y}) bottom/100% 12px no-repeat">por apenas</p>
+    <p style="${serif};font-size:${210 * k}px;line-height:1;margin-top:${10 * k}px;white-space:nowrap">R$49<span style="font-size:${96 * k}px">/mês</span></p>
+    <div style="display:flex;align-items:center;gap:26px;margin-top:${26 * k}px">
+      <span style="color:${Y};font-size:${60 * k}px;font-weight:900">\\</span>
+      <span class="pill" style="background:${Y};color:#111;font-size:${50 * k}px;font-weight:800;padding:${18 * k}px ${54 * k}px">pronto em 24h</span>
+      <span style="color:${Y};font-size:${60 * k}px;font-weight:900">//</span>
+    </div>
+    <p style="font-size:${30 * k}px;font-weight:700;color:#111;margin-top:${18 * k}px">sem fidelidade · cancele quando quiser</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:28px;margin-top:${46 * k}px;width:100%;text-align:left">
+      ${perk(ICON.search, "pronto para o Google")}
+      ${perk(ICON.calendar, "clientes agendam sozinhos 24h")}
+      ${perk(ICON.chart, "sua empresa vendendo mais")}
+    </div>
+    ${fmt === "story" ? `<div class="pill" style="margin-top:60px;background:#111;color:${Y};font-size:40px;padding:28px 44px">Toque e chame no WhatsApp →</div>` : ""}
+  </div>`;
+}
+
+// ---------------------------------------------------------------------------------------------
 const browser = await chromium.launch({ channel: "chrome" });
 const page = await browser.newPage({ deviceScaleFactor: 1 });
 async function render(html, width, height, file) {
@@ -208,7 +250,9 @@ async function render(html, width, height, file) {
 }
 
 // ONLY=nichos gera só as peças por ramo.
-const onlyNiches = process.env.ONLY === "nichos";
+// ONLY=classico gera só o anúncio clássico.
+const onlyNiches = process.env.ONLY === "nichos" || process.env.ONLY === "classico";
+const skipNiches = process.env.ONLY === "classico";
 mkdirSync("docs/marketing/apresentacao", { recursive: true });
 mkdirSync("docs/marketing/anuncios", { recursive: true });
 for (const [i, html] of onlyNiches ? [] : deck.entries()) {
@@ -227,10 +271,13 @@ for (const [name, html] of onlyNiches ? [] : Object.entries(ads)) {
   await render(html, 1080, height, `docs/marketing/anuncios/${name}.png`);
 }
 mkdirSync("docs/marketing/anuncios/nichos", { recursive: true });
-for (const n of NICHE_ADS) {
+for (const n of skipNiches ? [] : NICHE_ADS) {
   for (const [fmt, f] of Object.entries(FORMATS)) {
     await render(nicheOffer(n, fmt), f.width, f.height, `docs/marketing/anuncios/nichos/${n.file}-${fmt}.png`);
   }
+}
+for (const [fmt, f] of Object.entries(CLASSIC_FORMATS)) {
+  await render(classic(fmt), f.width, f.height, `docs/marketing/anuncios/classico-${fmt}.png`);
 }
 await browser.close();
 console.log("ok");
