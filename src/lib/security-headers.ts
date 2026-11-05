@@ -1,7 +1,8 @@
 /**
  * Security headers (Prompt 40). Every page refuses to be framed except the chat page used by the
  * external-site modal (/<slug>/agendar), which any site may embed, and the business page
- * (/<slug>), which only the same origin may frame (the phone preview in the panel).
+ * (/<slug>) and its site (/<slug>/site), which only the same origin may frame (the phone previews
+ * in the panel).
  */
 
 const EMBEDDABLE = /^\/([a-z0-9][a-z0-9-]{1,38}[a-z0-9])\/agendar\/?$/;
@@ -12,9 +13,9 @@ export function isEmbeddable(path: string): boolean {
   return Boolean(match && !INTERNAL.has(match[1]!));
 }
 
-const SINGLE_SEGMENT = /^\/([a-z0-9][a-z0-9-]{1,38}[a-z0-9])\/?$/;
+const SINGLE_SEGMENT = /^\/([a-z0-9][a-z0-9-]{1,38}[a-z0-9])(?:\/site)?\/?$/;
 
-/** Business page: framable by the same origin only (panel preview). */
+/** Business page and its site: framable by the same origin only (panel previews). */
 export function isSelfFramable(path: string): boolean {
   const match = path.match(SINGLE_SEGMENT);
   return Boolean(match && !INTERNAL.has(match[1]!));

@@ -12,6 +12,10 @@ describe("security headers", () => {
 
   it("the business page can only be framed by the same origin (panel preview)", () => {
     expect(isSelfFramable("/studio-bela")).toBe(true);
+    // Its site too ("Meu site" preview).
+    expect(isSelfFramable("/studio-bela/site")).toBe(true);
+    expect(isSelfFramable("/painel/site")).toBe(false);
+    expect(isSelfFramable("/studio-bela/perfil")).toBe(false);
     expect(isSelfFramable("/painel")).toBe(false);
     expect(isSelfFramable("/painel/pagina")).toBe(false);
     const page = securityHeaders("/studio-bela");
