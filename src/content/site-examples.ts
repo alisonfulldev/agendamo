@@ -33,6 +33,44 @@ export const EXAMPLE_NAMES: Partial<Record<string, string>> = {
 
 export const EXAMPLE_CITY = "São Paulo";
 
+/**
+ * Gallery photos of each niche on the example sites (public/examples/gallery/<key>-<n>.webp,
+ * Pexels, see docs/design/example-photos.md): how many there are.
+ */
+export const EXAMPLE_GALLERY: Partial<Record<string, number>> = {
+  acupuncture: 5,
+  aesthetics: 6,
+  "auto-detailing": 5,
+  barber: 6,
+  beauty: 6,
+  chiropractic: 6,
+  consulting: 6,
+  dentistry: 6,
+  "integrative-therapy": 6,
+  "lash-brow": 4,
+  "massage-therapy": 6,
+  medical: 5,
+  nails: 6,
+  nutrition: 6,
+  "occupational-therapy": 6,
+  osteopathy: 6,
+  "personal-trainer": 6,
+  "pet-grooming": 5,
+  photography: 5,
+  physio: 5,
+  pilates: 6,
+  podiatry: 4,
+  psychoanalysis: 4,
+  psychology: 6,
+  psychopedagogy: 6,
+  "speech-therapy": 6,
+  "sports-court": 6,
+  tattoo: 6,
+  tutoring: 6,
+  veterinary: 5,
+  yoga: 5,
+};
+
 /** Sample reviews (the page says it is an example). */
 export const EXAMPLE_REVIEWS = [
   {

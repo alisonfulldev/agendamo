@@ -25,10 +25,27 @@ test("example sites: both templates, out of search engines, booking opens the si
   await page.getByRole("link", { name: "Ver modelo Elegante" }).click();
   await expect(page.getByText("Site de exemplo · Modelo Elegante")).toBeVisible();
   await expect(page.getByRole("heading", { level: 1, name: "Studio Bela" })).toBeVisible();
-  await expect(page.getByRole("link", { name: /Agendar horário/ }).first()).toHaveAttribute(
-    "href",
-    /\/\?criar=1&ramo=beleza/,
-  );
+  // Gallery of the niche (example photos).
+  await expect(page.getByRole("heading", { name: "Nossos trabalhos" })).toBeVisible();
+  await expect(page.getByRole("img", { name: /Studio Bela: foto/ })).toHaveCount(6);
+  // "Agendar" opens an example booking chat: nothing is booked.
+  await page
+    .getByRole("link", { name: /Agendar horário/ })
+    .first()
+    .click();
+  await page.waitForURL(/\/exemplo\/beleza\/agendar\?modelo=elegante/);
+  await expect(page.getByText("Exemplo: nada aqui é agendado de verdade.")).toBeVisible();
+  await page.getByRole("button", { name: /^Manicure/ }).click();
+  await page
+    .getByRole("button", { name: /\d+ de / })
+    .first()
+    .click();
+  await page.getByRole("button", { name: "14:00" }).click();
+  await page.getByPlaceholder("Digite seu nome").fill("Mariana");
+  await page.keyboard.press("Enter");
+  await expect(page.getByText(/nenhum horário foi marcado/)).toBeVisible();
+  await page.getByRole("link", { name: "Voltar ao site" }).click();
+  await page.waitForURL(/\/exemplo\/beleza\?modelo=elegante$/);
 });
 
 test("Nova venda: account and Pix, payment page, paid releases the account and the site", async ({

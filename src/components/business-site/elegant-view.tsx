@@ -3,9 +3,8 @@ import { ArrowRight, MapPin, Star } from "lucide-react";
 import { MeetChatBadge } from "@/components/chat/meetchat-badge";
 import { formatBRL, formatDuration } from "@/lib/money";
 import type { SiteSectionKey } from "@/lib/public/site";
-import { publicUrl } from "@/lib/storage/r2";
 
-import { capitalize, siteContent, siteTheme, type SiteViewProps } from "./site-view";
+import { capitalize, photoUrl, siteContent, siteTheme, type SiteViewProps } from "./site-view";
 
 /*
  * "Elegante" template of the business site (2026-11-06): light background, a large photo, serif
@@ -118,11 +117,11 @@ export function ElegantSiteView({
           <div className={container}>
             <Heading id="fotos" kicker="Galeria" title="Nossos trabalhos" />
             <ul className="mt-12 grid grid-cols-2 gap-2 md:grid-cols-3">
-              {data.photos.slice(0, 12).map((photo, i) => (
+              {data.photos.slice(0, 20).map((photo, i) => (
                 <li key={photo.id}>
                   {/* eslint-disable-next-line @next/next/no-img-element -- R2 public image */}
                   <img
-                    src={publicUrl(photo.key)!}
+                    src={photoUrl(photo.key)}
                     alt={`${business.name}: foto ${i + 1}`}
                     width={photo.width}
                     height={photo.height}

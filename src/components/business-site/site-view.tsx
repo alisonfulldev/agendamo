@@ -71,6 +71,11 @@ export function siteTexts(data: PublicPage, brand: BrandConfig, settings: SiteSe
   };
 }
 
+/** A gallery photo: an R2 key, or a public path on the example sites ("/examples/…"). */
+export function photoUrl(key: string): string {
+  return key.startsWith("/") ? key : (publicUrl(key) ?? "");
+}
+
 export const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
 
 /** What both templates show, from the business data and the owner's edits. */
@@ -88,7 +93,7 @@ export function siteContent(
       exampleHeroUrl ??
       publicUrl(settings?.hero_image_key) ??
       publicUrl(page?.cover_key) ??
-      publicUrl(data.photos[0]?.key) ??
+      (data.photos[0] ? photoUrl(data.photos[0].key) : null) ??
       publicUrl(page?.avatar_key),
     avatar: publicUrl(page?.avatar_key),
     sections: resolveSections(settings?.sections ?? null).filter((s) => s.visible),
@@ -215,11 +220,11 @@ export function SiteView({
               Nossos trabalhos
             </h2>
             <ul className="mt-10 grid grid-cols-2 gap-3 md:grid-cols-3">
-              {data.photos.slice(0, 12).map((photo, i) => (
+              {data.photos.slice(0, 20).map((photo, i) => (
                 <li key={photo.id}>
                   {/* eslint-disable-next-line @next/next/no-img-element -- R2 public image */}
                   <img
-                    src={publicUrl(photo.key)!}
+                    src={photoUrl(photo.key)}
                     alt={`${business.name}: foto ${i + 1}`}
                     width={photo.width}
                     height={photo.height}

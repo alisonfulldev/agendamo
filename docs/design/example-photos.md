@@ -22,3 +22,7 @@ Origem: [Pexels](https://www.pexels.com/license/), licença gratuita para uso co
 | sports-court | 33641987 | tattoo | 5088482 |
 | tutoring | 5311406 | veterinary | 7470754 |
 | yoga | 3822169 | | |
+
+## Galeria ("Nossos trabalhos") dos exemplos
+
+De 4 a 6 fotos por ramo em `public/examples/gallery/<chave>-<n>.webp` (700x700, WebP), também do Pexels (mesma licença), baixadas em 2026-11-06 a partir das buscas de cada ramo. A quantidade por ramo está em `EXAMPLE_GALLERY` (`src/content/site-examples.ts`). Foram descartadas as que mostravam marca ou nome de outro estabelecimento.
