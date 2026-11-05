@@ -341,3 +341,9 @@ Revise antes de aplicar no Supabase de produção.
 - Admin › Sites personalizados: lista com o prazo (vermelho com menos de 1 dia), briefing em texto com "Copiar briefing" (com o id do negócio) para colar no chat do Claude Code, fotos, "marcar como entregue", "concluir" e "cancelar" (audit_log `admin.custom_site`).
 - O site feito vira um modelo exclusivo no código: `src/components/business-site/custom/` registrado em `CUSTOM_SITES` pelo id do negócio; usa os mesmos dados do sistema (serviços, preços, avaliações) e o "Agendar" abre o chat.
 - Na venda pelo WhatsApp, "Site personalizado" soma R$ 148 ao primeiro Pix e cria o pedido; o cliente responde o briefing no painel.
+
+## Anúncio do Site + Agenda para quem já usava (2026-11-06)
+
+- Para contas criadas antes de 2026-11-05 (`ANNOUNCEMENT_CUTOFF`), textos em `src/content/site-plan-announcement.ts` por situação: em teste ("seu teste agora vem com um site"), assinante do Completo ("tenha também o seu site", mudar de plano) e modo de espera ("site + agenda: assine e tudo volta").
+- Popup no painel (`news-prompt.tsx`) para teste e Completo, uma vez por aparelho, nunca no tutorial, com prioridade na vez do dia.
+- E-mail e push únicos na categoria "Novidades e dicas" (descadastro de um clique; quem desligou não recebe), disparados pelo admin em Admin › Anúncio (prévia dos textos, contagem por grupo, confirmação; lotes de 40; uma vez por conta via notification_log `announce_site_plan`; audit_log `admin.announcement_sent`).

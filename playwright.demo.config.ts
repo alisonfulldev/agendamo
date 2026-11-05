@@ -24,6 +24,7 @@ export default defineConfig({
           localStorage: [
             { name: "mc_app_prompt_until", value: "9999999999999" },
             { name: "mc_photo_prompt_until", value: "9999999999999" },
+            { name: "mc_news_site_plan", value: "1" },
           ],
         },
       ],

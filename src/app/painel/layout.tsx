@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ANNOUNCEMENT_CUTOFF } from "@/content/site-plan-announcement";
 import { ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -21,6 +22,7 @@ import { createClient } from "@/lib/supabase/server";
 import { MobileNav } from "./mobile-nav";
 import { PanelNav, SectionTabs } from "./panel-nav";
 import { AppPrompt } from "./app-prompt";
+import { NewsPrompt } from "./news-prompt";
 import { PhotoPrompt } from "./photo-prompt";
 import { PanelTour } from "./tour";
 
@@ -125,6 +127,11 @@ export default async function PanelLayout({ children }: LayoutProps<"/painel">) 
         <Suspense>
           <PanelTour />
         </Suspense>
+      ) : null}
+      {context.isOwner &&
+      context.business.created_at < ANNOUNCEMENT_CUTOFF &&
+      (features.trialActive || (features.subscribed && features.tier === "complete")) ? (
+        <NewsPrompt group={features.trialActive ? "trial" : "complete"} />
       ) : null}
       {features.active ? (
         <AppPrompt

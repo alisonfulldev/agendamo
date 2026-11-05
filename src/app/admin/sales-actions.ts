@@ -7,6 +7,7 @@ import { NICHES } from "@/brands";
 import { requireAdmin } from "@/lib/admin";
 import { audit } from "@/lib/audit";
 import { adminOrderStep } from "@/lib/custom-site/orders";
+import { sendAnnouncement } from "@/lib/notifications/announcement";
 import { SITE_TEMPLATES } from "@/lib/db/types";
 import { normalizeBrPhone } from "@/lib/phone";
 import { validCnpj, validCpf } from "@/lib/pix";
@@ -153,4 +154,23 @@ export async function customSiteStepAction(
   });
   revalidatePath("/admin/sites");
   return { ok: true, message };
+}
+
+/** Admin › Anúncio: sends the one-time "Site + Agenda" e-mail to the accounts that did not get it. */
+export async function sendAnnouncementAction(): Promise<{ ok: boolean; message: string }> {
+  const admin = await requireAdmin();
+  const { sent, left } = await sendAnnouncement();
+  await audit({
+    businessId: null,
+    userId: admin.id,
+    action: "admin.announcement_sent",
+    details: { sent, left, by: admin.email },
+  });
+  revalidatePath("/admin/anuncio");
+  return {
+    ok: true,
+    message: left
+      ? `Enviado para ${sent}. Faltam ${left}: clique de novo.`
+      : `Enviado para ${sent}.`,
+  };
 }
