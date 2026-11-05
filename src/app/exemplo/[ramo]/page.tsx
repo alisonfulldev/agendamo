@@ -130,6 +130,8 @@ export default async function ExampleSitePage({
         chatHref={chatHref}
         badgeHref={nicheHubUrl(niche)}
         logo={PLATFORM.logo}
+        // A photo of the niche where the owner's own photo goes (example only).
+        exampleHeroUrl={real ? undefined : `/examples/${niche.key}.webp`}
       />
     </BrandScope>
   );

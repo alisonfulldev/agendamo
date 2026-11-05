@@ -39,6 +39,8 @@ export interface SiteViewProps {
   /** Link of the MeetChat niche page (badge). */
   badgeHref: string;
   logo: string;
+  /** Example sites only (/exemplo/<ramo>): a photo of the niche in the owner's photo spot. */
+  exampleHeroUrl?: string;
 }
 
 /** The brand theme with the owner's colors on top (site color, else the page's own color). */
@@ -72,12 +74,18 @@ export function siteTexts(data: PublicPage, brand: BrandConfig, settings: SiteSe
 export const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
 
 /** What both templates show, from the business data and the owner's edits. */
-export function siteContent(data: PublicPage, brand: BrandConfig, settings: SiteSettings | null) {
+export function siteContent(
+  data: PublicPage,
+  brand: BrandConfig,
+  settings: SiteSettings | null,
+  exampleHeroUrl?: string,
+) {
   const { page } = data;
   const terms = brand.terms;
   return {
     texts: siteTexts(data, brand, settings),
     heroImage:
+      exampleHeroUrl ??
       publicUrl(settings?.hero_image_key) ??
       publicUrl(page?.cover_key) ??
       publicUrl(data.photos[0]?.key) ??
@@ -106,12 +114,21 @@ export function siteContent(data: PublicPage, brand: BrandConfig, settings: Site
   };
 }
 
-export function SiteView({ data, brand, settings, chatHref, badgeHref, logo }: SiteViewProps) {
+export function SiteView({
+  data,
+  brand,
+  settings,
+  chatHref,
+  badgeHref,
+  logo,
+  exampleHeroUrl,
+}: SiteViewProps) {
   const { business, page } = data;
   const { texts, heroImage, avatar, sections, showPrices, whatsapp, place, faq } = siteContent(
     data,
     brand,
     settings,
+    exampleHeroUrl,
   );
   const terms = brand.terms;
 

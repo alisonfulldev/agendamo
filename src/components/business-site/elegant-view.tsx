@@ -39,12 +39,14 @@ export function ElegantSiteView({
   chatHref,
   badgeHref,
   logo,
+  exampleHeroUrl,
 }: SiteViewProps) {
   const { business, page } = data;
   const { texts, heroImage, avatar, sections, showPrices, whatsapp, place, faq } = siteContent(
     data,
     brand,
     settings,
+    exampleHeroUrl,
   );
   const terms = brand.terms;
 
