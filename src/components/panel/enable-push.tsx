@@ -70,10 +70,21 @@ export function EnablePush({ vapidPublicKey }: { vapidPublicKey: string | null }
       const registration = await navigator.serviceWorker.register("/sw.js");
       await navigator.serviceWorker.ready;
       step = "subscribe";
-      const subscription = await registration.pushManager.subscribe({
+      const options = {
         userVisibleOnly: true,
         applicationServerKey: base64UrlToBytes(vapidPublicKey!),
-      });
+      };
+      // A stale subscription (other key, half-done attempt) makes some phones refuse a new one.
+      await (await registration.pushManager.getSubscription())?.unsubscribe().catch(() => false);
+      let subscription: PushSubscription;
+      try {
+        subscription = await registration.pushManager.subscribe(options);
+      } catch (first) {
+        // AbortError: the phone push service did not answer; one more try usually works.
+        if (!(first instanceof Error) || first.name !== "AbortError") throw first;
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+        subscription = await registration.pushManager.subscribe(options);
+      }
       step = "save";
       const response = await fetch("/api/push/subscribe", {
         method: "POST",
@@ -88,7 +99,9 @@ export function EnablePush({ vapidPublicKey }: { vapidPublicKey: string | null }
         step === "worker"
           ? "Não foi possível preparar os avisos neste navegador. Atualize a página e tente de novo."
           : step === "subscribe"
-            ? `O navegador recusou a inscrição dos avisos (${name || "erro"}). Se estiver no celular, abra pelo app instalado ou pelo Chrome/Safari e tente de novo.`
+            ? name === "AbortError"
+              ? "O serviço de avisos do celular não respondeu. No Android, use o Chrome (o Brave e alguns navegadores não têm esse serviço), confira se o Google Play Services está atualizado e tente de novo."
+              : `O navegador recusou a inscrição dos avisos (${name || "erro"}). Se estiver no celular, abra pelo app instalado ou pelo Chrome/Safari e tente de novo.`
             : "Os avisos foram ativados no aparelho, mas não foram salvos. Tente de novo.",
       );
       console.error("push enable failed", { step, name });
