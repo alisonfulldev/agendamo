@@ -5,19 +5,24 @@ import { businessUrl } from "@/brands/urls";
 import { getBusinessContext } from "@/lib/business/context";
 import { claimNotification } from "@/lib/notifications/owner";
 
-/** QR code of the business page. ?format=svg|png, ?download=1 for a file download. */
+/**
+ * QR code of the business link (the chat), or of its site with ?page=site. ?format=svg|png,
+ * ?download=1 for a file download.
+ */
 export async function GET(request: NextRequest) {
   const context = await getBusinessContext();
   if (!context) return new NextResponse("Not found", { status: 404 });
 
-  const url = businessUrl(context.brand, `/${context.business.slug}`);
+  const site = request.nextUrl.searchParams.get("page") === "site";
+  const path = `/${context.business.slug}${site ? "/site" : ""}`;
+  const url = businessUrl(context.brand, path);
   const format = request.nextUrl.searchParams.get("format") === "svg" ? "svg" : "png";
   const download = request.nextUrl.searchParams.get("download") === "1";
   const disposition = download
-    ? `attachment; filename="qrcode-${context.business.slug}.${format}"`
+    ? `attachment; filename="qrcode-${context.business.slug}${site ? "-site" : ""}.${format}"`
     : "inline";
   // "Primeiros passos": downloading the QR code ticks that item.
-  if (download)
+  if (download && !site)
     await claimNotification(context.business.id, "checklist_qr", "downloaded").catch(() => false);
 
   if (format === "svg") {

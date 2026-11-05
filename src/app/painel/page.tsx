@@ -13,7 +13,8 @@ import { loadCatalog } from "@/lib/booking/data";
 import { freeTimesOn } from "@/lib/booking/free-times";
 import { requireBusiness } from "@/lib/business/context";
 import { trialCounter } from "@/lib/plan-text";
-import { getPlanFeatures, planLabel } from "@/lib/plans";
+import { getPlanFeatures, planLabel, SITE_PLAN_NAME, SITE_PRICE_TEXT } from "@/lib/plans";
+import { SITE_QR_PNG_DOWNLOAD_URL } from "@/lib/qr";
 import { freeSlotsMessage, listTimes } from "@/lib/sales/free-slots";
 import { TOUR_TEXT } from "@/content/tour";
 import { ACTIVE_APPOINTMENT_STATUSES } from "@/lib/db/types";
@@ -34,6 +35,7 @@ export default async function PanelHomePage({ searchParams }: PageProps<"/painel
   const { senha } = await searchParams;
   const pageUrl = businessUrl(brand, `/${business.slug}`);
   const features = getPlanFeatures(business);
+  const siteUrl = businessUrl(brand, `/${business.slug}/site`);
 
   let steps: Step[] = [];
   if (isOwner) {
@@ -214,6 +216,33 @@ export default async function PanelHomePage({ searchParams }: PageProps<"/painel
         </p>
         <CopyLink url={pageUrl} />
       </div>
+
+      {features.site ? (
+        <div className="rounded-xl border bg-card p-5">
+          <p className="font-medium">Seu site</p>
+          <p className="mb-2 text-sm text-muted-foreground">
+            Uma página completa do seu negócio, feita para aparecer no Google. Todo botão “Agendar”
+            abre o seu chat. Use no Google, no Instagram e onde quiser mostrar seu trabalho.
+            {features.trialActive ? ` Incluso no teste e no plano ${SITE_PLAN_NAME}.` : ""}
+          </p>
+          <CopyLink url={siteUrl} qrHref={SITE_QR_PNG_DOWNLOAD_URL} tour={false} />
+        </div>
+      ) : isOwner ? (
+        <Link
+          href="/painel/plano#assinar"
+          className="flex items-center gap-3 rounded-xl border border-dashed bg-card p-5 hover:bg-accent"
+        >
+          <Sparkles className="size-5 shrink-0 text-primary" aria-hidden />
+          <span className="flex-1">
+            <span className="block font-medium">Tenha também o seu site</span>
+            <span className="block text-sm text-muted-foreground">
+              No plano {SITE_PLAN_NAME} ({SITE_PRICE_TEXT.monthly}), seu negócio ganha um site
+              pronto para o Google, com o agendamento dentro.
+            </span>
+          </span>
+          <span className="font-medium text-primary">Ver</span>
+        </Link>
+      ) : null}
 
       {todayText ? (
         <section
