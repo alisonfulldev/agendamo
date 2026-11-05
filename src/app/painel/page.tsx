@@ -5,6 +5,7 @@ import Link from "next/link";
 import { businessUrl } from "@/brands/urls";
 import { CopyLink } from "@/components/panel/copy-link";
 import { CopyTextButton } from "@/components/panel/copy-text-button";
+import { LinkBonusCard } from "@/components/panel/link-bonus";
 import { InstallGuide } from "@/components/panel/install-guide";
 import { PageHeader } from "@/components/panel/page-header";
 import { Button } from "@/components/ui/button";
@@ -20,6 +21,7 @@ import { TOUR_TEXT } from "@/content/tour";
 import { ACTIVE_APPOINTMENT_STATUSES } from "@/lib/db/types";
 import { depositSetup, type DepositSetupService } from "@/lib/deposits/setup";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { earnedBonuses } from "@/lib/trial-bonus";
 
 export const metadata: Metadata = { title: "Início" };
 
@@ -109,6 +111,9 @@ export default async function PanelHomePage({ searchParams }: PageProps<"/painel
         .eq("business_id", business.id)
         .eq("deposit_status", "sent")
     : { count: 0 };
+
+  // Link bonus while testing (+7 days per link that brings a customer).
+  const bonuses = isOwner && features.trialActive ? await earnedBonuses(business.id) : null;
 
   // Deposit by Pix started but incomplete (key without services, or the other way round).
   let depositMissing: string[] = [];
@@ -247,6 +252,10 @@ export default async function PanelHomePage({ searchParams }: PageProps<"/painel
           </span>
           <span className="font-medium text-primary">Ver</span>
         </Link>
+      ) : null}
+
+      {bonuses && bonuses.size < 2 ? (
+        <LinkBonusCard pageUrl={pageUrl} businessName={business.name} earned={bonuses} />
       ) : null}
 
       {todayText ? (

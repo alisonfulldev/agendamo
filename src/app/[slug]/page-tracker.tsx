@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { track } from "@/lib/tracking/client";
+import { isLinkBonus, LINK_BONUS_PARAM } from "@/lib/trial-bonus-shared";
 import type { PageEventType } from "@/lib/tracking/events";
 
 const NOTICE_KEY = "lv_cookie_notice";
@@ -20,7 +21,9 @@ export function PageTracker({
   const [showNotice, setShowNotice] = useState(false);
 
   useEffect(() => {
-    track(businessId, "view");
+    // Which shared link brought the visit (bio, WhatsApp greeting): counts for the link bonus.
+    const from = new URLSearchParams(location.search).get(LINK_BONUS_PARAM);
+    track(businessId, "view", isLinkBonus(from) ? { [LINK_BONUS_PARAM]: from } : {});
     const onClick = (event: MouseEvent) => {
       const element = (event.target as HTMLElement | null)?.closest<HTMLElement>("[data-track]");
       const type = element?.dataset.track as PageEventType | undefined;

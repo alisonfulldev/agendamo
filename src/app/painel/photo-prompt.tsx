@@ -15,6 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { ImageUploadButton } from "@/components/uploads/image-upload-button";
 
+import { claimPromptSlot } from "./prompt-slot";
 import { tourPendingAction } from "./tour-actions";
 
 const SNOOZE_KEY = "mc_photo_prompt_until";
@@ -68,7 +69,7 @@ export function PhotoPrompt({
         // No sessionStorage: carry on.
       }
       if (await tourPendingAction().catch(() => false)) return;
-      if (!cancelled) setOpen(true);
+      if (!cancelled && claimPromptSlot("photo")) setOpen(true);
     }, DELAY_MS);
     return () => {
       cancelled = true;

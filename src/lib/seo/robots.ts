@@ -29,6 +29,7 @@ export const DISALLOWED_PATHS = [
   "/cancelar/",
   "/avaliar/",
   "/descadastrar",
+  "/avisos",
   "/cadastro",
   "/entrar",
   "/recuperar-senha",

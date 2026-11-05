@@ -5,6 +5,7 @@ import { cronRoute } from "@/lib/cron";
 import type { Business } from "@/lib/db/types";
 import { claimNotification, notifyTeam } from "@/lib/notifications/owner";
 import { sendPhotoReminders } from "@/lib/notifications/photo-reminder";
+import { sendUsageTips } from "@/lib/notifications/usage-tips";
 import { getPlanFeatures, PLAN_NAME } from "@/lib/plans";
 import { displayCount } from "@/lib/stats";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -64,5 +65,7 @@ export const POST = cronRoute(async () => {
   }
   // Same morning run: one-time reminder to put a profile photo and a cover.
   const photoReminders = await sendPhotoReminders(now.getTime());
-  return { sent, photoReminders };
+  // And the trial incentive tips (at most one per business per day).
+  const usageTips = await sendUsageTips(now.getTime());
+  return { sent, photoReminders, usageTips };
 });

@@ -70,8 +70,9 @@ export async function sendEmail(input: SendEmailInput): Promise<SendEmailResult>
   const headers: Record<string, string> = {};
   if (input.content.unsubscribeUrl) {
     // One-click endpoint (RFC 8058); the visible link opens the confirmation page.
-    headers["List-Unsubscribe"] =
-      `<${input.content.unsubscribeUrl.replace("/descadastrar?", "/api/unsubscribe?")}>`;
+    headers["List-Unsubscribe"] = `<${input.content.unsubscribeUrl
+      .replace("/descadastrar?", "/api/unsubscribe?")
+      .replace("/avisos/desligar?", "/api/notifications/off?")}>`;
     headers["List-Unsubscribe-Post"] = "List-Unsubscribe=One-Click";
   }
 

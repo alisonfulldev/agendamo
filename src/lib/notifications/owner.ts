@@ -7,20 +7,10 @@ import { sendEmail } from "@/lib/email/send";
 import { sendPushToUser, type PushPayload } from "@/lib/push/send";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-/** Notification kinds the owner/staff can turn on or off per channel. */
-export const OWNER_NOTIFICATION_TYPES = {
-  booking_request: "Novo pedido de horário",
-  appointment_new: "Novo agendamento",
-  appointment_changed: "Cancelamentos e remarcações",
-  deposit_informed: "Comprovantes de sinal para conferir",
-  daily_alert: "Pessoas que quiseram agendar fora do horário",
-  weekly_summary: "Resumo semanal",
-  empty_slots: "Horários vagos amanhã",
-  account: "Plano, teste e cobrança",
-  profile_tips: "Dicas para completar o perfil",
-} as const;
+import { optOutUrl } from "./opt-out";
+import { OPT_OUT_TYPES, type OwnerNotificationType } from "./owner-types";
 
-export type OwnerNotificationType = keyof typeof OWNER_NOTIFICATION_TYPES;
+export { OWNER_NOTIFICATION_TYPES, type OwnerNotificationType } from "./owner-types";
 
 interface Recipient {
   userId: string;
@@ -120,9 +110,14 @@ export async function notifyTeam(input: {
       const tasks: Promise<unknown>[] = [];
       if (pref.email) {
         tasks.push(
-          sendEmail({ brand, to: person.email, subject: input.subject, content }).catch((error) =>
-            console.error("owner email failed", error),
-          ),
+          sendEmail({
+            brand,
+            to: person.email,
+            subject: input.subject,
+            content: OPT_OUT_TYPES.has(input.type)
+              ? { ...content, unsubscribeUrl: optOutUrl(brand, person.userId, input.type) }
+              : content,
+          }).catch((error) => console.error("owner email failed", error)),
         );
       }
       if (pref.push) {

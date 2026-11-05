@@ -20,6 +20,7 @@ import { createClient } from "@/lib/supabase/server";
 
 import { MobileNav } from "./mobile-nav";
 import { PanelNav } from "./panel-nav";
+import { AppPrompt } from "./app-prompt";
 import { PhotoPrompt } from "./photo-prompt";
 import { PanelTour } from "./tour";
 
@@ -121,6 +122,12 @@ export default async function PanelLayout({ children }: LayoutProps<"/painel">) 
         <Suspense>
           <PanelTour />
         </Suspense>
+      ) : null}
+      {features.active ? (
+        <AppPrompt
+          brandName={context.brand.name}
+          vapidPublicKey={process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || null}
+        />
       ) : null}
       {context.isOwner && features.active ? (
         <PhotoPrompt

@@ -214,3 +214,30 @@ test("every sign-up starts with 14 days; the same person gets no second trial", 
   await expect(second.getByRole("heading", { name: "O teste grátis já foi usado" })).toBeVisible();
   await other.close();
 });
+
+test("link bonus: the first customer through the bio link adds 7 days to the trial", async ({
+  page,
+  browser,
+}) => {
+  await setPlan(page, "Espaço Escuta", "Teste do Completo");
+  await signIn(page, "psi@demo.com");
+  await expect(page.getByRole("heading", { name: /Ganhe até \+14 dias de teste/ })).toBeVisible();
+
+  // A customer (not signed in) opens the bio link.
+  const visitor = await browser.newContext({ userAgent: VISITOR_UA });
+  const chat = await visitor.newPage();
+  await chat.goto("/espaco-escuta?de=bio");
+  await expect(chat.getByText(/Você está na agenda de/)).toBeVisible();
+  await visitor.close();
+
+  await expect
+    .poll(
+      async () => {
+        await page.goto("/painel");
+        return page.getByText("+7 dias ganhos").count();
+      },
+      { timeout: 30_000 },
+    )
+    .toBeGreaterThan(0);
+  await expect(page.getByRole("link", { name: /faltam 21 dias/ })).toBeVisible();
+});

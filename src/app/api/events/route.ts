@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 import { z } from "zod";
 
 import { getSessionUser } from "@/lib/auth/session";
@@ -6,6 +6,8 @@ import { rateLimitRequest } from "@/lib/rate-limit";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { BOT_PATTERN, PAGE_EVENT_TYPES } from "@/lib/tracking/events";
 import { isOutsideHours } from "@/lib/tracking/outside-hours";
+import { grantLinkBonus } from "@/lib/trial-bonus";
+import { isLinkBonus, LINK_BONUS_PARAM } from "@/lib/trial-bonus-shared";
 
 const eventSchema = z.object({
   businessId: z.uuid(),
@@ -58,5 +60,12 @@ export async function POST(request: Request) {
     meta,
   });
   if (error) console.error("page event insert failed", error.message);
+  // A customer came through the bio or WhatsApp greeting link: trial bonus (once each).
+  const bonus = meta[LINK_BONUS_PARAM];
+  if (type === "view" && isLinkBonus(bonus)) {
+    after(() =>
+      grantLinkBonus(businessId, bonus).catch((e) => console.error("link bonus failed", e)),
+    );
+  }
   return noContent();
 }

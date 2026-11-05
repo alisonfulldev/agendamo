@@ -11,7 +11,24 @@ export default defineConfig({
   reporter: "list",
   timeout: 300_000,
   expect: { timeout: 30_000 },
-  use: { baseURL, trace: "retain-on-failure" },
+  use: {
+    baseURL,
+    trace: "retain-on-failure",
+    // The panel popups (install the app, profile photo) start snoozed: they would cover the
+    // screens under test.
+    storageState: {
+      cookies: [],
+      origins: [
+        {
+          origin: baseURL,
+          localStorage: [
+            { name: "mc_app_prompt_until", value: "9999999999999" },
+            { name: "mc_photo_prompt_until", value: "9999999999999" },
+          ],
+        },
+      ],
+    },
+  },
   projects: [{ name: "chrome", use: { ...devices["Desktop Chrome"], channel: "chrome" } }],
   webServer: {
     command: "node scripts/dev-demo.mjs",
