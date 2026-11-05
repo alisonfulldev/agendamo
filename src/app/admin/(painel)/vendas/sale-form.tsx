@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
-import { createSaleAction } from "@/app/admin/sales-actions";
+import { createSaleAction, domainAvailabilityAction } from "@/app/admin/sales-actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,16 +17,30 @@ interface Option {
 export function SaleForm({
   niches,
   prices,
+  domainPrice,
 }: {
   niches: Option[];
   /** Price labels of each plan and cycle ("R$ 49,00/mês"…). */
   prices: Record<"site" | "complete", Record<"monthly" | "yearly", string>>;
+  /** "R$ 91,00/ano" */
+  domainPrice: string;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [tier, setTier] = useState<"site" | "complete">("site");
   const [cycle, setCycle] = useState<"monthly" | "yearly">("monthly");
+  const [withDomain, setWithDomain] = useState(false);
+  const [domain, setDomain] = useState("");
+  const [availability, setAvailability] = useState<string | null>(null);
+  const [checking, startCheck] = useTransition();
+
+  const AVAILABILITY = {
+    available: "Disponível ✓",
+    taken: "Já tem dono: escolha outro",
+    unknown: "Não deu para consultar agora: confira no registro.br",
+    invalid: "Domínio inválido. Ex.: studiobela.com.br",
+  } as const;
 
   function submit(form: FormData) {
     setError(null);
@@ -42,6 +56,7 @@ export function SaleForm({
         cycle,
         template: form.get("template") ?? "vibrant",
         couponCode: form.get("couponCode"),
+        domain: withDomain ? domain : "",
       });
       if (result.ok) router.push(`/admin/vendas/${result.saleId}`);
       else setError(result.message);
@@ -130,6 +145,49 @@ export function SaleForm({
           </label>
         </fieldset>
       ) : null}
+      <fieldset className="flex flex-col gap-2 sm:col-span-2">
+        <label className="flex items-center gap-2 text-sm font-medium">
+          <input
+            type="checkbox"
+            checked={withDomain}
+            onChange={(e) => setWithDomain(e.target.checked)}
+          />
+          Domínio próprio .com.br (+{domainPrice}, 1º ano no primeiro Pix)
+        </label>
+        {withDomain ? (
+          <div className="flex flex-wrap items-center gap-2">
+            <Input
+              aria-label="Domínio"
+              placeholder="studiobela.com.br"
+              value={domain}
+              onChange={(e) => {
+                setDomain(e.target.value);
+                setAvailability(null);
+              }}
+              className="max-w-xs"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              disabled={checking || !domain}
+              onClick={() =>
+                startCheck(async () => {
+                  const result = await domainAvailabilityAction(domain);
+                  if (result.domain) setDomain(result.domain);
+                  setAvailability(AVAILABILITY[result.status]);
+                })
+              }
+            >
+              {checking ? "Consultando…" : "Ver se está livre"}
+            </Button>
+            {availability ? (
+              <span role="status" className="text-sm">
+                {availability}
+              </span>
+            ) : null}
+          </div>
+        ) : null}
+      </fieldset>
       <div className={field}>
         <Label htmlFor="couponCode">Cupom (opcional)</Label>
         <Input id="couponCode" name="couponCode" maxLength={40} />

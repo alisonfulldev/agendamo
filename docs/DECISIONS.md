@@ -324,3 +324,11 @@ Revise antes de aplicar no Supabase de produção.
 - Modelo de site "Elegante" (`elegant-view.tsx`): fundo claro, foto grande, títulos em Fraunces, linhas finas; mesmos dados, seções e edições do "Vibrante". `site_settings.template`; escolha em Meu site e na Nova venda.
 - Slugs reservados: exemplo, pagar.
 - Próximas partes aprovadas: domínio próprio (R$ 91/ano, no nome do cliente, registro manual no Registro.br e conexão automática na Vercel) e site personalizado (R$ 197 com o 1º mês, ou R$ 148 para assinantes; briefing na plataforma, até 5 dias úteis, 1 rodada de ajustes).
+
+## Domínio próprio na venda pelo WhatsApp (2026-11-06)
+
+- R$ 91/ano (`PLAN_PRICES.domainYearly`), registrado no nome e CPF do cliente. Na Nova venda: "Domínio próprio" + consulta de disponibilidade no RDAP público do Registro.br (404 = livre). O 1º Pix soma a 1ª mensalidade e o 1º ano (`subscribePlan.firstExtraCents`; sem o Pix Automático, a venda com domínio não cai no Pix comum: tenta de novo).
+- Estados em `custom_domains.status`: awaiting_payment → awaiting_registration (pago; `expires_at` = +1 ano; cria a cobrança anual do domínio no Asaas, Pix comum, vencendo 10 dias antes) → connecting (o admin registrou e tocou em "Conectar": domínio e www com 308 adicionados ao projeto na Vercel) → live (DNS certo e verificado; e-mail e push "Seu site está no ar", IndexNow).
+- Admin › Vendas › Domínios: passo a passo (link do Registro.br, 2 entradas de DNS para copiar, "Já registrei: conectar", "Verificar agora", "Renovei (+1 ano)"). Tarefa diária (`runDomainJobs` no cron daily-alert): confere os domínios em conexão, lembra os admins 30 dias antes de vencer no Registro.br e manda ao cliente o Pix da renovação 10 dias antes (o Asaas está com notificações desligadas).
+- No ar: a raiz do domínio mostra o site (o proxy reescreve "/" para /<slug>/site); /<slug>/site no MeetChat redireciona (308) para o domínio, que vira o canônico; o sitemap "sites" deixa de listar esse site; o painel mostra o domínio no lugar do endereço do MeetChat.
+- Variáveis na Vercel (Production): VERCEL_API_TOKEN (secret), VERCEL_PROJECT_ID e VERCEL_TEAM_ID.

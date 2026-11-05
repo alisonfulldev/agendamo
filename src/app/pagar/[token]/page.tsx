@@ -80,6 +80,12 @@ export default async function PayPage({ params }: PageProps<"/pagar/[token]">) {
                 {TIER_NAME[sale.tier]} · {sale.cycle === "yearly" ? "anual" : "1ª mensalidade"}
               </p>
               <p className="text-3xl font-bold">{formatBRL(sale.value_cents)}</p>
+              {sale.domain ? (
+                <p className="text-sm text-muted-foreground">
+                  {formatBRL(sale.value_cents - sale.domain_cents)} da mensalidade +{" "}
+                  {formatBRL(sale.domain_cents)} do domínio {sale.domain} (1º ano)
+                </p>
+              ) : null}
             </div>
             {sale.pix_image ? (
               // eslint-disable-next-line @next/next/no-img-element -- data URL from Asaas
@@ -117,7 +123,10 @@ export default async function PayPage({ params }: PageProps<"/pagar/[token]">) {
         <section className="rounded-2xl border bg-card p-6">
           <h2 className="font-semibold">O que está incluso</h2>
           <ul className="mt-3 flex flex-col gap-2 text-sm">
-            {INCLUDES[sale.tier].map((item) => (
+            {[
+              ...INCLUDES[sale.tier],
+              ...(sale.domain ? [`Seu endereço próprio: ${sale.domain}`] : []),
+            ].map((item) => (
               <li key={item} className="flex items-start gap-2">
                 <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />
                 {item}

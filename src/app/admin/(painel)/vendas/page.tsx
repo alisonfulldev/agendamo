@@ -43,15 +43,24 @@ export default async function AdminSalesPage() {
     <>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-bold">Vendas pelo WhatsApp</h1>
-        <Button asChild variant="outline">
-          <Link href="/admin/vendas/roteiro">Roteiro de mensagens</Link>
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button asChild variant="outline">
+            <Link href="/admin/vendas/dominios">Domínios</Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link href="/admin/vendas/roteiro">Roteiro de mensagens</Link>
+          </Button>
+        </div>
       </div>
       <AdminSection
         title="Nova venda"
         description="Com os dados que o cliente mandou no chat. Cria a conta (sem teste grátis) e o Pix da 1ª mensalidade."
       >
-        <SaleForm niches={niches} prices={prices} />
+        <SaleForm
+          niches={niches}
+          prices={prices}
+          domainPrice={`${brl(PLAN_PRICES.domainYearly)}/ano`}
+        />
       </AdminSection>
       <AdminSection title={`Vendas (${sales.length})`}>
         {sales.length === 0 ? (

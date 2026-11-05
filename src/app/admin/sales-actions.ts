@@ -8,6 +8,8 @@ import { requireAdmin } from "@/lib/admin";
 import { SITE_TEMPLATES } from "@/lib/db/types";
 import { normalizeBrPhone } from "@/lib/phone";
 import { validCnpj, validCpf } from "@/lib/pix";
+import { connectDomain, checkDomain, renewDomain } from "@/lib/domains/jobs";
+import { brDomainAvailability, normalizeBrDomain } from "@/lib/domains/registro";
 import { createAssistedSale, renewSalePix } from "@/lib/sales/assisted";
 
 const digits = (v: string) => v.replace(/\D/g, "");
@@ -39,6 +41,19 @@ const saleSchema = z.object({
     .trim()
     .max(40)
     .transform((v) => (v ? v.toUpperCase() : null)),
+  domain: z
+    .string()
+    .trim()
+    .max(253)
+    .transform((v, ctx) => {
+      if (!v) return null;
+      const domain = normalizeBrDomain(v);
+      if (!domain) {
+        ctx.addIssue({ code: "custom", message: "Domínio inválido. Ex.: studiobela.com.br" });
+        return z.NEVER;
+      }
+      return domain;
+    }),
 });
 
 export type SaleActionResult = { ok: true; saleId: string } | { ok: false; message: string };
@@ -57,9 +72,11 @@ export async function createSaleAction(input: unknown): Promise<SaleActionResult
       message:
         result.error === "has_business"
           ? "Esse e-mail já tem um negócio no MeetChat. Peça outro e-mail ou fale com a pessoa."
-          : result.error === "coupon_invalid"
-            ? "Cupom inválido ou esgotado."
-            : "Não foi possível criar a venda. Tente de novo.",
+          : result.error === "domain_taken"
+            ? "Esse domínio já está ligado a outro negócio."
+            : result.error === "coupon_invalid"
+              ? "Cupom inválido ou esgotado."
+              : "Não foi possível criar a venda. Tente de novo.",
     };
   }
   revalidatePath("/admin/vendas");
@@ -83,4 +100,36 @@ export async function renewSalePixAction(
   return ok
     ? { ok: true, message: "Novo Pix gerado." }
     : { ok: false, message: "Não foi possível gerar o Pix. Tente de novo." };
+}
+
+/** Nova venda: is the .br domain free? (Registro.br public lookup) */
+export async function domainAvailabilityAction(
+  input: string,
+): Promise<{ domain: string | null; status: "available" | "taken" | "unknown" | "invalid" }> {
+  await requireAdmin();
+  const domain = normalizeBrDomain(String(input ?? ""));
+  if (!domain) return { domain: null, status: "invalid" };
+  return { domain, status: await brDomainAvailability(domain) };
+}
+
+type DomainStep = "connect" | "check" | "renew";
+
+/** Admin › Vendas › Domínios: "Já registrei, conectar", "Verificar agora" and "Renovei". */
+export async function domainStepAction(
+  id: string,
+  step: DomainStep,
+): Promise<{ ok: boolean; message: string }> {
+  await requireAdmin();
+  if (!z.uuid().safeParse(id).success) return { ok: false, message: "Domínio inválido." };
+  const result =
+    step === "connect"
+      ? await connectDomain(id)
+      : step === "check"
+        ? await checkDomain(id)
+        : await renewDomain(id).then(() => ({
+            ok: true,
+            message: "Renovação registrada (+1 ano).",
+          }));
+  revalidatePath("/admin/vendas/dominios");
+  return result;
 }

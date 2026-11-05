@@ -123,6 +123,11 @@ async function pixOfPayment(payment: AsaasPayment): Promise<PixCharge> {
   };
 }
 
+/** Open charge of an add-on subscription (the yearly domain), as a Pix to send by e-mail. */
+export function addonPendingPix(subscriptionId: string): Promise<PixCharge | null> {
+  return pixOfPendingPayment(subscriptionId);
+}
+
 async function pixOfPendingPayment(subscriptionId: string): Promise<PixCharge | null> {
   const payments = await listSubscriptionPayments(subscriptionId);
   const pending = payments.find((p) => p.status === "PENDING" || p.status === "OVERDUE");
@@ -193,6 +198,8 @@ export async function subscribePlan(input: {
   tier?: Tier;
   payer: { name: string; cpfCnpj: string; email: string };
   couponCode?: string | null;
+  /** Added to the first payment only (the own domain's first year in a WhatsApp sale). */
+  firstExtraCents?: number;
 }): Promise<SubscribeResult> {
   const tier: Tier = input.tier ?? "complete";
   const admin = createAdminClient();
@@ -296,9 +303,11 @@ export async function subscribePlan(input: {
     started = await startPixAutomatic(draft, {
       brandName: input.brand.name,
       valueCents: value,
-      firstValueCents: value,
+      firstValueCents: value + (input.firstExtraCents ?? 0),
     });
   } catch (error) {
+    // The regular Pix cannot charge a different first value: a sale with a domain tries again.
+    if (input.firstExtraCents) throw new Error("pix_automatic_required");
     // Asaas could not create the authorization: the subscription starts on the regular Pix and
     // the next charge offers the Pix Automático again.
     console.error(
@@ -785,10 +794,62 @@ async function activateBusinessPlan(row: Subscription): Promise<void> {
     });
     invalidatePublicPage(business.slug);
   }
+  // An own domain sold with the plan: paid now, to be registered (and billed once a year).
+  await activatePaidDomain(business.id, row).catch((error) =>
+    console.error("paid domain activation failed", error),
+  );
   // A WhatsApp sale waiting for this payment: the customer gets the access e-mail.
   await completeAssistedSale(business.id).catch((error) =>
     console.error("assisted sale completion failed", error),
   );
+}
+
+/**
+ * Own domain of a WhatsApp sale, paid with the first payment (2026-11-06): one year at Registro.br
+ * from today, and a yearly Pix charge of the domain starting 10 days before it expires (the
+ * customer gets that Pix by e-mail, see src/lib/domains/jobs.ts). Idempotent.
+ */
+async function activatePaidDomain(businessId: string, row: Subscription): Promise<void> {
+  const admin = createAdminClient();
+  const expires = new Date();
+  expires.setFullYear(expires.getFullYear() + 1);
+  const expiresAt = dateOnly(expires.toISOString());
+  const { data: domains } = await admin
+    .from("custom_domains")
+    .update({
+      status: "awaiting_registration",
+      expires_at: expiresAt,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("business_id", businessId)
+    .eq("status", "awaiting_payment")
+    .select("domain");
+  const domain = domains?.[0]?.domain as string | undefined;
+  if (!domain || !row.provider_customer_id) return;
+  const due = new Date(expires.getTime() - 10 * 86_400_000);
+  const subscription = await createSubscription({
+    customer: row.provider_customer_id,
+    valueCents: PLAN_PRICES.domainYearly,
+    cycle: "YEARLY",
+    nextDueDate: dateOnly(due.toISOString()),
+    description: `Domínio ${domain} (renovação anual)`,
+    externalReference: `${businessId}:domain`,
+  });
+  const addons = (row.addons ?? {}) as Addons;
+  await admin
+    .from("subscriptions")
+    .update({
+      addons: {
+        ...addons,
+        custom_domain: {
+          subscription_id: subscription.id,
+          status: "active",
+          paid_until: expiresAt,
+        },
+      },
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", row.id);
 }
 
 /**

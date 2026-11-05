@@ -64,14 +64,15 @@ export async function proxy(request: NextRequest) {
   const brandCookie = request.cookies.get(BRAND_COOKIE)?.value;
   let brand = getBrandByHost(host, { brandParam, brandCookie });
 
-  // Prompt 38: a verified custom domain shows its business (root = the business page) in its brand.
+  // Prompt 38: a verified custom domain shows its business in its brand. Its root is the business
+  // site (2026-11-06; without the site plan, the site page sends visitors on to the chat).
   let rewriteTo: string | null = null;
   const normalized = normalizeHost(host);
   if (!getBrandByDomain(normalized) && !isBrandSelectableHost(normalized)) {
     const target = await resolveCustomDomain((host ?? "").toLowerCase().split(":")[0] ?? "");
     if (target) {
       brand = getBrand(target.brandKey) ?? brand;
-      if (path === "/") rewriteTo = `/${target.slug}`;
+      if (path === "/") rewriteTo = `/${target.slug}/site`;
     }
   }
 

@@ -12,7 +12,7 @@ import { requireOwner } from "@/lib/business/context";
 import { getPlanFeatures, SITE_PLAN_NAME, SITE_PRICE_TEXT } from "@/lib/plans";
 import { PROFILE_INDEX_RULES } from "@/lib/public/indexable";
 import { getPublicPage } from "@/lib/public/page";
-import { getSiteSettings, resolveSections, SITE_SECTIONS } from "@/lib/public/site";
+import { getLiveDomain, getSiteSettings, resolveSections, SITE_SECTIONS } from "@/lib/public/site";
 import { SITE_QR_PNG_DOWNLOAD_URL } from "@/lib/qr";
 import { publicUrl } from "@/lib/storage/r2";
 
@@ -49,7 +49,11 @@ export default async function SiteEditorPage() {
     getPublicPage(brand.key, business.slug),
     getSiteSettings(business.slug, business.id),
   ]);
-  const siteUrl = businessUrl(brand, `/${business.slug}/site`);
+  // The own domain once live (sold with the plan), else the MeetChat address.
+  const liveDomain = await getLiveDomain(business.slug, business.id);
+  const siteUrl = liveDomain
+    ? `https://${liveDomain}/`
+    : businessUrl(brand, `/${business.slug}/site`);
   const pageColor = data?.page?.primary_color_override ?? null;
   const primary = settings?.primary_color ?? pageColor ?? brand.theme.primary;
   const defaults = data

@@ -1,6 +1,6 @@
 import type { BrandConfig } from "@/brands";
 import { formatBRL } from "@/lib/money";
-import { PRICE_TEXT, SITE_PRICE_TEXT } from "@/lib/plans";
+import { PLAN_PRICES, PRICE_TEXT, SITE_PRICE_TEXT } from "@/lib/plans";
 
 /**
  * WhatsApp sales script (2026-11-06, Admin › Vendas): ready messages, copied one by one by the
@@ -32,7 +32,9 @@ export function salesScript(niche: BrandConfig, origin: string): ScriptMessage[]
     {
       id: "how",
       title: "3. Como funciona",
-      text: `✅ Seu site no Google, com suas fotos, serviços e preços\n✅ ${capitalize(customer)} escolhe o ${service} e o horário livre e já fica marcado\n✅ Recebe confirmação e lembrete (menos faltas)\n✅ Você recebe aviso no celular a cada agendamento\n✅ Agenda, ${niche.terms.customer.plural}, financeiro e sinal pelo Pix\n\nTudo por ${SITE_PRICE_TEXT.monthly}, sem fidelidade. (Só a agenda, sem o site: ${PRICE_TEXT.monthly}.)`,
+      text: `✅ Seu site no Google, com suas fotos, serviços e preços\n✅ ${capitalize(customer)} escolhe o ${service} e o horário livre e já fica marcado\n✅ Recebe confirmação e lembrete (menos faltas)\n✅ Você recebe aviso no celular a cada agendamento\n✅ Agenda, ${niche.terms.customer.plural}, financeiro e sinal pelo Pix\n\nTudo por ${SITE_PRICE_TEXT.monthly}, sem fidelidade. (Só a agenda, sem o site: ${PRICE_TEXT.monthly}.)
+
+Quer seu próprio endereço, tipo seunegocio.com.br? Fica ${formatBRL(PLAN_PRICES.domainYearly)} por ano, registrado no seu nome.`,
     },
     {
       id: "closing",
@@ -49,8 +51,13 @@ export function pixMessage(input: {
   payload: string;
   payUrl: string;
   termsUrl: string;
+  /** Own domain in this first Pix (its first year). */
+  domain?: { name: string; cents: number } | null;
 }): string {
-  return `Pronto, ${input.firstName}! Pix de ${formatBRL(input.valueCents)} (copia e cola):\n\n${input.payload}\n\nOu pelo link, com o QR code: ${input.payUrl}\n\nAssim que cair, sua conta é liberada e você recebe um e-mail com o acesso. Ao pagar, você concorda com os Termos de uso (${input.termsUrl}).`;
+  const breakdown = input.domain
+    ? ` (${formatBRL(input.valueCents - input.domain.cents)} da 1ª mensalidade + ${formatBRL(input.domain.cents)} do domínio ${input.domain.name}, 1º ano)`
+    : "";
+  return `Pronto, ${input.firstName}! Pix de ${formatBRL(input.valueCents)}${breakdown} (copia e cola):\n\n${input.payload}\n\nOu pelo link, com o QR code: ${input.payUrl}\n\nAssim que cair, sua conta é liberada e você recebe um e-mail com o acesso. Ao pagar, você concorda com os Termos de uso (${input.termsUrl}).`;
 }
 
 /** Message 6: after the payment. */

@@ -8,7 +8,7 @@ import { subscribePlan, type PixCharge } from "@/lib/billing/service";
 import { DEFAULT_HOURS } from "@/lib/business/schemas";
 import { checkSlug } from "@/lib/business/slug-check";
 import type { Business, SiteTemplate } from "@/lib/db/types";
-import type { Cycle, Tier } from "@/lib/plans";
+import { PLAN_PRICES, type Cycle, type Tier } from "@/lib/plans";
 import { slugify } from "@/lib/slug";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -29,6 +29,8 @@ export interface AssistedSale {
   pix_image: string | null;
   pix_expires_at: string | null;
   coupon_code: string | null;
+  domain: string | null;
+  domain_cents: number;
   created_at: string;
   paid_at: string | null;
 }
@@ -44,10 +46,13 @@ export interface NewSaleInput {
   cycle: Cycle;
   template: SiteTemplate;
   couponCode: string | null;
+  /** Own .br domain (first year in the first Pix). */
+  domain: string | null;
 }
 
 export type NewSaleResult =
-  { ok: true; saleId: string } | { ok: false; error: "has_business" | "coupon_invalid" | "failed" };
+  | { ok: true; saleId: string }
+  | { ok: false; error: "has_business" | "coupon_invalid" | "domain_taken" | "failed" };
 
 async function freeSlug(name: string): Promise<string> {
   const base = slugify(name) || "minha-agenda";
@@ -100,6 +105,14 @@ export async function createAssistedSale(
 ): Promise<NewSaleResult> {
   const admin = createAdminClient();
   const email = input.email.trim().toLowerCase();
+  if (input.domain) {
+    const { data: used } = await admin
+      .from("custom_domains")
+      .select("id")
+      .eq("domain", input.domain)
+      .maybeSingle();
+    if (used) return { ok: false, error: "domain_taken" };
+  }
   const userId = await accountFor(email);
   if (!userId) return { ok: false, error: "failed" };
 
@@ -145,6 +158,14 @@ export async function createAssistedSale(
     template: input.template,
     updated_at: new Date().toISOString(),
   });
+  if (input.domain) {
+    await admin.from("custom_domains").insert({
+      business_id: business.id,
+      domain: input.domain,
+      verified: false,
+      status: "awaiting_payment",
+    });
+  }
   // First access opens the panel tutorial, like any new account.
   await admin.auth.admin.updateUserById(userId, { user_metadata: { tour_pending: true } });
   await audit({
@@ -165,6 +186,7 @@ export async function createAssistedSale(
       tier: input.tier,
       payer: { name: input.payerName, cpfCnpj: input.cpfCnpj, email },
       couponCode: input.couponCode,
+      firstExtraCents: input.domain ? PLAN_PRICES.domainYearly : 0,
     });
     if (result.kind !== "pix") throw new Error("unexpected_change");
     pix = result.pix;
@@ -188,6 +210,8 @@ export async function createAssistedSale(
       payer_email: email,
       payer_whatsapp: input.whatsapp,
       coupon_code: input.couponCode,
+      domain: input.domain,
+      domain_cents: input.domain ? PLAN_PRICES.domainYearly : 0,
       ...PIX_FIELDS(pix),
     })
     .select("id")
@@ -238,6 +262,7 @@ export async function renewSalePix(
     // The Asaas customer already exists: its document is not asked again.
     payer: { name: sale.payer_name, cpfCnpj: "", email: sale.payer_email },
     couponCode: sale.coupon_code,
+    firstExtraCents: sale.domain_cents,
   });
   if (result.kind !== "pix") return false;
   await admin

@@ -56,6 +56,24 @@ export function getSiteSettings(slug: string, businessId: string): Promise<SiteS
   })();
 }
 
+async function fetchLiveDomain(businessId: string): Promise<string | null> {
+  const { data } = await createAdminClient()
+    .from("custom_domains")
+    .select("domain")
+    .eq("business_id", businessId)
+    .eq("status", "live")
+    .maybeSingle();
+  return (data?.domain as string | undefined) ?? null;
+}
+
+/** The own domain serving the site, once live (cached with the public page). */
+export function getLiveDomain(slug: string, businessId: string): Promise<string | null> {
+  return dataCache(() => fetchLiveDomain(businessId), ["live-domain", businessId], {
+    tags: [publicPageTag(slug)],
+    revalidate: 3600,
+  })();
+}
+
 /**
  * Slugs of businesses whose site is live (trial or "Site + Agenda"), out of the given slugs (the
  * complete profiles): the sitemap lists their /<slug>/site. Plan read fresh (rule 6).
@@ -68,6 +86,14 @@ export async function liveSiteSlugs(slugs: string[]): Promise<Set<string>> {
     .in("slug", slugs)
     .is("suspended_at", null);
   if (error) throw new Error(`live sites failed: ${error.message}`);
+  // A site on its own domain is not listed here (its MeetChat address redirects there).
+  const { data: domains } = await createAdminClient()
+    .from("custom_domains")
+    .select("business:businesses(slug)")
+    .eq("status", "live");
+  const ownDomain = new Set(
+    (domains ?? []).map((d) => (d.business as unknown as { slug: string } | null)?.slug),
+  );
   return new Set(
     (data ?? [])
       .filter(
@@ -78,6 +104,7 @@ export async function liveSiteSlugs(slugs: string[]): Promise<Set<string>> {
             plan_tier: b.plan_tier as "complete" | "site",
           }).site,
       )
-      .map((b) => b.slug as string),
+      .map((b) => b.slug as string)
+      .filter((slug) => !ownDomain.has(slug)),
   );
 }

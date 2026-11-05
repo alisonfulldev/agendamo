@@ -100,3 +100,52 @@ test("Nova venda: account and Pix, payment page, paid releases the account and t
   await expect(pay.getByText("Perguntas frequentes")).toBeVisible();
   await visitor.close();
 });
+
+test("sale with an own domain: first Pix with the first year, then register, connect and go live", async ({
+  page,
+}) => {
+  const stamp = Date.now().toString(36);
+  const name = `Dominio ${stamp}`;
+  const domain = `studio-${stamp}.com.br`;
+
+  await page.goto("/demo");
+  await page
+    .locator("form", { hasText: "admin@demo.com" })
+    .getByRole("button", { name: "Entrar" })
+    .click();
+  await page.waitForURL(/\/admin/);
+  await page.goto("/admin/vendas");
+  await page.getByLabel("Nome do negócio").fill(name);
+  await page.getByLabel(/Nome completo/).fill("Joana Dominio Teste");
+  await page.getByLabel("CPF ou CNPJ").fill("529.982.247-25");
+  await page.getByLabel(/E-mail/).fill(`dominio-${stamp}@exemplo.com`);
+  await page.getByLabel(/Domínio próprio/).check();
+  await page.getByLabel("Domínio", { exact: true }).fill(`www.${domain}`);
+  await page.getByRole("button", { name: "Ver se está livre" }).click();
+  await expect(page.getByText("Disponível ✓")).toBeVisible();
+  await page.getByRole("button", { name: "Criar conta e gerar Pix" }).click();
+
+  await page.waitForURL(/\/admin\/vendas\/[0-9a-f-]{36}$/);
+  // R$ 49 + R$ 91 in the first Pix.
+  await expect(page.locator("pre").first()).toContainText("R$ 140,00");
+  await expect(page.locator("pre").first()).toContainText(`do domínio ${domain}`);
+
+  const confirm = await page.context().newPage();
+  await confirm.goto("/demo#assinaturas");
+  await confirm
+    .locator("form", { hasText: name })
+    .filter({ has: confirm.getByRole("button", { name: "Confirmar pagamento" }) })
+    .first()
+    .getByRole("button", { name: "Confirmar pagamento" })
+    .click();
+  await expect(confirm.getByText(/Pagamento confirmado: a assinatura foi ativada/)).toBeVisible();
+
+  await page.goto("/admin/vendas/dominios");
+  const card = page.locator("section", { hasText: domain }).first();
+  await expect(card.getByText("Registrar no Registro.br")).toBeVisible();
+  await card.getByRole("button", { name: "Já registrei: conectar" }).click();
+  // The screen refreshes with the new status.
+  await expect(page.getByRole("heading", { name: `${domain} · Aguardando o DNS` })).toBeVisible();
+  await page.getByRole("button", { name: "Verificar agora" }).first().click();
+  await expect(page.locator("li", { hasText: domain }).getByText("No ar")).toBeVisible();
+});

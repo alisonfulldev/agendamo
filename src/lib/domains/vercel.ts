@@ -47,9 +47,12 @@ export interface DomainConfig {
   recommendedIPv4: { rank: number; value: string[] }[];
 }
 
-/** POST /v10/projects/{id}/domains */
-export function addProjectDomain(domain: string) {
-  return vercel<ProjectDomain>("POST", "/v10/projects/:project/domains", { name: domain });
+/** POST /v10/projects/{id}/domains (optionally a 308 redirect to another domain, e.g. www). */
+export function addProjectDomain(domain: string, redirectTo?: string) {
+  return vercel<ProjectDomain>("POST", "/v10/projects/:project/domains", {
+    name: domain,
+    ...(redirectTo ? { redirect: redirectTo, redirectStatusCode: 308 } : {}),
+  });
 }
 
 /** POST /v9/projects/{id}/domains/{domain}/verify */

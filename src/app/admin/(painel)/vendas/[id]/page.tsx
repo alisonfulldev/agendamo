@@ -48,6 +48,7 @@ export default async function AdminSalePage({ params }: PageProps<"/admin/vendas
           payload: sale.pix_payload,
           payUrl,
           termsUrl: siteUrl("/termos"),
+          domain: sale.domain ? { name: sale.domain, cents: sale.domain_cents } : null,
         })
       : null;
   const afterText = paidMessage({ firstName, siteUrl: site, chatUrl });
@@ -86,6 +87,17 @@ export default async function AdminSalePage({ params }: PageProps<"/admin/vendas
               {sale.coupon_code ? ` (cupom ${sale.coupon_code})` : ""}
             </dd>
           </div>
+          {sale.domain ? (
+            <div>
+              <dt className="text-muted-foreground">Domínio</dt>
+              <dd>
+                {sale.domain} ({formatBRL(sale.domain_cents)}/ano, incluso no 1º Pix) ·{" "}
+                <Link href="/admin/vendas/dominios" className="text-primary underline">
+                  Domínios
+                </Link>
+              </dd>
+            </div>
+          ) : null}
           <div>
             <dt className="text-muted-foreground">Criada</dt>
             <dd>

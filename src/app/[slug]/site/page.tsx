@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { permanentRedirect, redirect } from "next/navigation";
 
 import { PLATFORM } from "@/brands";
@@ -8,7 +9,7 @@ import { BusinessSite } from "@/components/business-site/business-site";
 import { siteTexts } from "@/components/business-site/site-view";
 import { JsonLd } from "@/components/seo/json-ld";
 import { isIndexable } from "@/lib/public/indexable";
-import { getSiteSettings } from "@/lib/public/site";
+import { getLiveDomain, getSiteSettings } from "@/lib/public/site";
 import { pageMetadata } from "@/lib/seo/metadata";
 import { publicUrl } from "@/lib/storage/r2";
 
@@ -29,7 +30,7 @@ export async function generateMetadata({ params }: PageProps<"/[slug]/site">): P
     publicUrl(settings?.hero_image_key) ??
     publicUrl(data.page?.cover_key) ??
     publicUrl(data.page?.avatar_key);
-  return pageMetadata({
+  const metadata = pageMetadata({
     title: `${data.business.name}${niche} | Agende online`,
     description: data.page?.bio ?? siteTexts(data, brand, settings).subtitle,
     path: `/${data.business.slug}/site`,
@@ -39,6 +40,15 @@ export async function generateMetadata({ params }: PageProps<"/[slug]/site">): P
     image: image ? { url: image } : null,
     index: isIndexable(data),
   });
+  // On its own domain, that address is the canonical one.
+  const domain = await getLiveDomain(data.business.slug, data.business.id);
+  if (!domain) return metadata;
+  const url = `https://${domain}/`;
+  return {
+    ...metadata,
+    alternates: { canonical: url },
+    openGraph: { ...metadata.openGraph, url },
+  };
 }
 
 /**
@@ -59,7 +69,13 @@ export default async function BusinessSitePage({
   if (loaded.wrongDomain) permanentRedirect(brandUrl(brand, `/${data.business.slug}/site`));
   if (!loaded.features.site) redirect(`/${data.business.slug}`);
 
-  const settings = await getSiteSettings(data.business.slug, data.business.id);
+  const [settings, domain] = await Promise.all([
+    getSiteSettings(data.business.slug, data.business.id),
+    getLiveDomain(data.business.slug, data.business.id),
+  ]);
+  // A site with its own domain lives there: the MeetChat address redirects (308).
+  const host = (await headers()).get("host")?.toLowerCase().split(":")[0];
+  if (domain && host !== domain) permanentRedirect(`https://${domain}/`);
 
   return (
     <BrandScope brand={brand} current={domainBrand}>

@@ -34,6 +34,8 @@ export const PLAN_PRICES = {
   extraProfessional: { monthly: 900, yearly: 9000 },
   featured: { monthly: 4900 },
   customDomain: { monthly: 1900 },
+  /** Own .br domain sold with "Site + Agenda" (2026-11-06): first year in the first Pix. */
+  domainYearly: 9100,
 } as const;
 
 export const PLAN_NAME = "Completo";
