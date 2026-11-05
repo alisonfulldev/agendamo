@@ -112,6 +112,13 @@ export async function demoSetPlanAction(formData: FormData): Promise<void> {
     "update public.page_settings set deposit_policy_text = null where business_id = $1",
     [businessId],
   );
+  // A fresh trial starts without the link bonuses already earned (+7 days each).
+  if (plan === "trial") {
+    await db.query(
+      "delete from public.notification_log where business_id = $1 and type in ('bonus_bio', 'bonus_saudacao')",
+      [businessId],
+    );
+  }
   if (row) invalidatePublicPage(row.slug);
   redirect("/demo?ok=plano#planos");
 }

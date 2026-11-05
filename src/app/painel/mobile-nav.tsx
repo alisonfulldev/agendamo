@@ -8,7 +8,6 @@ import {
   type LucideIcon,
   Menu,
   Users,
-  Wallet,
   X,
 } from "lucide-react";
 import Link from "next/link";
@@ -17,20 +16,12 @@ import { useState } from "react";
 
 import { signOutAction } from "@/app/(auth)/actions";
 
-import {
-  isActive,
-  NAV_GROUP_LABELS,
-  navTourId,
-  visibleNav,
-  type NavItem,
-  type NavOptions,
-} from "./nav";
+import { isActive, navTourId, visibleSections, type NavItem, type NavOptions } from "./nav";
 
 const TAB_ICONS: Record<string, LucideIcon> = {
   "/painel": Home,
   "/painel/agenda": CalendarDays,
   "/painel/clientes": Users,
-  "/painel/financeiro": Wallet,
 };
 
 /**
@@ -46,9 +37,10 @@ export function MobileNav({
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
-  const items = visibleNav(options);
-  const tabs = items.filter((item) => item.group === "main");
-  const more = items.filter((item) => item.group !== "main");
+  const sections = visibleSections(options);
+  const tabs = sections.filter((s) => s.tab).map((s) => s.items[0]!);
+  const groups = sections.filter((s) => !s.tab);
+  const more = groups.flatMap((s) => s.items);
   const label = (item: NavItem) => (item.href === "/painel/clientes" ? customersLabel : item.label);
   const moreActive = more.some((item) => isActive(pathname, item.href));
 
@@ -77,13 +69,12 @@ export function MobileNav({
                 <X className="size-5" />
               </button>
             </div>
-            {(["business", "setup", "account"] as const).map((group) => {
-              const list = more.filter((item) => item.group === group);
-              if (!list.length) return null;
+            {groups.map((section) => {
+              const list = section.items;
               return (
-                <div key={group} className="mb-4">
+                <div key={section.key} className="mb-4">
                   <p className="mb-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-                    {NAV_GROUP_LABELS[group]}
+                    {section.label}
                   </p>
                   <ul className="divide-y rounded-2xl border bg-card">
                     {list.map((item) => {

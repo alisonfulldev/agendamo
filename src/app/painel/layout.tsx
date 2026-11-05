@@ -19,7 +19,7 @@ import { publicUrl } from "@/lib/storage/r2";
 import { createClient } from "@/lib/supabase/server";
 
 import { MobileNav } from "./mobile-nav";
-import { PanelNav } from "./panel-nav";
+import { PanelNav, SectionTabs } from "./panel-nav";
 import { AppPrompt } from "./app-prompt";
 import { PhotoPrompt } from "./photo-prompt";
 import { PanelTour } from "./tour";
@@ -114,7 +114,10 @@ export default async function PanelLayout({ children }: LayoutProps<"/painel">) 
             <PanelNav {...nav} customersLabel={customersLabel} />
           </div>
         </aside>
-        <main className="min-w-0 flex-1">{children}</main>
+        <main className="min-w-0 flex-1">
+          <SectionTabs {...nav} />
+          {children}
+        </main>
       </div>
       <MobileNav {...nav} customersLabel={customersLabel} />
       <HelpChat isOwner={context.isOwner} waiting={!features.active} />

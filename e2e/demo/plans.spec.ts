@@ -129,7 +129,11 @@ test("trial ends without payment: waiting mode, nothing deleted, subscribing bri
   await expect(page).toHaveURL(/\/painel\/plano/);
   const menu = page.getByRole("navigation", { name: "Painel" }).first();
   await expect(menu.getByRole("link", { name: "Agenda" })).toHaveCount(0);
-  await expect(menu.getByRole("link", { name: "Conta" })).toBeVisible();
+  // Waiting mode: only "Ajustes", with the subscription and the account as its tabs.
+  await expect(menu.getByRole("link", { name: "Ajustes" })).toBeVisible();
+  await expect(
+    page.getByRole("navigation", { name: "Ajustes" }).getByRole("link", { name: "Conta" }),
+  ).toBeVisible();
   await page.goto("/painel/conta");
   await expect(page).toHaveURL(/\/painel\/conta/);
 
@@ -221,7 +225,9 @@ test("link bonus: the first customer through the bio link adds 7 days to the tri
 }) => {
   await setPlan(page, "Espaço Escuta", "Teste do Completo");
   await signIn(page, "psi@demo.com");
-  await expect(page.getByRole("heading", { name: /Ganhe até \+14 dias de teste/ })).toBeVisible();
+  // The bonus steps are in "Próximo passo" (the full list one tap away).
+  await page.getByText("Ver todos os passos").click();
+  await expect(page.getByText("Coloque o link na bio do Instagram (+7 dias)")).toBeVisible();
 
   // A customer (not signed in) opens the bio link.
   const visitor = await browser.newContext({ userAgent: VISITOR_UA });
@@ -234,7 +240,7 @@ test("link bonus: the first customer through the bio link adds 7 days to the tri
     .poll(
       async () => {
         await page.goto("/painel");
-        return page.getByText("+7 dias ganhos").count();
+        return page.getByRole("link", { name: /faltam 21 dias/ }).count();
       },
       { timeout: 30_000 },
     )

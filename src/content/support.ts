@@ -59,7 +59,7 @@ export const SUPPORT_ITEMS: SupportItem[] = [
     id: "link",
     question: "Onde está o meu link de agendamento?",
     answer:
-      "Fica no Início, em “Seu link de agendamento”, com o botão de copiar. É ele que você cola na bio do Instagram, no WhatsApp e no Google.",
+      "Fica no Início, em “Seus links”, com o botão de copiar e o QR code. É ele que você cola na bio do Instagram, no WhatsApp e no Google.",
     keywords: [
       "link",
       "meu link",
@@ -141,7 +141,7 @@ export const SUPPORT_ITEMS: SupportItem[] = [
     id: "site",
     question: "Como edito o meu site?",
     answer:
-      "Em Meu site (no menu). Ali você muda as cores, a foto do topo, os textos e as seções, e vê como está no ar. Fotos, serviços e endereço vêm do Meu perfil. O site faz parte do teste e do plano Site + Agenda.",
+      "Em Minha página › Meu site (no menu). Ali você muda as cores, a foto do topo, os textos e as seções, e vê como está no ar. Fotos, serviços e endereço vêm do Meu perfil. O site faz parte do teste e do plano Site + Agenda.",
     keywords: [
       "site",
       "meu site",
@@ -842,7 +842,7 @@ export const SUPPORT_ITEMS: SupportItem[] = [
     id: "app",
     question: "Tem aplicativo para baixar?",
     answer:
-      "Não precisa. O painel funciona no navegador do celular. Para abrir como app, use “Adicionar à tela de início” no menu do navegador.",
+      "Não precisa baixar de loja. Ao abrir o painel no celular, ele mostra como instalar o app (Android: “Instalar app”; iPhone: Compartilhar › “Adicionar à Tela de Início”). Com o app, você recebe os avisos de agendamento.",
     keywords: [
       "aplicativo",
       "app",
