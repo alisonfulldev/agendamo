@@ -6,19 +6,35 @@ import { invalidatePublicPage } from "@/lib/cache";
 import { cronRoute } from "@/lib/cron";
 import type { Business } from "@/lib/db/types";
 import { claimNotification, notifyTeam } from "@/lib/notifications/owner";
-import { getPlanFeatures, PLAN_NAME, PRICE_TEXT, TRIAL_DAYS } from "@/lib/plans";
+import {
+  getPlanFeatures,
+  PLAN_NAME,
+  PRICE_TEXT,
+  SITE_PLAN_NAME,
+  SITE_PRICE_TEXT,
+  TRIAL_DAYS,
+} from "@/lib/plans";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 const DAY = 86_400_000;
 
+/** The two plans (2026-11-05), shown in the trial notices. */
+const TWO_PLANS = [
+  "Escolha o seu plano:",
+  `${SITE_PLAN_NAME}: o chat de agendamento + o seu site pronto para o Google, por ${SITE_PRICE_TEXT.summary}.`,
+  `${PLAN_NAME}: só o chat de agendamento, por ${PRICE_TEXT.summary}.`,
+  "Os dois liberam na hora pelo Pix, e o teste continua valendo até o fim.",
+];
+
 /** What happens when the trial ends without a subscription (waiting mode). */
 const WHAT_CHANGES = [
+  "Seu site sai do ar e o endereço dele passa a abrir o chat.",
   "Seu link continua no ar: os clientes escolhem o serviço, o dia e o turno, e o pedido chega no seu WhatsApp para você confirmar.",
   "O painel fica pausado. Agenda, clientes e configurações ficam guardados, e os horários já marcados continuam valendo.",
   "Assinando, tudo volta na hora.",
 ];
 
-const CTA = { label: `Assinar o ${PLAN_NAME}`, url: "/painel/plano" };
+const CTA = { label: "Escolher meu plano", url: "/painel/plano" };
 
 /**
  * 14-day trial notices (e-mail + push), each once: day 10, day 13 (ends tomorrow) and day 14 (last
@@ -96,7 +112,8 @@ export const POST = cronRoute(async () => {
         content: {
           heading: "Hoje é o último dia do seu teste",
           paragraphs: [
-            `Assine hoje para os clientes continuarem marcando sozinhos (${PRICE_TEXT.summary}).`,
+            "Assine hoje para os clientes continuarem marcando sozinhos e o seu site continuar no ar.",
+            ...TWO_PLANS,
             "Se não assinar:",
             ...WHAT_CHANGES,
           ],
@@ -104,7 +121,7 @@ export const POST = cronRoute(async () => {
         },
         push: {
           title: "Último dia do teste",
-          body: `Assine o ${PLAN_NAME} para os clientes continuarem marcando sozinhos.`,
+          body: "Escolha seu plano para manter os agendamentos automáticos e o seu site.",
           url: "/painel/plano",
         },
       });
@@ -118,7 +135,8 @@ export const POST = cronRoute(async () => {
         content: {
           heading: "Seu teste termina amanhã",
           paragraphs: [
-            `Amanhã termina o seu teste do ${PLAN_NAME}. Assine quando quiser: libera na hora e o teste continua valendo até o fim (${PRICE_TEXT.summary}).`,
+            "Amanhã termina o seu teste.",
+            ...TWO_PLANS,
             "Se não assinar:",
             ...WHAT_CHANGES,
           ],
@@ -126,7 +144,7 @@ export const POST = cronRoute(async () => {
         },
         push: {
           title: "Seu teste termina amanhã",
-          body: `Assine o ${PLAN_NAME} para manter os agendamentos automáticos.`,
+          body: "Escolha seu plano para manter os agendamentos automáticos e o seu site.",
           url: "/painel/plano",
         },
       });
@@ -137,11 +155,12 @@ export const POST = cronRoute(async () => {
       await notifyTeam({
         businessId: business.id,
         type: "account",
-        subject: `Seu teste do ${PLAN_NAME} vai até ${until}`,
+        subject: `Seu teste vai até ${until}`,
         content: {
           heading: `Seu teste vai até ${until}`,
           paragraphs: [
-            `Faltam poucos dias do seu teste do ${PLAN_NAME}. Assine quando quiser: libera na hora e o teste continua valendo até o fim. ${PRICE_TEXT.summary}.`,
+            "Faltam poucos dias do seu teste. Já viu o seu site? Ele está no Início do painel, com o link para divulgar.",
+            ...TWO_PLANS,
             "Se não assinar:",
             ...WHAT_CHANGES,
           ],
@@ -149,7 +168,7 @@ export const POST = cronRoute(async () => {
         },
         push: {
           title: `Seu teste vai até ${until}`,
-          body: `Assine o ${PLAN_NAME} para os clientes continuarem marcando sozinhos.`,
+          body: "Escolha seu plano para os clientes continuarem marcando sozinhos.",
           url: "/painel/plano",
         },
       });
