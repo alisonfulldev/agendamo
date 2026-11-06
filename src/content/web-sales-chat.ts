@@ -31,8 +31,11 @@ export const WEB_CHAT = {
   askModel: "Qual modelo você gostou mais?",
   modelChosen: "Gostei do {model}",
   custom: "Não gostei de nenhum",
-  customOffer: `Sem problema! Uma pessoa da nossa equipe cria um site só seu, sob medida, a partir das suas respostas: ${custom} (uma vez só) + ${month}/mês. Fica pronto em até 5 dias úteis, com 1 rodada de ajustes.`,
-  customYes: "Quero o personalizado",
+  customOffer: `Sem problema! A gente cria um site só seu, sob medida, a partir de ${custom} + ${month}/mês. Quer conversar comigo pelo WhatsApp para eu entender o que você precisa?`,
+  customYes: "Falar no WhatsApp",
+  customSent: "Te espero lá no WhatsApp! 😊 Se preferir, você também pode escolher um dos modelos.",
+  /** The message that opens in the seller's WhatsApp. */
+  customMessage: "Olá! Vim pelo MeetChat e quero um site personalizado para {name}.",
   customNo: "Prefiro um dos modelos",
 
   how: {

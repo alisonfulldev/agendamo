@@ -115,7 +115,7 @@ test("sales chat (/criar-site): store with her name, custom offer, Pix and the p
 
   // "Não gostei de nenhum" offers the custom site; she goes back to the templates.
   await chat.getByRole("button", { name: "Não gostei de nenhum" }).click();
-  await expect(chat.getByText(/R\$ 197,00 \(uma vez só\)/)).toBeVisible();
+  await expect(chat.getByText(/a partir de R\$ 197,00/)).toBeVisible();
   await chat.getByRole("button", { name: "Prefiro um dos modelos" }).click();
   await chat.getByRole("button", { name: "Vitrine", exact: true }).click();
   // The end of the tour: her store is ready as a preview; publishing is the plan.

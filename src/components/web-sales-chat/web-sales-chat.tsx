@@ -22,6 +22,7 @@ import {
   type ComposerSettings,
 } from "@/components/sales-chat/sales-chat";
 import { SALES_CHAT as T } from "@/content/sales-chat";
+import { salesWhatsappHref } from "@/content/contact";
 import { WEB_CHAT as W, webFirstPayment } from "@/content/web-sales-chat";
 import { WEB_SITE_TEMPLATES, WEB_STORE_TEMPLATES, type WebTemplate } from "@/lib/db/types";
 import { EMAIL_PATTERN, suggestEmailFix } from "@/lib/email-typos";
@@ -451,17 +452,22 @@ export function WebSalesChat({ initialName }: { initialName: string | null }) {
               ])
             }
             onNoneFits={() => update({ phase: "custom" }, [user(W.custom), system(W.customOffer)])}
-            onCustom={(yes) =>
-              yes
-                ? update({ customSite: true, template: templates[0]!, phase: "cycle" }, [
-                    user(W.customYes),
-                    system(W.askCycle),
-                  ])
-                : update({ phase: "models" }, [
-                    user(W.customNo),
-                    system(modelsText(state.product ?? "site", state.name)),
-                  ])
-            }
+            onCustom={(yes) => {
+              if (yes) {
+                // The custom site is talked over with the seller (from R$ 197), on the WhatsApp.
+                window.open(
+                  salesWhatsappHref(fill(W.customMessage, { name: state.name })),
+                  "_blank",
+                  "noopener",
+                );
+                update({ phase: "models" }, [user(W.customYes), system(W.customSent)]);
+                return;
+              }
+              update({ phase: "models" }, [
+                user(W.customNo),
+                system(modelsText(state.product ?? "site", state.name)),
+              ]);
+            }}
             onHowNext={() =>
               update({ phase: "cycle" }, [
                 user(W.howNext[state.product ?? "site"]),

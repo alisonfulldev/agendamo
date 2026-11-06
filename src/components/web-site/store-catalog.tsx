@@ -38,17 +38,21 @@ export function StoreCatalog({
   phone,
   items,
   variant,
+  preview = false,
 }: {
   slug: string;
   storeName: string;
   phone: string | null;
   items: WebItem[];
   variant: "showcase" | "clean";
+  /** The example in the sales chat (no WhatsApp yet). */
+  preview?: boolean;
 }) {
   const storageKey = `mc_bag_${slug}`;
   const [bag, setBag] = useState<Bag>({});
   const [open, setOpen] = useState(false);
   const [category, setCategory] = useState<string | null>(null);
+  const [noPhoneNote, setNoPhoneNote] = useState(false);
 
   // The bag survives a reload on this phone (browser only, never sent to the server).
   useEffect(() => {
@@ -301,6 +305,24 @@ export function StoreCatalog({
               >
                 Enviar pedido no WhatsApp
               </a>
+            ) : lines.length ? (
+              // No WhatsApp yet (the preview in the sales chat): the button explains what it does.
+              <>
+                <button
+                  type="button"
+                  onClick={() => setNoPhoneNote(true)}
+                  className="mt-5 flex min-h-16 items-center justify-center rounded-full bg-primary text-xl font-semibold text-primary-foreground"
+                >
+                  Enviar pedido no WhatsApp
+                </button>
+                {noPhoneNote ? (
+                  <p role="status" className="mt-3 text-center font-medium">
+                    {preview
+                      ? "Na sua loja, este botão manda o pedido com a lista e o total para o seu WhatsApp."
+                      : "Esta loja ainda não informou o WhatsApp. Tente mais tarde."}
+                  </p>
+                ) : null}
+              </>
             ) : null}
             <p className="mt-3 text-center text-sm text-muted-foreground">
               O pagamento e a entrega você combina direto com a loja.

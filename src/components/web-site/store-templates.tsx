@@ -24,6 +24,7 @@ function Catalog({ data, variant }: { data: WebSiteData; variant: "showcase" | "
       phone={data.phone}
       items={data.items}
       variant={variant}
+      preview={data.businessId === "example"}
     />
   );
 }

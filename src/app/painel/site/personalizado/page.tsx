@@ -4,12 +4,13 @@ import Link from "next/link";
 
 import { PageHeader } from "@/components/panel/page-header";
 import { Button } from "@/components/ui/button";
+import { salesWhatsappHref } from "@/content/contact";
 import { requireOwner } from "@/lib/business/context";
 import { briefingSchema } from "@/lib/custom-site/briefing";
 import { customSiteOffer, ensureOrder } from "@/lib/custom-site/orders";
-import { DELIVERY_BUSINESS_DAYS, orderPixValid } from "@/lib/custom-site/paid";
+import { DELIVERY_BUSINESS_DAYS, openOrderOf, orderPixValid } from "@/lib/custom-site/paid";
 import { formatBRL } from "@/lib/money";
-import { PLAN_PRICES } from "@/lib/plans";
+import { getPlanFeatures, PLAN_PRICES } from "@/lib/plans";
 import { publicUrl } from "@/lib/storage/r2";
 
 import { AdjustmentForm, BriefingForm, CustomSitePayment } from "./forms";
@@ -25,6 +26,32 @@ const brDate = (iso: string) => iso.slice(0, 10).split("-").reverse().join("/");
  */
 export default async function CustomSitePage() {
   const { business } = await requireOwner({ anyProduct: true });
+
+  // "Site ou Loja" (2026-11-07): the custom site is "a partir de R$ 197", talked over with the
+  // seller on the WhatsApp. An order already paid keeps its briefing and progress below.
+  if (getPlanFeatures(business).web && !(await openOrderOf(business.id))?.paid_at) {
+    const message = `Olá! Sou de ${business.name} (MeetChat) e quero um site personalizado.`;
+    return (
+      <div className="flex max-w-2xl flex-col gap-6">
+        <PageHeader
+          title="Site personalizado"
+          description="Um site feito por uma pessoa da nossa equipe, sob medida, com a sua cara."
+        />
+        <div className="flex flex-col items-start gap-4 rounded-xl border bg-card p-6">
+          <p className="text-lg">
+            A partir de <strong>{formatBRL(PLAN_PRICES.webCustomSite)}</strong>, além da
+            mensalidade. Conte o que você precisa e a gente monta uma proposta.
+          </p>
+          <Button asChild>
+            <a href={salesWhatsappHref(message)} target="_blank" rel="noopener noreferrer">
+              Falar no WhatsApp
+            </a>
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   const offer = customSiteOffer(business);
 
   const header = (
