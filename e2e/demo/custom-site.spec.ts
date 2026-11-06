@@ -96,9 +96,9 @@ test("custom site: R$ 197 with the first month, then R$ 148 for a subscriber", a
 
   // 4. Now a "Site + Agenda" subscriber: a new custom site is R$ 148, a one-off Pix.
   await page.goto("/painel/site/personalizado");
-  await expect(page.getByText(/R\$ 148,00/).first()).toBeVisible();
+  await expect(page.getByText(/R\$ 158,00/).first()).toBeVisible();
   await fillAndSendBriefing(page);
-  await page.getByRole("button", { name: "Gerar Pix de R$ 148,00" }).click();
+  await page.getByRole("button", { name: "Gerar Pix de R$ 158,00" }).click();
   await expect(page.getByRole("img", { name: "QR code do Pix" })).toBeVisible();
   await demo.goto("/demo#assinaturas");
   await demo

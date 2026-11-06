@@ -1,4 +1,5 @@
 import type { WebSiteData } from "@/components/web-site/types";
+import { webSections } from "@/content/web-site-sections";
 import { WEB_STORE_TEMPLATES, type WebTemplate } from "@/lib/db/types";
 
 import { webDefaults } from "./texts";
@@ -15,7 +16,7 @@ export function webExample(template: WebTemplate, name: string): WebSiteData {
     ? `A ${name} nasceu para facilitar a sua vida: produtos escolhidos a dedo, preço justo e atendimento de verdade, direto pelo WhatsApp.`
     : `A ${name} atende com atenção a cada detalhe. Experiência, responsabilidade e um atendimento próximo, do primeiro contato até o resultado.`;
   const texts = webDefaults({ name, bio: null, city: null, store });
-  return {
+  const site: Omit<WebSiteData, "sections"> = {
     businessId: "example",
     slug: "exemplo",
     name,
@@ -48,6 +49,7 @@ export function webExample(template: WebTemplate, name: string): WebSiteData {
           priceCents: price as number,
           category: category as string,
           imageUrl: gallery(photo as string),
+          linkUrl: null,
         }))
       : [
           ["Consultoria", "Uma conversa para entender o que você precisa e o melhor caminho."],
@@ -61,6 +63,16 @@ export function webExample(template: WebTemplate, name: string): WebSiteData {
           priceCents: null,
           category: null,
           imageUrl: null,
+          linkUrl: null,
         })),
+  };
+  return {
+    ...site,
+    sections: webSections({
+      name: site.name,
+      store: site.store,
+      place: site.place,
+      externalLinks: site.items.some((item) => item.linkUrl),
+    }),
   };
 }

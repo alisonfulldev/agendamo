@@ -1,7 +1,19 @@
 import { ArrowRight, Check } from "lucide-react";
 import type { ReactNode } from "react";
 
-import { Brand, Contact, display, Footer, Gallery, price, WhatsAppButton, wide } from "./parts";
+import {
+  Brand,
+  Contact,
+  display,
+  Faq,
+  Footer,
+  Gallery,
+  Highlights,
+  price,
+  Steps,
+  WhatsAppButton,
+  wide,
+} from "./parts";
 import type { WebSiteData } from "./types";
 
 /** wa.me link asking about one service. */
@@ -63,6 +75,7 @@ export function SiteBold({ data, badge }: { data: WebSiteData; badge: ReactNode 
         </div>
       </header>
 
+      <Highlights items={data.sections.highlights} />
       {data.items.length ? (
         <section id="servicos" aria-labelledby="servicos-titulo" className="lp-soft py-24">
           <div className={wide}>
@@ -138,7 +151,9 @@ export function SiteBold({ data, badge }: { data: WebSiteData; badge: ReactNode 
         </section>
       ) : null}
 
+      <Steps title={data.sections.stepsTitle} steps={data.sections.steps} className="lp-soft" />
       <Gallery data={{ ...data, photos: data.bio ? data.photos.slice(1) : data.photos }} />
+      <Faq items={data.sections.faq} className="lp-soft" />
       <Contact data={data} className="lp-brand" />
       <Footer data={data} badge={badge} />
     </div>
@@ -194,8 +209,9 @@ export function SiteClean({ data, badge }: { data: WebSiteData; badge: ReactNode
         </div>
       </section>
 
+      <Highlights items={data.sections.highlights} className="lp-soft" />
       {data.items.length ? (
-        <section aria-labelledby="servicos" className="lp-soft py-24">
+        <section aria-labelledby="servicos" className="py-24">
           <div className={wide}>
             <h2 id="servicos" className={`${display} text-5xl sm:text-7xl`}>
               Serviços
@@ -264,7 +280,9 @@ export function SiteClean({ data, badge }: { data: WebSiteData; badge: ReactNode
         </section>
       ) : null}
 
+      <Steps title={data.sections.stepsTitle} steps={data.sections.steps} className="lp-soft" />
       <Gallery data={data} title="Galeria" />
+      <Faq items={data.sections.faq} />
       <Contact data={data} className="lp-soft" />
       <Footer data={data} badge={badge} />
     </div>

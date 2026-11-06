@@ -29,8 +29,11 @@ const testPrice = TEST_PRICE > 0 ? Math.max(TEST_PRICE, ASAAS_MINIMUM_CENTS) : 0
 
 export const PLAN_PRICES = {
   complete: { monthly: testPrice || 2390, yearly: testPrice || 23880 },
-  /** "Site + Agenda" (2026-11-05): Completo + the landing page at /<slug>/site. */
-  site: { monthly: testPrice || 4900, yearly: testPrice || 49000 },
+  /**
+   * "Site + Agenda" (2026-11-05): Completo + the landing page at /<slug>/site. R$ 49 until
+   * 2026-11-07, then R$ 39 (subscribers at the new value from the next charge, needs_reprice).
+   */
+  site: { monthly: testPrice || 3900, yearly: testPrice || 39000 },
   /** "Site ou Loja" (2026-11-07): only a site or a store, no booking. */
   web: { monthly: testPrice || 2900, yearly: testPrice || 29000 },
   /** Custom site made by a person for "Site ou Loja": R$ 197 once, plus the R$ 29 month. */
@@ -43,7 +46,7 @@ export const PLAN_PRICES = {
   /** Own .br domain sold with "Site + Agenda" (2026-11-06): first year in the first Pix. */
   domainYearly: 9100,
   /** Custom site (2026-11-06): the creation; with the first month of "Site + Agenda" = R$ 197. */
-  customSite: 14800,
+  customSite: 15800,
 } as const;
 
 export const PLAN_NAME = "Completo";

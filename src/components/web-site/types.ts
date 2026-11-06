@@ -1,4 +1,5 @@
 import type { WebTemplate } from "@/lib/db/types";
+import type { WebSections } from "@/content/web-site-sections";
 import type { WebTexts } from "@/lib/web/texts";
 
 /** A service (site) or product (store) as the public site shows it. */
@@ -9,6 +10,8 @@ export interface WebItem {
   priceCents: number | null;
   category: string | null;
   imageUrl: string | null;
+  /** Where it is sold (Shopee, Mercado Livre, own shop); null = the WhatsApp bag. */
+  linkUrl: string | null;
 }
 
 /** Everything a "Site ou Loja" template draws (built on the server from the business data). */
@@ -30,4 +33,6 @@ export interface WebSiteData {
   place: string;
   photos: { url: string; width: number; height: number }[];
   items: WebItem[];
+  /** Highlights, how it works and common questions. */
+  sections: WebSections;
 }

@@ -45,8 +45,8 @@ describe("monthlyRevenue", () => {
       addons: {},
       extra_professionals: 0,
     };
-    expect(monthlyRevenue(sub)).toBe(4900);
-    expect(monthlyRevenue({ ...sub, billing_cycle: "yearly" })).toBe(Math.round(49000 / 12));
+    expect(monthlyRevenue(sub)).toBe(3900);
+    expect(monthlyRevenue({ ...sub, billing_cycle: "yearly" })).toBe(Math.round(39000 / 12));
   });
 });
 

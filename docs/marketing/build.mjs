@@ -5,7 +5,8 @@ import { readFileSync, mkdirSync } from "node:fs";
 import { chromium } from "@playwright/test";
 
 // Preços (mesmos de src/lib/plans.ts). Mudou lá, mude aqui e gere de novo.
-const PRICE = { site: "R$ 49", domain: "R$ 91/ano", customSite: "R$ 148" };
+// Site + Agenda R$ 39 (2026-11-07); "Site ou Loja" (só site) R$ 29: o anúncio original usa este.
+const PRICE = { site: "R$ 39", web: "R$ 29", domain: "R$ 91/ano", customSite: "R$ 158" };
 
 const C = { primary: "#4338CA", lime: "#CBEF4A", deep: "#1B1464", bg: "#F8F9FC", ink: "#14123A" };
 const img = (name) => `data:image/png;base64,${readFileSync(`docs/marketing/shots/${name}.png`).toString("base64")}`;
@@ -234,7 +235,7 @@ const CLASSIC_NICHES = [
 function classic(fmt, niche = null) {
   const f = CLASSIC_FORMATS[fmt];
   const k = f.scale;
-  const serif = "font-family:'Playfair Display',serif;font-weight:900;letter-spacing:-0.015em;color:#111;text-shadow:7px 7px 0 " + Y;
+  const serif = "font-family:'Playfair Display',serif;font-weight:900;font-variant-numeric:lining-nums;letter-spacing:-0.015em;color:#111;text-shadow:7px 7px 0 " + Y;
   const perk = (icon, text) => `<div style="display:flex;align-items:center;gap:18px"><span style="width:70px;height:70px;flex:none">${icon}</span><span style="font-size:30px;font-weight:600;line-height:1.15;color:#111">${text}</span></div>`;
   return `<div class="slide" style="width:${f.width}px;height:${f.height}px;padding:${f.top}px 60px 60px;align-items:center;text-align:center;${f.center ? "justify-content:center;" : ""}
       background:radial-gradient(120% 60% at 50% 0%, #ffffff 0%, #f1f1f1 55%, #e9e9e9 100%)">
@@ -243,10 +244,10 @@ function classic(fmt, niche = null) {
     <p style="${serif};font-size:${150 * k}px;line-height:.95">Seu SITE</p>
     <p style="${serif};font-size:${86 * k}px;line-height:1;margin-top:${6 * k}px">+ agenda online</p>
     <p style="font-family:'Playfair Display',serif;font-weight:800;font-size:${64 * k}px;color:#111;margin-top:${18 * k}px;line-height:1;display:inline-block;padding-bottom:10px;background:linear-gradient(${Y},${Y}) bottom/100% 12px no-repeat">por apenas</p>
-    <p style="${serif};font-size:${210 * k}px;line-height:1;margin-top:${10 * k}px;white-space:nowrap">R$49<span style="font-size:${96 * k}px">/mês</span></p>
+    <p style="${serif};font-size:${210 * k}px;line-height:1;margin-top:${10 * k}px;white-space:nowrap">${PRICE.site.replace(" ", "")}<span style="font-size:${96 * k}px">/mês</span></p>
     <div style="display:flex;align-items:center;gap:26px;margin-top:${26 * k}px">
       <span style="color:${Y};font-size:${60 * k}px;font-weight:900">\\</span>
-      <span class="pill" style="background:${Y};color:#111;font-size:${50 * k}px;font-weight:800;padding:${18 * k}px ${54 * k}px">pronto em 24h</span>
+      <span class="pill" style="background:${Y};color:#111;font-size:${50 * k}px;font-weight:800;padding:${18 * k}px ${54 * k}px">pronto em 1h</span>
       <span style="color:${Y};font-size:${60 * k}px;font-weight:900">//</span>
     </div>
     <p style="font-size:${30 * k}px;font-weight:700;color:#111;margin-top:${18 * k}px">sem fidelidade · cancele quando quiser</p>
@@ -256,6 +257,48 @@ function classic(fmt, niche = null) {
       ${perk(niche ? ICON.bell : ICON.chart, niche?.perks[2] ?? "sua empresa vendendo mais")}
     </div>
     ${fmt === "story" ? `<div class="pill" style="margin-top:60px;background:#111;color:${Y};font-size:40px;padding:28px 44px">Toque e chame no WhatsApp →</div>` : ""}
+  </div>`;
+}
+
+// ---------------------------------------------------------------------------------------------
+// O anúncio original (2026-11-07): igual à imagem que sempre converteu, só com o preço do
+// "Site ou Loja" (R$ 29/mês). Fundo claro com ondas, título serifado preto com sombra amarela,
+// "por apenas" sublinhado em amarelo, selo amarelo "pronto em 1h" e duas vantagens.
+const ORIGINAL_FORMATS = {
+  quadrado: { width: 1080, height: 1080, scale: 1 },
+  retrato: { width: 1080, height: 1350, scale: 1.08 },
+  story: { width: 1080, height: 1920, scale: 1.12 },
+};
+const G_ICON = `<svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="21" fill="none" stroke="#111" stroke-width="4.5"/><text x="24" y="36" text-anchor="middle" font-family="Figtree, sans-serif" font-weight="900" font-size="34" fill="#111">G</text></svg>`;
+const CHART_ICON = `<svg viewBox="0 0 48 48" fill="#111"><rect x="4" y="30" width="7" height="14"/><rect x="15" y="24" width="7" height="20"/><rect x="26" y="27" width="7" height="17"/><rect x="37" y="18" width="7" height="26"/><path d="M4 26 15 15l8 7 15-14" fill="none" stroke="#111" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M31 6h9v9" fill="none" stroke="#111" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+function original(fmt) {
+  const f = ORIGINAL_FORMATS[fmt];
+  const k = f.scale;
+  const serif = (size, weight = 900) =>
+    `font-family:'Playfair Display',serif;font-weight:${weight};font-variant-numeric:lining-nums;font-size:${size * k}px;line-height:.95;color:#111;letter-spacing:-0.01em;text-shadow:${6 * k}px ${6 * k}px 0 ${Y}`;
+  const price = PRICE.web.replace("R$ ", "");
+  const ray = (rot) => `<span style="display:block;width:${70 * k}px;height:${12 * k}px;border-radius:99px;background:${Y};transform:rotate(${rot}deg)"></span>`;
+  const rays = (side) => `<span style="display:flex;flex-direction:column;gap:${18 * k}px">${ray(side * -22)}${ray(0)}${ray(side * 22)}</span>`;
+  const perk = (icon, text) => `<div style="display:flex;align-items:center;gap:${22 * k}px"><span style="width:${110 * k}px;height:${110 * k}px;flex:none;display:flex">${icon}</span><span style="font-family:Figtree,sans-serif;font-size:${36 * k}px;font-weight:600;line-height:1.15;color:#111">${text}</span></div>`;
+  return `<div class="slide" style="width:${f.width}px;height:${f.height}px;padding:40px 50px;align-items:center;justify-content:center;text-align:center;
+      background:radial-gradient(120% 80% at 50% 40%, #ffffff 0%, #f3f3f3 60%, #e8e8e8 100%)">
+    <div style="position:absolute;inset:-300px;background:repeating-radial-gradient(ellipse at 50% -20%, rgba(0,0,0,.035) 0 3px, transparent 3px 70px);pointer-events:none"></div>
+    <p style="${serif(178)}">Seu SITE</p>
+    <p style="${serif(84, 800)};text-shadow:none;margin-top:${4 * k}px">por apenas</p>
+    <svg viewBox="0 0 520 26" style="width:${470 * k}px;height:${24 * k}px;margin-top:${4 * k}px"><path d="M6 18 C120 8, 300 6, 514 12" stroke="${Y}" stroke-width="12" fill="none" stroke-linecap="round"/><path d="M40 22 C180 14, 340 14, 470 18" stroke="${Y}" stroke-width="5" fill="none" stroke-linecap="round" opacity=".7"/></svg>
+    <p style="${serif(300)};margin-top:${-46 * k}px;white-space:nowrap;display:flex;align-items:baseline;justify-content:center">
+      <span style="font-size:${205 * k}px">R$</span>${price}<span style="font-size:${120 * k}px">/mês</span>
+    </p>
+    <div style="display:flex;align-items:center;gap:${26 * k}px;margin-top:${34 * k}px">
+      ${rays(-1)}
+      <span class="pill" style="background:${Y};color:#111;font-family:Figtree,sans-serif;font-size:${76 * k}px;font-weight:800;padding:${14 * k}px ${70 * k}px">pronto em 1h</span>
+      ${rays(1)}
+    </div>
+    <div style="display:flex;align-items:center;gap:${50 * k}px;margin-top:${50 * k}px">
+      ${perk(G_ICON, "colocamos<br/>no Google")}
+      <span style="width:6px;height:${130 * k}px;background:${Y};border-radius:3px"></span>
+      ${perk(CHART_ICON, "sua empresa<br/>vendendo mais")}
+    </div>
   </div>`;
 }
 
@@ -298,7 +341,12 @@ for (const n of skipNiches ? [] : NICHE_ADS) {
 }
 for (const [fmt, f] of Object.entries(CLASSIC_FORMATS)) {
   if (process.env.ONLY !== "classico-nichos")
-    await render(classic(fmt), f.width, f.height, `docs/marketing/anuncios/classico-${fmt}.png`);
+    await render(
+      original(fmt),
+      ORIGINAL_FORMATS[fmt].width,
+      ORIGINAL_FORMATS[fmt].height,
+      `docs/marketing/anuncios/classico-${fmt}.png`,
+    );
   for (const n of CLASSIC_NICHES) {
     await render(classic(fmt, n), f.width, f.height, `docs/marketing/anuncios/nichos/classico-${n.file}-${fmt}.png`);
   }

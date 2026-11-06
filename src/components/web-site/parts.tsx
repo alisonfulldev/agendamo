@@ -188,3 +188,89 @@ export function WebBadge({ href, logo }: { href: string; logo: string }) {
     </a>
   );
 }
+
+/** Three short points of what the business offers (cards). */
+export function Highlights({
+  items,
+  className = "",
+}: {
+  items: { title: string; text: string }[];
+  className?: string;
+}) {
+  return (
+    <section aria-label="Destaques" className={`py-16 ${className}`}>
+      <ul className={`${wide} grid gap-4 sm:grid-cols-3`}>
+        {items.map((item, i) => (
+          <li key={item.title} className="flex flex-col gap-2 rounded-3xl bg-card p-7 shadow-sm">
+            <span className="font-heading text-4xl font-bold text-primary tabular-nums">
+              {String(i + 1).padStart(2, "0")}
+            </span>
+            <span className="font-heading text-2xl font-bold">{item.title}</span>
+            <span className="text-lg opacity-80">{item.text}</span>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+/** How to hire or buy, in three steps. */
+export function Steps({
+  title,
+  steps,
+  className = "",
+}: {
+  title: string;
+  steps: { title: string; text: string }[];
+  className?: string;
+}) {
+  return (
+    <section aria-labelledby="como" className={`py-24 ${className}`}>
+      <div className={wide}>
+        <h2 id="como" className={`${display} text-5xl sm:text-6xl`}>
+          {title}
+        </h2>
+        <ol className="mt-12 grid gap-8 md:grid-cols-3">
+          {steps.map((step, i) => (
+            <li key={step.title} className="flex flex-col gap-3">
+              <span className="flex size-14 items-center justify-center rounded-full bg-primary font-heading text-2xl font-bold text-primary-foreground">
+                {i + 1}
+              </span>
+              <span className="font-heading text-2xl font-bold">{step.title}</span>
+              <span className="text-lg leading-relaxed opacity-85">{step.text}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </section>
+  );
+}
+
+/** Common questions, opened one by one. */
+export function Faq({
+  items,
+  className = "",
+}: {
+  items: { question: string; answer: string }[];
+  className?: string;
+}) {
+  return (
+    <section aria-labelledby="perguntas" className={`py-24 ${className}`}>
+      <div className={`${wide} max-w-4xl`}>
+        <h2 id="perguntas" className={`${display} text-5xl sm:text-6xl`}>
+          Perguntas frequentes
+        </h2>
+        <div className="mt-10 flex flex-col gap-3">
+          {items.map((item) => (
+            <details key={item.question} className="group rounded-2xl bg-card p-6 shadow-sm">
+              <summary className="cursor-pointer list-none font-heading text-xl font-bold">
+                {item.question}
+              </summary>
+              <p className="mt-3 text-lg leading-relaxed opacity-85">{item.answer}</p>
+            </details>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}

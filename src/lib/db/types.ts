@@ -440,6 +440,8 @@ export interface CatalogItem {
   price_cents: number | null;
   category: string | null;
   image_key: string | null;
+  /** Where the product is sold (Shopee, Mercado Livre…); null = the WhatsApp bag. */
+  link_url: string | null;
   position: number;
   active: boolean;
   created_at: string;

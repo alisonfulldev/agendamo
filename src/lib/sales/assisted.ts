@@ -65,7 +65,7 @@ export type NewSaleResult =
       error: "has_business" | "has_account" | "coupon_invalid" | "domain_taken" | "failed";
     };
 
-/** The custom site's creation: R$ 148 with "Site + Agenda", R$ 197 with "Site ou Loja". */
+/** The custom site's creation: R$ 158 with "Site + Agenda", R$ 197 with "Site ou Loja". */
 function customSitePrice(tier: AssistedSale["tier"]): number {
   return tier === "web" ? PLAN_PRICES.webCustomSite : PLAN_PRICES.customSite;
 }

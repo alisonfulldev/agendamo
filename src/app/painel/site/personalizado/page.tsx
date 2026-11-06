@@ -19,7 +19,7 @@ export const metadata: Metadata = { title: "Site personalizado" };
 const brDate = (iso: string) => iso.slice(0, 10).split("-").reverse().join("/");
 
 /**
- * Custom site (2026-11-06): the owner fills the briefing, pays (R$ 148 for "Site + Agenda"
+ * Custom site (2026-11-06): the owner fills the briefing, pays (R$ 158 for "Site + Agenda"
  * subscribers, R$ 197 with the first month otherwise) and follows the order until it is delivered;
  * then one adjustment.
  */

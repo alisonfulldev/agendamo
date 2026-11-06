@@ -37,6 +37,7 @@ export default async function WebCatalogPage() {
           description: item.description ?? "",
           price: priceText(item.price_cents),
           category: item.category ?? "",
+          link: item.link_url ?? "",
           active: item.active,
           imageUrl: publicUrl(item.image_key),
         }))}

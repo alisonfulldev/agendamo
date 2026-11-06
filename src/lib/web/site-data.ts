@@ -1,4 +1,5 @@
 import "server-only";
+import { webSections } from "@/content/web-site-sections";
 
 import type { WebSiteData } from "@/components/web-site/types";
 import {
@@ -30,7 +31,7 @@ export async function webSiteData(
   );
   const items = await loadCatalog(business.id, { onlyActive: true });
   const phone = page?.whatsapp_number?.replace(/\D/g, "") || null;
-  return {
+  const site: Omit<WebSiteData, "sections"> = {
     businessId: business.id,
     slug: business.slug,
     name: business.name,
@@ -56,6 +57,16 @@ export async function webSiteData(
         priceCents: item.price_cents,
         category: item.category,
         imageUrl: publicUrl(item.image_key),
+        linkUrl: item.link_url,
       })),
+  };
+  return {
+    ...site,
+    sections: webSections({
+      name: site.name,
+      store: site.store,
+      place: site.place,
+      externalLinks: site.items.some((item) => item.linkUrl),
+    }),
   };
 }

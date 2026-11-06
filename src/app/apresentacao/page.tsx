@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { SITE_PRICE_TEXT } from "@/lib/plans";
+
 import { NICHES, PLATFORM } from "@/brands";
 import { brandThemeStyle } from "@/brands/theme";
 import { siteUrl } from "@/lib/site-url";
@@ -17,7 +19,7 @@ const SLIDES = [
   "Tudo que vem no plano: site pronto para o Google, agendamento por chat 24h, lembretes automáticos, aviso no seu celular, agenda e equipe, clientes, financeiro simples e sinal pelo Pix.",
   "Ferramentas para vender mais: cupons de desconto, pacotes de sessões, lista de espera, clientes que sumiram, indicações, avaliações, artes para stories e Google Agenda.",
   "O que muda no seu dia: chega de responder “tem horário?”, agenda cheia até quando você está dormindo, menos faltas com lembrete e sinal pelo Pix, seu negócio no Google com um site seu e imagem profissional.",
-  "Site + Agenda por R$ 49 por mês, sem taxa de criação e sem fidelidade. Opcionais: seu próprio endereço .com.br e site personalizado.",
+  `Site + Agenda por ${SITE_PRICE_TEXT.monthly}, sem taxa de criação e sem fidelidade. Opcionais: seu próprio endereço .com.br e site personalizado.`,
 ];
 
 export const metadata: Metadata = {

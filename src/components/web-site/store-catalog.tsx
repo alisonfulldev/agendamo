@@ -1,6 +1,6 @@
 "use client";
 
-import { Minus, Plus, ShoppingBag, X } from "lucide-react";
+import { ExternalLink, Minus, Plus, ShoppingBag, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 import { formatBRL } from "@/lib/money";
@@ -8,6 +8,24 @@ import { formatBRL } from "@/lib/money";
 import type { WebItem } from "./types";
 
 type Bag = Record<string, number>;
+
+/** "Comprar na Shopee", "Comprar no Mercado Livre"… from where the product is sold. */
+function buyLabel(url: string): string {
+  const host = (() => {
+    try {
+      return new URL(url).hostname.replace(/^www\./, "");
+    } catch {
+      return "";
+    }
+  })();
+  if (host.includes("shopee")) return "Comprar na Shopee";
+  if (host.includes("mercadolivre") || host.includes("mercadolibre"))
+    return "Comprar no Mercado Livre";
+  if (host.includes("amazon")) return "Comprar na Amazon";
+  if (host.includes("magazineluiza") || host.includes("magalu")) return "Comprar na Magalu";
+  if (host.includes("shein")) return "Comprar na Shein";
+  return "Comprar";
+}
 
 /**
  * Catalog of a store ("Site ou Loja", 2026-11-07): category chips, big product cards and a bag.
@@ -148,7 +166,19 @@ export function StoreCatalog({
                       {formatBRL(item.priceCents)}
                     </span>
                   ) : null}
-                  {inBag ? (
+                  {item.linkUrl ? (
+                    // Sold elsewhere (Shopee, Mercado Livre…): straight there, not the bag.
+                    <a
+                      href={item.linkUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      data-track="click_link"
+                      className="flex min-h-12 items-center justify-center gap-2 rounded-full bg-primary px-4 text-base font-semibold text-primary-foreground sm:text-lg"
+                    >
+                      <ExternalLink className="size-5" aria-hidden />
+                      {buyLabel(item.linkUrl)}
+                    </a>
+                  ) : inBag ? (
                     <span className="flex min-h-12 items-center justify-between rounded-full border-2 border-primary px-1">
                       <button
                         type="button"

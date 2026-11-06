@@ -17,7 +17,7 @@ import {
   type CustomSiteOrder,
 } from "./paid";
 
-/** Price of the custom site for this business: R$ 148 for "Site + Agenda" subscribers, else R$ 197 with the first month. */
+/** Price of the custom site for this business: R$ 158 for "Site + Agenda" subscribers, else R$ 197 with the first month. */
 export function customSiteOffer(business: Business): {
   kind: "single" | "with_plan" | "upgrade_first";
   priceCents: number;

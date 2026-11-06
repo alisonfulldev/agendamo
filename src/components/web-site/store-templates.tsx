@@ -1,7 +1,18 @@
 import { ArrowDown } from "lucide-react";
 import type { ReactNode } from "react";
 
-import { Brand, Contact, display, Footer, Gallery, WhatsAppButton, wide } from "./parts";
+import {
+  Brand,
+  Contact,
+  display,
+  Faq,
+  Footer,
+  Gallery,
+  Highlights,
+  Steps,
+  WhatsAppButton,
+  wide,
+} from "./parts";
 import { StoreCatalog } from "./store-catalog";
 import type { WebSiteData } from "./types";
 
@@ -60,6 +71,7 @@ export function StoreShowcase({ data, badge }: { data: WebSiteData; badge: React
         </div>
       </header>
 
+      <Highlights items={data.sections.highlights} />
       <section id="produtos" aria-labelledby="produtos-titulo" className="py-20">
         <div className={wide}>
           <h2 id="produtos-titulo" className={`${display} mb-10 text-5xl sm:text-7xl`}>
@@ -73,8 +85,9 @@ export function StoreShowcase({ data, badge }: { data: WebSiteData; badge: React
         </div>
       </section>
 
+      <Steps title={data.sections.stepsTitle} steps={data.sections.steps} className="lp-soft" />
       {data.bio ? (
-        <section aria-labelledby="sobre" className="lp-soft py-24">
+        <section aria-labelledby="sobre" className="py-24">
           <div className={`${wide} max-w-4xl`}>
             <h2 id="sobre" className={`${display} text-5xl sm:text-7xl`}>
               Sobre a loja
@@ -87,6 +100,7 @@ export function StoreShowcase({ data, badge }: { data: WebSiteData; badge: React
       ) : null}
 
       <Gallery data={data} title="Nossa loja" />
+      <Faq items={data.sections.faq} className="lp-soft" />
       <Contact data={data} className="lp-brand" />
       <Footer data={data} badge={badge} />
     </div>
@@ -135,6 +149,7 @@ export function StoreClean({ data, badge }: { data: WebSiteData; badge: ReactNod
         ) : null}
       </section>
 
+      <Highlights items={data.sections.highlights} className="lp-soft" />
       <section id="produtos" aria-labelledby="produtos-titulo" className="py-16">
         <div className={wide}>
           <h2 id="produtos-titulo" className={`${display} mb-10 text-center text-5xl sm:text-6xl`}>
@@ -150,6 +165,7 @@ export function StoreClean({ data, badge }: { data: WebSiteData; badge: ReactNod
         </div>
       </section>
 
+      <Steps title={data.sections.stepsTitle} steps={data.sections.steps} className="lp-soft" />
       {data.bio ? (
         <section aria-labelledby="sobre" className="py-24">
           <div className={`${wide} max-w-3xl text-center`}>
@@ -164,6 +180,7 @@ export function StoreClean({ data, badge }: { data: WebSiteData; badge: ReactNod
       ) : null}
 
       <Gallery data={data} title="Inspiração" />
+      <Faq items={data.sections.faq} />
       <Contact data={data} className="lp-soft" />
       <Footer data={data} badge={badge} />
     </div>

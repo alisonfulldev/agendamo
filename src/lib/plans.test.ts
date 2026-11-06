@@ -145,14 +145,14 @@ describe("Site + Agenda (2026-11-05)", () => {
     ).toBe(false);
   });
 
-  it("prices: R$ 49/month or R$ 490/year, extras on top, coupon applies", async () => {
+  it("prices: R$ 39/month or R$ 390/year, extras on top, coupon applies", async () => {
     const { subscriptionPrice, yearlySavings, planLabel, getPlanFeatures } =
       await import("./plans");
-    expect(subscriptionPrice("monthly", 0, 0, "site")).toBe(4900);
-    expect(subscriptionPrice("yearly", 0, 0, "site")).toBe(49_000);
-    expect(subscriptionPrice("monthly", 1, 0, "site")).toBe(5800);
-    expect(subscriptionPrice("monthly", 0, 10, "site")).toBe(4410);
-    expect(yearlySavings(0, "site")).toBe(9800);
+    expect(subscriptionPrice("monthly", 0, 0, "site")).toBe(3900);
+    expect(subscriptionPrice("yearly", 0, 0, "site")).toBe(39_000);
+    expect(subscriptionPrice("monthly", 1, 0, "site")).toBe(4800);
+    expect(subscriptionPrice("monthly", 0, 10, "site")).toBe(3510);
+    expect(yearlySavings(0, "site")).toBe(7800);
     expect(
       planLabel(getPlanFeatures({ plan: "complete", trial_ends_at: null, plan_tier: "site" }, now)),
     ).toBe("Site + Agenda");

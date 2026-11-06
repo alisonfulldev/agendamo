@@ -84,7 +84,7 @@ test("Nova venda: account and Pix, payment page, paid releases the account and t
   const pay = await visitor.newPage();
   await pay.goto(payPath!);
   await expect(pay.getByRole("heading", { level: 1, name })).toBeVisible();
-  await expect(pay.getByText("R$ 49,00")).toBeVisible();
+  await expect(pay.getByText("R$ 39,00")).toBeVisible();
   await expect(pay.getByRole("img", { name: "QR code do Pix" })).toBeVisible();
 
   // The Asaas webhook confirms the payment (simulated in demo mode).
@@ -143,8 +143,8 @@ test("sale with an own domain: first Pix with the first year, then register, con
   await page.getByRole("button", { name: "Criar conta e gerar Pix" }).click();
 
   await page.waitForURL(/\/admin\/vendas\/[0-9a-f-]{36}$/);
-  // R$ 49 + R$ 91 in the first Pix.
-  await expect(page.locator("pre").first()).toContainText("R$ 140,00");
+  // R$ 39 + R$ 91 in the first Pix.
+  await expect(page.locator("pre").first()).toContainText("R$ 130,00");
   await expect(page.locator("pre").first()).toContainText(`do domínio ${domain}`);
 
   const confirm = await page.context().newPage();
@@ -204,13 +204,13 @@ test("sales chat (/conheca): models with her name, plan, Pix, paid opens the pan
   await chat.keyboard.press("Enter");
   await chat.getByPlaceholder("CPF ou CNPJ").fill("529.982.247-25");
   await chat.keyboard.press("Enter");
-  await expect(chat.getByText(/Site \+ Agenda · R\$ 49,00\/mês/)).toBeVisible();
+  await expect(chat.getByText(/Site \+ Agenda · R\$ 39,00\/mês/)).toBeVisible();
   await expect(chat.getByText(/Maria Chat Teste/).last()).toBeVisible();
   // The summary lets her change the plan without typing everything again.
   await chat.getByRole("button", { name: "Trocar plano" }).click();
   await chat.getByRole("button", { name: /Site \+ Agenda/ }).click();
   await chat.getByRole("button", { name: /Anual/ }).click();
-  await expect(chat.getByText(/Site \+ Agenda · R\$ 490,00\/ano/)).toBeVisible();
+  await expect(chat.getByText(/Site \+ Agenda · R\$ 390,00\/ano/)).toBeVisible();
   await chat.getByRole("button", { name: "Gerar meu Pix" }).click();
   await expect(chat.getByRole("img", { name: "QR code do Pix" })).toBeVisible({ timeout: 20_000 });
   await expect(chat.getByText("Aguardando o pagamento…")).toBeVisible();

@@ -3,7 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
+import { PLATFORM } from "@/brands";
+import { brandUrl } from "@/brands/urls";
 import { requireOwner } from "@/lib/business/context";
+import { sendEmail } from "@/lib/email/send";
+import { getServerEnv } from "@/lib/env";
+import { formatBRL } from "@/lib/money";
+import { PLAN_PRICES } from "@/lib/plans";
 import { invalidatePublicPage } from "@/lib/cache";
 import { WEB_SITE_TEMPLATES, WEB_STORE_TEMPLATES } from "@/lib/db/types";
 import { normalizeBrPhone } from "@/lib/phone";
@@ -147,6 +153,23 @@ const itemSchema = z.object({
   description: text(2, 1000, "Descrição"),
   price: priceSchema,
   category: text(1, 60, "Categoria"),
+  /** Where it is sold (Shopee, Mercado Livre, own shop): an https link, or empty. */
+  link: z
+    .string()
+    .trim()
+    .max(500)
+    .transform((value, ctx) => {
+      if (!value) return null;
+      const withScheme = /^https?:\/\//i.test(value) ? value : `https://${value}`;
+      try {
+        const url = new URL(withScheme.replace(/^http:/i, "https:"));
+        if (!url.hostname.includes(".")) throw new Error("host");
+        return url.toString();
+      } catch {
+        ctx.addIssue({ code: "custom", message: "Link inválido. Ex.: shopee.com.br/seu-produto" });
+        return z.NEVER;
+      }
+    }),
   active: z.boolean(),
 });
 
@@ -157,13 +180,14 @@ export async function saveCatalogItemAction(input: unknown): Promise<WebResult> 
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Confira os campos." };
   }
-  const { id, name, description, price, category, active } = parsed.data;
+  const { id, name, description, price, category, link, active } = parsed.data;
   const admin = createAdminClient();
   const fields = {
     name,
     description,
     price_cents: price,
     category,
+    link_url: link,
     active,
     updated_at: new Date().toISOString(),
   };
@@ -271,5 +295,48 @@ export async function removeWebHeroAction(): Promise<WebResult> {
     .eq("business_id", business.id);
   await deleteObject(data.hero_image_key as string).catch(() => undefined);
   refresh(business.slug);
+  return { ok: true };
+}
+
+/**
+ * "Quero meu domínio" (R$ 120 a year, optional): tells the admins by e-mail; they check the name,
+ * register it in the owner's name and send the Pix (manual, like the WhatsApp sales).
+ */
+export async function requestDomainAction(input: unknown): Promise<WebResult> {
+  const { business, brand, user } = await requireOwner({ web: true });
+  const parsed = z
+    .string()
+    .trim()
+    .toLowerCase()
+    .max(253)
+    .regex(/^[a-z0-9-]+(\.[a-z0-9-]+)+$/, "Escreva o endereço, ex.: seunegocio.com.br")
+    .safeParse(
+      String(input ?? "")
+        .replace(/^https?:\/\//, "")
+        .replace(/^www\./, ""),
+    );
+  if (!parsed.success) {
+    return { ok: false, error: parsed.error.issues[0]?.message ?? "Endereço inválido." };
+  }
+  const admins = getServerEnv().ADMIN_EMAILS;
+  if (admins.length) {
+    await sendEmail({
+      brand: PLATFORM,
+      to: admins,
+      subject: `Pedido de domínio: ${parsed.data} (${business.name})`,
+      content: {
+        heading: "Pedido de domínio próprio",
+        paragraphs: [
+          `${business.name} quer o domínio ${parsed.data} (${formatBRL(PLAN_PRICES.webDomainYearly)} por ano).`,
+          "Confira se está livre, registre no nome do cliente e mande o Pix.",
+        ],
+        details: [
+          { label: "Domínio", value: parsed.data },
+          { label: "Site", value: brandUrl(brand, `/${business.slug}`) },
+          { label: "E-mail da dona", value: user.email ?? "" },
+        ],
+      },
+    }).catch((error) => console.error("domain request e-mail failed", error));
+  }
   return { ok: true };
 }

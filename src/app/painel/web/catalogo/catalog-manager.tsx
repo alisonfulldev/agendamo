@@ -24,6 +24,8 @@ export interface CatalogRow {
   /** Price as typed ("49,90"); empty = no price. */
   price: string;
   category: string;
+  /** Where it is sold (Shopee, Mercado Livre…); empty = the WhatsApp bag. */
+  link: string;
   active: boolean;
   imageUrl: string | null;
 }
@@ -33,6 +35,7 @@ const EMPTY: Omit<CatalogRow, "id" | "imageUrl"> = {
   description: "",
   price: "",
   category: "",
+  link: "",
   active: true,
 };
 
@@ -274,6 +277,24 @@ function ItemForm({
           value={values.description}
           onChange={(e) => set("description", e.target.value)}
         />
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor={`link-${id ?? "new"}`}>
+          {store ? "Link para comprar" : "Link"} · opcional
+        </Label>
+        <Input
+          id={`link-${id ?? "new"}`}
+          inputMode="url"
+          maxLength={500}
+          value={values.link}
+          placeholder={store ? "shopee.com.br/… ou mercadolivre.com.br/…" : "https://…"}
+          onChange={(e) => set("link", e.target.value)}
+        />
+        <span className="text-xs text-muted-foreground">
+          {store
+            ? "Com link, o botão leva para onde você vende (Shopee, Mercado Livre, sua loja). Sem link, o produto vai para a sacolinha do WhatsApp."
+            : "Opcional: uma página com mais detalhes deste serviço."}
+        </span>
       </div>
       <label className="flex min-h-11 items-center gap-3 text-sm">
         <input
