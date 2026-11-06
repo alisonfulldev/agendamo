@@ -70,6 +70,10 @@ interface SalesState {
   pix: ChatPix | null;
   expired: boolean;
   paid: Paid | null;
+  /** The conversation before each answer: "Voltar" restores the last one. */
+  history: SalesState[];
+  /** Changing the plan from the summary: back to the summary after the cycle. */
+  editing: boolean;
 }
 
 /** Saved in this browser so whoever leaves comes back where she stopped (never the CPF). */
@@ -100,14 +104,33 @@ function fresh(): SalesState {
     pix: null,
     expired: false,
     paid: null,
+    history: [],
+    editing: false,
   };
+}
+
+/** The state before an answer, kept for "Voltar" (without its own history). */
+const snapshot = (s: SalesState): SalesState => ({ ...s, history: [] });
+
+/** Everything she typed and chose, to confirm before the Pix. */
+function summaryText(s: SalesState): string {
+  const tier = s.tier ?? "site";
+  return fill(T.summary, {
+    business: s.name,
+    plan: T.plans[tier].label,
+    price: firstPaymentText(tier, s.cycle ?? "monthly"),
+    payer: s.payerName,
+    email: s.email,
+    whatsapp: s.whatsapp,
+  });
 }
 
 function load(): SalesState | null {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
-    const saved = JSON.parse(raw) as SalesState;
+    const parsed = JSON.parse(raw) as SalesState;
+    const saved = { ...parsed, history: parsed.history ?? [], editing: false };
     // The document is never saved: a conversation left at the summary asks it again.
     if (saved.phase === "summary" || saved.phase === "generating")
       return { ...saved, phase: "document", log: [...saved.log, system(T.askDocument)] };
@@ -191,30 +214,45 @@ export function SalesChat({
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [revealed, state.phase, typing]);
 
+  // Every answer (a user bubble) keeps the state before it, for "Voltar".
   const update = useCallback((patch: Partial<SalesState>, bubbles: Bubble[] = []) => {
-    setState((s) => ({ ...s, ...patch, log: [...s.log, ...bubbles] }));
+    setState((s) => ({
+      ...s,
+      ...patch,
+      history: bubbles.some((b) => b.from === "user") ? [...s.history, snapshot(s)] : s.history,
+      log: [...s.log, ...bubbles],
+    }));
   }, []);
 
   function start(name: string, niche: string | null) {
     const clean = name.trim().slice(0, 80);
     const detected = niche ?? detectNiche(clean);
     if (detected) {
-      setState((s) => ({
-        ...s,
-        name: clean,
-        detected,
-        phase: "confirm",
-        log: [...s.log, user(clean), system(fill(T.confirmNiche, { niche: nicheLabel(detected) }))],
-      }));
+      update({ name: clean, detected, phase: "confirm" }, [
+        user(clean),
+        system(fill(T.confirmNiche, { niche: nicheLabel(detected) })),
+      ]);
     } else {
-      setState((s) => ({
-        ...s,
-        name: clean,
-        phase: "pick",
-        log: [...s.log, user(clean), system(T.askNiche)],
-      }));
+      update({ name: clean, detected: null, phase: "pick" }, [user(clean), system(T.askNiche)]);
     }
   }
+
+  /** Undoes the last answer: the question comes back as it was. */
+  function back() {
+    const previous = state.history.at(-1);
+    if (!previous) return;
+    const restored = { ...previous, history: state.history.slice(0, -1) };
+    setState(restored);
+    setRevealed(restored.log.length);
+    setNotice(null);
+  }
+
+  const canGoBack =
+    state.history.length > 0 &&
+    !typing &&
+    state.phase !== "generating" &&
+    state.phase !== "pix" &&
+    state.phase !== "paid";
 
   function chooseNiche(key: string, label: string) {
     update({ nicheKey: key, phase: "models" }, [
@@ -351,16 +389,7 @@ export function SalesChat({
           return;
         }
         setDocument(digits);
-        const plan = T.plans[state.tier ?? "site"];
-        update({ phase: "summary" }, [
-          user(masked),
-          system(
-            fill(T.summary, {
-              plan: plan.label,
-              price: firstPaymentText(state.tier ?? "site", state.cycle ?? "monthly"),
-            }),
-          ),
-        ]);
+        update({ phase: "summary", editing: false }, [user(masked), system(summaryText(state))]);
         return;
       }
     }
@@ -448,8 +477,28 @@ export function SalesChat({
             onPlan={(tier) =>
               update({ tier, phase: "cycle" }, [user(T.plans[tier].label), system(T.askCycle)])
             }
-            onCycle={(cycle) =>
-              update({ cycle, phase: "payer" }, [user(T.cycles[cycle].label), system(T.askPayer)])
+            onCycle={(cycle) => {
+              const answer = user(T.cycles[cycle].label);
+              if (!state.editing) {
+                update({ cycle, phase: "payer" }, [answer, system(T.askPayer)]);
+              } else if (document) {
+                // Plan changed from the summary: the data is already here.
+                update({ cycle, phase: "summary", editing: false }, [
+                  answer,
+                  system(summaryText({ ...state, cycle })),
+                ]);
+              } else {
+                update({ cycle, phase: "document", editing: false }, [
+                  answer,
+                  system(T.askDocument),
+                ]);
+              }
+            }}
+            onChangePlan={() =>
+              update({ phase: "plan", editing: true }, [user(T.changePlan), system(T.askPlan)])
+            }
+            onChangeData={() =>
+              update({ phase: "payer", editing: false }, [user(T.changeData), system(T.askPayer)])
             }
             onEmailFix={(accept) => {
               const email = accept ? state.emailFix! : state.email;
@@ -465,6 +514,19 @@ export function SalesChat({
           />
         )}
       </div>
+
+      {canGoBack ? (
+        <div className="border-t bg-card px-3 pt-2">
+          <button
+            type="button"
+            onClick={back}
+            className="flex min-h-9 items-center gap-1.5 rounded-full px-2 text-[15px] font-medium text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="size-4" />
+            {T.back}
+          </button>
+        </div>
+      ) : null}
 
       {composer ? (
         <Composer key={state.phase} enabled={!typing} settings={composer} onSubmit={submitText} />
@@ -580,6 +642,8 @@ function Options({
   onCycle,
   onEmailFix,
   onGenerate,
+  onChangePlan,
+  onChangeData,
   onRenew,
   onEnterPanel,
 }: {
@@ -595,6 +659,8 @@ function Options({
   onCycle: (cycle: Cycle) => void;
   onEmailFix: (accept: boolean) => void;
   onGenerate: () => void;
+  onChangePlan: () => void;
+  onChangeData: () => void;
   onRenew: () => void;
   onEnterPanel: () => void;
 }) {
@@ -753,6 +819,22 @@ function Options({
           <button type="button" className={primary} onClick={onGenerate}>
             {T.generate}
           </button>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={onChangePlan}
+              className="min-h-11 rounded-xl border bg-card text-[15px] font-medium"
+            >
+              {T.changePlan}
+            </button>
+            <button
+              type="button"
+              onClick={onChangeData}
+              className="min-h-11 rounded-xl border bg-card text-[15px] font-medium"
+            >
+              {T.changeData}
+            </button>
+          </div>
           <a
             href="/termos"
             target="_blank"

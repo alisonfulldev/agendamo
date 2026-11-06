@@ -191,6 +191,9 @@ test("sales chat (/conheca): models with her name, plan, Pix, paid opens the pan
   await chat.getByRole("button", { name: "Voltar para a conversa" }).click();
   await chat.getByRole("button", { name: "Modelo 2", exact: true }).click();
   await chat.getByRole("button", { name: "Quero o meu" }).click();
+  // A plan tapped by mistake: "Voltar" brings the question back.
+  await chat.getByRole("button", { name: /Só a agenda/ }).click();
+  await chat.getByRole("button", { name: "Voltar", exact: true }).click();
   await chat.getByRole("button", { name: /Site \+ Agenda/ }).click();
   await chat.getByRole("button", { name: /Mensal/ }).click();
   await chat.getByPlaceholder("Nome completo").fill("Maria Chat Teste");
@@ -202,6 +205,12 @@ test("sales chat (/conheca): models with her name, plan, Pix, paid opens the pan
   await chat.getByPlaceholder("CPF ou CNPJ").fill("529.982.247-25");
   await chat.keyboard.press("Enter");
   await expect(chat.getByText(/Site \+ Agenda · R\$ 49,00\/mês/)).toBeVisible();
+  await expect(chat.getByText(/Maria Chat Teste/).last()).toBeVisible();
+  // The summary lets her change the plan without typing everything again.
+  await chat.getByRole("button", { name: "Trocar plano" }).click();
+  await chat.getByRole("button", { name: /Site \+ Agenda/ }).click();
+  await chat.getByRole("button", { name: /Anual/ }).click();
+  await expect(chat.getByText(/Site \+ Agenda · R\$ 490,00\/ano/)).toBeVisible();
   await chat.getByRole("button", { name: "Gerar meu Pix" }).click();
   await expect(chat.getByRole("img", { name: "QR code do Pix" })).toBeVisible({ timeout: 20_000 });
   await expect(chat.getByText("Aguardando o pagamento…")).toBeVisible();

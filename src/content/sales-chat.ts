@@ -75,7 +75,11 @@ export const SALES_CHAT = {
   askDocument: "Por último, o seu CPF ou CNPJ (o banco pede para gerar o Pix).",
   documentPlaceholder: "CPF ou CNPJ",
   documentInvalid: "Esse CPF ou CNPJ não parece válido. Confere pra mim?",
-  summary: "{plan} · {price}. Ao pagar, você concorda com os Termos de uso.",
+  summary:
+    "Confere se está tudo certo:\n\n🏪 {business}\n📦 {plan} · {price}\n👤 {payer}\n✉️ {email}\n📱 {whatsapp}\n\nAo pagar, você concorda com os Termos de uso.",
+  changePlan: "Trocar plano",
+  changeData: "Corrigir meus dados",
+  back: "Voltar",
   terms: "Ler os Termos de uso",
   generate: "Gerar meu Pix",
   generating: "Gerando seu Pix…",
