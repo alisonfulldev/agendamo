@@ -12,7 +12,10 @@ import {
   type AdminStatus,
 } from "@/lib/admin-metrics";
 import type { Business, Subscription } from "@/lib/db/types";
+import { OUTREACH_LABELS, outreachMessage, outreachSituation } from "@/content/admin-outreach";
+import { whatsappLink } from "@/content/sales-script";
 import { formatBRL } from "@/lib/money";
+import { normalizeBrPhone } from "@/lib/phone";
 import { signupOrigin, type SignupSource } from "@/lib/signup-origin";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -51,6 +54,7 @@ export default async function AdminBusinessesPage({ searchParams }: PageProps<"/
     viewsResult,
     emails,
     createdResult,
+    pagesResult,
   ] = await Promise.all([
     db.from("businesses").select("*").order("created_at", { ascending: false }).limit(5000),
     db.from("subscriptions").select("*"),
@@ -68,7 +72,18 @@ export default async function AdminBusinessesPage({ searchParams }: PageProps<"/
       .select("business_id, details")
       .eq("action", "business.created")
       .limit(10000),
+    // WhatsApp and photo of each account, for "Chamar no WhatsApp".
+    db.from("page_settings").select("business_id, whatsapp_number, avatar_key").limit(10000),
   ]);
+  const pages = new Map(
+    (
+      (pagesResult.data ?? []) as {
+        business_id: string;
+        whatsapp_number: string | null;
+        avatar_key: string | null;
+      }[]
+    ).map((p) => [p.business_id, p]),
+  );
   const origins = new Map<string, SignupSource>();
   for (const row of (createdResult.data ?? []) as {
     business_id: string;
@@ -257,6 +272,15 @@ export default async function AdminBusinessesPage({ searchParams }: PageProps<"/
                         {views.get(b.id) ?? 0}
                       </td>
                       <td className="py-2.5">
+                        <OutreachButton
+                          business={b}
+                          status={situation}
+                          phone={pages.get(b.id)?.whatsapp_number ?? null}
+                          hasPhoto={Boolean(pages.get(b.id)?.avatar_key)}
+                          hasBooking={(bookings.get(b.id) ?? 0) > 0}
+                          link={businessUrl(brand, `/${b.slug}`)}
+                          now={now}
+                        />
                         <BusinessActions
                           id={b.id}
                           suspended={Boolean(b.suspended_at)}
@@ -272,5 +296,56 @@ export default async function AdminBusinessesPage({ searchParams }: PageProps<"/
         )}
       </AdminSection>
     </>
+  );
+}
+
+/** "Chamar no WhatsApp": a personal message for the account's situation (src/content/admin-outreach). */
+function OutreachButton({
+  business,
+  status,
+  phone,
+  hasPhoto,
+  hasBooking,
+  link,
+  now,
+}: {
+  business: Business;
+  status: AdminStatus;
+  phone: string | null;
+  hasPhoto: boolean;
+  hasBooking: boolean;
+  link: string;
+  now: Date;
+}) {
+  const number = normalizeBrPhone(phone);
+  const situation = outreachSituation(
+    {
+      status,
+      createdAt: business.created_at,
+      trialEndsAt: business.trial_ends_at,
+      hasBooking,
+      hasPhoto,
+    },
+    now,
+  );
+  if (!situation) return null;
+  if (!number) {
+    return <span className="mb-1.5 block text-xs text-muted-foreground">Sem WhatsApp</span>;
+  }
+  const text = outreachMessage(
+    situation,
+    { businessName: business.name, link, trialEndsAt: business.trial_ends_at },
+    now,
+  );
+  return (
+    <a
+      href={whatsappLink(number, text)}
+      target="_blank"
+      rel="noreferrer"
+      className="mb-1.5 inline-flex flex-col rounded-lg border px-2.5 py-1 text-xs font-medium whitespace-nowrap hover:bg-muted"
+    >
+      Chamar no WhatsApp
+      <span className="font-normal text-muted-foreground">{OUTREACH_LABELS[situation]}</span>
+    </a>
   );
 }
