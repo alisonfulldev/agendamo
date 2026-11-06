@@ -119,7 +119,7 @@ test("sales chat (/criar-site): store with her name, custom offer, Pix and the p
   await chat.getByRole("button", { name: "Prefiro um dos modelos" }).click();
   await chat.getByRole("button", { name: "Vitrine", exact: true }).click();
   // The end of the tour: her store is ready as a preview; publishing is the plan.
-  await expect(chat.getByText(/Sua loja está pronta!/)).toBeVisible();
+  await expect(chat.getByText(/A base da sua loja está pronta!/)).toBeVisible();
   await chat.getByRole("button", { name: "Ver minha loja" }).click();
   await expect(frame.getByText(/Prévia da sua loja/)).toBeVisible();
   await chat.getByRole("button", { name: "Voltar para a conversa" }).click();

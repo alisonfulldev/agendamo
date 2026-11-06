@@ -54,8 +54,8 @@ export const WEB_CHAT = {
   },
   /** The end of the tour: her site is ready as a preview; publishing (and editing) is the plan. */
   ready: {
-    site: `Seu site está pronto! 🎉 Toque em “Ver meu site” para ver como ficou. Para publicar e editar tudo quando quiser (textos, fotos, cores e serviços): ${month}/mês.`,
-    store: `Sua loja está pronta! 🎉 Toque em “Ver minha loja” para ver como ficou. Para publicar e editar tudo quando quiser (textos, fotos, cores e produtos): ${month}/mês.`,
+    site: `A base do seu site está pronta! 🎉 Toque em “Ver meu site” para ver como vai ficar. Depois de publicar, você coloca seus serviços, fotos, textos e cores e deixa do seu jeito. Para publicar e editar: ${month}/mês.`,
+    store: `A base da sua loja está pronta! 🎉 Toque em “Ver minha loja” para ver como vai ficar. Depois de publicar, você coloca seus produtos, fotos, textos e cores e deixa do seu jeito. Para publicar e editar: ${month}/mês.`,
   },
   previewOpen: { site: "Ver meu site", store: "Ver minha loja" },
   howNext: { site: "Publicar meu site", store: "Publicar minha loja" },
@@ -79,7 +79,7 @@ export const WEB_CHAT = {
   paidCustom:
     "Agora é só responder umas perguntas no painel (Site personalizado) para a nossa equipe criar o seu.",
   paidEmail:
-    "Também mandei o acesso para {email}. No painel você coloca seu logo, fotos, textos e o que você vende.",
+    "Agora é com você: entre no painel e deixe do seu jeito, com seu logo, fotos, textos e o que você vende. Também mandei o acesso para {email}.",
   domain: `Quer um endereço só seu, tipo seunegocio.com.br? É opcional: custa ${formatBRL(PLAN_PRICES.webDomainYearly)} por ano e dá para pedir depois, com calma.`,
   openSite: "Ver meu site",
   openStore: "Ver minha loja",
