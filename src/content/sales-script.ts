@@ -32,7 +32,7 @@ export function salesScript(niche: BrandConfig, origin: string): ScriptMessage[]
     {
       id: "how",
       title: "3. Como funciona",
-      text: `✅ Seu site no Google, com suas fotos, serviços e preços\n✅ ${capitalize(customer)} escolhe o ${service} e o horário livre e já fica marcado\n✅ Recebe confirmação e lembrete (menos faltas)\n✅ Você recebe aviso no celular a cada agendamento\n✅ Agenda, ${niche.terms.customer.plural}, financeiro e sinal pelo Pix\n\nTudo por ${SITE_PRICE_TEXT.monthly}, sem fidelidade. (Só a agenda, sem o site: ${PRICE_TEXT.monthly}.)
+      text: `Aqui tem a apresentação completa, leva 1 minuto: ${origin}/apresentacao?ramo=${route}\n\nResumindo:\n✅ Seu site no Google, com suas fotos, serviços e preços\n✅ ${capitalize(customer)} escolhe o ${service} e o horário livre e já fica marcado\n✅ Recebe confirmação e lembrete (menos faltas)\n✅ Você recebe aviso no celular a cada agendamento\n✅ Agenda, ${niche.terms.customer.plural}, financeiro e sinal pelo Pix\n\nTudo por ${SITE_PRICE_TEXT.monthly}, sem fidelidade. (Só a agenda, sem o site: ${PRICE_TEXT.monthly}.)
 
 Quer seu próprio endereço, tipo seunegocio.com.br? Fica ${formatBRL(PLAN_PRICES.domainYearly)} por ano, registrado no seu nome.`,
     },

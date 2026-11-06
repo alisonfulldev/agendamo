@@ -44,6 +44,25 @@ export default async function AdminSalesScriptPage({
           ))}
         </ul>
       </AdminSection>
+      <AdminSection title="Links para mandar">
+        <ul className="flex flex-col gap-3 text-sm">
+          {[
+            ["Apresentação geral", `${origin}/apresentacao`],
+            [
+              `Apresentação de ${niche.niche!.name}`,
+              `${origin}/apresentacao?ramo=${niche.niche!.route}`,
+            ],
+            ["Modelo 1 (Vibrante)", `${origin}/exemplo/${niche.niche!.route}`],
+            ["Modelo 2 (Elegante)", `${origin}/exemplo/${niche.niche!.route}?modelo=elegante`],
+          ].map(([label, url]) => (
+            <li key={label} className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <span className="min-w-44 font-medium">{label}</span>
+              <span className="min-w-0 flex-1 break-all text-muted-foreground">{url}</span>
+              <CopyTextButton text={url!} label="Copiar" />
+            </li>
+          ))}
+        </ul>
+      </AdminSection>
       {messages.map((m) => (
         <AdminSection key={m.id} title={m.title}>
           <pre className="rounded-lg bg-muted p-3 text-sm whitespace-pre-wrap">{m.text}</pre>
