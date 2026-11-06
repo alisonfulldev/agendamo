@@ -15,6 +15,7 @@ export const META_PIXEL_ID = "3760458420790268";
 /** First path segments of the sales site that are not niche pages. */
 export const SITE_SECTIONS = [
   "agendamento",
+  "site-e-agenda",
   "ajuda",
   "cadastro",
   "comecar",

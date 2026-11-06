@@ -16,6 +16,7 @@ export const SITE_TEMPLATES = [
   "recursos",
   "ajuda",
   "precos",
+  "site-e-agenda",
   "outro",
 ] as const;
 export type SiteTemplate = (typeof SITE_TEMPLATES)[number];

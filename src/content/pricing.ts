@@ -1,4 +1,12 @@
-import { PLAN_NAME, PLAN_PRICES, PRICE_TEXT, reais, TRIAL_DAYS } from "@/lib/plans";
+import {
+  PLAN_NAME,
+  PLAN_PRICES,
+  PRICE_TEXT,
+  reais,
+  SITE_PLAN_NAME,
+  SITE_PRICE_TEXT,
+  TRIAL_DAYS,
+} from "@/lib/plans";
 
 /**
  * Texts of /precos (D1, 2026-10-16). Values always come from src/lib/plans.ts, never typed here.
@@ -7,11 +15,11 @@ import { PLAN_NAME, PLAN_PRICES, PRICE_TEXT, reais, TRIAL_DAYS } from "@/lib/pla
  */
 export const PRICING = {
   meta: {
-    title: "Preços do MeetChat: grátis no modo WhatsApp ou plano completo",
-    description: `Comece grátis, sem cartão: seu link no ar com pedidos pelo WhatsApp. Agenda completa e lembretes automáticos no plano ${PLAN_NAME}, por ${PRICE_TEXT.monthly}.`,
+    title: "Preços do MeetChat: site + agenda online ou só a agenda",
+    description: `Site profissional + agenda online por ${SITE_PRICE_TEXT.monthly}, ou só a agenda online por ${PRICE_TEXT.monthly}. Comece grátis, sem cartão, com ${TRIAL_DAYS} dias para testar.`,
   },
   title: "Preços",
-  intro: `Comece grátis, sem cartão. Todo cadastro começa com ${TRIAL_DAYS} dias do plano ${PLAN_NAME}. Depois, você escolhe: continuar grátis no modo WhatsApp ou assinar.`,
+  intro: `Comece grátis, sem cartão. Todo cadastro começa com ${TRIAL_DAYS} dias com tudo liberado, inclusive o seu site. Depois, você escolhe: ${SITE_PLAN_NAME}, só a agenda (${PLAN_NAME}) ou continuar grátis no modo WhatsApp.`,
   tiers: [
     {
       id: "gratis",
@@ -32,12 +40,33 @@ export const PRICING = {
       ],
     },
     {
+      id: "site",
+      name: SITE_PLAN_NAME,
+      summary: "Seu site profissional pronto para o Google, com a agenda online dentro.",
+      price: SITE_PRICE_TEXT.monthly,
+      priceNote: `ou ${SITE_PRICE_TEXT.yearly} no anual. Sem fidelidade. ${TRIAL_DAYS} dias grátis para testar, sem cartão.`,
+      highlight: true,
+      items: [
+        {
+          included: true,
+          text: "Site do seu negócio, na sua cor, com serviços, preços, fotos e avaliações",
+        },
+        {
+          included: true,
+          text: "Feito para aparecer no Google, com o seu endereço e a sua cidade",
+        },
+        { included: true, text: "Você muda modelo, cores, foto e textos quando quiser" },
+        { included: true, text: "Todo botão “Agendar” do site abre a sua agenda online" },
+        { included: true, text: `Tudo do plano ${PLAN_NAME}` },
+      ],
+    },
+    {
       id: "completo",
       name: PLAN_NAME,
       summary: "O cliente marca sozinho e o horário já fica na sua agenda.",
       price: PRICE_TEXT.monthly,
       priceNote: `ou ${PRICE_TEXT.yearlyPerMonth} no anual (${PRICE_TEXT.yearly}). ${TRIAL_DAYS} dias grátis para testar, sem cartão.`,
-      highlight: true,
+      highlight: false,
       items: [
         { included: true, text: "Agendamentos ilimitados, com o horário reservado na hora" },
         { included: true, text: "Confirmação e lembrete automáticos para o cliente" },
@@ -56,6 +85,10 @@ export const PRICING = {
   cta: "Comece grátis, sem cartão",
   ctaNote: "Pronto em 1 minuto.",
   faq: [
+    {
+      question: `Qual a diferença entre o ${SITE_PLAN_NAME} e o ${PLAN_NAME}?`,
+      answer: `Os dois têm a agenda online completa. O ${SITE_PLAN_NAME} vem também com um site profissional do seu negócio, pronto para o Google, que você personaliza no painel. O ${PLAN_NAME} é só a agenda, com o link de agendamento para a bio e o WhatsApp.`,
+    },
     {
       question: "O que acontece quando acaba o teste?",
       answer:

@@ -3,6 +3,7 @@ import { publishedArticles } from "@/content/articles";
 import { COMPARISONS } from "@/content/comparisons";
 import { HOME } from "@/content/home";
 import { INTENT_PAGES } from "@/content/intent-pages";
+import { SITE_AGENDA_INDEX, SITE_AGENDA_PAGES } from "@/content/site-agenda-pages";
 import { nicheHomeContent } from "@/content/niche-pages";
 import { publishedTopics } from "@/content/niche-guides";
 import { PRICING } from "@/content/pricing";
@@ -40,6 +41,13 @@ export function llmsTxt(): string {
     "",
     ...niches.map((b) =>
       line(b.niche!.name, `/${b.niche!.route}`, nicheHomeContent(b).meta.description),
+    ),
+    "",
+    "## Site + agenda online por área",
+    "",
+    line("Site + agenda online", "/site-e-agenda", SITE_AGENDA_INDEX.description),
+    ...SITE_AGENDA_PAGES.filter((p) => passesQualityGate(`/site-e-agenda/${p.slug}`)).map((p) =>
+      line(p.h1, `/site-e-agenda/${p.slug}`, p.description),
     ),
     "",
     "## Guias",

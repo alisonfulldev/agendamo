@@ -1,6 +1,6 @@
 import { PLATFORM, type BrandConfig } from "@/brands";
 import { CONTACT_EMAIL } from "@/content/contact";
-import { PLAN_NAME, PLAN_PRICES } from "@/lib/plans";
+import { PLAN_NAME, PLAN_PRICES, SITE_PLAN_NAME } from "@/lib/plans";
 import { siteUrl, withoutQuery } from "@/lib/site-url";
 
 /**
@@ -75,6 +75,25 @@ export function websiteNode(): JsonLdNode {
 const price = (cents: number) => (cents / 100).toFixed(2);
 
 /** The two levels shown on /precos (D1): free WhatsApp mode and the paid plan, per month. */
+/** A monthly paid plan as an Offer. */
+function monthlyOffer(name: string, cents: number): JsonLdNode {
+  return {
+    "@type": "Offer",
+    name,
+    price: price(cents),
+    priceCurrency: "BRL",
+    url: site("/precos"),
+    priceSpecification: {
+      "@type": "UnitPriceSpecification",
+      price: price(cents),
+      priceCurrency: "BRL",
+      unitText: "mês",
+      referenceQuantity: { "@type": "QuantitativeValue", value: 1, unitCode: "MON" },
+    },
+  };
+}
+
+/** The plans of /precos, in the same order: free WhatsApp mode, "Site + Agenda", "Completo". */
 export function pricingOffers(): JsonLdNode[] {
   return [
     {
@@ -84,20 +103,8 @@ export function pricingOffers(): JsonLdNode[] {
       priceCurrency: "BRL",
       url: site("/precos"),
     },
-    {
-      "@type": "Offer",
-      name: PLAN_NAME,
-      price: price(PLAN_PRICES.complete.monthly),
-      priceCurrency: "BRL",
-      url: site("/precos"),
-      priceSpecification: {
-        "@type": "UnitPriceSpecification",
-        price: price(PLAN_PRICES.complete.monthly),
-        priceCurrency: "BRL",
-        unitText: "mês",
-        referenceQuantity: { "@type": "QuantitativeValue", value: 1, unitCode: "MON" },
-      },
-    },
+    monthlyOffer(SITE_PLAN_NAME, PLAN_PRICES.site.monthly),
+    monthlyOffer(PLAN_NAME, PLAN_PRICES.complete.monthly),
   ];
 }
 

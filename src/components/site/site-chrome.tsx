@@ -139,6 +139,7 @@ export function SiteFooter() {
       title: "MeetChat",
       links: [
         { label: "Preços", href: "/precos" },
+        { label: "Site + agenda online", href: "/site-e-agenda" },
         { label: "Central de ajuda", href: "/ajuda" },
         { label: "Contato", href: `mailto:${CONTACT_EMAIL}` },
         { label: "Termos de uso", href: "/termos" },

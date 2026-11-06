@@ -2,6 +2,7 @@ import { NICHES } from "@/brands";
 import { publishedArticles } from "@/content/articles";
 import { NICHE_LANDINGS, type LandingCopy } from "@/content/copy/landing";
 import { INTENT_PAGES } from "@/content/intent-pages";
+import { SITE_AGENDA_PAGES } from "@/content/site-agenda-pages";
 import { nicheHomeContent } from "@/content/niche-pages";
 import {
   getPublishedGuide,
@@ -196,6 +197,13 @@ export function qualityReport(): QualityResult[] {
     ...INTENT_PAGES.map((page) => ({
       path: `/agendamento/${page.slug}`,
       template: "agendamento",
+      text: topicText(page),
+      blocks: topicBlocks(page),
+      minBlocks: QUALITY_CONFIG.minUniqueBlocks,
+    })),
+    ...SITE_AGENDA_PAGES.map((page) => ({
+      path: `/site-e-agenda/${page.slug}`,
+      template: "site-e-agenda",
       text: topicText(page),
       blocks: topicBlocks(page),
       minBlocks: QUALITY_CONFIG.minUniqueBlocks,

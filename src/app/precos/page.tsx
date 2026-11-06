@@ -41,7 +41,7 @@ export default function PricingPage() {
           {PRICING.intro}
         </p>
 
-        <div className="mt-10 grid gap-5 md:grid-cols-2">
+        <div className="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
           {PRICING.tiers.map((tier) => (
             <section
               key={tier.name}

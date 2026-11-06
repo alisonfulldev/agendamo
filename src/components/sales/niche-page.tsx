@@ -8,6 +8,7 @@ import { NICHE_LANDINGS, type LandingCopy } from "@/content/copy/landing";
 import { getPublishedGuide, NICHE_TOPICS, TOPIC_LABELS } from "@/content/niche-guides";
 import { TOOLS } from "@/content/tools";
 import { nicheHomeContent } from "@/content/niche-pages";
+import { SITE_AGENDA_PAGES } from "@/content/site-agenda-pages";
 import { getDirectoryCities } from "@/lib/directory/data";
 import { experimentVariant } from "@/lib/experiments-server";
 import { pageMetadata } from "@/lib/seo/metadata";
@@ -71,12 +72,18 @@ async function NicheLanding({ brand, copy }: { brand: BrandConfig; copy: Landing
   const extras: LinkGroup[] = [
     {
       title: `Guias para ${niche.name.toLowerCase()}`,
-      links: guide
-        ? NICHE_TOPICS.filter((t) => guide.topics[t]).map((t) => ({
-            label: TOPIC_LABELS[t],
-            href: `/${niche.route}/${t}`,
-          }))
-        : [],
+      links: [
+        ...SITE_AGENDA_PAGES.filter((p) => p.nicheKey === brand.key).map((p) => ({
+          label: p.h1,
+          href: `/site-e-agenda/${p.slug}`,
+        })),
+        ...(guide
+          ? NICHE_TOPICS.filter((t) => guide.topics[t]).map((t) => ({
+              label: TOPIC_LABELS[t],
+              href: `/${niche.route}/${t}`,
+            }))
+          : []),
+      ],
     },
     {
       title: "Ferramentas grátis",

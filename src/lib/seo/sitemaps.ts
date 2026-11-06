@@ -2,6 +2,7 @@ import { NICHES } from "@/brands";
 import { ARTICLE_SECTIONS, publishedArticles, type ArticleSection } from "@/content/articles";
 import { COMPARISONS, COMPARISONS_INDEX } from "@/content/comparisons";
 import { INTENT_INDEX, INTENT_PAGES } from "@/content/intent-pages";
+import { SITE_AGENDA_INDEX, SITE_AGENDA_PAGES } from "@/content/site-agenda-pages";
 import { publishedTopics } from "@/content/niche-guides";
 import { NICHE_SEO } from "@/content/niche-seo";
 import { NICHE_PAGES_UPDATED_AT, SITE_PAGES } from "@/content/site-pages";
@@ -73,6 +74,17 @@ export function directoryUrls(
 }
 
 /** Cross-niche guides (/agendamento and its pages) that pass the gate. */
+/** "Site + agenda online" pages (2026-11-06): the hub and each area that passes the quality gate. */
+export function siteAgendaUrls(url: (path: string) => string): SitemapUrl[] {
+  return [
+    { loc: url("/site-e-agenda"), lastmod: SITE_AGENDA_INDEX.updatedAt },
+    ...SITE_AGENDA_PAGES.filter((p) => passesQualityGate(`/site-e-agenda/${p.slug}`)).map((p) => ({
+      loc: url(`/site-e-agenda/${p.slug}`),
+      lastmod: p.updatedAt,
+    })),
+  ];
+}
+
 export function intentUrls(url: (path: string) => string): SitemapUrl[] {
   return [
     { loc: url("/agendamento"), lastmod: INTENT_INDEX.updatedAt },

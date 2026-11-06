@@ -347,3 +347,10 @@ Revise antes de aplicar no Supabase de produção.
 - Para contas criadas antes de 2026-11-05 (`ANNOUNCEMENT_CUTOFF`), textos em `src/content/site-plan-announcement.ts` por situação: em teste ("seu teste agora vem com um site"), assinante do Completo ("tenha também o seu site", mudar de plano) e modo de espera ("site + agenda: assine e tudo volta").
 - Popup no painel (`news-prompt.tsx`) para teste e Completo, uma vez por aparelho, nunca no tutorial, com prioridade na vez do dia.
 - E-mail e push únicos na categoria "Novidades e dicas" (descadastro de um clique; quem desligou não recebe), disparados pelo admin em Admin › Anúncio (prévia dos textos, contagem por grupo, confirmação; lotes de 40; uma vez por conta via notification_log `announce_site_plan`; audit_log `admin.announcement_sent`).
+
+## SEO do Site + Agenda (2026-11-06)
+
+- Páginas públicas `/site-e-agenda` (índice) e `/site-e-agenda/<profissão>` (`src/content/site-agenda-pages.ts`), uma por área, com resposta direta, seções próprias (por que precisa de site, o que vai no site, como o cliente agenda), bloco de preço e FAQ do ramo (FAQPage no JSON-LD). Vendem pelo cadastro do site (teste de 14 dias); a venda pelo WhatsApp, o domínio e o site personalizado ficam só no x1. Links para os sites de exemplo do ramo.
+- Primeiro lote de 10 áreas (nutricionista, psicólogo, clínica de estética, salão de beleza, barbearia, cílios e sobrancelhas, manicure, fisioterapeuta, personal trainer, studio de pilates); semelhança máxima entre elas de 16% no filtro de qualidade (limite 70%). As outras áreas entram depois, com texto próprio.
+- No sitemap (arquivo "site-e-agenda"), no `llms.txt` (seção "Site + agenda online por área"), no rodapé e nos guias da página de cada ramo. Tipo de página `site-e-agenda` nos eventos do site. Slug reservado.
+- `/precos` com três colunas (Grátis no modo WhatsApp, Site + Agenda em destaque, Completo) e a FAQ da diferença entre os planos; as ofertas do JSON-LD seguem a mesma ordem.
