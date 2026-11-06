@@ -3,10 +3,14 @@ import Link from "next/link";
 
 import { PageHeader } from "@/components/panel/page-header";
 import { UpgradeNotice } from "@/components/panel/upgrade-notice";
-import { requireOwner } from "@/lib/business/context";
+import { getBusinessContext, requireOwner } from "@/lib/business/context";
 import { getPlanFeatures } from "@/lib/plans";
+import { panelWords } from "@/lib/panel-words";
 
-export const metadata: Metadata = { title: "Vendas" };
+export async function generateMetadata(): Promise<Metadata> {
+  const context = await getBusinessContext();
+  return { title: context ? panelWords(context.brand).salesTitle : "Vendas" };
+}
 
 const TOOLS = [
   {
@@ -32,7 +36,7 @@ const TOOLS = [
   {
     href: "/painel/vendas/pacotes",
     title: "Pacotes",
-    text: "Sessões vendidas com saldo por cliente.",
+    text: "Sessões pagas adiantado, com saldo por cliente.",
   },
   { href: "/painel/vendas/cupons", title: "Cupons", text: "Descontos aplicados no agendamento." },
   {
@@ -43,18 +47,16 @@ const TOOLS = [
 ];
 
 export default async function SalesPage() {
-  const { business } = await requireOwner();
+  const { business, brand } = await requireOwner();
+  const words = panelWords(brand);
   const features = getPlanFeatures(business);
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="Vendas"
-        description="Ferramentas para encher a agenda e trazer clientes de volta."
-      />
+      <PageHeader title={words.salesTitle} description={words.salesDescription} />
       {!features.salesTools ? (
         <UpgradeNotice
           features={features}
-          title="Ferramentas de venda"
+          title={words.salesTools}
           description="Reativação, lista de espera, indicações, pacotes, cupons e artes prontas para divulgar."
         />
       ) : null}
@@ -66,7 +68,7 @@ export default async function SalesPage() {
               className="block rounded-xl border bg-card p-5 hover:border-primary"
             >
               <span className="font-semibold">{tool.title}</span>
-              <span className="mt-1 block text-sm text-muted-foreground">{tool.text}</span>
+              <span className="mt-1 block text-sm text-muted-foreground">{words.t(tool.text)}</span>
             </Link>
           </li>
         ))}

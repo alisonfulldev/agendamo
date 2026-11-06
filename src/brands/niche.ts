@@ -187,6 +187,7 @@ export function nicheBrand<T extends NicheBrandInput>(input: T) {
       testimonials: input.testimonial ? [{ ...input.testimonial, isExample: true }] : [],
     },
     suggestedServices: input.services,
+    kind,
     terms: { customer, service, appointment },
     chatMessages: chat,
     messageTemplates: {

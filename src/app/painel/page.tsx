@@ -27,6 +27,7 @@ import { earnedBonuses } from "@/lib/trial-bonus";
 import { LINK_BONUS_DAYS, LINK_BONUS_PARAM } from "@/lib/trial-bonus-shared";
 
 import { NextStepCard, type HomeStep } from "./next-step";
+import { panelWords } from "@/lib/panel-words";
 
 export const metadata: Metadata = { title: "Início" };
 
@@ -51,6 +52,7 @@ interface TodayAppointment {
  */
 export default async function PanelHomePage({ searchParams }: PageProps<"/painel">) {
   const { business, brand, user, isOwner } = await requireBusiness();
+  const { t } = panelWords(brand);
   const { senha } = await searchParams;
   const pageUrl = businessUrl(brand, `/${business.slug}`);
   // The own domain once live (sold with the plan), else the MeetChat address.
@@ -123,7 +125,7 @@ export default async function PanelHomePage({ searchParams }: PageProps<"/painel
       attention.push({
         href: "/painel/agenda",
         title: `${pendingApproval.count} ${plural(pendingApproval.count, "agendamento para aprovar", "agendamentos para aprovar")}`,
-        text: "Confirme ou recuse na agenda. O cliente recebe a resposta por e-mail.",
+        text: t("Confirme ou recuse na agenda. O cliente recebe a resposta por e-mail."),
         action: "Ver",
       });
     }
@@ -201,7 +203,9 @@ export default async function PanelHomePage({ searchParams }: PageProps<"/painel
               id: "bio",
               done: bonuses.has("bio"),
               label: "Coloque o link na bio do Instagram",
-              hint: "No Instagram: Editar perfil › Links › Adicionar link externo. Quando o primeiro cliente chegar por ele, seu teste ganha mais dias.",
+              hint: t(
+                "No Instagram: Editar perfil › Links › Adicionar link externo. Quando o primeiro cliente chegar por ele, seu teste ganha mais dias.",
+              ),
               badge: `+${LINK_BONUS_DAYS} dias`,
               action: { copy: `${pageUrl}?${LINK_BONUS_PARAM}=bio`, label: "Copiar link da bio" },
             },
@@ -219,7 +223,9 @@ export default async function PanelHomePage({ searchParams }: PageProps<"/painel
               id: "share",
               done: (views.count ?? 0) > 0,
               label: "Divulgue seu link",
-              hint: "Na bio do Instagram, no WhatsApp Business e no seu Perfil da Empresa no Google. Marca sozinho quando um cliente abrir.",
+              hint: t(
+                "Na bio do Instagram, no WhatsApp Business e no seu Perfil da Empresa no Google. Marca sozinho quando um cliente abrir.",
+              ),
               action: { copy: pageUrl, label: "Copiar link" },
             },
           ] satisfies HomeStep[])),
@@ -377,7 +383,7 @@ export default async function PanelHomePage({ searchParams }: PageProps<"/painel
           <div>
             <p className="text-sm font-medium">Agendamento (chat)</p>
             <p className="mb-1.5 text-xs text-muted-foreground">
-              Para WhatsApp, Instagram, Google e onde os clientes estiverem.
+              {t("Para WhatsApp, Instagram, Google e onde os clientes estiverem.")}
             </p>
             <CopyLink url={pageUrl} />
           </div>

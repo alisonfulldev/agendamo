@@ -12,6 +12,7 @@ import { createClient } from "@/lib/supabase/server";
 
 import { AgendaView } from "./agenda-view";
 import type { AgendaAppointment, AgendaBlock, AgendaCatalog } from "./types";
+import { panelWords } from "@/lib/panel-words";
 
 export const metadata: Metadata = { title: "Agenda" };
 
@@ -22,6 +23,7 @@ function minutesOf(iso: string, timezone: string): number {
 
 export default async function AgendaPage({ searchParams }: PageProps<"/painel/agenda">) {
   const context = await requireBusiness();
+  const { t } = panelWords(context.brand);
   const { business } = context;
   const features = getPlanFeatures(business);
   if (!features.agenda) {
@@ -31,7 +33,9 @@ export default async function AgendaPage({ searchParams }: PageProps<"/painel/ag
         <UpgradeNotice
           features={features}
           title="Sua agenda, organizada sozinha"
-          description="Com o Completo, as clientes escolhem um horário livre pelo chat e tudo aparece aqui."
+          description={t(
+            "Com o Completo, as clientes escolhem um horário livre pelo chat e tudo aparece aqui.",
+          )}
           bullets={[
             "Visão de dia e semana",
             "Agendamento manual com horários livres calculados",
@@ -133,7 +137,7 @@ export default async function AgendaPage({ searchParams }: PageProps<"/painel/ag
         endMinute: endDate === date ? minutesOf(a.ends_at as string, business.timezone) : 24 * 60,
         timeLabel: `${formatInTimeZone(new Date(a.starts_at as string), business.timezone, "HH:mm")}–${formatInTimeZone(new Date(a.ends_at as string), business.timezone, "HH:mm")}`,
         customerId: customer?.id ?? "",
-        customerName: customer?.name ?? "Cliente",
+        customerName: customer?.name ?? t("Cliente"),
         customerPhone: customer?.phone ?? null,
         services: lines.map((l) => l.name).join(" + "),
         priceCents:

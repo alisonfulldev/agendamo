@@ -11,6 +11,7 @@ export function toClientBrand(brand: BrandConfig): ClientBrand {
     key: brand.key,
     name: brand.name,
     logo: brand.logo,
+    kind: brand.kind,
     terms: brand.terms,
     chatMessages: brand.chatMessages,
     socialLinks: brand.socialLinks,

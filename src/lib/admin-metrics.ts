@@ -6,14 +6,17 @@ export function monthlyRevenue(
   subscription: Pick<
     Subscription,
     "plan" | "billing_cycle" | "status" | "addons" | "extra_professionals"
-  >,
+  > &
+    Partial<Pick<Subscription, "tier">>,
 ): number {
   if (subscription.status !== "active" && subscription.status !== "overdue") return 0;
   const extras = subscription.extra_professionals ?? 0;
+  // Price of the subscription's plan ("Site + Agenda" or "Completo").
+  const tier = subscription.tier ?? "complete";
   const plan =
     subscription.billing_cycle === "yearly"
-      ? Math.round(subscriptionPrice("yearly", extras) / 12)
-      : subscriptionPrice("monthly", extras);
+      ? Math.round(subscriptionPrice("yearly", extras, 0, tier) / 12)
+      : subscriptionPrice("monthly", extras, 0, tier);
   const featured =
     (subscription.addons.featured ?? []).filter((f) => f.status === "active").length *
     PLAN_PRICES.featured.monthly;

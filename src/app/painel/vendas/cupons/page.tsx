@@ -11,11 +11,13 @@ import { createClient } from "@/lib/supabase/server";
 
 import { deleteCouponAction } from "../actions";
 import { CouponForm } from "../forms";
+import { panelWords } from "@/lib/panel-words";
 
 export const metadata: Metadata = { title: "Cupons" };
 
 export default async function CouponsPage() {
-  const { business } = await requireOwner();
+  const { business, brand } = await requireOwner();
+  const { t } = panelWords(brand);
   const supabase = await createClient();
   const { data } = await supabase
     .from("business_coupons")
@@ -28,7 +30,9 @@ export default async function CouponsPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Cupons"
-        description="A cliente digita o código no chat de agendamento. Cupons vencidos ou esgotados são recusados."
+        description={t(
+          "A cliente digita o código no chat de agendamento. Cupons vencidos ou esgotados são recusados.",
+        )}
       />
       <Section title="Novo cupom">
         <CouponForm />

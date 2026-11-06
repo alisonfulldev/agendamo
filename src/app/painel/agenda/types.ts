@@ -51,6 +51,6 @@ export const STATUS_LABELS: Record<AppointmentStatus, string> = {
 /** Panel notice after a reschedule: the e-mail only goes when the customer left one. */
 export function rescheduledText(emailed: boolean): string {
   return emailed
-    ? "Remarcado. O cliente recebeu o novo horário por e-mail."
-    : "Remarcado. O cliente não deixou e-mail: avise pelo WhatsApp.";
+    ? "Remarcado. O novo horário foi enviado por e-mail."
+    : "Remarcado. Sem e-mail cadastrado: avise pelo WhatsApp.";
 }

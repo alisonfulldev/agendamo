@@ -177,7 +177,7 @@ export function BriefingForm({
       </div>
       <div className={field}>
         <Label htmlFor="audience" className="font-medium">
-          8. Quem são seus clientes?
+          8. Quem é o seu público?
         </Label>
         <Textarea
           id="audience"

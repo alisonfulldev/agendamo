@@ -56,8 +56,8 @@ export default async function PageEditorPage() {
           description={
             <>
               <p className="mb-2 text-sm">
-                Seu link abre direto no chat; as informações abaixo aparecem quando a cliente toca
-                na sua foto.
+                Seu link abre direto no chat; as informações abaixo aparecem quando alguém toca na
+                sua foto.
               </p>
               <CopyLink url={pageUrl} />
             </>

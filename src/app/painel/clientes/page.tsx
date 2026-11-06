@@ -6,19 +6,25 @@ import { PageHeader } from "@/components/panel/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { requireBusiness } from "@/lib/business/context";
+import { getBusinessContext, requireBusiness } from "@/lib/business/context";
 import type { Customer } from "@/lib/db/types";
 import { formatBrPhone } from "@/lib/phone";
 import { createClient } from "@/lib/supabase/server";
 
 import { ImportDialog } from "./import-dialog";
+import { panelWords } from "@/lib/panel-words";
 
-export const metadata: Metadata = { title: "Clientes" };
+export async function generateMetadata(): Promise<Metadata> {
+  const context = await getBusinessContext();
+  const words = context ? panelWords(context.brand) : null;
+  return { title: words?.Customers ?? "Clientes" };
+}
 
 const PAGE_SIZE = 50;
 
 export default async function CustomersPage({ searchParams }: PageProps<"/painel/clientes">) {
   const { business, isOwner, brand } = await requireBusiness();
+  const { t } = panelWords(brand);
   const term = brand.terms.customer;
   const title = term.plural.charAt(0).toUpperCase() + term.plural.slice(1);
   const params = await searchParams;
@@ -63,7 +69,7 @@ export default async function CustomersPage({ searchParams }: PageProps<"/painel
           role="status"
           className="mb-4 rounded-lg bg-accent px-3 py-2 text-sm text-accent-foreground"
         >
-          Dados da cliente excluídos.
+          {t("Dados da cliente excluídos.")}
         </p>
       ) : null}
       <form className="mb-4 flex flex-wrap gap-2" role="search">
@@ -71,7 +77,7 @@ export default async function CustomersPage({ searchParams }: PageProps<"/painel
           name="q"
           defaultValue={q}
           placeholder="Buscar por nome ou telefone"
-          aria-label="Buscar cliente"
+          aria-label={t("Buscar cliente")}
           className="h-10 max-w-xs"
         />
         <label className="flex items-center gap-2 text-sm">
@@ -90,7 +96,7 @@ export default async function CustomersPage({ searchParams }: PageProps<"/painel
       </form>
       {customers.length === 0 ? (
         <p className="rounded-xl border border-dashed p-8 text-center text-muted-foreground">
-          Nenhuma cliente encontrada.
+          {t("Nenhuma cliente encontrada.")}
         </p>
       ) : (
         <ul className="divide-y rounded-xl border bg-card">

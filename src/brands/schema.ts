@@ -229,6 +229,8 @@ export const brandConfigSchema = z.object({
       }),
     )
     .min(1),
+  /** "health": health professionals (no sales wording in the panel: paciente, divulgação). */
+  kind: z.enum(["general", "health"]).default("general"),
   terms: z.object({
     customer: term,
     service: term,

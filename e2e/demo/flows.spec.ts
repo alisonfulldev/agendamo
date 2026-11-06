@@ -327,7 +327,7 @@ test("owner reschedules: the panel offers a ready WhatsApp message to tell the c
   await page.getByRole("radiogroup", { name: "Horários livres" }).getByRole("radio").last().click();
   await page.getByRole("button", { name: "Confirmar novo horário" }).click();
 
-  await expect(page.getByText(/não deixou e-mail: avise pelo WhatsApp/)).toBeVisible();
+  await expect(page.getByText(/Sem e-mail cadastrado: avise pelo WhatsApp/)).toBeVisible();
   await expect(page.getByRole("link", { name: "Avisar pelo WhatsApp" })).toHaveAttribute(
     "href",
     /wa\.me\/55\d+\?text=.*remarcado/,

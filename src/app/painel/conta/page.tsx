@@ -7,12 +7,14 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getBusinessContext } from "@/lib/business/context";
 
 import { ChangePasswordForm, CreatePasswordForm, DeleteAccountDialog } from "./forms";
+import { adaptCustomer } from "@/lib/panel-words";
 
 export const metadata: Metadata = { title: "Conta" };
 
 export default async function AccountPage() {
   const user = await requireUser();
   const context = await getBusinessContext();
+  const t = (text: string) => (context ? adaptCustomer(text, context.brand) : text);
   const isOwner = Boolean(context?.isOwner);
   // Accounts created with the e-mail code start without a password.
   const { data: account } = await createAdminClient().auth.admin.getUserById(user.id);
@@ -50,7 +52,7 @@ export default async function AccountPage() {
                   <a href={`/painel/conta/exportar?formato=csv&tabela=${table}`} download>
                     {
                       {
-                        customers: "Clientes",
+                        customers: t("Clientes"),
                         appointments: "Agendamentos",
                         services: "Serviços",
                         booking_requests: "Pedidos",
@@ -69,7 +71,9 @@ export default async function AccountPage() {
         title="Excluir conta"
         description={
           isOwner
-            ? "Apaga o negócio, a página, a agenda, os clientes e as fotos. Não dá para desfazer."
+            ? t(
+                "Apaga o negócio, a página, a agenda, os clientes e as fotos. Não dá para desfazer.",
+              )
             : "Apaga seu acesso. Não dá para desfazer."
         }
       >

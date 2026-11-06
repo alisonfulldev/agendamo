@@ -16,6 +16,7 @@ import {
 import { initialFormState } from "@/lib/forms";
 
 import { changePasswordAction, createPasswordAction, deleteAccountAction } from "./actions";
+import { usePanelWords } from "@/components/panel/use-panel-words";
 
 /** For accounts created with the e-mail code (no password yet). */
 export function CreatePasswordForm() {
@@ -84,6 +85,7 @@ export function DeleteAccountDialog({
   confirmationWord: string;
   hasBusiness: boolean;
 }) {
+  const { t } = usePanelWords();
   const [state, action] = useActionState(deleteAccountAction, initialFormState);
   const [open, setOpen] = useState(false);
   return (
@@ -96,7 +98,9 @@ export function DeleteAccountDialog({
           <DialogTitle>Excluir conta</DialogTitle>
           <DialogDescription>
             {hasBusiness
-              ? "Sua página, agenda, clientes, fotos e todos os dados do negócio serão apagados para sempre."
+              ? t(
+                  "Sua página, agenda, clientes, fotos e todos os dados do negócio serão apagados para sempre.",
+                )
               : "Sua conta será apagada para sempre."}
           </DialogDescription>
         </DialogHeader>

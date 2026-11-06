@@ -21,6 +21,7 @@ import { normalizeBrPhone } from "@/lib/phone";
 import { getPlanFeatures } from "@/lib/plans";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { adaptCustomer } from "@/lib/panel-words";
 
 /** Agenda features need Pro/Team (or an active trial), checked on the server (rule 6). */
 async function requireAgenda(): Promise<BusinessContext> {
@@ -191,7 +192,8 @@ export async function createManualAppointmentAction(input: unknown): Promise<Man
     customer = { existingId: data.customerId };
   } else if (data.newCustomer) {
     const phone = normalizeBrPhone(data.newCustomer.phone);
-    if (!phone) return { ok: false, message: "WhatsApp da cliente inválido." };
+    if (!phone)
+      return { ok: false, message: adaptCustomer("WhatsApp da cliente inválido.", context.brand) };
     customer = {
       name: data.newCustomer.name,
       phone,
@@ -199,7 +201,7 @@ export async function createManualAppointmentAction(input: unknown): Promise<Man
       marketingOptIn: false,
     };
   } else {
-    return { ok: false, message: "Escolha ou cadastre a cliente." };
+    return { ok: false, message: adaptCustomer("Escolha ou cadastre a cliente.", context.brand) };
   }
 
   const catalog = await loadCatalog(context.business.id);
@@ -217,7 +219,7 @@ export async function createManualAppointmentAction(input: unknown): Promise<Man
     const messages = {
       conflict: "Esse horário não está mais livre. Escolha outro.",
       invalid: "Confira os serviços escolhidos.",
-      blocked: "Cliente bloqueada.",
+      blocked: adaptCustomer("Cliente bloqueada.", context.brand),
       unavailable: "Horário indisponível.",
       coupon_invalid: "Cupom inválido.",
       limit: "Assinatura inativa: assine o Completo para agendar pelo chat.",

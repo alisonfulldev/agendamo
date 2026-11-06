@@ -7,7 +7,7 @@ import type { BrandConfig } from "@/brands";
 /** Brand data available to Client Components (sales copy stays on the server). */
 export type ClientBrand = Pick<
   BrandConfig,
-  "key" | "name" | "logo" | "terms" | "chatMessages" | "socialLinks"
+  "key" | "name" | "logo" | "kind" | "terms" | "chatMessages" | "socialLinks"
 >;
 
 const BrandContext = createContext<ClientBrand | null>(null);

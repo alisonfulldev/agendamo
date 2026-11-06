@@ -35,6 +35,19 @@ describe("monthlyRevenue", () => {
     ).toBe(2390 + 2 * 900 + 4900);
     expect(monthlyRevenue({ ...sub, status: "cancelled" })).toBe(0);
   });
+
+  it("uses the price of the subscription's plan (Site + Agenda)", () => {
+    const sub = {
+      plan: "complete" as const,
+      tier: "site" as const,
+      billing_cycle: "monthly" as const,
+      status: "active" as const,
+      addons: {},
+      extra_professionals: 0,
+    };
+    expect(monthlyRevenue(sub)).toBe(4900);
+    expect(monthlyRevenue({ ...sub, billing_cycle: "yearly" })).toBe(Math.round(49000 / 12));
+  });
 });
 
 describe("computeMetrics", () => {

@@ -6,7 +6,7 @@ import { notFound } from "next/navigation";
 import { PageHeader, Section } from "@/components/panel/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { requireBusiness } from "@/lib/business/context";
+import { getBusinessContext, requireBusiness } from "@/lib/business/context";
 import type { Customer } from "@/lib/db/types";
 import { formatBRL } from "@/lib/money";
 import { formatBrPhone, whatsappLink } from "@/lib/phone";
@@ -14,8 +14,13 @@ import { createClient } from "@/lib/supabase/server";
 
 import { STATUS_LABELS } from "../../agenda/types";
 import { NotesForm, OwnerActions, SellPackage } from "./customer-actions";
+import { panelWords } from "@/lib/panel-words";
 
-export const metadata: Metadata = { title: "Cliente" };
+export async function generateMetadata(): Promise<Metadata> {
+  const context = await getBusinessContext();
+  const words = context ? panelWords(context.brand) : null;
+  return { title: words?.Customer ?? "Cliente" };
+}
 
 export default async function CustomerPage({ params }: PageProps<"/painel/clientes/[id]">) {
   const { id } = await params;

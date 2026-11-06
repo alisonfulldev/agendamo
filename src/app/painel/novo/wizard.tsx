@@ -156,7 +156,7 @@ export function OnboardingWizard({
         {
           [
             "Como seu negócio se chama?",
-            "Como as clientes falam com você?",
+            "Como as pessoas falam com você?",
             "Quais serviços você oferece?",
             "Quando você atende?",
           ][step]
@@ -233,7 +233,7 @@ export function OnboardingWizard({
             name="whatsapp"
             label="WhatsApp"
             error={errors.whatsapp}
-            hint="Para a cliente falar com você quando não houver horário livre."
+            hint="Para quem agenda falar com você quando não houver horário livre."
           >
             <Input
               id="whatsapp"

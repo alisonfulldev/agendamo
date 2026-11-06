@@ -20,6 +20,7 @@ import {
 } from "./actions";
 import { SlotPicker } from "./slot-picker";
 import type { AgendaCatalog } from "./types";
+import { usePanelWords } from "@/components/panel/use-panel-words";
 
 const selectClass = "h-10 w-full rounded-lg border border-input bg-transparent px-2 text-sm";
 
@@ -30,6 +31,7 @@ function CustomerPicker({
   value: CustomerOption | { name: string; phone: string; email: string } | null;
   onChange: (value: CustomerOption | { name: string; phone: string; email: string } | null) => void;
 }) {
+  const { t } = usePanelWords();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<{ query: string; list: CustomerOption[] } | null>(null);
   const [creating, setCreating] = useState(false);
@@ -64,7 +66,7 @@ function CustomerPicker({
     return (
       <div className="flex flex-col gap-2 rounded-lg border p-3">
         <Input
-          aria-label="Nome da cliente"
+          aria-label={t("Nome da cliente")}
           placeholder="Nome"
           value={draft.name}
           onChange={(e) => {
@@ -75,7 +77,7 @@ function CustomerPicker({
           className="h-10"
         />
         <Input
-          aria-label="WhatsApp da cliente"
+          aria-label={t("WhatsApp da cliente")}
           placeholder="WhatsApp"
           inputMode="tel"
           value={draft.phone}
@@ -87,7 +89,7 @@ function CustomerPicker({
           className="h-10"
         />
         <Input
-          aria-label="E-mail da cliente"
+          aria-label={t("E-mail da cliente")}
           placeholder="E-mail (opcional, para avisos)"
           type="email"
           value={draft.email}
@@ -105,7 +107,7 @@ function CustomerPicker({
           className="self-start"
           onClick={() => setCreating(false)}
         >
-          Buscar cliente cadastrada
+          {t("Buscar cliente cadastrada")}
         </Button>
       </div>
     );
@@ -115,7 +117,7 @@ function CustomerPicker({
   return (
     <div className="flex flex-col gap-2">
       <Input
-        aria-label="Buscar cliente"
+        aria-label={t("Buscar cliente")}
         placeholder="Buscar por nome ou telefone"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
@@ -146,7 +148,7 @@ function CustomerPicker({
         className="self-start"
         onClick={() => setCreating(true)}
       >
-        Nova cliente
+        {t("Nova cliente")}
       </Button>
     </div>
   );
@@ -168,6 +170,7 @@ export function NewAppointmentDialog({
   defaultProfessional: string;
   onDone: () => void;
 }) {
+  const { t } = usePanelWords();
   const [customer, setCustomer] = useState<
     CustomerOption | { name: string; phone: string; email: string } | null
   >(null);
@@ -228,7 +231,7 @@ export function NewAppointmentDialog({
           <DialogTitle>Novo agendamento</DialogTitle>
         </DialogHeader>
         <div className="flex flex-col gap-4">
-          <FieldShell name="customer" label="Cliente">
+          <FieldShell name="customer" label={t("Cliente")}>
             <CustomerPicker value={customer} onChange={setCustomer} />
           </FieldShell>
 
@@ -272,7 +275,7 @@ export function NewAppointmentDialog({
           </fieldset>
 
           {usablePackages.length > 0 ? (
-            <FieldShell name="package" label="Pacote da cliente">
+            <FieldShell name="package" label={t("Pacote da cliente")}>
               <select
                 id="package"
                 value={packageId ?? ""}

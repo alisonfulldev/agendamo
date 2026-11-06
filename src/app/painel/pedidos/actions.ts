@@ -12,6 +12,7 @@ import { requireOwner } from "@/lib/business/context";
 import { sendEmail } from "@/lib/email/send";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { adaptCustomer } from "@/lib/panel-words";
 
 const schema = z.object({
   id: z.uuid(),
@@ -51,7 +52,7 @@ async function loadOpenRequest(businessId: string, id: string) {
 
 /** Owner accepts the time chosen in the request: creates the appointment and tells the customer. */
 export async function confirmRequestAction(id: string): Promise<RequestDecision> {
-  const { business } = await requireOwner();
+  const { business, brand } = await requireOwner();
   if (!z.uuid().safeParse(id).success) return { ok: false, message: "Pedido inválido." };
   const request = await loadOpenRequest(business.id, id);
   if (!request) return { ok: false, message: "Esse pedido já foi resolvido." };
@@ -85,9 +86,12 @@ export async function confirmRequestAction(id: string): Promise<RequestDecision>
       ok: false,
       message:
         result.error === "unavailable" || result.error === "conflict"
-          ? "Esse horário não está mais livre. Combine outro com a cliente pelo WhatsApp."
+          ? adaptCustomer(
+              "Esse horário não está mais livre. Combine outro com a cliente pelo WhatsApp.",
+              brand,
+            )
           : result.error === "blocked"
-            ? "Essa cliente está bloqueada."
+            ? adaptCustomer("Essa cliente está bloqueada.", brand)
             : "Não foi possível confirmar agora.",
     };
   }

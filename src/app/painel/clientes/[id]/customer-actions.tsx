@@ -14,6 +14,7 @@ import {
   sellPackageAction,
   setBlockedAction,
 } from "../actions";
+import { usePanelWords } from "@/components/panel/use-panel-words";
 
 export function NotesForm({
   id,
@@ -76,6 +77,7 @@ export function OwnerActions({
   blocked: boolean;
   slug: string;
 }) {
+  const { t } = usePanelWords();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [confirm, setConfirm] = useState("");
@@ -93,16 +95,16 @@ export function OwnerActions({
             })
           }
         >
-          {blocked ? "Desbloquear" : "Bloquear cliente"}
+          {blocked ? "Desbloquear" : t("Bloquear cliente")}
         </Button>
       </div>
       <details className="rounded-lg border p-3 text-sm">
         <summary className="cursor-pointer font-medium">
-          Excluir dados da cliente (pedido de LGPD)
+          {t("Excluir dados da cliente (pedido de LGPD)")}
         </summary>
         <p className="mt-2 text-muted-foreground">
-          Apaga a cliente, os agendamentos dela e os pedidos feitos com o mesmo e-mail. Não dá para
-          desfazer.
+          {t("Apaga a cliente, os agendamentos e os pedidos feitos com o mesmo e-mail.")} Não dá
+          para desfazer.
         </p>
         <div className="mt-2 flex flex-wrap gap-2">
           <Input
@@ -133,12 +135,15 @@ export function SellPackage({
   customerId: string;
   packages: { id: string; name: string }[];
 }) {
+  const { t } = usePanelWords();
   const router = useRouter();
   const [packageId, setPackageId] = useState(packages[0]?.id ?? "");
   const [message, setMessage] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   if (packages.length === 0)
-    return <p className="text-sm text-muted-foreground">Crie pacotes em Vendas → Pacotes.</p>;
+    return (
+      <p className="text-sm text-muted-foreground">{t("Crie pacotes em Vendas → Pacotes.")}</p>
+    );
   return (
     <div className="flex flex-wrap items-center gap-2">
       <select
@@ -165,7 +170,7 @@ export function SellPackage({
           })
         }
       >
-        Registrar venda (pago fora da plataforma)
+        Registrar pacote (pago fora da plataforma)
       </Button>
       {message ? <span className="text-sm text-muted-foreground">{message}</span> : null}
     </div>

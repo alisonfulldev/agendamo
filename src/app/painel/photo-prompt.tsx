@@ -95,7 +95,7 @@ export function PhotoPrompt({
           </DialogTitle>
           <DialogDescription>
             {complete
-              ? "É assim que os seus clientes vão ver o seu perfil."
+              ? "É assim que quem agenda vai ver o seu perfil."
               : "Quem toca no seu link vê primeiro a sua foto. Escolha qualquer foto da galeria: o MeetChat ajusta o tamanho sozinho."}
           </DialogDescription>
         </DialogHeader>

@@ -6,6 +6,7 @@ import { useState } from "react";
 import { FieldShell } from "@/components/forms/field";
 import { CopyTextButton } from "@/components/panel/copy-text-button";
 import { Button } from "@/components/ui/button";
+import { usePanelWords } from "@/components/panel/use-panel-words";
 
 const TYPES = [
   { value: "agenda-aberta", label: "Agenda aberta" },
@@ -29,6 +30,7 @@ export function ArtStudio({
   /** Ready texts with the real free times, per art type (empty when nothing is free). */
   texts: Partial<Record<string, string>>;
 }) {
+  const { t } = usePanelWords();
   const [type, setType] = useState(
     TYPES.some((t) => t.value === initialType) ? initialType : "agenda-aberta",
   );
@@ -104,7 +106,9 @@ export function ArtStudio({
               </select>
             </FieldShell>
           ) : (
-            <p className="text-sm text-muted-foreground">Crie um cupom ativo em Vendas → Cupons.</p>
+            <p className="text-sm text-muted-foreground">
+              {t("Crie um cupom ativo em Vendas → Cupons.")}
+            </p>
           )
         ) : null}
         <div className="flex flex-wrap gap-2">

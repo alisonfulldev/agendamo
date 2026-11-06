@@ -9,11 +9,13 @@ import { createClient } from "@/lib/supabase/server";
 
 import { togglePackageAction } from "../actions";
 import { PackageForm } from "../forms";
+import { panelWords } from "@/lib/panel-words";
 
 export const metadata: Metadata = { title: "Pacotes" };
 
 export default async function PackagesPage() {
-  const { business } = await requireOwner();
+  const { business, brand } = await requireOwner();
+  const { t } = panelWords(brand);
   const supabase = await createClient();
   const [packages, services, sold] = await Promise.all([
     supabase
@@ -44,12 +46,17 @@ export default async function PackagesPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Pacotes"
-        description="Venda sessões adiantadas (o pagamento é combinado com a cliente, fora da plataforma). A sessão é descontada ao concluir o atendimento."
+        description={t(
+          "Registre sessões pagas adiantadas (o pagamento é combinado com a cliente, fora da plataforma). A sessão é descontada ao concluir o atendimento.",
+        )}
       />
       <Section title="Novo pacote">
         <PackageForm services={(services.data ?? []) as { id: string; name: string }[]} />
       </Section>
-      <Section title="Seus pacotes" description="Para vender, abra a ficha da cliente em Clientes.">
+      <Section
+        title="Seus pacotes"
+        description={t("Para registrar, abra a ficha da cliente em Clientes.")}
+      >
         {(packages.data ?? []).length === 0 ? (
           <p className="text-sm text-muted-foreground">Nenhum pacote ainda.</p>
         ) : (

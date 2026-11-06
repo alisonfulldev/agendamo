@@ -4,6 +4,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { usePanelWords } from "@/components/panel/use-panel-words";
 import { TOUR_STEPS, TOUR_TEXT } from "@/content/tour";
 
 import { finishTourAction, tourPendingAction } from "./tour-actions";
@@ -60,6 +61,7 @@ export function PanelTour() {
   const [target, setTarget] = useState<HTMLElement | null>(null);
   const [rect, setRect] = useState<Rect | null>(null);
 
+  const { t } = usePanelWords();
   const step = index === null ? null : TOUR_STEPS[index];
 
   const current = useRef<number | null>(null);
@@ -178,9 +180,9 @@ export function PanelTour() {
     >
       <p className="text-xs font-semibold text-primary">{counter}</p>
       <p id="tour-title" className="mt-1 text-lg font-semibold">
-        {step.title}
+        {t(step.title)}
       </p>
-      <p className="mt-1 text-[15px] leading-relaxed text-muted-foreground">{step.text}</p>
+      <p className="mt-1 text-[15px] leading-relaxed text-muted-foreground">{t(step.text)}</p>
       <div className="mt-4 flex items-center justify-between gap-3">
         <button
           type="button"

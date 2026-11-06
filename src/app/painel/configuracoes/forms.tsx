@@ -128,7 +128,7 @@ export function BusinessSettingsForm({ business }: { business: Business }) {
           min={1}
           max={20}
           defaultValue={business.no_show_limit ?? ""}
-          hint="Acima disso, a cliente só consegue pedir horário para você aprovar."
+          hint="Acima disso, só dá para pedir horário para você aprovar."
           state={state}
         />
       </div>
@@ -378,7 +378,7 @@ export function PixForm({ settings }: { settings: PageSettings | null }) {
           rows={4}
           maxLength={2000}
           defaultValue={settings?.deposit_policy_text ?? ""}
-          hint="O cliente vê e aceita antes de pagar. Guardamos o texto aceito, com a data."
+          hint="Quem agenda vê e aceita antes de pagar. Guardamos o texto aceito, com a data."
           state={state}
         />
       </div>

@@ -20,11 +20,13 @@ import {
   ResourcesEditor,
   StaffAccess,
 } from "./team-forms";
+import { panelWords } from "@/lib/panel-words";
 
 export const metadata: Metadata = { title: "Equipe" };
 
 export default async function TeamPage() {
-  const { business } = await requireOwner();
+  const { business, brand } = await requireOwner();
+  const { t } = panelWords(brand);
   const features = getPlanFeatures(business);
   const supabase = await createClient();
   const [pros, services, links, hours, members, resources, serviceResources] = await Promise.all([
@@ -113,7 +115,7 @@ export default async function TeamPage() {
           title="Monte sua equipe"
           description="No plano Equipe você cadastra até 5 profissionais, cada um com agenda, serviços e preços próprios."
           bullets={[
-            "Cliente escolhe o profissional ou “qualquer profissional”",
+            t("Cliente escolhe o profissional ou “qualquer profissional”"),
             "Cada profissional acessa só a própria agenda",
             "Salas e macas compartilhadas sem conflito",
             "Relatório por profissional",

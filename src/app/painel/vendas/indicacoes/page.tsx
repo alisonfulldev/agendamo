@@ -11,11 +11,13 @@ import { createClient } from "@/lib/supabase/server";
 
 import { setRewardAppliedAction } from "../actions";
 import { MarketingSettingsForm } from "../forms";
+import { panelWords } from "@/lib/panel-words";
 
 export const metadata: Metadata = { title: "Indicações" };
 
 export default async function ReferralsPage() {
   const { business, brand } = await requireOwner();
+  const { t } = panelWords(brand);
   const supabase = await createClient();
   const [{ data }, settings] = await Promise.all([
     supabase
@@ -38,7 +40,9 @@ export default async function ReferralsPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Indicações"
-        description="Depois de cada atendimento a cliente recebe um link próprio para indicar. A indicação vale quando a indicada conclui o primeiro atendimento."
+        description={t(
+          "Depois de cada atendimento a cliente recebe um link próprio para indicar. A indicação vale quando a pessoa indicada conclui o primeiro atendimento.",
+        )}
       />
       <Section title="Recompensa">
         <MarketingSettingsForm settings={settings} section="referral" />

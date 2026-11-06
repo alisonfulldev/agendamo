@@ -12,6 +12,7 @@ import { createClient } from "@/lib/supabase/server";
 
 import { DecisionButtons } from "./decision-buttons";
 import { StatusSelect } from "./status-select";
+import { panelWords } from "@/lib/panel-words";
 
 export const metadata: Metadata = { title: "Pedidos de horário" };
 
@@ -22,7 +23,8 @@ function isUpcoming(iso: string | null): boolean {
 const PERIODS = { morning: "manhã", afternoon: "tarde", evening: "noite" } as const;
 
 export default async function RequestsPage({ searchParams }: PageProps<"/painel/pedidos">) {
-  const { business } = await requireOwner();
+  const { business, brand } = await requireOwner();
+  const { t } = panelWords(brand);
   const { todos } = await searchParams;
   const supabase = await createClient();
   let query = supabase
@@ -44,7 +46,9 @@ export default async function RequestsPage({ searchParams }: PageProps<"/painel/
     <div>
       <PageHeader
         title="Pedidos de horário"
-        description="Pedidos feitos no seu chat (“Pedir horário”). Confirme o horário escolhido pela cliente e ela recebe o aviso."
+        description={t(
+          "Pedidos feitos no seu chat (“Pedir horário”). Confirme o horário escolhido pela cliente e ela recebe o aviso.",
+        )}
         actions={
           <Button asChild variant="outline" size="sm">
             <a href={todos ? "/painel/pedidos" : "/painel/pedidos?todos=1"}>
@@ -100,7 +104,7 @@ export default async function RequestsPage({ searchParams }: PageProps<"/painel/
                     ) : null}
                     {request.appointment_id ? (
                       <p className="text-sm font-medium text-primary">
-                        Horário confirmado{request.email ? " (cliente avisada por e-mail)" : ""}
+                        Horário confirmado{request.email ? t(" (cliente avisada por e-mail)") : ""}
                       </p>
                     ) : null}
                     <p className="text-xs text-muted-foreground">

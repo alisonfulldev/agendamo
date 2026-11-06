@@ -82,7 +82,7 @@ export function PageInfoForm({
             label="Link para avaliar no Google"
             placeholder="https://g.page/r/..."
             defaultValue={settings?.google_review_url ?? ""}
-            hint="Usado para convidar clientes satisfeitas a avaliar você no Google."
+            hint="Usado para convidar quem já foi atendido a avaliar você no Google."
             state={state}
           />
         </div>

@@ -620,7 +620,7 @@ export const SUPPORT_ITEMS: SupportItem[] = [
   },
   {
     id: "packages",
-    question: "Como vendo pacotes de sessões?",
+    question: "Como crio pacotes de sessões?",
     answer:
       "Em Vendas › Pacotes, crie o pacote (serviço, sessões e preço). Depois associe ao cliente em Clientes.",
     keywords: ["pacote", "pacotes", "sessoes", "plano de sessoes", "mensalidade", "credito"],

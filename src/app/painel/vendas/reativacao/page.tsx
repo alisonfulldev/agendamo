@@ -18,6 +18,7 @@ import { fillTemplate } from "@/lib/sales/settings";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 import { MarketingSettingsForm } from "../forms";
+import { panelWords } from "@/lib/panel-words";
 
 export const metadata: Metadata = { title: "Reativação e retorno" };
 
@@ -69,6 +70,7 @@ function CustomerList({
 
 export default async function ReactivationPage() {
   const { business, brand } = await requireOwner();
+  const { t } = panelWords(brand);
   const settings = await loadMarketingSettings(business.id, brand);
   const { data } = await createAdminClient().rpc("customer_activity", {
     p_business_id: business.id,
@@ -93,7 +95,7 @@ export default async function ReactivationPage() {
         description="Quem sumiu, quem está na hora de voltar e quem faz aniversário este mês."
       />
       <Section
-        title={`Clientes que sumiram (${inactive.length})`}
+        title={t(`Clientes que sumiram (${inactive.length})`)}
         description={`Sem visita há ${settings.inactive_days} dias ou mais e sem horário marcado.`}
       >
         <CustomerList

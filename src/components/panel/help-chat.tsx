@@ -13,6 +13,8 @@ import {
 } from "@/content/support";
 import { suggestionsFor, understand, visibleSupport } from "@/lib/support-search";
 
+import { usePanelWords } from "./use-panel-words";
+
 /** Screens that stay open in waiting mode (subscription and account). */
 const WAITING_OPEN = ["/painel/plano", "/painel/conta"];
 
@@ -51,7 +53,21 @@ function findTarget(target: SupportTarget): HTMLElement | null {
 export function HelpChat({ isOwner, waiting }: { isOwner: boolean; waiting: boolean }) {
   const router = useRouter();
   const pathname = usePathname();
-  const items = useMemo(() => visibleSupport(SUPPORT_ITEMS, isOwner), [isOwner]);
+  const { t } = usePanelWords();
+  // Answers in the niche's words (paciente, aluno…); the original keywords still match.
+  const items = useMemo(
+    () =>
+      visibleSupport(SUPPORT_ITEMS, isOwner).map((item) => ({
+        ...item,
+        question: t(item.question),
+        answer: t(item.answer),
+        keywords: [...new Set([...item.keywords, ...item.keywords.map(t)])],
+        target: item.target?.section
+          ? { ...item.target, section: t(item.target.section) }
+          : item.target,
+      })),
+    [isOwner, t],
+  );
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [query, setQuery] = useState("");

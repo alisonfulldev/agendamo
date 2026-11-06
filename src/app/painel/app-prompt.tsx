@@ -146,7 +146,7 @@ export function AppPrompt({
           </DialogTitle>
           <DialogDescription className="text-center">
             {install
-              ? "Seu painel na tela do celular, como um app: abre num toque e avisa na hora quando um cliente marcar, cancelar ou remarcar."
+              ? "Seu painel na tela do celular, como um app: abre num toque e avisa na hora quando alguém marcar, cancelar ou remarcar."
               : "Ative os avisos neste aparelho. Você recebe um aviso a cada agendamento, cancelamento e remarcação, sem precisar abrir o painel."}
           </DialogDescription>
         </DialogHeader>

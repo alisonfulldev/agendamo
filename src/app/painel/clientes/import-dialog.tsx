@@ -17,6 +17,7 @@ import { mapCustomerHeaders, parseCsv } from "@/lib/csv";
 import { formatBrPhone, normalizeBrPhone } from "@/lib/phone";
 
 import { importCustomersAction, type ImportReport } from "./actions";
+import { usePanelWords } from "@/components/panel/use-panel-words";
 
 interface PreviewRow {
   line: number;
@@ -28,6 +29,7 @@ interface PreviewRow {
 }
 
 export function ImportDialog() {
+  const { t } = usePanelWords();
   const router = useRouter();
   const [rows, setRows] = useState<PreviewRow[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -79,9 +81,9 @@ export function ImportDialog() {
       </DialogTrigger>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Importar clientes</DialogTitle>
+          <DialogTitle>{t("Importar clientes")}</DialogTitle>
           <DialogDescription>
-            Arquivo CSV com as colunas Nome, Telefone e, se quiser, E-mail e Aniversário. Clientes
+            Arquivo CSV com as colunas Nome, Telefone e, se quiser, E-mail e Aniversário. Contatos
             com o mesmo telefone não se repetem.
           </DialogDescription>
         </DialogHeader>
@@ -153,7 +155,7 @@ export function ImportDialog() {
                 })
               }
             >
-              {pending ? "Importando…" : `Importar ${okRows.length} clientes`}
+              {pending ? "Importando…" : t(`Importar ${okRows.length} clientes`)}
             </Button>
           </>
         ) : null}

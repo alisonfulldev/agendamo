@@ -10,6 +10,7 @@ import { getPlanFeatures } from "@/lib/plans";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 import { DepositDecision, RefundForm } from "./decisions";
+import { panelWords } from "@/lib/panel-words";
 
 export const metadata: Metadata = { title: "Sinais pelo Pix" };
 
@@ -37,7 +38,8 @@ const STATUS: Record<string, string> = {
  * Decisions are always the professional's.
  */
 export default async function DepositsPage() {
-  const { business } = await requireOwner();
+  const { business, brand } = await requireOwner();
+  const { t } = panelWords(brand);
   const features = getPlanFeatures(business);
   const tz = business.timezone;
   const monthStart = new Date(`${formatInTimeZone(new Date(), tz, "yyyy-MM")}-01T00:00:00Z`);
@@ -82,7 +84,9 @@ export default async function DepositsPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Sinais pelo Pix"
-        description="O cliente paga direto na sua chave e avisa no chat (o comprovante é opcional). Confira no seu extrato pelo valor e pelo nome de quem pagou, e confirme."
+        description={t(
+          "O cliente paga direto na sua chave e avisa no chat (o comprovante é opcional). Confira no seu extrato pelo valor e pelo nome de quem pagou, e confirme.",
+        )}
       />
 
       <dl className="grid grid-cols-3 gap-3 text-center">
@@ -145,7 +149,7 @@ export default async function DepositsPage() {
                     ) : null}
                     {!receipt ? (
                       <p className="text-sm text-muted-foreground">
-                        Sem comprovante: o cliente tocou em “Já fiz o Pix”.
+                        Sem comprovante: a pessoa tocou em “Já fiz o Pix”.
                       </p>
                     ) : null}
                     <DepositDecision appointmentId={r.id} />
@@ -165,7 +169,7 @@ export default async function DepositsPage() {
                         {/* eslint-disable-next-line @next/next/no-img-element -- private receipt served by the panel */}
                         <img
                           src={url}
-                          alt="Comprovante enviado pelo cliente"
+                          alt={t("Comprovante enviado pelo cliente")}
                           className="max-h-80 w-full rounded-lg border object-contain"
                         />
                       </a>

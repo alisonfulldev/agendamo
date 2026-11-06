@@ -6,6 +6,7 @@ import { monthRange, PAYMENT_METHOD_LABELS, type FinanceEntry } from "@/lib/fina
 import { formatAmount } from "@/lib/money";
 import { getPlanFeatures } from "@/lib/plans";
 import { createClient } from "@/lib/supabase/server";
+import { adaptCustomer } from "@/lib/panel-words";
 
 /** Entries of a month as CSV (opens in Excel pt-BR). Owner only (RLS). */
 export async function GET(request: NextRequest) {
@@ -26,7 +27,15 @@ export async function GET(request: NextRequest) {
     .lt("occurred_on", to)
     .order("occurred_on");
   const csv = toCsv([
-    ["Data", "Tipo", "Categoria", "Descrição", "Cliente", "Forma de pagamento", "Valor (R$)"],
+    [
+      "Data",
+      "Tipo",
+      "Categoria",
+      "Descrição",
+      adaptCustomer("Cliente", context.brand),
+      "Forma de pagamento",
+      "Valor (R$)",
+    ],
     ...((data ?? []) as FinanceEntry[]).map((e) => [
       e.occurred_on.split("-").reverse().join("/"),
       e.kind === "income" ? "Receita" : "Custo",

@@ -73,7 +73,7 @@ export default async function FinancePage({ searchParams }: PageProps<"/painel/f
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Financeiro"
-        description="Atendimentos concluídos entram como receita sozinhos. Lance também vendas avulsas e seus custos."
+        description="Atendimentos concluídos entram como receita sozinhos. Lance também receitas avulsas e seus custos."
         actions={
           <Button asChild variant="outline" size="sm">
             <a href={`/painel/financeiro/exportar?mes=${month}`}>

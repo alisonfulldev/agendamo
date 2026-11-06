@@ -26,6 +26,7 @@ import { createClient } from "@/lib/supabase/server";
 
 import { CancelAddonButton, CancelPlanButton, PlanCheckout } from "./checkout";
 import { PendingPixButton } from "./payment";
+import { panelWords } from "@/lib/panel-words";
 
 export const metadata: Metadata = { title: "Assinatura" };
 
@@ -61,7 +62,8 @@ async function syncedPlan(businessId: string) {
 
 export default async function PlanPage() {
   // Open in waiting mode: it is the only panel screen then.
-  const { business: loaded } = await requireOwner({ allowWaiting: true });
+  const { business: loaded, brand } = await requireOwner({ allowWaiting: true });
+  const { t } = panelWords(brand);
   // A payment confirmed at the bank but not yet seen here (webhook late or missing) is applied
   // before the screen is drawn.
   let business = loaded;
@@ -126,13 +128,17 @@ export default async function PlanPage() {
           </h2>
           <p className="mt-2 text-lg font-medium text-pretty">
             {handoffs > 0
-              ? `Este mês, ${handoffs} ${handoffs === 1 ? "cliente pediu" : "clientes pediram"} horário pelo seu link e ${handoffs === 1 ? "foi" : "foram"} para o seu WhatsApp. Com o ${PLAN_NAME}, ${handoffs === 1 ? "ele marcaria sozinho" : "eles marcariam sozinhos"}.`
-              : `Seus clientes ainda pedem horário pelo seu link, mas o pedido vai para o seu WhatsApp. Com o ${PLAN_NAME}, eles marcam sozinhos.`}
+              ? t(
+                  `Este mês, ${handoffs} ${handoffs === 1 ? "cliente pediu" : "clientes pediram"} horário pelo seu link e ${handoffs === 1 ? "foi" : "foram"} para o seu WhatsApp. Com o ${PLAN_NAME}, ${handoffs === 1 ? "ele marcaria sozinho" : "eles marcariam sozinhos"}.`,
+                )
+              : t(
+                  `Seus clientes ainda pedem horário pelo seu link, mas o pedido vai para o seu WhatsApp. Com o ${PLAN_NAME}, eles marcam sozinhos.`,
+                )}
           </p>
           <p className="mt-2 text-sm text-muted-foreground">
-            Agenda, clientes e configurações estão guardados, e os horários já marcados continuam
-            valendo. Assinando, tudo volta na hora: {PLAN_NAME} por {PRICE_TEXT.summary}, ou com o
-            seu site por {SITE_PRICE_TEXT.summary}.
+            {t("Agenda, clientes")} e configurações estão guardados, e os horários já marcados
+            continuam valendo. Assinando, tudo volta na hora: {PLAN_NAME} por {PRICE_TEXT.summary},
+            ou com o seu site por {SITE_PRICE_TEXT.summary}.
           </p>
           <a
             href="#assinar"

@@ -161,8 +161,8 @@ export function SiteEditor({
         <fieldset className="flex flex-col gap-3 rounded-xl border bg-card p-5">
           <legend className="px-1 font-semibold">Foto do topo</legend>
           <p className="text-sm text-muted-foreground">
-            A primeira coisa que a cliente vê. Sem foto aqui, o site usa a capa ou a foto do perfil.
-            De pé (vertical) fica melhor.
+            A primeira coisa que quem visita vê. Sem foto aqui, o site usa a capa ou a foto do
+            perfil. De pé (vertical) fica melhor.
           </p>
           {heroUrl ? (
             // eslint-disable-next-line @next/next/no-img-element -- R2 public URL

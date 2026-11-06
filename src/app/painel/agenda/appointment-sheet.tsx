@@ -25,6 +25,7 @@ import {
   type AgendaAppointment,
   type AgendaCatalog,
 } from "./types";
+import { usePanelWords } from "@/components/panel/use-panel-words";
 
 type Op = "cancel" | "complete" | "no_show" | "approve" | "refuse" | "confirm_deposit";
 
@@ -42,6 +43,7 @@ export function AppointmentSheet({
   /** `whatsappUrl`: ready message to tell the customer about a reschedule. */
   onDone: (message: string, whatsappUrl?: string | null) => void;
 }) {
+  const { t } = usePanelWords();
   const [mode, setMode] = useState<"view" | "cancel" | "reschedule">("view");
   const [reason, setReason] = useState("");
   const [newStart, setNewStart] = useState<string | null>(null);
@@ -109,7 +111,7 @@ export function AppointmentSheet({
                   {
                     {
                       waiting: "aguardando pagamento",
-                      informed: "cliente diz que pagou",
+                      informed: t("cliente diz que pagou"),
                       confirmed: "recebido",
                       none: "",
                     }[a.depositStatus]
@@ -118,7 +120,7 @@ export function AppointmentSheet({
               </>
             ) : null}
             <dt className="text-muted-foreground">Origem</dt>
-            <dd>{a.source === "chat" ? "Agendado pela cliente" : "Agendado por você"}</dd>
+            <dd>{a.source === "chat" ? t("Agendado pela cliente") : "Agendado por você"}</dd>
           </dl>
 
           {a.customerPhone ? (
@@ -140,7 +142,7 @@ export function AppointmentSheet({
               href={`/painel/clientes/${a.customerId}`}
               className="text-sm text-primary underline-offset-4 hover:underline"
             >
-              Ver ficha da cliente
+              {t("Ver ficha da cliente")}
             </Link>
           ) : null}
 
@@ -150,7 +152,9 @@ export function AppointmentSheet({
                 <>
                   <Button
                     disabled={pending}
-                    onClick={() => run("approve", "Agendamento aprovado. A cliente foi avisada.")}
+                    onClick={() =>
+                      run("approve", t("Agendamento aprovado. A cliente foi avisada."))
+                    }
                   >
                     Aprovar
                   </Button>
@@ -180,7 +184,7 @@ export function AppointmentSheet({
                     disabled={pending}
                     onClick={() => run("no_show", "Falta registrada.")}
                   >
-                    Cliente faltou
+                    {t("Cliente faltou")}
                   </Button>
                 </>
               ) : null}
@@ -206,7 +210,7 @@ export function AppointmentSheet({
           {mode === "cancel" ? (
             <div className="flex flex-col gap-2">
               <label htmlFor="cancel-reason" className="text-sm font-medium">
-                Motivo (vai no e-mail da cliente, opcional)
+                {t("Motivo (vai no e-mail da cliente, opcional)")}
               </label>
               <Textarea
                 id="cancel-reason"

@@ -357,7 +357,7 @@ test("“Já fiz o Pix” without a receipt; after a “Não recebi” the same 
   await owner.goto("/painel/sinais");
   const item = owner.locator("li", { hasText: customer });
   await expect(item.getByText("Procure no seu extrato")).toBeVisible();
-  await expect(item.getByText(/Sem comprovante: o cliente tocou em “Já fiz o Pix”/)).toBeVisible();
+  await expect(item.getByText(/Sem comprovante: a pessoa tocou em “Já fiz o Pix”/)).toBeVisible();
   await item.getByRole("button", { name: "Não recebi", exact: true }).click();
   await item.getByRole("button", { name: "Não recebi: liberar o horário" }).click();
   await expect(owner.locator("li", { hasText: customer }).getByText(/Recusado/)).toBeVisible();

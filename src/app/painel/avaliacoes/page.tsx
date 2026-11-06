@@ -10,11 +10,13 @@ import { createClient } from "@/lib/supabase/server";
 
 import { setReviewHiddenAction } from "./actions";
 import { ReplyForm } from "./reply-form";
+import { panelWords } from "@/lib/panel-words";
 
 export const metadata: Metadata = { title: "Avaliações" };
 
 export default async function ReviewsPage() {
-  const { business } = await requireOwner();
+  const { business, brand } = await requireOwner();
+  const { t } = panelWords(brand);
   const supabase = await createClient();
   const { data } = await supabase
     .from("reviews")
@@ -33,8 +35,10 @@ export default async function ReviewsPage() {
         title="Avaliações"
         description={
           average !== null
-            ? `Nota ${average.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} de 5 · ${visible.length} avaliações visíveis. Só clientes com atendimento concluído avaliam, uma vez.`
-            : "Depois de cada atendimento concluído, a cliente recebe um link para avaliar."
+            ? t(
+                `Nota ${average.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} de 5 · ${visible.length} avaliações visíveis. Só clientes com atendimento concluído avaliam, uma vez.`,
+              )
+            : t("Depois de cada atendimento concluído, a cliente recebe um link para avaliar.")
         }
       />
       {reviews.length === 0 ? (
@@ -50,7 +54,7 @@ export default async function ReviewsPage() {
             >
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p>
-                  <span className="font-medium">{review.customer?.name ?? "Cliente"}</span>{" "}
+                  <span className="font-medium">{review.customer?.name ?? t("Cliente")}</span>{" "}
                   <span className="text-primary" aria-label={`${review.rating} de 5`}>
                     {"★".repeat(review.rating)}
                   </span>{" "}

@@ -93,6 +93,8 @@ export interface NavOptions {
   /** Waiting mode: only the subscription and the account. */
   waiting: boolean;
   deposits: boolean;
+  /** Niche wording (panelWords): health niches have no sales labels. */
+  labels: { sellSection: string; salesTitle: string };
 }
 
 function visibleItem(item: NavItem, { isOwner, waiting, deposits }: NavOptions): boolean {
@@ -105,9 +107,15 @@ function visibleItem(item: NavItem, { isOwner, waiting, deposits }: NavOptions):
 
 /** Sections with the screens this person can open (staff and waiting mode see fewer). */
 export function visibleSections(options: NavOptions): NavSection[] {
+  const { labels } = options;
   return PANEL_SECTIONS.map((section) => ({
     ...section,
-    items: section.items.filter((item) => visibleItem(item, options)),
+    label: section.key === "sell" ? labels.sellSection : section.label,
+    items: section.items
+      .filter((item) => visibleItem(item, options))
+      .map((item) =>
+        item.href === "/painel/vendas" ? { ...item, label: labels.salesTitle } : item,
+      ),
   })).filter((section) => section.items.length > 0);
 }
 

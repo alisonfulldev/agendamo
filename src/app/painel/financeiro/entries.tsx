@@ -17,6 +17,7 @@ import {
 import { formatBRL } from "@/lib/money";
 
 import { createEntryAction, deleteEntryAction, setPaymentMethodAction } from "./actions";
+import { usePanelWords } from "@/components/panel/use-panel-words";
 
 const selectClass = "h-10 w-full rounded-lg border border-input bg-transparent px-2 text-sm";
 
@@ -28,6 +29,7 @@ export function EntryForm({
   defaultDate: string;
   customers: { id: string; name: string }[];
 }) {
+  const { t, health } = usePanelWords();
   const [open, setOpen] = useState(false);
   const [kind, setKind] = useState<FinanceKind>("expense");
   const [message, setMessage] = useState<string | null>(null);
@@ -103,7 +105,13 @@ export function EntryForm({
             name="description"
             required
             maxLength={200}
-            placeholder={kind === "expense" ? "Ex.: aluguel de outubro" : "Ex.: venda de esmalte"}
+            placeholder={
+              kind === "expense"
+                ? "Ex.: aluguel de outubro"
+                : health
+                  ? "Ex.: atendimento avulso"
+                  : "Ex.: venda de esmalte"
+            }
             className="h-10"
           />
         </FieldShell>
@@ -148,9 +156,9 @@ export function EntryForm({
                 ))}
               </select>
             </FieldShell>
-            <FieldShell name="customerId" label="Cliente (opcional)">
+            <FieldShell name="customerId" label={t("Cliente (opcional)")}>
               <select id="customerId" name="customerId" className={selectClass}>
-                <option value="">Sem cliente</option>
+                <option value="">{t("Sem cliente")}</option>
                 {customers.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.name}
