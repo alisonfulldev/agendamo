@@ -34,6 +34,7 @@ const registerSchema = z.object({
   width: z.number().int().positive().max(4000),
   height: z.number().int().positive().max(4000),
   professionalId: z.uuid().optional(),
+  catalogItemId: z.uuid().optional(),
 });
 
 /** Profile content changed: fresh public page, panel and IndexNow (when the profile is complete). */
@@ -45,13 +46,13 @@ function refresh(business: { slug: string; brand_key: string | null }) {
 
 /** Records an image after the browser uploaded it to R2 with the presigned URL. */
 export async function registerUploadAction(input: unknown): Promise<UploadResult> {
-  const { business } = await requireOwner();
+  const { business } = await requireOwner({ anyProduct: true });
   const parsed = registerSchema.safeParse(input);
   if (!parsed.success || !isKeyOf(parsed.data.key, business.id, parsed.data.kind)) {
     console.error("upload register refused", { reason: "invalid_input", business: business.id });
     return { ok: false, error: "Envio inválido." };
   }
-  const { kind, key, width, height, professionalId } = parsed.data;
+  const { kind, key, width, height, professionalId, catalogItemId } = parsed.data;
 
   const size = await objectSize(key);
   if (size === null) {
@@ -68,7 +69,7 @@ export async function registerUploadAction(input: unknown): Promise<UploadResult
     return { ok: false, error: "Imagem acima de 300 KB." };
   }
 
-  return saveImage(business, { kind, key, width, height, size, professionalId });
+  return saveImage(business, { kind, key, width, height, size, professionalId, catalogItemId });
 }
 
 type Owner = Awaited<ReturnType<typeof requireOwner>>["business"];
@@ -87,9 +88,10 @@ async function saveImage(
     height: number;
     size: number;
     professionalId?: string;
+    catalogItemId?: string;
   },
 ): Promise<UploadResult> {
-  const { kind, key, width, height, size, professionalId } = image;
+  const { kind, key, width, height, size, professionalId, catalogItemId } = image;
   const supabase = await createClient();
 
   if (kind === "photo") {
@@ -142,6 +144,29 @@ async function saveImage(
       await deleteObject(key);
       return { ok: false, error: "Não dá para enviar mais fotos." };
     }
+  } else if (kind === "catalog") {
+    // A service or product photo ("Site ou Loja"); catalog_items is written by the server only.
+    const admin = createAdminClient();
+    const { data: item } = await admin
+      .from("catalog_items")
+      .select("image_key")
+      .eq("id", catalogItemId ?? "")
+      .eq("business_id", business.id)
+      .maybeSingle();
+    if (!item || !getPlanFeatures(business).web) {
+      await deleteObject(key);
+      return { ok: false, error: "Item não encontrado." };
+    }
+    const { error } = await admin
+      .from("catalog_items")
+      .update({ image_key: key, updated_at: new Date().toISOString() })
+      .eq("id", catalogItemId!)
+      .eq("business_id", business.id);
+    if (error) {
+      await deleteObject(key);
+      return { ok: false, error: "Não foi possível salvar a foto." };
+    }
+    if (item.image_key) await deleteObject(item.image_key as string);
   } else if (kind === "site_hero") {
     if (!getPlanFeatures(business).site) {
       await deleteObject(key);
@@ -192,6 +217,7 @@ const originalSchema = z.object({
   kind: z.enum(IMAGE_KINDS),
   key: z.string(),
   professionalId: z.uuid().optional(),
+  catalogItemId: z.uuid().optional(),
   /** Why the phone could not prepare the photo (logged, to know what fails). */
   reason: z.string().max(120).optional(),
 });
@@ -202,12 +228,12 @@ const originalSchema = z.object({
  * deletes the original. The photo is read in memory only; nothing about it is logged.
  */
 export async function processOriginalAction(input: unknown): Promise<UploadResult> {
-  const { business } = await requireOwner();
+  const { business } = await requireOwner({ anyProduct: true });
   const parsed = originalSchema.safeParse(input);
   if (!parsed.success || !isIncomingKeyOf(parsed.data.key, business.id)) {
     return { ok: false, error: "Envio inválido." };
   }
-  const { kind, key, professionalId, reason } = parsed.data;
+  const { kind, key, professionalId, catalogItemId, reason } = parsed.data;
 
   const original = await readObject(key, MAX_ORIGINAL_BYTES);
   if (!original) {
@@ -241,12 +267,13 @@ export async function processOriginalAction(input: unknown): Promise<UploadResul
     height: converted.height,
     size: converted.bytes.length,
     professionalId,
+    catalogItemId,
   });
 }
 
 /** Deletes a gallery photo and its R2 object. */
 export async function deletePhotoAction(photoId: string): Promise<UploadResult> {
-  const { business, user } = await requireOwner();
+  const { business, user } = await requireOwner({ anyProduct: true });
   const supabase = await createClient();
   const { data: photo } = await supabase
     .from("page_photos")
@@ -275,7 +302,7 @@ export async function deletePhotoAction(photoId: string): Promise<UploadResult> 
 
 /** Removes the avatar or cover image. */
 export async function removePageImageAction(kind: "avatar" | "cover"): Promise<UploadResult> {
-  const { business } = await requireOwner();
+  const { business } = await requireOwner({ anyProduct: true });
   const column = kind === "avatar" ? "avatar_key" : "cover_key";
   const supabase = await createClient();
   const { data } = await supabase
@@ -295,7 +322,7 @@ export async function removePageImageAction(kind: "avatar" | "cover"): Promise<U
 
 /** Saves the gallery order after drag and drop. */
 export async function reorderPhotosAction(orderedIds: string[]): Promise<UploadResult> {
-  const { business } = await requireOwner();
+  const { business } = await requireOwner({ anyProduct: true });
   const ids = z.array(z.uuid()).max(100).safeParse(orderedIds);
   if (!ids.success) return { ok: false, error: "Ordem inválida." };
   const supabase = await createClient();

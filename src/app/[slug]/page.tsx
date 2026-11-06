@@ -19,11 +19,15 @@ import {
   themeOverride,
 } from "./load";
 import { PageTracker } from "./page-tracker";
+import { WebSitePage, webSiteMetadata } from "./web-site-page";
 import { ProfileView } from "./profile-view";
 
 export async function generateMetadata({ params }: PageProps<"/[slug]">): Promise<Metadata> {
   const { slug } = await params;
-  return businessMetadata(await loadBusinessPage(slug));
+  const loaded = await loadBusinessPage(slug);
+  // "Site ou Loja" (2026-11-07): its own site, not the booking chat.
+  if (loaded?.features.web) return webSiteMetadata(loaded);
+  return businessMetadata(loaded);
 }
 
 /**
@@ -41,6 +45,8 @@ export default async function BusinessChatPage({ params, searchParams }: PagePro
 
   // A business always shows on its own brand's domain.
   if (loaded.wrongDomain) permanentRedirect(brandUrl(brand, `/${data.business.slug}`));
+  // "Site ou Loja" (2026-11-07): the link opens its site or store.
+  if (loaded.features.web) return <WebSitePage loaded={loaded} />;
 
   const { business, page } = data;
   // Waiting mode (no trial, no subscription): the chat collects the request for WhatsApp.

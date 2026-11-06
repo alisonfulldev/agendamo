@@ -38,6 +38,8 @@ export default async function BusinessProfilePage({
   if (!loaded) return businessGone(slug);
   const { data, brand, domainBrand } = loaded;
   if (loaded.wrongDomain) permanentRedirect(brandUrl(brand, `/${data.business.slug}/perfil`));
+  // "Site ou Loja" (2026-11-07): its site lives at the business link itself.
+  if (loaded.features.web) permanentRedirect(`/${data.business.slug}`);
 
   // Link to the niche's directory page of the profile's city, when that page is indexable.
   const citySlug = data.page?.city ? slugify(data.page.city) : "";

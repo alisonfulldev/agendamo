@@ -58,7 +58,12 @@ export default async function PanelLayout({ children }: LayoutProps<"/painel">) 
     waiting: !features.active,
     deposits: features.deposits,
     labels: { sellSection: words.sellSection, salesTitle: words.salesTitle },
+    // "Site ou Loja": its own menu, and none of the booking product's prompts below.
+    web: features.web
+      ? { catalogLabel: context.business.product === "store" ? "Produtos" : "Serviços" }
+      : null,
   };
+  const booking = !features.web;
   const customers = context.brand.terms.customer.plural;
   const customersLabel = customers.charAt(0).toUpperCase() + customers.slice(1);
 
@@ -96,7 +101,11 @@ export default async function PanelLayout({ children }: LayoutProps<"/painel">) 
               <Button asChild variant="outline" size="sm">
                 <Link href={`/${context.business.slug}`} target="_blank" data-tour="view-chat">
                   <ExternalLink aria-hidden />
-                  Ver chat
+                  {booking
+                    ? "Ver chat"
+                    : context.business.product === "store"
+                      ? "Ver loja"
+                      : "Ver site"}
                 </Link>
               </Button>
               {/* On the phone, "Sair" is in "Mais". */}
@@ -128,24 +137,25 @@ export default async function PanelLayout({ children }: LayoutProps<"/painel">) 
           </main>
         </div>
         <MobileNav {...nav} customersLabel={customersLabel} />
-        <HelpChat isOwner={context.isOwner} waiting={!features.active} />
-        {context.isOwner && features.active ? (
+        {booking ? <HelpChat isOwner={context.isOwner} waiting={!features.active} /> : null}
+        {booking && context.isOwner && features.active ? (
           <Suspense>
             <PanelTour />
           </Suspense>
         ) : null}
-        {context.isOwner &&
+        {booking &&
+        context.isOwner &&
         context.business.created_at < ANNOUNCEMENT_CUTOFF &&
         (features.trialActive || (features.subscribed && features.tier === "complete")) ? (
           <NewsPrompt group={features.trialActive ? "trial" : "complete"} />
         ) : null}
-        {features.active ? (
+        {booking && features.active ? (
           <AppPrompt
             brandName={context.brand.name}
             vapidPublicKey={process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || null}
           />
         ) : null}
-        {context.isOwner && features.active ? (
+        {booking && context.isOwner && features.active ? (
           <PhotoPrompt
             businessName={context.business.name}
             avatarUrl={publicUrl(pageImages?.avatar_key)}

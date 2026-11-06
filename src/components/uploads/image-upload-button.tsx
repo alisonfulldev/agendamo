@@ -13,11 +13,14 @@ import { processOriginalAction, registerUploadAction } from "@/lib/uploads/actio
 export function ImageUploadButton({
   kind,
   professionalId,
+  catalogItemId,
   children,
   variant = "outline",
 }: {
   kind: ImageKind;
   professionalId?: string;
+  /** Service or product of a "Site ou Loja" site (kind "catalog"). */
+  catalogItemId?: string;
   children?: ReactNode;
   variant?: "outline" | "default" | "ghost";
 }) {
@@ -32,7 +35,7 @@ export function ImageUploadButton({
     const response = await fetch("/api/uploads/sign", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ kind, professionalId, ...body }),
+      body: JSON.stringify({ kind, professionalId, catalogItemId, ...body }),
     });
     const signed = await response.json();
     if (!response.ok) throw new ImageError(signed.error ?? "Não foi possível enviar.");
@@ -60,7 +63,13 @@ export function ImageUploadButton({
     setStatus("converting");
     const signed = await sign({ original: true, contentType: file.type, size: file.size });
     await put(signed, file);
-    const result = await processOriginalAction({ kind, key: signed.key, professionalId, reason });
+    const result = await processOriginalAction({
+      kind,
+      key: signed.key,
+      professionalId,
+      catalogItemId,
+      reason,
+    });
     if (!result.ok) throw new ImageError(result.error);
   }
 
@@ -114,6 +123,7 @@ export function ImageUploadButton({
           width: image.width,
           height: image.height,
           professionalId,
+          catalogItemId,
         });
         if (!result.ok) throw new ImageError(result.error);
       }

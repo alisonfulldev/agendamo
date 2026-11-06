@@ -35,6 +35,7 @@ export interface PublicPage {
     | "max_days_ahead"
     | "booking_confirmation"
     | "portal_opt_out"
+    | "product"
   >;
   page: {
     bio: string | null;
@@ -73,7 +74,13 @@ async function fetchPublicPage(slug: string): Promise<PublicPage | null> {
 
 type LivePlan = Pick<
   Business,
-  "plan" | "plan_tier" | "trial_started_at" | "trial_ends_at" | "created_at" | "portal_opt_out"
+  | "plan"
+  | "plan_tier"
+  | "trial_started_at"
+  | "trial_ends_at"
+  | "created_at"
+  | "portal_opt_out"
+  | "product"
 >;
 
 /**
@@ -83,7 +90,8 @@ type LivePlan = Pick<
 async function fetchLivePlan(slug: string): Promise<LivePlan | null> {
   const { data, error } = await createAdminClient()
     .from("businesses")
-    .select("plan, plan_tier, trial_started_at, trial_ends_at, created_at, portal_opt_out")
+    // product: booking, or a "Site ou Loja" site or store (2026-11-07).
+    .select("plan, plan_tier, trial_started_at, trial_ends_at, created_at, portal_opt_out, product")
     .eq("slug", slug.toLowerCase())
     .is("suspended_at", null)
     .maybeSingle();

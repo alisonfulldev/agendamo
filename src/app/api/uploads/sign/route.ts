@@ -25,6 +25,7 @@ const bodySchema = z.object({
   contentType: z.literal(UPLOAD_CONTENT_TYPE),
   size: z.number().int().positive().max(MAX_UPLOAD_BYTES),
   professionalId: z.uuid().optional(),
+  catalogItemId: z.uuid().optional(),
 });
 
 /**
@@ -37,6 +38,7 @@ const originalSchema = z.object({
   contentType: z.string().max(100),
   size: z.number().int().positive().max(MAX_ORIGINAL_BYTES),
   professionalId: z.uuid().optional(),
+  catalogItemId: z.uuid().optional(),
 });
 
 /** Returns a short-lived presigned PUT URL. The file never passes through this server (rule 7). */
@@ -61,7 +63,7 @@ export async function POST(request: Request) {
       { status: 400 },
     );
   }
-  const { kind, size, professionalId } = parsed.data;
+  const { kind, size, professionalId, catalogItemId } = parsed.data;
   const { business } = context;
   const supabase = await createClient();
 
@@ -99,6 +101,20 @@ export async function POST(request: Request) {
     ) {
       return NextResponse.json({ error: "Não dá para enviar mais fotos." }, { status: 403 });
     }
+  }
+
+  // A catalog photo: a service or product of this "Site ou Loja" business.
+  if (kind === "catalog") {
+    if (!getPlanFeatures(business).web || !catalogItemId) {
+      return NextResponse.json({ error: "Sem permissão." }, { status: 403 });
+    }
+    const { data } = await supabase
+      .from("catalog_items")
+      .select("id")
+      .eq("id", catalogItemId)
+      .eq("business_id", business.id)
+      .maybeSingle();
+    if (!data) return NextResponse.json({ error: "Item não encontrado." }, { status: 404 });
   }
 
   if (kind === "professional") {

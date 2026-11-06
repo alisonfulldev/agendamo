@@ -29,6 +29,11 @@ const INCLUDES = {
     "Avisos no seu celular a cada agendamento",
     "Clientes, financeiro e sinal pelo Pix",
   ],
+  web: [
+    "Seu site pronto, na sua cor, feito para o Google",
+    "Botões que levam o cliente direto para o seu WhatsApp",
+    "Você muda textos, fotos e preços quando quiser",
+  ],
 } as const;
 
 /**

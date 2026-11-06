@@ -69,6 +69,10 @@ export const getBusinessContext = cache(async (): Promise<BusinessContext | null
 export interface RequireOptions {
   /** Pages and actions that stay open in waiting mode (subscription and account). */
   allowWaiting?: boolean;
+  /** Pages and actions of the "Site ou Loja" panel (/painel/web). */
+  web?: boolean;
+  /** Shared actions (image uploads): both the booking and the "Site ou Loja" accounts. */
+  anyProduct?: boolean;
 }
 
 /**
@@ -79,6 +83,13 @@ export interface RequireOptions {
 export async function requireBusiness(options: RequireOptions = {}): Promise<BusinessContext> {
   const context = await getBusinessContext();
   if (!context) redirect("/painel/novo");
+  // "Site ou Loja" accounts only have their own panel (plus the subscription and the account);
+  // booking accounts never open it.
+  const web = (context.business.product ?? "booking") !== "booking";
+  if (!options.anyProduct) {
+    if (web && !options.web && !options.allowWaiting) redirect("/painel/web");
+    if (!web && options.web) redirect("/painel");
+  }
   if (!options.allowWaiting && !getPlanFeatures(context.business).active) {
     redirect(context.isOwner ? "/painel/plano" : "/painel/conta");
   }

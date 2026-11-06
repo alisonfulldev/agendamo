@@ -7,6 +7,7 @@ export const IMAGE_KINDS = [
   "professional",
   "site_hero",
   "briefing",
+  "catalog",
 ] as const;
 export type ImageKind = (typeof IMAGE_KINDS)[number];
 
@@ -27,6 +28,8 @@ export const IMAGE_PRESETS: Record<ImageKind, ImagePreset> = {
   site_hero: { maxWidth: 1200, maxHeight: 1500 },
   /** Photos and logo sent with the custom site briefing. */
   briefing: { maxWidth: 1600, maxHeight: 1600 },
+  /** Photo of a service or product of a "Site ou Loja" site (square-ish cards). */
+  catalog: { maxWidth: 1000, maxHeight: 1000 },
 };
 
 /** Original photo picked by the user (never uploaded: only the compressed WebP is). */

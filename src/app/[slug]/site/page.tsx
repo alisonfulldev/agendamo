@@ -67,6 +67,8 @@ export default async function BusinessSitePage({
   if (!loaded) return businessGone(slug);
   const { data, brand, domainBrand } = loaded;
   if (loaded.wrongDomain) permanentRedirect(brandUrl(brand, `/${data.business.slug}/site`));
+  // "Site ou Loja" (2026-11-07): its site lives at the business link itself.
+  if (loaded.features.web) permanentRedirect(`/${data.business.slug}`);
   if (!loaded.features.site) redirect(`/${data.business.slug}`);
 
   const [settings, domain] = await Promise.all([

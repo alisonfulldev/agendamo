@@ -31,6 +31,12 @@ export const PLAN_PRICES = {
   complete: { monthly: testPrice || 2390, yearly: testPrice || 23880 },
   /** "Site + Agenda" (2026-11-05): Completo + the landing page at /<slug>/site. */
   site: { monthly: testPrice || 4900, yearly: testPrice || 49000 },
+  /** "Site ou Loja" (2026-11-07): only a site or a store, no booking. */
+  web: { monthly: testPrice || 2900, yearly: testPrice || 29000 },
+  /** Custom site made by a person for "Site ou Loja": R$ 197 once, plus the R$ 29 month. */
+  webCustomSite: 19700,
+  /** Own domain for "Site ou Loja": R$ 120 a year, optional (asked in its sales chat). */
+  webDomainYearly: 12000,
   extraProfessional: { monthly: 900, yearly: 9000 },
   featured: { monthly: 4900 },
   customDomain: { monthly: 1900 },
@@ -42,12 +48,20 @@ export const PLAN_PRICES = {
 
 export const PLAN_NAME = "Completo";
 export const SITE_PLAN_NAME = "Site + Agenda";
+export const WEB_PLAN_NAME = "Site ou Loja";
 
 export type Cycle = "monthly" | "yearly";
-/** Which plan: "complete" (chat + agenda) or "site" (the same + the landing page). */
-export type Tier = "complete" | "site";
+/**
+ * Which plan: "complete" (chat + agenda), "site" (the same + the landing page) or "web" (only a
+ * site or a store, no booking: the "Site ou Loja" product).
+ */
+export type Tier = "complete" | "site" | "web";
 
-export const TIER_NAME: Record<Tier, string> = { complete: PLAN_NAME, site: SITE_PLAN_NAME };
+export const TIER_NAME: Record<Tier, string> = {
+  complete: PLAN_NAME,
+  site: SITE_PLAN_NAME,
+  web: WEB_PLAN_NAME,
+};
 
 /** Subscription value in cents for the plan and cycle, with extra professionals and a coupon. */
 export function subscriptionPrice(
@@ -120,6 +134,8 @@ export interface PlanFeatures {
    * Checked on the server for the page and the editor (rule 6).
    */
   site: boolean;
+  /** "Site ou Loja" account: only the site (and the catalog); no booking features. */
+  web: boolean;
   // Server checks of each feature (rule 6): all of them follow `active` (one plan).
   agenda: boolean;
   reminders: boolean;
@@ -147,6 +163,7 @@ type PlanFields = Pick<Business, "plan" | "trial_ends_at"> & {
   trial_started_at?: string | null;
   professional_seats?: number | null;
   plan_tier?: Tier | null;
+  product?: Business["product"] | null;
 };
 
 /**
@@ -159,6 +176,9 @@ export function getPlanFeatures(business: PlanFields, now: Date = new Date()): P
   const trialActive = !subscribed && trialEndsAt !== null && trialEndsAt > now;
   const active = subscribed || trialActive;
   const seats = Math.max(1, business.professional_seats ?? 1);
+  // "Site ou Loja" (2026-11-07): only the site; nothing of the booking product.
+  const web = (business.product ?? "booking") !== "booking";
+  const booking = active && !web;
 
   return {
     status: subscribed ? "subscribed" : trialActive ? "trial" : "waiting",
@@ -171,24 +191,25 @@ export function getPlanFeatures(business: PlanFields, now: Date = new Date()): P
       : null,
     discreetBadge: active,
     tier: business.plan_tier ?? "complete",
-    site: trialActive || (subscribed && business.plan_tier === "site"),
-    agenda: active,
-    reminders: active,
-    customers: active,
-    finance: active,
-    salesTools: active,
-    packagesAndCombos: active,
-    reviews: active,
+    site: web ? active : trialActive || (subscribed && business.plan_tier === "site"),
+    web,
+    agenda: booking,
+    reminders: booking,
+    customers: booking,
+    finance: booking,
+    salesTools: booking,
+    packagesAndCombos: booking,
+    reviews: booking,
     stats: active,
-    googleCalendar: active,
-    embed: active,
-    anyProfessional: active,
-    resources: active,
-    teamPermissions: active,
-    reportsByProfessional: active,
-    deposits: DEPOSITS_ENABLED && active,
+    googleCalendar: booking,
+    embed: booking,
+    anyProfessional: booking,
+    resources: booking,
+    teamPermissions: booking,
+    reportsByProfessional: booking,
+    deposits: DEPOSITS_ENABLED && booking,
     photoLimit: PHOTO_LIMIT,
-    professionalLimit: !active ? 1 : trialActive ? TRIAL_PROFESSIONALS : seats,
+    professionalLimit: !booking ? 1 : trialActive ? TRIAL_PROFESSIONALS : seats,
   };
 }
 

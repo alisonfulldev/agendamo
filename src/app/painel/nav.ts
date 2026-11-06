@@ -18,7 +18,18 @@ export interface NavItem {
 }
 
 export interface NavSection {
-  key: "home" | "agenda" | "customers" | "finance" | "page" | "sell" | "settings";
+  key:
+    | "home"
+    | "agenda"
+    | "customers"
+    | "finance"
+    | "page"
+    | "sell"
+    | "settings"
+    | "web_home"
+    | "web_site"
+    | "web_catalog"
+    | "web_account";
   label: string;
   /** Bottom bar on the phone (the others are in "Mais"). */
   tab?: boolean;
@@ -88,6 +99,39 @@ export const PANEL_SECTIONS: NavSection[] = [
   },
 ];
 
+/**
+ * Menu of the "Site ou Loja" accounts (2026-11-07): the site, its services or products, a few
+ * numbers, the subscription and the account. Nothing of the booking product.
+ */
+export const WEB_SECTIONS: NavSection[] = [
+  {
+    key: "web_home",
+    label: "Início",
+    tab: true,
+    items: [{ href: "/painel/web", label: "Início", hint: "Seu link e as visitas" }],
+  },
+  {
+    key: "web_site",
+    label: "Meu site",
+    tab: true,
+    items: [{ href: "/painel/web/site", label: "Meu site", hint: "Modelo, cores, fotos e textos" }],
+  },
+  {
+    key: "web_catalog",
+    label: "Produtos",
+    tab: true,
+    items: [{ href: "/painel/web/catalogo", label: "Produtos", hint: "O que aparece no site" }],
+  },
+  {
+    key: "web_account",
+    label: "Ajustes",
+    items: [
+      { href: "/painel/plano", label: "Assinatura", waiting: true },
+      { href: "/painel/conta", label: "Conta", staff: true, waiting: true },
+    ],
+  },
+];
+
 export interface NavOptions {
   isOwner: boolean;
   /** Waiting mode: only the subscription and the account. */
@@ -95,6 +139,8 @@ export interface NavOptions {
   deposits: boolean;
   /** Niche wording (panelWords): health niches have no sales labels. */
   labels: { sellSection: string; salesTitle: string };
+  /** "Site ou Loja" account: its own menu; "Serviços" (site) or "Produtos" (store). */
+  web?: { catalogLabel: string } | null;
 }
 
 function visibleItem(item: NavItem, { isOwner, waiting, deposits }: NavOptions): boolean {
@@ -108,6 +154,16 @@ function visibleItem(item: NavItem, { isOwner, waiting, deposits }: NavOptions):
 /** Sections with the screens this person can open (staff and waiting mode see fewer). */
 export function visibleSections(options: NavOptions): NavSection[] {
   const { labels } = options;
+  if (options.web) {
+    const catalog = options.web.catalogLabel;
+    return WEB_SECTIONS.map((section) => ({
+      ...section,
+      label: section.key === "web_catalog" ? catalog : section.label,
+      items: section.items
+        .filter((item) => visibleItem(item, options))
+        .map((item) => (item.href === "/painel/web/catalogo" ? { ...item, label: catalog } : item)),
+    })).filter((section) => section.items.length > 0);
+  }
   return PANEL_SECTIONS.map((section) => ({
     ...section,
     label: section.key === "sell" ? labels.sellSection : section.label,

@@ -32,8 +32,10 @@ export interface Business {
   plan: Plan;
   trial_started_at: string | null;
   trial_ends_at: string | null;
-  /** Which plan (when paying, or tried): "complete" or "site" (with the landing page). */
-  plan_tier?: "complete" | "site";
+  /** Which plan (when paying, or tried): "complete", "site" (with the landing page) or "web". */
+  plan_tier?: "complete" | "site" | "web";
+  /** "booking" (agenda and chat), or the "Site ou Loja" product: "site" or "store". */
+  product?: BusinessProduct;
   /** Last time the owner opened the panel (updated at most once an hour). */
   owner_last_seen_at: string | null;
   slot_interval_minutes: 15 | 30 | 60;
@@ -419,6 +421,31 @@ export interface DepositReceipt {
 export const SITE_TEMPLATES = ["vibrant", "elegant"] as const;
 export type SiteTemplate = (typeof SITE_TEMPLATES)[number];
 
+/** What a business is (2026-11-07): the booking product, or a site or a store ("Site ou Loja"). */
+export type BusinessProduct = "booking" | "site" | "store";
+
+/** Templates of the "Site ou Loja" product: two for sites, two for stores. */
+export const WEB_SITE_TEMPLATES = ["site_bold", "site_clean"] as const;
+export const WEB_STORE_TEMPLATES = ["store_showcase", "store_clean"] as const;
+export type WebTemplate =
+  (typeof WEB_SITE_TEMPLATES)[number] | (typeof WEB_STORE_TEMPLATES)[number];
+
+/** A service of a site or a product of a store ("Site ou Loja"). */
+export interface CatalogItem {
+  id: string;
+  business_id: string;
+  kind: "service" | "product";
+  name: string;
+  description: string | null;
+  price_cents: number | null;
+  category: string | null;
+  image_key: string | null;
+  position: number;
+  active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 /** Owner's edits of the landing page (/<slug>/site); null = default from the business data. */
 export interface SiteSettings {
   business_id: string;
@@ -428,8 +455,10 @@ export interface SiteSettings {
   hero_subtitle: string | null;
   cta_label: string | null;
   hero_image_key: string | null;
-  /** "vibrant" (color blocks) or "elegant" (light, serif titles). */
-  template: SiteTemplate;
+  /** "vibrant" (color blocks) or "elegant" (light, serif titles); WebTemplate for "Site ou Loja". */
+  template: SiteTemplate | WebTemplate;
+  /** "Site ou Loja": text of the WhatsApp message of the site's buttons (null = default). */
+  whatsapp_message?: string | null;
   sections: { key: string; visible: boolean }[] | null;
   updated_at: string;
 }

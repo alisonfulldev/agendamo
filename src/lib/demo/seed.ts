@@ -5,6 +5,7 @@ import type { PGlite } from "@electric-sql/pglite";
 import { getBrand } from "@/brands";
 
 import { DEMO_PASSWORD } from "./mode";
+import { seedWebDemo, WEB_DEMO_PERSONAS } from "./seed-web";
 import { writeDemoObject } from "./storage";
 
 /**
@@ -84,6 +85,8 @@ export const DEMO_PERSONAS: DemoPersona[] = [
     brandKey: null,
     slug: null,
   },
+  // "Site ou Loja" (2026-11-07).
+  ...WEB_DEMO_PERSONAS,
 ];
 
 interface ServiceSeed {
@@ -658,5 +661,6 @@ export async function seedDemo(db: PGlite): Promise<void> {
     }
   }
 
+  await seedWebDemo(db);
   await db.query("select public.refresh_page_stats(current_date - 61)");
 }

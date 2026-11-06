@@ -76,6 +76,10 @@ async function prepare(db: PGlite): Promise<void> {
   if (fresh) {
     const { seedDemo } = await import("./seed");
     await seedDemo(db);
+  } else {
+    // Demo accounts added after this database was created ("Site ou Loja", 2026-11-07).
+    const { seedWebDemo } = await import("./seed-web");
+    await seedWebDemo(db);
   }
 }
 

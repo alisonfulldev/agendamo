@@ -34,11 +34,13 @@ describe("demo seed", () => {
     expect((data as { slug: string }[]).map((b) => b.slug).sort()).toEqual([
       "atelie-restaura",
       "barbearia-navalha",
+      "bela-cosmeticos",
       "clinica-pele",
       "esmalteria-flor",
       "espaco-escuta",
       "movimento-fisio",
       "salao-aurora",
+      "silva-costa-advocacia",
       "studio-bela",
     ]);
     const users = await db.query<{ email: string }>("select email from auth.users");
@@ -92,7 +94,7 @@ describe("demo query builder", () => {
       .in("slug", ["studio-bela", "clinica-pele"])
       .not("suspended_at", "is", null);
     expect(list.data).toEqual([]);
-    const ilike = await admin().from("businesses").select("slug").ilike("name", "%bela%");
+    const ilike = await admin().from("businesses").select("slug").ilike("name", "%studio bela%");
     expect(ilike.data).toEqual([{ slug: "studio-bela" }]);
   });
 
