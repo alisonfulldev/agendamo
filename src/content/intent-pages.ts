@@ -1,4 +1,4 @@
-import { PRICE_TEXT, TRIAL_DAYS } from "@/lib/plans";
+import { PRICE_TEXT, SITE_PRICE_TEXT, TRIAL_DAYS } from "@/lib/plans";
 
 import type { FaqItem, GuideSection } from "./niche-guides/types";
 
@@ -420,6 +420,332 @@ export const INTENT_PAGES: readonly IntentPage[] = [
     related: ["link-na-bio", "pelo-whatsapp", "autonomo"],
     updatedAt: "2026-10-16",
   },
+  {
+    slug: "parar-de-responder-tem-horario",
+    label: "Parar de responder “tem horário?”",
+    title: "Como parar de responder “tem horário?” no WhatsApp | MeetChat",
+    description:
+      "Um link onde o cliente vê os horários livres e marca sozinho tira do seu WhatsApp as conversas de “tem horário?”. Veja como montar e o que dizer aos clientes.",
+    h1: "Como parar de responder “tem horário?” no WhatsApp",
+    answer:
+      "A forma mais simples de parar de responder “tem horário?” é deixar o cliente ver a agenda e marcar sozinho. Você coloca um link de agendamento na saudação do WhatsApp Business, na bio e nas respostas rápidas; quem pergunta recebe o link, escolhe o serviço e um horário livre e confirma, e você só recebe o aviso.",
+    sections: [
+      {
+        title: "Por que essa pergunta toma tanto tempo",
+        paragraphs: [
+          "Cada “tem horário?” vira uma troca de mensagens: você olha a agenda, oferece dois horários, o cliente não pode, você oferece outros. Muitas vezes a conversa acontece enquanto você está atendendo.",
+          "Quando o cliente vê os horários livres sozinho, a troca acaba numa mensagem: o link.",
+        ],
+      },
+      {
+        title: "Onde colocar o link",
+        ordered: true,
+        list: [
+          "Na mensagem de saudação do WhatsApp Business, que chega sozinha para quem escreve pela primeira vez.",
+          "Numa resposta rápida (por exemplo, /agenda), para mandar o link em dois toques.",
+          "Na bio do Instagram e nos stories, para quem chega por lá.",
+          "No seu Perfil da Empresa no Google, no campo de agendamento.",
+        ],
+      },
+      {
+        title: "Uma mensagem pronta para a saudação",
+        paragraphs: [
+          "“Oi! Para ver os horários livres e marcar na hora, é só tocar aqui: [seu link]. Se tiver alguma dúvida, me escreve que eu respondo assim que puder.”",
+          "O cliente que quer marcar resolve sozinho, e as mensagens que sobram para você são as que precisam de você.",
+        ],
+      },
+      {
+        title: "O que o link faz por você",
+        list: [
+          "Mostra só horários em que o serviço cabe inteiro, fora das pausas e de outros agendamentos.",
+          "Avisa você no celular a cada agendamento, cancelamento ou remarcação.",
+          "Manda confirmação e lembrete ao cliente que informou o e-mail.",
+        ],
+      },
+    ],
+    faq: [
+      {
+        question: "O cliente vai estranhar receber um link?",
+        answer:
+          "Em geral, não: o link abre como uma conversa no navegador, sem aplicativo e sem cadastro. Ele informa só o nome e o WhatsApp.",
+      },
+      {
+        question: "E quem prefere falar comigo?",
+        answer:
+          "Continua falando. O link não substitui o seu WhatsApp; ele só tira dali as conversas de marcar horário.",
+      },
+    ],
+    related: ["pelo-whatsapp", "link-na-bio", "sem-app"],
+    nicheTopic: "agendar-pelo-whatsapp",
+    updatedAt: "2026-11-06",
+  },
+  {
+    slug: "sinal-pelo-pix",
+    label: "Sinal pelo Pix no agendamento",
+    title: "Como cobrar sinal pelo Pix no agendamento online | MeetChat",
+    description:
+      "Peça sinal (ou o valor total) pelo Pix na hora em que o cliente marca, direto na sua chave. Veja como conferir e o que fazer quando o Pix não chega.",
+    h1: "Como cobrar sinal pelo Pix no agendamento online",
+    answer:
+      "Para cobrar sinal pelo Pix, o agendamento online mostra o valor e a sua chave Pix na hora em que o cliente escolhe o horário. No MeetChat, o cliente paga direto para você, toca em “Já fiz o Pix” (o comprovante é opcional) e o horário fica reservado até você conferir no seu extrato e confirmar.",
+    sections: [
+      {
+        title: "Quando vale pedir sinal",
+        list: [
+          "Serviços longos ou caros, em que uma falta pesa no mês.",
+          "Horários muito disputados, como sábado e fim de tarde.",
+          "Clientes novos, que ainda não conhecem você.",
+        ],
+      },
+      {
+        title: "Como funciona para o cliente",
+        ordered: true,
+        list: [
+          "Escolhe o serviço, o dia e o horário no chat.",
+          "Vê o valor do sinal e a sua política de cancelamento, e aceita.",
+          "Paga pelo Pix copia e cola ou pelo QR code, direto na sua chave.",
+          "Toca em “Já fiz o Pix” e pode anexar o comprovante.",
+        ],
+      },
+      {
+        title: "Como funciona para você",
+        paragraphs: [
+          "O dinheiro cai direto na sua conta: o MeetChat não recebe nem repassa o pagamento. Você confere no extrato pelo valor e pelo nome de quem pagou e confirma no painel.",
+          "Se o Pix não chegou, você marca “Não recebi”. A partir daí, aquele cliente precisa anexar o comprovante nos próximos agendamentos.",
+        ],
+      },
+      {
+        title: "O que você configura",
+        list: [
+          "Valor fixo, porcentagem do preço ou pagamento total, por serviço.",
+          "Quanto tempo o horário fica reservado esperando o Pix.",
+          "O texto da sua política de cancelamento, que o cliente aceita antes de pagar.",
+        ],
+      },
+    ],
+    faq: [
+      {
+        question: "Tem taxa sobre o Pix?",
+        answer:
+          "Não. O Pix vai direto da conta do cliente para a sua chave, sem intermediário e sem taxa do MeetChat.",
+      },
+      {
+        question: "O sistema confere o Pix sozinho?",
+        answer:
+          "Não. Quem confirma é você, olhando o seu extrato. O MeetChat avisa quando há Pix esperando conferência.",
+      },
+    ],
+    related: ["reduzir-faltas", "lembrete-automatico", "pelo-whatsapp"],
+    nicheTopic: "reduzir-faltas",
+    updatedAt: "2026-11-06",
+  },
+  {
+    slug: "quanto-custa",
+    label: "Quanto custa um sistema de agendamento",
+    title: "Quanto custa um sistema de agendamento online? | MeetChat",
+    description: `Os modelos de cobrança mais comuns de sistemas de agendamento e o preço do MeetChat: ${PRICE_TEXT.monthly}, ou ${SITE_PRICE_TEXT.monthly} com site, e ${TRIAL_DAYS} dias de teste sem cartão.`,
+    h1: "Quanto custa um sistema de agendamento online?",
+    answer: `Sistemas de agendamento online costumam cobrar uma mensalidade fixa, um valor por profissional ou uma taxa por agendamento. O MeetChat cobra ${PRICE_TEXT.summary}, com agendamentos ilimitados e 1 profissional incluso; cada profissional a mais custa ${PRICE_TEXT.extraProfessional}. Com site profissional junto, o plano Site + Agenda sai ${SITE_PRICE_TEXT.summary}.`,
+    sections: [
+      {
+        title: "Os modelos de cobrança mais comuns",
+        list: [
+          "Mensalidade fixa: o mesmo valor todo mês, com ou sem limite de agendamentos.",
+          "Por profissional: o valor cresce com a equipe.",
+          "Por agendamento ou com taxa sobre o pagamento: barato no começo, caro quando a agenda enche.",
+          "Grátis com limite: funciona até um número de agendamentos ou com recursos travados.",
+        ],
+      },
+      {
+        title: "O que olhar além do preço",
+        list: [
+          "Se há limite de agendamentos por mês.",
+          "Se os lembretes automáticos estão incluídos ou são cobrados à parte.",
+          "Se o sistema cobra taxa sobre o sinal ou o pagamento do cliente.",
+          "Se dá para cancelar quando quiser, sem multa.",
+        ],
+      },
+      {
+        title: "O que está incluso no MeetChat",
+        list: [
+          "Agendamentos ilimitados pelo chat, 24 horas.",
+          "Lembretes automáticos, agenda, clientes e financeiro.",
+          "Sinal ou pagamento total pelo Pix, direto na sua conta, sem taxa.",
+          "Equipe e integração com o Google Agenda.",
+        ],
+      },
+      {
+        title: "Como começar sem gastar",
+        paragraphs: [
+          `Todo cadastro começa com ${PRICE_TEXT.trial}. Se você não assinar, o link continua no ar no modo WhatsApp: o cliente escolhe serviço, dia e turno e o pedido chega no seu WhatsApp. Lembretes automáticos e agenda completa ficam no plano pago.`,
+        ],
+      },
+    ],
+    faq: [
+      {
+        question: "Tem fidelidade ou multa?",
+        answer:
+          "Não. Você cancela quando quiser e o plano continua valendo até o fim do período já pago.",
+      },
+      {
+        question: "Como é o pagamento da assinatura?",
+        answer:
+          "Pelo Pix Automático: você paga a primeira mensalidade pelo QR code e autoriza o débito das próximas no app do seu banco.",
+      },
+    ],
+    related: ["agenda-gratis", "autonomo", "multiagenda"],
+    updatedAt: "2026-11-06",
+  },
+  {
+    slug: "agenda-de-papel",
+    label: "Trocar a agenda de papel",
+    title: "Como trocar a agenda de papel por uma agenda online | MeetChat",
+    description:
+      "Passo a passo para sair do caderno ou da agenda de papel sem perder os horários já marcados: o que cadastrar primeiro, como passar os clientes e como avisar.",
+    h1: "Como trocar a agenda de papel por uma agenda online",
+    answer:
+      "Para trocar a agenda de papel por uma online sem bagunça, cadastre primeiro seus serviços e horários de atendimento, passe para o sistema os horários já marcados das próximas semanas e só então divulgue o link. No MeetChat dá para fazer tudo pelo celular, e os clientes que você já tem podem ser importados por planilha.",
+    sections: [
+      {
+        title: "Por que a agenda de papel começa a atrapalhar",
+        list: [
+          "Ela só está onde você está: longe dela, não dá para responder se tem horário.",
+          "Remarcar vira rabisco, e um horário duplicado só aparece quando os dois clientes chegam.",
+          "Não avisa ninguém: o lembrete depende de você mandar mensagem um por um.",
+        ],
+      },
+      {
+        title: "A troca em quatro passos",
+        ordered: true,
+        list: [
+          "Cadastre os serviços, com a duração real de cada um.",
+          "Configure os dias, horários e pausas de atendimento.",
+          "Lance na agenda online os horários já marcados das próximas semanas.",
+          "Divulgue o link no WhatsApp e no Instagram para os novos agendamentos.",
+        ],
+      },
+      {
+        title: "E os clientes que já estão no caderno?",
+        paragraphs: [
+          "Você pode cadastrar aos poucos, conforme eles voltam, ou importar uma planilha com nome e telefone. Quem marcar pelo link entra sozinho na lista de clientes.",
+        ],
+      },
+      {
+        title: "Uma semana com as duas agendas",
+        paragraphs: [
+          "Na primeira semana, vale manter o caderno ao lado e conferir os dois no fim do dia. Depois disso, a agenda online passa a ser a única, e o caderno fica para anotações.",
+        ],
+      },
+    ],
+    faq: [
+      {
+        question: "Preciso de computador?",
+        answer: "Não. O painel foi feito para o celular, e também abre no computador.",
+      },
+      {
+        question: "E se um cliente marcar pelo WhatsApp como antes?",
+        answer:
+          "Você lança o horário na agenda pelo painel em poucos toques, e ele fica protegido contra marcação duplicada como os outros.",
+      },
+    ],
+    related: ["autonomo", "agenda-gratis", "sem-app"],
+    updatedAt: "2026-11-06",
+  },
+  {
+    slug: "pacotes-de-sessoes",
+    label: "Controle de pacotes de sessões",
+    title: "Como controlar pacotes de sessões na agenda | MeetChat",
+    description:
+      "Registre pacotes de sessões e veja o saldo de cada cliente sem planilha: cada atendimento concluído desconta uma sessão, e o histórico fica na ficha do cliente.",
+    h1: "Como controlar pacotes de sessões na agenda",
+    answer:
+      "Para controlar pacotes de sessões sem planilha, registre o pacote na ficha do cliente e deixe a agenda descontar uma sessão a cada atendimento concluído. No MeetChat você cria o pacote (serviço, número de sessões e preço), associa ao cliente quando ele paga e acompanha o saldo na ficha.",
+    sections: [
+      {
+        title: "Onde os pacotes costumam se perder",
+        list: [
+          "O saldo fica no caderno ou na memória, e cliente e profissional lembram números diferentes.",
+          "A sessão é descontada no dia errado, ou não é descontada.",
+          "Não fica claro quantas sessões ainda faltam.",
+        ],
+      },
+      {
+        title: "Como funciona no MeetChat",
+        ordered: true,
+        list: [
+          "Crie o pacote: serviço, quantidade de sessões e preço.",
+          "Quando o cliente pagar (fora da plataforma), registre o pacote na ficha dele.",
+          "Ao marcar o horário, escolha usar o pacote.",
+          "Ao concluir o atendimento, uma sessão é descontada do saldo.",
+        ],
+      },
+      {
+        title: "Para que tipo de negócio serve",
+        paragraphs: [
+          "Funciona para qualquer serviço feito em sessões: tratamentos estéticos, depilação, fisioterapia, pilates, aulas e massagem, por exemplo.",
+        ],
+      },
+    ],
+    faq: [
+      {
+        question: "O pagamento do pacote passa pelo MeetChat?",
+        answer:
+          "Não. O pagamento é combinado entre você e o cliente, fora da plataforma; o MeetChat controla as sessões.",
+      },
+      {
+        question: "Onde vejo o saldo?",
+        answer: "O saldo de cada pacote fica na ficha do cliente, no seu painel.",
+      },
+    ],
+    related: ["multiagenda", "reduzir-faltas", "autonomo"],
+    updatedAt: "2026-11-06",
+  },
+  {
+    slug: "lista-de-espera",
+    label: "Lista de espera para encaixe",
+    title: "Lista de espera automática para encaixe de horário | MeetChat",
+    description:
+      "Quando um horário é cancelado, quem está na lista de espera daquele dia recebe um e-mail e o primeiro a confirmar fica com a vaga. Veja como funciona.",
+    h1: "Lista de espera automática para encaixe de horário",
+    answer:
+      "Uma lista de espera automática preenche horários cancelados sem você mandar mensagem para ninguém. No MeetChat, quando não há horário no dia que o cliente quer, ele pode entrar na lista; se um horário daquele dia e serviço for cancelado, a lista recebe um e-mail na ordem de chegada e quem confirmar primeiro fica com a vaga.",
+    sections: [
+      {
+        title: "O problema do horário que vaga em cima da hora",
+        paragraphs: [
+          "Um cancelamento de última hora quase sempre vira horário vazio: até você lembrar quem queria aquele dia e mandar mensagem, já passou.",
+        ],
+      },
+      {
+        title: "Como funciona",
+        ordered: true,
+        list: [
+          "O cliente procura um dia sem horário livre e entra na lista de espera pelo chat.",
+          "Um horário daquele dia e serviço é cancelado.",
+          "Quem está na lista recebe um e-mail, na ordem de chegada.",
+          "O primeiro a confirmar fica com o horário, e você recebe o aviso.",
+        ],
+      },
+      {
+        title: "O que você acompanha",
+        paragraphs: [
+          "No painel você vê quem está na lista, de qual dia e serviço, e pode marcar quem já foi atendido.",
+        ],
+      },
+    ],
+    faq: [
+      {
+        question: "Preciso fazer alguma coisa quando alguém cancela?",
+        answer: "Não. O aviso para a lista sai sozinho; você só recebe o novo agendamento.",
+      },
+      {
+        question: "Está em qual plano?",
+        answer: `No plano Completo (${PRICE_TEXT.monthly}), junto com as outras ferramentas.`,
+      },
+    ],
+    related: ["reduzir-faltas", "lembrete-automatico", "multiagenda"],
+    updatedAt: "2026-11-06",
+  },
 ];
 
 export function getIntentPage(slug: string): IntentPage | null {
@@ -430,7 +756,7 @@ export function getIntentPage(slug: string): IntentPage | null {
 export const INTENT_INDEX = {
   title: "Guias de agendamento online | MeetChat",
   description:
-    "Guias práticos sobre agendamento online: link na bio, WhatsApp, lembretes, faltas, agenda grátis, equipe e agendamento sem aplicativo.",
+    "Guias práticos sobre agendamento online: link na bio, WhatsApp, lembretes, faltas, sinal pelo Pix, preços, pacotes, lista de espera e equipe.",
   h1: "Guias de agendamento online",
   intro:
     "Respostas diretas para quem trabalha com hora marcada e quer que o cliente agende sozinho. Cada guia explica o que funciona e o que o MeetChat faz, sem promessa.",
