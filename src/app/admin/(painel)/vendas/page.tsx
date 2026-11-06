@@ -2,10 +2,13 @@ import { formatInTimeZone } from "date-fns-tz";
 import Link from "next/link";
 
 import { NICHES } from "@/brands";
+import { CopyTextButton } from "@/components/panel/copy-text-button";
 import { Button } from "@/components/ui/button";
+import { chatLinkMessage } from "@/content/sales-script";
 import { formatBRL } from "@/lib/money";
 import { PLAN_PRICES, TIER_NAME } from "@/lib/plans";
 import type { AssistedSale } from "@/lib/sales/assisted";
+import { siteUrl } from "@/lib/site-url";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 import { AdminSection } from "../ui";
@@ -21,6 +24,7 @@ export default async function AdminSalesPage() {
     .select("*, business:businesses(name)")
     .order("created_at", { ascending: false })
     .limit(100);
+  const chatMessage = chatLinkMessage(siteUrl("").replace(/\/$/, ""));
   const sales = (data ?? []) as (AssistedSale & { business: { name: string } | null })[];
   const niches = [
     ...NICHES.map((b) => ({ value: b.key, label: b.niche!.name })).sort((a, b) =>
@@ -53,8 +57,17 @@ export default async function AdminSalesPage() {
         </div>
       </div>
       <AdminSection
+        title="Chat de vendas (automático)"
+        description="Mande esta mensagem para quem chamar no WhatsApp. O chat mostra os modelos de site, os planos e o Pix; a conta é liberada sozinha quando a pessoa paga."
+      >
+        <pre className="rounded-lg bg-muted p-3 text-sm whitespace-pre-wrap">{chatMessage}</pre>
+        <div className="mt-3">
+          <CopyTextButton text={chatMessage} label="Copiar mensagem" variant="default" />
+        </div>
+      </AdminSection>
+      <AdminSection
         title="Nova venda"
-        description="Com os dados que o cliente mandou no chat. Cria a conta (sem teste grátis) e o Pix da 1ª mensalidade."
+        description="Quando você atende pessoalmente: com os dados que o cliente mandou, cria a conta (sem teste grátis) e o Pix da 1ª mensalidade."
       >
         <SaleForm
           niches={niches}
@@ -77,7 +90,8 @@ export default async function AdminSalesPage() {
                   <span className="min-w-0 flex-1">
                     <span className="block font-medium">{sale.business?.name ?? "—"}</span>
                     <span className="block text-sm text-muted-foreground">
-                      {sale.payer_name} ·{" "}
+                      {sale.payer_name}
+                      {sale.source === "chat" ? " · pelo chat" : ""} ·{" "}
                       {formatInTimeZone(
                         new Date(sale.created_at),
                         "America/Sao_Paulo",

@@ -15,8 +15,15 @@ export function isEmbeddable(path: string): boolean {
 
 const SINGLE_SEGMENT = /^\/([a-z0-9][a-z0-9-]{1,38}[a-z0-9])(?:\/site)?\/?$/;
 
-/** Business page and its site: framable by the same origin only (panel previews). */
+/** Example sites and the presentation, opened over the sales chat (/conheca). */
+const SALES_PREVIEW = /^\/(exemplo\/[a-z0-9-]{2,40}(\/agendar)?|apresentacao)\/?$/;
+
+/**
+ * Business page and its site (panel previews), and the example sites and presentation (sales
+ * chat): framable by the same origin only.
+ */
 export function isSelfFramable(path: string): boolean {
+  if (SALES_PREVIEW.test(path)) return true;
   const match = path.match(SINGLE_SEGMENT);
   return Boolean(match && !INTERNAL.has(match[1]!));
 }

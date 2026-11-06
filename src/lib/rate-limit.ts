@@ -31,6 +31,10 @@ export const RATE_LIMITS = {
   accountCreate: { limit: 3, windowSeconds: 24 * 60 * 60 },
   /** Demonstrations of the creation conversation (home page). */
   demo: { limit: 10, windowSeconds: 60 * 60 },
+  /** Sales chat (/conheca): accounts and Pix created, per IP and e-mail, per day. */
+  chatSale: { limit: 3, windowSeconds: 24 * 60 * 60 },
+  /** Sales chat: payment status checks and new Pix, per IP. */
+  chatSaleStatus: { limit: 240, windowSeconds: 60 * 60 },
   /** Pix receipt uploads, per appointment and per IP. */
   receipt: { limit: 10, windowSeconds: 60 * 60 },
 } as const satisfies Record<string, RateLimitRule>;

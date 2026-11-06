@@ -44,6 +44,16 @@ Quer seu próprio endereço, tipo seunegocio.com.br? Fica ${formatBRL(PLAN_PRICE
   ];
 }
 
+/**
+ * The first message with the sales chat link (/conheca, 2026-11-07): the chat shows the example
+ * sites, the plans and the Pix by itself, so this one message replaces messages 1 to 5.
+ */
+export function chatLinkMessage(origin: string): string {
+  return `Oi! Que bom que você chamou 😊 Vou te mostrar como fica: seu site + agenda online, onde seu cliente marca sozinho, 24h, sem você precisar responder "tem horário?".
+
+Toca aqui pra ver como fica o seu: ${origin}/conheca`;
+}
+
 /** Message 5: the Pix of the sale. */
 export function pixMessage(input: {
   firstName: string;

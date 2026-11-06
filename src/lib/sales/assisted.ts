@@ -25,6 +25,10 @@ export interface AssistedSale {
   payer_email: string;
   payer_whatsapp: string | null;
   status: "awaiting_payment" | "paid" | "cancelled";
+  /** "admin": Admin › Vendas; "chat": the sales chat (/conheca). */
+  source: "admin" | "chat";
+  /** The chat logged the owner in right after paying (once). */
+  auto_login_at: string | null;
   pix_payload: string | null;
   pix_image: string | null;
   pix_expires_at: string | null;
@@ -53,8 +57,11 @@ export interface NewSaleInput {
 }
 
 export type NewSaleResult =
-  | { ok: true; saleId: string }
-  | { ok: false; error: "has_business" | "coupon_invalid" | "domain_taken" | "failed" };
+  | { ok: true; saleId: string; token: string }
+  | {
+      ok: false;
+      error: "has_business" | "has_account" | "coupon_invalid" | "domain_taken" | "failed";
+    };
 
 async function freeSlug(name: string): Promise<string> {
   const base = slugify(name) || "minha-agenda";
@@ -64,10 +71,18 @@ async function freeSlug(name: string): Promise<string> {
   return `${base.slice(0, 30)}-${Math.random().toString(36).slice(2, 6)}`;
 }
 
-/** The person's account: created when the e-mail is new, else the existing one. */
-async function accountFor(email: string): Promise<string | null> {
+/**
+ * The person's account: created when the e-mail is new, else the existing one. `newOnly` (the
+ * sales chat, where nobody checked the e-mail): an existing account is never used, so paying with
+ * someone else's e-mail never opens their account.
+ */
+async function accountFor(
+  email: string,
+  newOnly = false,
+): Promise<{ id: string } | { error: "has_account" | "failed" }> {
   const admin = createAdminClient();
   const { data: exists } = await admin.rpc("email_has_account", { p_email: email });
+  if (exists && newOnly) return { error: "has_account" };
   if (!exists) {
     const { data, error } = await admin.auth.admin.createUser({
       email,
@@ -76,17 +91,17 @@ async function accountFor(email: string): Promise<string | null> {
     });
     if (error || !data.user) {
       console.error("sale createUser failed", error?.message);
-      return null;
+      return { error: "failed" };
     }
-    return data.user.id;
+    return { id: data.user.id };
   }
   // The link is never sent: it only returns the existing user.
   const { data, error } = await admin.auth.admin.generateLink({ type: "magiclink", email });
   if (error || !data.user) {
     console.error("sale user lookup failed", error?.message);
-    return null;
+    return { error: "failed" };
   }
-  return data.user.id;
+  return { id: data.user.id };
 }
 
 const PIX_FIELDS = (pix: PixCharge) => ({
@@ -103,7 +118,8 @@ const PIX_FIELDS = (pix: PixCharge) => ({
  */
 export async function createAssistedSale(
   input: NewSaleInput,
-  seller: { id: string; email: string },
+  /** Admin who sold it; null = the sales chat (/conheca), only for a new e-mail. */
+  seller: { id: string; email: string } | null,
 ): Promise<NewSaleResult> {
   const admin = createAdminClient();
   const email = input.email.trim().toLowerCase();
@@ -115,8 +131,12 @@ export async function createAssistedSale(
       .maybeSingle();
     if (used) return { ok: false, error: "domain_taken" };
   }
-  const userId = await accountFor(email);
-  if (!userId) return { ok: false, error: "failed" };
+  const account = await accountFor(email, !seller);
+  if ("error" in account) return { ok: false, error: account.error };
+  const userId = account.id;
+  // Who did it, in the audit log: the admin, or the new owner herself in the chat.
+  const actor = seller ?? { id: userId, email };
+  const via = seller ? "whatsapp_sale" : "sales_chat";
 
   const { data: membership } = await admin
     .from("members")
@@ -172,9 +192,9 @@ export async function createAssistedSale(
   await admin.auth.admin.updateUserById(userId, { user_metadata: { tour_pending: true } });
   await audit({
     businessId: business.id,
-    userId: seller.id,
+    userId: actor.id,
     action: "business.created",
-    details: { via: "whatsapp_sale", by: seller.email },
+    details: { via, by: actor.email },
   });
 
   let pix: PixCharge;
@@ -182,7 +202,7 @@ export async function createAssistedSale(
     const result = await subscribePlan({
       business,
       brand: niche,
-      userId: seller.id,
+      userId: actor.id,
       cycle: input.cycle,
       extraProfessionals: 0,
       tier: input.tier,
@@ -201,12 +221,14 @@ export async function createAssistedSale(
     return { ok: false, error: message === "coupon_invalid" ? "coupon_invalid" : "failed" };
   }
 
+  const saleToken = randomBytes(24).toString("base64url");
   const { data: sale, error: saleError } = await admin
     .from("assisted_sales")
     .insert({
       business_id: business.id,
-      seller_id: seller.id,
-      token: randomBytes(24).toString("base64url"),
+      seller_id: seller?.id ?? null,
+      source: seller ? "admin" : "chat",
+      token: saleToken,
       tier: input.tier,
       cycle: input.cycle,
       value_cents: pix.valueCents,
@@ -236,22 +258,23 @@ export async function createAssistedSale(
   }
   await audit({
     businessId: business.id,
-    userId: seller.id,
-    action: "admin.sale_created",
+    userId: actor.id,
+    action: seller ? "admin.sale_created" : "sale.chat_created",
     details: {
       tier: input.tier,
       cycle: input.cycle,
       value_cents: pix.valueCents,
-      by: seller.email,
+      by: actor.email,
     },
   });
-  return { ok: true, saleId: sale.id as string };
+  return { ok: true, saleId: sale.id as string, token: saleToken };
 }
 
 /** New Pix for a sale whose Pix expired (same plan, same coupon; the payer is already known). */
 export async function renewSalePix(
   saleId: string,
-  seller: { id: string; email: string },
+  /** Admin who asked for it; null = the sales chat (the sale's own owner). */
+  seller: { id: string; email: string } | null,
 ): Promise<boolean> {
   const admin = createAdminClient();
   const { data: row } = await admin
@@ -278,7 +301,7 @@ export async function renewSalePix(
   const result = await subscribePlan({
     business: business as Business,
     brand: getNiche((business as Business).brand_key),
-    userId: seller.id,
+    userId: seller?.id ?? (await ownerOf(sale.business_id)) ?? "",
     cycle: sale.cycle,
     extraProfessionals: 0,
     tier: sale.tier,
@@ -299,6 +322,17 @@ export async function renewSalePix(
     .update({ value_cents: result.pix.valueCents, ...PIX_FIELDS(result.pix) })
     .eq("id", sale.id);
   return true;
+}
+
+/** Owner of a business (the sales chat renews the Pix in her name). */
+async function ownerOf(businessId: string): Promise<string | null> {
+  const { data } = await createAdminClient()
+    .from("members")
+    .select("user_id")
+    .eq("business_id", businessId)
+    .eq("role", "owner")
+    .maybeSingle();
+  return (data?.user_id as string | undefined) ?? null;
 }
 
 /** The Pix of an unpaid sale can no longer be paid (none yet, or past its 24 h). */

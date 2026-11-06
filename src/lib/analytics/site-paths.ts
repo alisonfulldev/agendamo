@@ -40,6 +40,7 @@ export const UNTRACKED_SECTIONS = [
   "auth",
   "avaliar",
   "avisos",
+  "conheca",
   "cancelar",
   "demo",
   "descadastrar",

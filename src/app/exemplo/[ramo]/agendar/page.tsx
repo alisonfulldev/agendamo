@@ -5,7 +5,7 @@ import { NICHES } from "@/brands";
 import { getCurrentBrand } from "@/brands/server";
 import { BrandScope } from "@/components/brand-scope";
 import { ExampleBookingChat } from "@/components/business-site/example-booking-chat";
-import { examplePage } from "@/lib/public/example-site";
+import { exampleName, examplePage } from "@/lib/public/example-site";
 
 export const metadata: Metadata = { title: "Agendamento de exemplo", robots: { index: false } };
 
@@ -18,10 +18,11 @@ export default async function ExampleBookingPage({
   searchParams,
 }: PageProps<"/exemplo/[ramo]/agendar">) {
   const { ramo } = await params;
-  const { modelo } = await searchParams;
+  const { modelo, nome } = await searchParams;
+  const ownName = exampleName(nome);
   const niche = NICHES.find((b) => b.niche!.route === ramo);
   if (!niche) notFound();
-  const data = examplePage(niche);
+  const data = examplePage(niche, ownName);
   const domainBrand = await getCurrentBrand();
 
   return (
@@ -43,7 +44,10 @@ export default async function ExampleBookingPage({
               askName: niche.chatMessages.askName,
               successConfirmed: niche.chatMessages.successConfirmed,
             },
-            siteHref: `/exemplo/${ramo}${modelo === "elegante" ? "?modelo=elegante" : ""}`,
+            siteHref: `/exemplo/${ramo}?${new URLSearchParams({
+              ...(modelo === "elegante" ? { modelo: "elegante" } : {}),
+              ...(ownName ? { nome: ownName } : {}),
+            }).toString()}`,
           }}
         />
       </main>

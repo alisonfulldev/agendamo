@@ -34,6 +34,8 @@ export type AuditAction =
   | "calendar.disconnected"
   | "admin.coupon_created"
   | "admin.sale_created"
+  | "sale.chat_created"
+  | "sale.chat_login"
   | "admin.custom_site"
   | "admin.announcement_sent"
   | "admin.signed_in"

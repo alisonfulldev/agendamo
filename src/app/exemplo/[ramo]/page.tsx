@@ -9,7 +9,7 @@ import { BusinessSite } from "@/components/business-site/business-site";
 import { EXAMPLE_COPY, SHOWCASE_SLUGS } from "@/content/site-examples";
 import { getCurrentBrand } from "@/brands/server";
 import type { SiteTemplate } from "@/lib/db/types";
-import { examplePage } from "@/lib/public/example-site";
+import { exampleName, examplePage } from "@/lib/public/example-site";
 import { getPublicPage } from "@/lib/public/page";
 import { getSiteSettings } from "@/lib/public/site";
 
@@ -25,20 +25,23 @@ export default async function ExampleSitePage({
   searchParams,
 }: PageProps<"/exemplo/[ramo]">) {
   const { ramo } = await params;
-  const { modelo } = await searchParams;
+  const { modelo, nome } = await searchParams;
+  const ownName = exampleName(nome);
+  const nameQuery = ownName ? `nome=${encodeURIComponent(ownName)}` : "";
   const niche = NICHES.find((b) => b.niche!.route === ramo);
   if (!niche) notFound();
   const template: SiteTemplate = modelo === "elegante" ? "elegant" : "vibrant";
   const other: SiteTemplate = template === "elegant" ? "vibrant" : "elegant";
   const domainBrand = await getCurrentBrand();
 
-  const showcase = SHOWCASE_SLUGS[niche.key];
+  // With the person's own name (sales chat), always the generated example.
+  const showcase = ownName ? undefined : SHOWCASE_SLUGS[niche.key];
   const real = showcase ? await getPublicPage(niche.key, showcase) : null;
-  const data = real ?? examplePage(niche);
+  const data = real ?? examplePage(niche, ownName);
   const settings = real ? await getSiteSettings(real.business.slug, real.business.id) : null;
   const chatHref = real
     ? `/${real.business.slug}`
-    : `/exemplo/${ramo}/agendar${template === "elegant" ? "?modelo=elegante" : ""}`;
+    : `/exemplo/${ramo}/agendar${query(template === "elegant" ? "modelo=elegante" : "", nameQuery)}`;
 
   return (
     <BrandScope brand={niche} current={domainBrand}>
@@ -47,7 +50,7 @@ export default async function ExampleSitePage({
           {EXAMPLE_COPY.banner} · {EXAMPLE_COPY.templateName[template]}
         </span>
         <Link
-          href={`/exemplo/${ramo}${other === "elegant" ? "?modelo=elegante" : ""}`}
+          href={`/exemplo/${ramo}${query(other === "elegant" ? "modelo=elegante" : "", nameQuery)}`}
           className="underline underline-offset-4"
         >
           {EXAMPLE_COPY.switchTo[other]}
@@ -66,4 +69,10 @@ export default async function ExampleSitePage({
       />
     </BrandScope>
   );
+}
+
+/** "?a&b" from the non-empty parts. */
+function query(...parts: string[]): string {
+  const joined = parts.filter(Boolean).join("&");
+  return joined ? `?${joined}` : "";
 }

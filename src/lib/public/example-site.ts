@@ -10,8 +10,9 @@ import {
 import type { PublicPage } from "./page";
 
 /** A fictional business of the niche, in the shape of a public page (nothing is stored). */
-export function examplePage(niche: BrandConfig): PublicPage {
-  const name = EXAMPLE_NAMES[niche.key] ?? "Seu negócio";
+export function examplePage(niche: BrandConfig, ownName?: string | null): PublicPage {
+  // The sales chat shows the person's own business name (?nome=).
+  const name = ownName || EXAMPLE_NAMES[niche.key] || "Seu negócio";
   const now = new Date().toISOString();
   const services = niche.suggestedServices.slice(0, 6).map((s, i) => ({
     id: `example-${i}`,
@@ -77,4 +78,16 @@ export function examplePage(niche: BrandConfig): PublicPage {
     })),
     rating: { average: 5, count: 48 },
   };
+}
+
+/** Business name from ?nome= (sales chat): plain text, at most 60 characters. */
+export function exampleName(value: string | string[] | undefined): string | null {
+  if (typeof value !== "string") return null;
+  // Drops control characters and angle brackets (React escapes the rest).
+  const name = [...value]
+    .filter((c) => c >= " " && c !== "<" && c !== ">")
+    .join("")
+    .trim()
+    .slice(0, 60);
+  return name.length >= 2 ? name : null;
 }

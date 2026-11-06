@@ -18,6 +18,11 @@ describe("security headers", () => {
     expect(isSelfFramable("/studio-bela/perfil")).toBe(false);
     expect(isSelfFramable("/painel")).toBe(false);
     expect(isSelfFramable("/painel/pagina")).toBe(false);
+    // Example sites and the presentation open over the sales chat.
+    expect(isSelfFramable("/exemplo/beleza")).toBe(true);
+    expect(isSelfFramable("/exemplo/beleza/agendar")).toBe(true);
+    expect(isSelfFramable("/apresentacao")).toBe(true);
+    expect(isSelfFramable("/exemplo/beleza/outra")).toBe(false);
     const page = securityHeaders("/studio-bela");
     expect(page["X-Frame-Options"]).toBe("SAMEORIGIN");
     expect(page["Content-Security-Policy"]).toContain("frame-ancestors 'self'");
