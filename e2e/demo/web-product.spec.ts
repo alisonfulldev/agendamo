@@ -12,7 +12,9 @@ test("store: catalog, bag and the order on the WhatsApp", async ({ page }) => {
   await page.getByRole("button", { name: "Esmaltes", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Paleta de sombras" })).toHaveCount(0);
   await page.getByRole("button", { name: "Tudo" }).click();
-  const kit = page.locator("li", { has: page.getByRole("heading", { name: "Kit 6 esmaltes nude" }) });
+  const kit = page.locator("li", {
+    has: page.getByRole("heading", { name: "Kit 6 esmaltes nude" }),
+  });
   await kit.getByRole("button", { name: "Adicionar" }).click();
   await kit.getByRole("button", { name: /Mais um/ }).click();
   const oil = page.locator("li", { has: page.getByRole("heading", { name: "Óleo de cutícula" }) });
@@ -86,7 +88,5 @@ test("panel: only the site, its products, subscription and account", async ({ pa
   await page.getByRole("button", { name: "Salvar" }).click();
   await expect(page.getByText("Site atualizado. Já está no ar.")).toBeVisible();
   await page.goto("/bela-cosmeticos");
-  await expect(
-    page.getByRole("heading", { level: 1, name: "Tudo para suas unhas" }),
-  ).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Tudo para suas unhas" })).toBeVisible();
 });
