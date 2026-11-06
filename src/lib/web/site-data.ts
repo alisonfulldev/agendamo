@@ -31,6 +31,7 @@ export async function webSiteData(
   const items = await loadCatalog(business.id, { onlyActive: true });
   const phone = page?.whatsapp_number?.replace(/\D/g, "") || null;
   return {
+    businessId: business.id,
     slug: business.slug,
     name: business.name,
     store,

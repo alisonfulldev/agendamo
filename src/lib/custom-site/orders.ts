@@ -23,6 +23,12 @@ export function customSiteOffer(business: Business): {
   priceCents: number;
 } {
   const features = getPlanFeatures(business);
+  // "Site ou Loja" (2026-11-07): R$ 197, with the first month when not subscribed yet.
+  if (features.web) {
+    return features.subscribed
+      ? { kind: "single", priceCents: PLAN_PRICES.webCustomSite }
+      : { kind: "with_plan", priceCents: PLAN_PRICES.web.monthly + PLAN_PRICES.webCustomSite };
+  }
   if (features.subscribed && features.tier === "site") {
     return { kind: "single", priceCents: PLAN_PRICES.customSite };
   }

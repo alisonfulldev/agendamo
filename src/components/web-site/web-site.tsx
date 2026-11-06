@@ -1,5 +1,6 @@
 import type { CSSProperties, ReactNode } from "react";
 
+import { CUSTOM_WEB_SITES } from "./custom";
 import { FloatingWhatsApp } from "./parts";
 import { SiteBold, SiteClean } from "./site-templates";
 import { StoreClean, StoreShowcase } from "./store-templates";
@@ -19,14 +20,16 @@ export function WebSite({
   theme: CSSProperties;
   badge: ReactNode;
 }) {
+  // A site made by a person for this business (custom site), else the owner's template.
   const Template =
-    data.template === "site_clean"
+    CUSTOM_WEB_SITES[data.businessId] ??
+    (data.template === "site_clean"
       ? SiteClean
       : data.template === "store_showcase"
         ? StoreShowcase
         : data.template === "store_clean"
           ? StoreClean
-          : SiteBold;
+          : SiteBold);
   return (
     <div data-theme-scope="" style={theme} className="min-h-[100dvh] bg-background">
       <Template data={data} badge={badge} />

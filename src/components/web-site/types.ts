@@ -13,6 +13,7 @@ export interface WebItem {
 
 /** Everything a "Site ou Loja" template draws (built on the server from the business data). */
 export interface WebSiteData {
+  businessId: string;
   slug: string;
   name: string;
   store: boolean;

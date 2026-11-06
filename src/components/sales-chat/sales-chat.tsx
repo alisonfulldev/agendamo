@@ -537,7 +537,7 @@ export function SalesChat({
   );
 }
 
-interface ComposerSettings {
+export interface ComposerSettings {
   placeholder: string;
   type?: string;
   inputMode?: "text" | "email" | "tel" | "numeric";
@@ -579,7 +579,7 @@ function composerFor(phase: Phase): ComposerSettings | null {
   }
 }
 
-function Composer({
+export function Composer({
   enabled,
   settings,
   onSubmit,
@@ -624,9 +624,9 @@ function Composer({
   );
 }
 
-const choice =
+export const choice =
   "rounded-full border-2 border-primary bg-card px-4 py-2.5 text-[16px] font-semibold text-primary hover:bg-primary hover:text-primary-foreground";
-const primary =
+export const primary =
   "flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 text-[16px] font-semibold text-primary-foreground";
 
 function Options({
@@ -890,7 +890,7 @@ function Options({
   }
 }
 
-function PixCard({
+export function PixCard({
   pix,
   expired,
   onRenew,
@@ -934,7 +934,7 @@ function PixCard({
 }
 
 /** Example site or presentation over the chat, with the way back always at the top. */
-function Preview({ url, onClose }: { url: string; onClose: () => void }) {
+export function Preview({ url, onClose }: { url: string; onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-background" role="dialog" aria-modal="true">
       <button

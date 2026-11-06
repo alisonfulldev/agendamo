@@ -133,7 +133,13 @@ export async function chatSaleStatusAction(rawToken: unknown): Promise<ChatSaleS
     return {
       status: "paid",
       chatUrl: businessUrl(brand, `/${sale.business.slug}`),
-      siteUrl: sale.tier === "site" ? businessUrl(brand, `/${sale.business.slug}/site`) : null,
+      // "Site ou Loja": the business link is the site itself.
+      siteUrl:
+        sale.tier === "site"
+          ? businessUrl(brand, `/${sale.business.slug}/site`)
+          : sale.tier === "web"
+            ? businessUrl(brand, `/${sale.business.slug}`)
+            : null,
       email: sale.payer_email,
     };
   }

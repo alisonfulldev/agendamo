@@ -41,6 +41,7 @@ export const UNTRACKED_SECTIONS = [
   "avaliar",
   "avisos",
   "conheca",
+  "criar-site",
   "cancelar",
   "demo",
   "descadastrar",

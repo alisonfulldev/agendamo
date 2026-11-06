@@ -24,7 +24,7 @@ const brDate = (iso: string) => iso.slice(0, 10).split("-").reverse().join("/");
  * then one adjustment.
  */
 export default async function CustomSitePage() {
-  const { business } = await requireOwner();
+  const { business } = await requireOwner({ anyProduct: true });
   const offer = customSiteOffer(business);
 
   const header = (

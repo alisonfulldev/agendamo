@@ -22,7 +22,7 @@ export async function saveBriefingAction(
   input: unknown,
   send: boolean,
 ): Promise<{ ok: boolean; message: string }> {
-  const { business } = await requireOwner();
+  const { business } = await requireOwner({ anyProduct: true });
   const result = await saveBriefing(business, input, Boolean(send));
   revalidatePath(PATH);
   if (!result.ok) return { ok: false, message: result.error };
@@ -30,7 +30,7 @@ export async function saveBriefingAction(
 }
 
 export async function removeBriefingPhotoAction(key: string): Promise<void> {
-  const { business } = await requireOwner();
+  const { business } = await requireOwner({ anyProduct: true });
   if (typeof key !== "string" || key.length > 300) return;
   await removeBriefingPhoto(business.id, key);
   revalidatePath(PATH);
@@ -55,7 +55,7 @@ const payerSchema = z
 export async function startCustomSitePaymentAction(
   input: unknown,
 ): Promise<{ ok: true; pix: PixCharge } | { ok: false; message: string }> {
-  const { business, brand, user } = await requireOwner();
+  const { business, brand, user } = await requireOwner({ anyProduct: true });
   if (!(await rateLimitRequest("publicAction", `custom-site:${business.id}`))) {
     return { ok: false, message: "Muitas tentativas. Espere um pouco." };
   }
@@ -94,7 +94,7 @@ export async function startCustomSitePaymentAction(
 export async function requestAdjustmentAction(
   text: unknown,
 ): Promise<{ ok: boolean; message: string }> {
-  const { business } = await requireOwner();
+  const { business } = await requireOwner({ anyProduct: true });
   const parsed = z.string().trim().min(10, "Conte o que quer mudar.").max(2000).safeParse(text);
   if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? "" };
   const ok = await requestAdjustment(business, parsed.data);

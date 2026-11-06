@@ -7,7 +7,7 @@ import { audit } from "@/lib/audit";
 import { subscribePlan, type PixCharge } from "@/lib/billing/service";
 import { DEFAULT_HOURS } from "@/lib/business/schemas";
 import { checkSlug } from "@/lib/business/slug-check";
-import type { Business, SiteTemplate } from "@/lib/db/types";
+import type { Business, SiteTemplate, WebTemplate } from "@/lib/db/types";
 import { PLAN_PRICES, type Cycle, type Tier } from "@/lib/plans";
 import { slugify } from "@/lib/slug";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -48,7 +48,9 @@ export interface NewSaleInput {
   cpfCnpj: string;
   tier: Tier;
   cycle: Cycle;
-  template: SiteTemplate;
+  template: SiteTemplate | WebTemplate;
+  /** "Site ou Loja" (tier "web"): a site or a store, without booking. Absent: booking. */
+  product?: "site" | "store";
   couponCode: string | null;
   /** Own .br domain (first year in the first Pix). */
   domain: string | null;
@@ -62,6 +64,11 @@ export type NewSaleResult =
       ok: false;
       error: "has_business" | "has_account" | "coupon_invalid" | "domain_taken" | "failed";
     };
+
+/** The custom site's creation: R$ 148 with "Site + Agenda", R$ 197 with "Site ou Loja". */
+function customSitePrice(tier: AssistedSale["tier"]): number {
+  return tier === "web" ? PLAN_PRICES.webCustomSite : PLAN_PRICES.customSite;
+}
 
 async function freeSlug(name: string): Promise<string> {
   const base = slugify(name) || "minha-agenda";
@@ -175,6 +182,12 @@ export async function createAssistedSale(
   }
   const { data: created } = await admin.from("businesses").select("*").eq("slug", slug).single();
   const business = created as Business;
+  if (input.product) {
+    // "Site ou Loja": no booking services (create_business asks for them; removed right away).
+    await admin.from("services").delete().eq("business_id", business.id);
+    await admin.from("businesses").update({ product: input.product }).eq("id", business.id);
+    business.product = input.product;
+  }
   await admin.from("site_settings").upsert({
     business_id: business.id,
     template: input.template,
@@ -188,8 +201,10 @@ export async function createAssistedSale(
       status: "awaiting_payment",
     });
   }
-  // First access opens the panel tutorial, like any new account.
-  await admin.auth.admin.updateUserById(userId, { user_metadata: { tour_pending: true } });
+  // First access opens the panel tutorial, like any new booking account.
+  if (!input.product) {
+    await admin.auth.admin.updateUserById(userId, { user_metadata: { tour_pending: true } });
+  }
   await audit({
     businessId: business.id,
     userId: actor.id,
@@ -210,7 +225,7 @@ export async function createAssistedSale(
       couponCode: input.couponCode,
       firstExtraCents:
         (input.domain ? PLAN_PRICES.domainYearly : 0) +
-        (input.customSite ? PLAN_PRICES.customSite : 0),
+        (input.customSite ? customSitePrice(input.tier) : 0),
     });
     if (result.kind !== "pix") throw new Error("unexpected_change");
     pix = result.pix;
@@ -251,7 +266,7 @@ export async function createAssistedSale(
     await admin.from("custom_site_orders").insert({
       business_id: business.id,
       payment_kind: "with_plan",
-      price_cents: PLAN_PRICES.site.monthly + PLAN_PRICES.customSite,
+      price_cents: PLAN_PRICES[input.tier].monthly + customSitePrice(input.tier),
       pix_payload: pix.payload,
       pix_expires_at: pix.expiresAt,
     });
@@ -308,7 +323,7 @@ export async function renewSalePix(
     // The Asaas customer already exists: its document is not asked again.
     payer: { name: sale.payer_name, cpfCnpj: "", email: sale.payer_email },
     couponCode: sale.coupon_code,
-    firstExtraCents: sale.domain_cents + (order ? PLAN_PRICES.customSite : 0),
+    firstExtraCents: sale.domain_cents + (order ? customSitePrice(sale.tier) : 0),
   });
   if (result.kind !== "pix") return false;
   if (order) {

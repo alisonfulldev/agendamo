@@ -16,7 +16,8 @@ export function isEmbeddable(path: string): boolean {
 const SINGLE_SEGMENT = /^\/([a-z0-9][a-z0-9-]{1,38}[a-z0-9])(?:\/site)?\/?$/;
 
 /** Example sites and the presentation, opened over the sales chat (/conheca). */
-const SALES_PREVIEW = /^\/(exemplo\/[a-z0-9-]{2,40}(\/agendar)?|apresentacao)\/?$/;
+const SALES_PREVIEW =
+  /^\/(exemplo\/[a-z0-9-]{2,40}(\/agendar)?|exemplo\/web\/[a-z_]{4,20}|apresentacao)\/?$/;
 
 /**
  * Business page and its site (panel previews), and the example sites and presentation (sales

@@ -114,7 +114,14 @@ export const WEB_SECTIONS: NavSection[] = [
     key: "web_site",
     label: "Meu site",
     tab: true,
-    items: [{ href: "/painel/web/site", label: "Meu site", hint: "Modelo, cores, fotos e textos" }],
+    items: [
+      { href: "/painel/web/site", label: "Meu site", hint: "Modelo, cores, fotos e textos" },
+      {
+        href: "/painel/site/personalizado",
+        label: "Site personalizado",
+        hint: "Feito por uma pessoa, sob medida",
+      },
+    ],
   },
   {
     key: "web_catalog",

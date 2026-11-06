@@ -36,7 +36,7 @@ export const WEB_TEMPLATE_INFO: Record<WebTemplate, { name: string; hint: string
   site_bold: { name: "Impacto", hint: "Foto grande no topo, cores fortes e títulos enormes" },
   site_clean: { name: "Clean", hint: "Claro, espaçoso e sofisticado" },
   store_showcase: { name: "Vitrine", hint: "Produtos em destaque, cores fortes" },
-  store_clean: { name: "Clean", hint: "Fundo claro, fotos grandes, estilo boutique" },
+  store_clean: { name: "Boutique", hint: "Fundo claro, fotos grandes, estilo elegante" },
 };
 
 const fieldset = "flex flex-col gap-4 rounded-xl border bg-card p-5";

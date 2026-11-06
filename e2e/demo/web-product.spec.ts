@@ -90,3 +90,67 @@ test("panel: only the site, its products, subscription and account", async ({ pa
   await page.goto("/bela-cosmeticos");
   await expect(page.getByRole("heading", { level: 1, name: "Tudo para suas unhas" })).toBeVisible();
 });
+
+test("sales chat (/criar-site): store with her name, custom offer, Pix and the panel", async ({
+  page,
+  browser,
+}) => {
+  const stamp = Date.now().toString(36);
+  const name = `Loja ${stamp}`;
+  const email = `loja-${stamp}@exemplo.com`;
+
+  const visitor = await browser.newContext();
+  const chat = await visitor.newPage();
+  await chat.goto("/criar-site");
+  await expect(chat.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
+  await chat.getByRole("button", { name: "Uma loja com catálogo" }).click();
+  await chat.getByPlaceholder("Nome do seu negócio").fill(name);
+  await chat.keyboard.press("Enter");
+
+  // The template opens over the chat, with her name, and comes back.
+  await chat.getByRole("button", { name: /Vitrine.*Ver/ }).click();
+  const frame = chat.frameLocator('iframe[title="Prévia do site"]');
+  await expect(frame.getByRole("heading", { level: 1, name })).toBeVisible();
+  await chat.getByRole("button", { name: "Voltar para a conversa" }).click();
+
+  // "Não gostei de nenhum" offers the custom site; she goes back to the templates.
+  await chat.getByRole("button", { name: "Não gostei de nenhum" }).click();
+  await expect(chat.getByText(/R\$ 197,00 \(uma vez só\)/)).toBeVisible();
+  await chat.getByRole("button", { name: "Prefiro um dos modelos" }).click();
+  await chat.getByRole("button", { name: "Vitrine", exact: true }).click();
+  // The end of the tour: her store is ready as a preview; publishing is the plan.
+  await expect(chat.getByText(/Sua loja está pronta!/)).toBeVisible();
+  await chat.getByRole("button", { name: "Ver minha loja" }).click();
+  await expect(frame.getByText(/Prévia da sua loja/)).toBeVisible();
+  await chat.getByRole("button", { name: "Voltar para a conversa" }).click();
+  await chat.getByRole("button", { name: "Publicar minha loja" }).click();
+  await chat.getByRole("button", { name: /Mensal/ }).click();
+  await chat.getByPlaceholder("Nome completo").fill("Maria Loja Teste");
+  await chat.keyboard.press("Enter");
+  await chat.getByPlaceholder("seuemail@exemplo.com").fill(email);
+  await chat.keyboard.press("Enter");
+  await chat.getByPlaceholder("(11) 99999-9999").fill("11988887777");
+  await chat.keyboard.press("Enter");
+  await chat.getByPlaceholder("CPF ou CNPJ").fill("529.982.247-25");
+  await chat.keyboard.press("Enter");
+  await expect(chat.getByText(/Loja · R\$ 29,00\/mês/)).toBeVisible();
+  await chat.getByRole("button", { name: "Gerar meu Pix" }).click();
+  await expect(chat.getByRole("img", { name: "QR code do Pix" })).toBeVisible({ timeout: 20_000 });
+
+  // The Asaas webhook confirms the payment (simulated in demo mode).
+  await page.goto("/demo#assinaturas");
+  await page
+    .locator("form", { hasText: name })
+    .filter({ has: page.getByRole("button", { name: "Confirmar pagamento" }) })
+    .first()
+    .getByRole("button", { name: "Confirmar pagamento" })
+    .click();
+  await expect(page.getByText(/Pagamento confirmado: a assinatura foi ativada/)).toBeVisible();
+
+  await expect(chat.getByText(/Sua loja já está no ar/)).toBeVisible({ timeout: 20_000 });
+  await expect(chat.getByText(/R\$ 120,00 por ano/)).toBeVisible();
+  await chat.getByRole("button", { name: "Entrar no painel" }).click();
+  await chat.waitForURL(/\/painel\/web/);
+  await expect(chat.getByText("O link da sua loja")).toBeVisible();
+  await visitor.close();
+});

@@ -41,7 +41,13 @@ export async function completeAssistedSale(businessId: string): Promise<void> {
   const brand = getNiche(sale.business.brand_key);
   const firstName = sale.payer_name.split(" ")[0];
   const chat = brandUrl(brand, `/${sale.business.slug}`);
-  const site = sale.tier === "site" ? brandUrl(brand, `/${sale.business.slug}/site`) : null;
+  // "Site ou Loja": the business link is the site itself (no booking link).
+  const web = sale.tier === "web";
+  const site = web
+    ? chat
+    : sale.tier === "site"
+      ? brandUrl(brand, `/${sale.business.slug}/site`)
+      : null;
 
   const { data: owner } = await admin
     .from("members")
@@ -64,11 +70,15 @@ export async function completeAssistedSale(businessId: string): Promise<void> {
     to: sale.payer_email,
     subject: `Sua conta está pronta, ${firstName}!`,
     content: {
-      preheader: "Pagamento confirmado. Seu link de agendamento já está no ar.",
+      preheader: web
+        ? "Pagamento confirmado. Seu site já está no ar."
+        : "Pagamento confirmado. Seu link de agendamento já está no ar.",
       heading: "Pagamento confirmado 🎉",
       paragraphs: [
         `Oi, ${firstName}! A conta de ${sale.business.name} está pronta e já está no ar.`,
-        "Entre no painel com este e-mail: você recebe um código para entrar, sem senha. Lá você coloca sua foto, ajusta serviços, preços e horários.",
+        web
+          ? "Entre no painel com este e-mail: você recebe um código para entrar, sem senha. Lá você coloca seu logo, fotos, textos e o que você vende."
+          : "Entre no painel com este e-mail: você recebe um código para entrar, sem senha. Lá você coloca sua foto, ajusta serviços, preços e horários.",
         ...(sale.domain
           ? [
               `Seu endereço próprio, ${sale.domain}, está sendo registrado no seu nome. Avisamos por e-mail assim que o site estiver no ar nele.`,
@@ -76,7 +86,7 @@ export async function completeAssistedSale(businessId: string): Promise<void> {
           : []),
       ],
       details: [
-        { label: "Seu link de agendamento", value: chat },
+        ...(web ? [] : [{ label: "Seu link de agendamento", value: chat }]),
         ...(site ? [{ label: "Seu site", value: site }] : []),
         { label: "Plano", value: TIER_NAME[sale.tier] },
       ],

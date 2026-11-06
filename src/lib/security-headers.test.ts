@@ -22,6 +22,7 @@ describe("security headers", () => {
     expect(isSelfFramable("/exemplo/beleza")).toBe(true);
     expect(isSelfFramable("/exemplo/beleza/agendar")).toBe(true);
     expect(isSelfFramable("/apresentacao")).toBe(true);
+    expect(isSelfFramable("/exemplo/web/store_clean")).toBe(true);
     expect(isSelfFramable("/exemplo/beleza/outra")).toBe(false);
     const page = securityHeaders("/studio-bela");
     expect(page["X-Frame-Options"]).toBe("SAMEORIGIN");
