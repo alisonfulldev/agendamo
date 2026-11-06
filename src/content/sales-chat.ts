@@ -97,6 +97,10 @@ export const SALES_CHAT = {
   openSite: "Ver meu site",
   openChat: "Meu link de agendamento",
   openPanel: "Entrar no painel",
+  signIn: "Entrar com código",
+  /** How to open the panel any other day. */
+  loginLater:
+    "Para entrar depois, de qualquer celular ou computador: meetchat.com.br/entrar com o seu e-mail. Chega um código, sem senha.",
   paidEmail:
     "Também mandei o acesso para {email}. No painel você coloca sua foto, seus serviços, preços e horários.",
 
@@ -106,7 +110,8 @@ export const SALES_CHAT = {
     has_business: "Esse e-mail já tem um negócio no MeetChat. Use outro e-mail.",
     limit: "Muitas tentativas por agora. Tente de novo mais tarde.",
     failed: "Não consegui gerar o Pix agora. Tenta de novo?",
-    login: "Não consegui entrar direto. Use o código que chegou no seu e-mail.",
+    login:
+      "Não consegui entrar direto. Toque em “Entrar com código” e use o código que vai chegar no seu e-mail.",
   },
   restart: "Começar de novo",
 } as const;

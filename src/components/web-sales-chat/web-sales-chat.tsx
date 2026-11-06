@@ -267,6 +267,7 @@ export function WebSalesChat({ initialName }: { initialName: string | null }) {
             system(fill(W.paid, { what: s.product === "store" ? W.paidStore : W.paidSite })),
             ...(s.customSite ? [system(W.paidCustom)] : []),
             system(fill(W.paidEmail, { email: status.email })),
+            system(T.loginLater),
             system(W.domain),
           ],
         }));
@@ -318,13 +319,10 @@ export function WebSalesChat({ initialName }: { initialName: string | null }) {
 
   async function enterPanel() {
     if (!state.token) return;
+    // On success the server sends her to the panel (with the session); the paid conversation
+    // stays saved, so coming back to this link shows it again.
     const result = await enterPanelAction(state.token).catch(() => ({ ok: false }));
-    if (result.ok) {
-      save(null);
-      window.location.href = "/painel";
-    } else {
-      setNotice(T.errors.login);
-    }
+    if (!result?.ok) setNotice(T.errors.login);
   }
 
   function submitText(text: string) {
@@ -742,6 +740,12 @@ function Options({
           <button type="button" className={primary} onClick={onEnterPanel}>
             {W.openPanel}
           </button>
+          <Link
+            href="/entrar"
+            className="flex min-h-11 items-center justify-center rounded-xl border bg-card font-medium"
+          >
+            {T.signIn}
+          </Link>
           {state.paid.siteUrl ? (
             <a
               href={state.paid.siteUrl}

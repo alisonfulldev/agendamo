@@ -1,5 +1,6 @@
 "use server";
 
+import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { NICHES } from "@/brands";
@@ -230,5 +231,6 @@ export async function enterPanelAction(rawToken: unknown): Promise<{ ok: boolean
     action: "sale.chat_login",
     details: {},
   });
-  return { ok: true };
+  // Sent by the server with the new session cookies, so the panel opens already signed in.
+  redirect("/painel");
 }

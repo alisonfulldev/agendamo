@@ -279,6 +279,7 @@ export function SalesChat({
         update({ phase: "paid", paid: status }, [
           system(fill(T.paid, { what })),
           system(fill(T.paidEmail, { email: status.email })),
+          system(T.loginLater),
         ]);
       } else if (status?.status === "awaiting_payment" && status.expired) {
         update({ expired: true }, [system(T.expired)]);
@@ -328,13 +329,10 @@ export function SalesChat({
 
   async function enterPanel() {
     if (!state.token) return;
+    // On success the server sends her to the panel (with the session); the paid conversation
+    // stays saved, so coming back to this link shows it again.
     const result = await enterPanelAction(state.token).catch(() => ({ ok: false }));
-    if (result.ok) {
-      save(null);
-      window.location.href = "/painel";
-    } else {
-      setNotice(T.errors.login);
-    }
+    if (!result?.ok) setNotice(T.errors.login);
   }
 
   function restart() {
@@ -857,6 +855,12 @@ function Options({
           <button type="button" className={primary} onClick={onEnterPanel}>
             {T.openPanel}
           </button>
+          <Link
+            href="/entrar"
+            className="flex min-h-11 items-center justify-center rounded-xl border bg-card font-medium"
+          >
+            {T.signIn}
+          </Link>
           {state.paid.siteUrl ? (
             <a
               href={state.paid.siteUrl}
