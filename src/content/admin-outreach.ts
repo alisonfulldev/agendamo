@@ -7,7 +7,7 @@ import type { AdminStatus } from "@/lib/admin-metrics";
  */
 
 export type OutreachSituation =
-  "welcome" | "no_booking" | "no_photo" | "trial_ending" | "waiting" | "subscribed";
+  "welcome" | "no_booking" | "no_photo" | "trial_ending" | "waiting" | "overdue" | "subscribed";
 
 export const OUTREACH_LABELS: Record<OutreachSituation, string> = {
   welcome: "Boas-vindas",
@@ -15,6 +15,7 @@ export const OUTREACH_LABELS: Record<OutreachSituation, string> = {
   no_photo: "Sem foto",
   trial_ending: "Teste acabando",
   waiting: "Teste terminou",
+  overdue: "Pagamento em atraso",
   subscribed: "Assinante",
 };
 
@@ -26,6 +27,8 @@ export interface OutreachInput {
   trialEndsAt: string | null;
   hasBooking: boolean;
   hasPhoto: boolean;
+  /** Subscription with a late payment. */
+  overdue?: boolean;
 }
 
 /** The most useful message for the account right now (null for suspended accounts). */
@@ -34,7 +37,7 @@ export function outreachSituation(
   now = new Date(),
 ): OutreachSituation | null {
   if (input.status === "suspended") return null;
-  if (input.status === "subscribed") return "subscribed";
+  if (input.status === "subscribed") return input.overdue ? "overdue" : "subscribed";
   if (input.status === "waiting") return "waiting";
   const ends = input.trialEndsAt ? new Date(input.trialEndsAt).getTime() - now.getTime() : null;
   if (ends !== null && ends <= 3 * DAY_MS) return "trial_ending";
@@ -70,6 +73,8 @@ export function outreachMessage(
       return `${HELLO} Seu teste ${daysLeftText(input.trialEndsAt, now)}. Queria saber como está sendo com o ${businessName}: tem alguma coisa que eu possa melhorar ou te ajudar a configurar?`;
     case "waiting":
       return `${HELLO} Vi que o teste do ${businessName} terminou. Queria entender o que faltou para o MeetChat funcionar para você. Sua opinião me ajuda muito a melhorar!`;
+    case "overdue":
+      return `${HELLO} Vi que a mensalidade do ${businessName} ficou pendente. Aconteceu alguma coisa com o Pix? Se quiser, te ajudo a resolver para a sua agenda não parar.`;
     case "subscribed":
       return `${HELLO} Obrigado por confiar no MeetChat com o ${businessName}! Qualquer dúvida ou ideia, pode me chamar aqui.`;
   }

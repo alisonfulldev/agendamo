@@ -21,6 +21,9 @@ describe("outreachSituation", () => {
     );
     expect(outreachSituation({ ...base, status: "waiting" }, now)).toBe("waiting");
     expect(outreachSituation({ ...base, status: "subscribed" }, now)).toBe("subscribed");
+    expect(outreachSituation({ ...base, status: "subscribed", overdue: true }, now)).toBe(
+      "overdue",
+    );
     expect(outreachSituation({ ...base, status: "suspended" }, now)).toBeNull();
   });
 });

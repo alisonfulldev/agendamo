@@ -12,7 +12,12 @@ import {
   type AdminStatus,
 } from "@/lib/admin-metrics";
 import type { Business, Subscription } from "@/lib/db/types";
-import { OUTREACH_LABELS, outreachMessage, outreachSituation } from "@/content/admin-outreach";
+import {
+  OUTREACH_LABELS,
+  outreachMessage,
+  outreachSituation,
+  type OutreachSituation,
+} from "@/content/admin-outreach";
 import { whatsappLink } from "@/content/sales-script";
 import { formatBRL } from "@/lib/money";
 import { normalizeBrPhone } from "@/lib/phone";
@@ -239,6 +244,7 @@ export default async function AdminBusinessesPage({ searchParams }: PageProps<"/
                           phone={pages.get(b.id)?.whatsapp_number ?? null}
                           hasPhoto={Boolean(pages.get(b.id)?.avatar_key)}
                           hasBooking={(bookings.get(b.id) ?? 0) > 0}
+                          overdue={sub?.status === "overdue"}
                           link={businessUrl(brand, `/${b.slug}`)}
                           now={now}
                         />
@@ -306,6 +312,7 @@ function OutreachButton({
   phone,
   hasPhoto,
   hasBooking,
+  overdue,
   link,
   now,
 }: {
@@ -314,6 +321,7 @@ function OutreachButton({
   phone: string | null;
   hasPhoto: boolean;
   hasBooking: boolean;
+  overdue: boolean;
   link: string;
   now: Date;
 }) {
@@ -325,6 +333,7 @@ function OutreachButton({
       trialEndsAt: business.trial_ends_at,
       hasBooking,
       hasPhoto,
+      overdue,
     },
     now,
   );
@@ -332,20 +341,47 @@ function OutreachButton({
   if (!number) {
     return <span className="mt-1.5 block text-xs text-muted-foreground">Sem WhatsApp</span>;
   }
-  const text = outreachMessage(
-    situation,
-    { businessName: business.name, link, trialEndsAt: business.trial_ends_at },
-    now,
+  const href = (choice: OutreachSituation) =>
+    whatsappLink(
+      number,
+      outreachMessage(
+        choice,
+        { businessName: business.name, link, trialEndsAt: business.trial_ends_at },
+        now,
+      ),
+    );
+  const others = (Object.keys(OUTREACH_LABELS) as OutreachSituation[]).filter(
+    (choice) => choice !== situation,
   );
   return (
-    <a
-      href={whatsappLink(number, text)}
-      target="_blank"
-      rel="noreferrer"
-      className="mt-1.5 inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-medium whitespace-nowrap hover:bg-muted"
-    >
-      Chamar no WhatsApp
-      <span className="font-normal text-muted-foreground">· {OUTREACH_LABELS[situation]}</span>
-    </a>
+    <div className="mt-1.5">
+      {/* The message of the account's current phase; the others stay one tap away. */}
+      <a
+        href={href(situation)}
+        target="_blank"
+        rel="noreferrer"
+        className="inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-medium whitespace-nowrap hover:bg-muted"
+      >
+        Chamar no WhatsApp
+        <span className="font-normal text-muted-foreground">· {OUTREACH_LABELS[situation]}</span>
+      </a>
+      <details className="mt-1 text-xs">
+        <summary className="cursor-pointer text-muted-foreground">Outra mensagem</summary>
+        <ul className="mt-1 flex flex-col gap-1">
+          {others.map((choice) => (
+            <li key={choice}>
+              <a
+                href={href(choice)}
+                target="_blank"
+                rel="noreferrer"
+                className="text-primary underline"
+              >
+                {OUTREACH_LABELS[choice]}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </details>
+    </div>
   );
 }
