@@ -233,6 +233,15 @@ export default async function AdminBusinessesPage({ searchParams }: PageProps<"/
                           {brand.niche?.name ?? "Outro / Geral"} ·{" "}
                           {emails.get(b.id) ?? "sem e-mail"}
                         </span>
+                        <OutreachButton
+                          business={b}
+                          status={situation}
+                          phone={pages.get(b.id)?.whatsapp_number ?? null}
+                          hasPhoto={Boolean(pages.get(b.id)?.avatar_key)}
+                          hasBooking={(bookings.get(b.id) ?? 0) > 0}
+                          link={businessUrl(brand, `/${b.slug}`)}
+                          now={now}
+                        />
                       </td>
                       <td className="py-2.5 pr-3">
                         <StatusBadge status={situation} />
@@ -272,15 +281,6 @@ export default async function AdminBusinessesPage({ searchParams }: PageProps<"/
                         {views.get(b.id) ?? 0}
                       </td>
                       <td className="py-2.5">
-                        <OutreachButton
-                          business={b}
-                          status={situation}
-                          phone={pages.get(b.id)?.whatsapp_number ?? null}
-                          hasPhoto={Boolean(pages.get(b.id)?.avatar_key)}
-                          hasBooking={(bookings.get(b.id) ?? 0) > 0}
-                          link={businessUrl(brand, `/${b.slug}`)}
-                          now={now}
-                        />
                         <BusinessActions
                           id={b.id}
                           suspended={Boolean(b.suspended_at)}
@@ -330,7 +330,7 @@ function OutreachButton({
   );
   if (!situation) return null;
   if (!number) {
-    return <span className="mb-1.5 block text-xs text-muted-foreground">Sem WhatsApp</span>;
+    return <span className="mt-1.5 block text-xs text-muted-foreground">Sem WhatsApp</span>;
   }
   const text = outreachMessage(
     situation,
@@ -342,10 +342,10 @@ function OutreachButton({
       href={whatsappLink(number, text)}
       target="_blank"
       rel="noreferrer"
-      className="mb-1.5 inline-flex flex-col rounded-lg border px-2.5 py-1 text-xs font-medium whitespace-nowrap hover:bg-muted"
+      className="mt-1.5 inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-medium whitespace-nowrap hover:bg-muted"
     >
       Chamar no WhatsApp
-      <span className="font-normal text-muted-foreground">{OUTREACH_LABELS[situation]}</span>
+      <span className="font-normal text-muted-foreground">· {OUTREACH_LABELS[situation]}</span>
     </a>
   );
 }
