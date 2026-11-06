@@ -19,7 +19,7 @@ export const PRICING = {
     description: `Site profissional + agenda online por ${SITE_PRICE_TEXT.monthly}, ou só a agenda online por ${PRICE_TEXT.monthly}. Comece grátis, sem cartão, com ${TRIAL_DAYS} dias para testar.`,
   },
   title: "Preços",
-  intro: `Comece grátis, sem cartão. Todo cadastro começa com ${TRIAL_DAYS} dias com tudo liberado, inclusive o seu site. Depois, você escolhe: ${SITE_PLAN_NAME}, só a agenda (${PLAN_NAME}) ou continuar grátis no modo WhatsApp.`,
+  intro: `Comece grátis, sem cartão. Todo cadastro começa com ${TRIAL_DAYS} dias com tudo liberado, inclusive o seu site. Depois, você escolhe: continuar grátis no modo WhatsApp, só a agenda (${PLAN_NAME}) ou ${SITE_PLAN_NAME}.`,
   tiers: [
     {
       id: "gratis",
@@ -37,27 +37,6 @@ export const PRICING = {
         { included: false, text: "Horário reservado automaticamente na sua agenda" },
         { included: false, text: "Lembretes automáticos" },
         { included: false, text: "Agenda, clientes e financeiro no painel" },
-      ],
-    },
-    {
-      id: "site",
-      name: SITE_PLAN_NAME,
-      summary: "Seu site profissional pronto para o Google, com a agenda online dentro.",
-      price: SITE_PRICE_TEXT.monthly,
-      priceNote: `ou ${SITE_PRICE_TEXT.yearly} no anual. Sem fidelidade. ${TRIAL_DAYS} dias grátis para testar, sem cartão.`,
-      highlight: true,
-      items: [
-        {
-          included: true,
-          text: "Site do seu negócio, na sua cor, com serviços, preços, fotos e avaliações",
-        },
-        {
-          included: true,
-          text: "Feito para aparecer no Google, com o seu endereço e a sua cidade",
-        },
-        { included: true, text: "Você muda modelo, cores, foto e textos quando quiser" },
-        { included: true, text: "Todo botão “Agendar” do site abre a sua agenda online" },
-        { included: true, text: `Tudo do plano ${PLAN_NAME}` },
       ],
     },
     {
@@ -79,6 +58,27 @@ export const PRICING = {
           text: `1 profissional incluso; cada profissional a mais custa ${PRICE_TEXT.extraProfessional} (${reais(PLAN_PRICES.extraProfessional.yearly)}/ano no anual)`,
         },
         { included: true, text: "Marca MeetChat discreta, em uma linha pequena no rodapé" },
+      ],
+    },
+    {
+      id: "site",
+      name: SITE_PLAN_NAME,
+      summary: "Seu site profissional pronto para o Google, com a agenda online dentro.",
+      price: SITE_PRICE_TEXT.monthly,
+      priceNote: `ou ${SITE_PRICE_TEXT.yearly} no anual. Sem fidelidade. ${TRIAL_DAYS} dias grátis para testar, sem cartão.`,
+      highlight: true,
+      items: [
+        {
+          included: true,
+          text: "Site do seu negócio, na sua cor, com serviços, preços, fotos e avaliações",
+        },
+        {
+          included: true,
+          text: "Feito para aparecer no Google, com o seu endereço e a sua cidade",
+        },
+        { included: true, text: "Você muda modelo, cores, foto e textos quando quiser" },
+        { included: true, text: "Todo botão “Agendar” do site abre a sua agenda online" },
+        { included: true, text: `Tudo do plano ${PLAN_NAME}` },
       ],
     },
   ],

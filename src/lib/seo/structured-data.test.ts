@@ -108,11 +108,11 @@ describe("MeetChat pages", () => {
   });
 
   it("offers mirror /precos: free WhatsApp mode and the plans' monthly prices from the config", () => {
-    const [free, site, paid] = pricingOffers();
+    const [free, paid, site] = pricingOffers();
     expect(free).toMatchObject({ price: "0", priceCurrency: "BRL" });
     expect(site).toMatchObject({ price: (PLAN_PRICES.site.monthly / 100).toFixed(2) });
     expect(paid).toMatchObject({ price: (PLAN_PRICES.complete.monthly / 100).toFixed(2) });
-    expect(PRICING.tiers.map((t) => t.name)).toEqual([free!.name, site!.name, paid!.name]);
+    expect(PRICING.tiers.map((t) => t.name)).toEqual([free!.name, paid!.name, site!.name]);
   });
 
   it("organization never invents social profiles", () => {

@@ -93,7 +93,7 @@ function monthlyOffer(name: string, cents: number): JsonLdNode {
   };
 }
 
-/** The plans of /precos, in the same order: free WhatsApp mode, "Site + Agenda", "Completo". */
+/** The plans of /precos, in the same order (by price): free WhatsApp mode, "Completo", "Site + Agenda". */
 export function pricingOffers(): JsonLdNode[] {
   return [
     {
@@ -103,8 +103,8 @@ export function pricingOffers(): JsonLdNode[] {
       priceCurrency: "BRL",
       url: site("/precos"),
     },
-    monthlyOffer(SITE_PLAN_NAME, PLAN_PRICES.site.monthly),
     monthlyOffer(PLAN_NAME, PLAN_PRICES.complete.monthly),
+    monthlyOffer(SITE_PLAN_NAME, PLAN_PRICES.site.monthly),
   ];
 }
 
