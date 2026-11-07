@@ -38,7 +38,8 @@ export function webExample(
     : store
       ? `A ${name} nasceu para facilitar a sua vida: produtos escolhidos a dedo, preço justo e atendimento de verdade, direto pelo WhatsApp.`
       : `A ${name} atende com atenção a cada detalhe. Experiência, responsabilidade e um atendimento próximo, do primeiro contato até o resultado.`;
-  const texts = webDefaults({ name, bio: null, city: null, store });
+  // The subtitle tells what her niche does ("Tatuagem fineline, blackwork e piercing.").
+  const texts = webDefaults({ name, bio: own?.sales.demo.bio ?? null, city: null, store });
   const site: Omit<WebSiteData, "sections"> = {
     businessId: "example",
     slug: "exemplo",
