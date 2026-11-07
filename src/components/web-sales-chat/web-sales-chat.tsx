@@ -4,7 +4,7 @@ import { ArrowLeft, RotateCcw } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { PLATFORM } from "@/brands";
+import { getNiche, NICHES, PLATFORM } from "@/brands";
 import { brandThemeStyle } from "@/brands/theme";
 import { startWebSaleAction } from "@/app/criar-site/actions";
 import {
@@ -21,6 +21,7 @@ import {
   primary,
   type ComposerSettings,
 } from "@/components/sales-chat/sales-chat";
+import { detectNiche } from "@/content/creation";
 import { SALES_CHAT as T } from "@/content/sales-chat";
 import { salesWhatsappHref } from "@/content/contact";
 import { WEB_CHAT as W, webFirstPayment } from "@/content/web-sales-chat";
@@ -32,6 +33,8 @@ import { validCnpj, validCpf } from "@/lib/pix";
 type Phase =
   | "need"
   | "name"
+  | "confirm"
+  | "pick"
   | "models"
   | "custom"
   | "how"
@@ -59,6 +62,10 @@ interface State {
   log: Bubble[];
   product: Product | null;
   name: string;
+  /** Her niche (colors, photos and services of the site); null = generic. */
+  nicheKey: string | null;
+  /** Niche found in the business name, to confirm. */
+  detected: string | null;
   template: WebTemplate | null;
   customSite: boolean;
   cycle: Cycle | null;
@@ -72,6 +79,15 @@ interface State {
   paid: { siteUrl: string | null; email: string } | null;
   /** The conversation before each answer: "Voltar" restores the last one. */
   history: State[];
+}
+
+/** Niches to pick, by name ("Outra área" = the generic site). */
+const NICHE_OPTIONS = [...NICHES]
+  .sort((a, b) => a.niche!.name.localeCompare(b.niche!.name, "pt-BR"))
+  .map((b) => ({ key: b.key, label: b.niche!.name }));
+
+function nicheLabel(key: string): string {
+  return getNiche(key).niche?.name.toLowerCase() ?? T.other.toLowerCase();
 }
 
 /** Saved in this browser so whoever leaves comes back where she stopped (never the CPF). */
@@ -99,6 +115,8 @@ function fresh(): State {
     log: [system(W.greeting), system(W.askNeed)],
     product: null,
     name: "",
+    nicheKey: null,
+    detected: null,
     template: null,
     customSite: false,
     cycle: null,
@@ -232,13 +250,35 @@ export function WebSalesChat({ initialName }: { initialName: string | null }) {
       return;
     }
     if (initialName) {
-      update({ product: need, name: initialName, phase: "models" }, [
-        user(W.needs[need]),
-        system(modelsText(need, initialName)),
-      ]);
+      afterName(need, initialName, [user(W.needs[need])]);
     } else {
       update({ product: need, phase: "name" }, [user(W.needs[need]), system(W.askName)]);
     }
+  }
+
+  /** A site asks its niche (photos, colors and services follow it); a store goes on. */
+  function afterName(product: Product, name: string, bubbles: Bubble[]) {
+    const detected = detectNiche(name);
+    if (product === "store") {
+      update({ product, name, nicheKey: detected, phase: "models" }, [
+        ...bubbles,
+        system(modelsText(product, name)),
+      ]);
+    } else if (detected) {
+      update({ product, name, detected, phase: "confirm" }, [
+        ...bubbles,
+        system(fill(T.confirmNiche, { niche: nicheLabel(detected) })),
+      ]);
+    } else {
+      update({ product, name, phase: "pick" }, [...bubbles, system(T.askNiche)]);
+    }
+  }
+
+  function chooseNiche(key: string | null, label: string) {
+    update({ nicheKey: key, phase: "models" }, [
+      user(label),
+      system(modelsText(state.product ?? "site", state.name)),
+    ]);
   }
 
   function modelsText(product: Product, name: string) {
@@ -247,8 +287,12 @@ export function WebSalesChat({ initialName }: { initialName: string | null }) {
 
   const templates: readonly WebTemplate[] =
     state.product === "store" ? WEB_STORE_TEMPLATES : WEB_SITE_TEMPLATES;
-  const exampleUrl = (template: WebTemplate) =>
-    `/exemplo/web/${template}?nome=${encodeURIComponent(state.name)}`;
+  const exampleUrl = (template: WebTemplate) => {
+    const params = new URLSearchParams({ nome: state.name });
+    const route = state.nicheKey ? getNiche(state.nicheKey).niche?.route : null;
+    if (route) params.set("ramo", route);
+    return `/exemplo/web/${template}?${params.toString()}`;
+  };
 
   // Waits for the payment while the Pix is shown.
   const token = state.token;
@@ -286,6 +330,7 @@ export function WebSalesChat({ initialName }: { initialName: string | null }) {
       template: state.template,
       customSite: state.customSite,
       businessName: state.name,
+      nicheKey: state.nicheKey ?? "general",
       payerName: state.payerName,
       email: state.email,
       whatsapp: state.whatsapp,
@@ -329,10 +374,7 @@ export function WebSalesChat({ initialName }: { initialName: string | null }) {
     const value = text.trim();
     switch (state.phase) {
       case "name":
-        update({ name: value.slice(0, 80), phase: "models" }, [
-          user(value),
-          system(modelsText(state.product ?? "site", value.slice(0, 80))),
-        ]);
+        afterName(state.product ?? "site", value.slice(0, 80), [user(value)]);
         return;
       case "payer":
         update({ payerName: value, phase: "email" }, [user(value), system(T.askEmail)]);
@@ -441,6 +483,12 @@ export function WebSalesChat({ initialName }: { initialName: string | null }) {
             templates={templates}
             notice={notice}
             onNeed={chooseNeed}
+            onConfirm={(yes) =>
+              yes && state.detected
+                ? chooseNiche(state.detected, T.yes)
+                : update({ phase: "pick" }, [user(T.no), system(T.askNiche)])
+            }
+            onNiche={chooseNiche}
             onOpenModel={(template) => setPreview(exampleUrl(template))}
             onModel={(template) =>
               update({ template, customSite: false, phase: "how" }, [
@@ -553,6 +601,8 @@ function Options({
   templates,
   notice,
   onNeed,
+  onConfirm,
+  onNiche,
   onOpenModel,
   onModel,
   onNoneFits,
@@ -570,6 +620,8 @@ function Options({
   templates: readonly WebTemplate[];
   notice: string | null;
   onNeed: (need: Product | "agenda") => void;
+  onConfirm: (yes: boolean) => void;
+  onNiche: (key: string | null, label: string) => void;
   onOpenModel: (template: WebTemplate) => void;
   onModel: (template: WebTemplate) => void;
   onNoneFits: () => void;
@@ -592,6 +644,35 @@ function Options({
               {W.needs[need]}
             </button>
           ))}
+        </div>
+      );
+    case "confirm":
+      return (
+        <div className="flex flex-wrap justify-end gap-2">
+          <button type="button" className={choice} onClick={() => onConfirm(true)}>
+            {T.yes}
+          </button>
+          <button type="button" className={choice} onClick={() => onConfirm(false)}>
+            {T.no}
+          </button>
+        </div>
+      );
+    case "pick":
+      return (
+        <div className="flex flex-wrap justify-end gap-2">
+          {NICHE_OPTIONS.map((n) => (
+            <button
+              key={n.key}
+              type="button"
+              className={choice}
+              onClick={() => onNiche(n.key, n.label)}
+            >
+              {n.label}
+            </button>
+          ))}
+          <button type="button" className={choice} onClick={() => onNiche(null, T.other)}>
+            {T.other}
+          </button>
         </div>
       );
     case "models":

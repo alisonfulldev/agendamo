@@ -12,6 +12,7 @@ import type { PublicPage } from "@/lib/public/page";
 import { publicUrl } from "@/lib/storage/r2";
 
 import { loadCatalog } from "./catalog";
+import { nichePhotos } from "./example";
 import { webDefaults, webTexts, whatsappHref } from "./texts";
 
 /** What the public site of a "Site ou Loja" business shows (2026-11-07). */
@@ -41,7 +42,12 @@ export async function webSiteData(
     whatsappHref: whatsappHref(phone, texts.message),
     phone,
     logoUrl: publicUrl(page?.avatar_key),
-    heroUrl: publicUrl(settings?.hero_image_key) ?? publicUrl(page?.cover_key) ?? null,
+    // Until the owner sends her own, the top photo of her niche (a tattoo studio sees a tattoo).
+    heroUrl:
+      publicUrl(settings?.hero_image_key) ??
+      publicUrl(page?.cover_key) ??
+      nichePhotos(business.brand_key)?.hero ??
+      null,
     bio: page?.bio ?? null,
     instagramUrl: page?.instagram_url ?? null,
     place: [page?.address, page?.neighborhood, page?.city].filter(Boolean).join(", "),

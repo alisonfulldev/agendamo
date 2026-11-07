@@ -41,6 +41,10 @@ export default async function AdminSalesPage() {
       monthly: `${brl(PLAN_PRICES.complete.monthly)}/mês`,
       yearly: `${brl(PLAN_PRICES.complete.yearly)}/ano`,
     },
+    web: {
+      monthly: `${brl(PLAN_PRICES.web.monthly)}/mês`,
+      yearly: `${brl(PLAN_PRICES.web.yearly)}/ano`,
+    },
   };
 
   return (
@@ -74,6 +78,7 @@ export default async function AdminSalesPage() {
           prices={prices}
           domainPrice={`${brl(PLAN_PRICES.domainYearly)}/ano`}
           customSitePrice={brl(PLAN_PRICES.customSite)}
+          webCustomSitePrice={brl(PLAN_PRICES.webCustomSite)}
         />
       </AdminSection>
       <AdminSection title={`Vendas (${sales.length})`}>

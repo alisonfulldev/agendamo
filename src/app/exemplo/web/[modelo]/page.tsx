@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { GENERAL_NICHE, PLATFORM } from "@/brands";
+import { GENERAL_NICHE, NICHES, PLATFORM } from "@/brands";
 import { getCurrentBrand } from "@/brands/server";
 import { BrandScope } from "@/components/brand-scope";
 import { siteTheme } from "@/components/business-site/site-view";
@@ -28,18 +28,24 @@ export default async function WebExamplePage({
 }) {
   const { modelo } = await params;
   if (!TEMPLATES.includes(modelo)) notFound();
-  const { nome } = await searchParams;
+  const { nome, ramo } = await searchParams;
   const domainBrand = await getCurrentBrand();
-  const data = webExample(modelo as WebTemplate, exampleName(nome) ?? "Seu Negócio");
+  // Her niche (?ramo=tatuagem): its colors, photos and services; else the generic example.
+  const niche = NICHES.find((b) => b.niche!.route === ramo) ?? GENERAL_NICHE;
+  const data = webExample(
+    modelo as WebTemplate,
+    exampleName(nome) ?? "Seu Negócio",
+    niche === GENERAL_NICHE ? null : niche.key,
+  );
   return (
-    <BrandScope brand={GENERAL_NICHE} current={domainBrand}>
+    <BrandScope brand={niche} current={domainBrand}>
       <div className="sticky top-0 z-50 bg-foreground px-4 py-2 text-center text-sm font-semibold text-background">
         {data.store ? "Prévia da sua loja" : "Prévia do seu site"} · você edita tudo depois de
         publicar
       </div>
       <WebSite
         data={data}
-        theme={siteTheme(GENERAL_NICHE, null, null)}
+        theme={siteTheme(niche, null, null)}
         badge={<WebBadge href="/" logo={PLATFORM.logo} />}
       />
     </BrandScope>

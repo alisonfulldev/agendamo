@@ -154,3 +154,17 @@ test("sales chat (/criar-site): store with her name, custom offer, Pix and the p
   await expect(chat.getByText("O link da sua loja")).toBeVisible();
   await visitor.close();
 });
+
+test("site preview follows her niche: a tattoo studio sees tattoo services in its colors", async ({
+  page,
+}) => {
+  await page.goto("/criar-site");
+  await page.getByRole("button", { name: "Um site para o meu negócio" }).click();
+  await page.getByPlaceholder("Nome do seu negócio").fill("Tinta Tattoo Studio");
+  await page.keyboard.press("Enter");
+  await page.getByRole("button", { name: "Sim", exact: true }).click();
+  await page.getByRole("button", { name: /Impacto.*Ver/ }).click();
+  const frame = page.frameLocator('iframe[title="Prévia do site"]');
+  await expect(frame.getByRole("heading", { level: 1, name: "Tinta Tattoo Studio" })).toBeVisible();
+  await expect(frame.getByRole("heading", { name: "Sessão de tatuagem" })).toBeVisible();
+});

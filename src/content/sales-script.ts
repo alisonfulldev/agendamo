@@ -74,9 +74,19 @@ export function pixMessage(input: {
 export function paidMessage(input: {
   firstName: string;
   siteUrl: string | null;
-  chatUrl: string;
+  /** Booking link; null for "Site ou Loja" (no booking). */
+  chatUrl: string | null;
 }): string {
-  return `Pagamento confirmado! 🎉 ${input.siteUrl ? `Seu site já está no ar: ${input.siteUrl}\n` : ""}Seu link de agendamento: ${input.chatUrl}\n\nEntre no painel pelo e-mail que você recebeu (chega um código, sem senha) para colocar sua foto e ajustar serviços e preços. Qualquer dúvida, é só chamar aqui, ${input.firstName}.`;
+  const links = [
+    input.siteUrl ? `Seu site já está no ar: ${input.siteUrl}` : "",
+    input.chatUrl ? `Seu link de agendamento: ${input.chatUrl}` : "",
+  ]
+    .filter(Boolean)
+    .join("\n");
+  const panel = input.chatUrl
+    ? "para colocar sua foto e ajustar serviços e preços"
+    : "para colocar seu logo, fotos, textos e o que você vende";
+  return `Pagamento confirmado! 🎉 ${links}\n\nEntre no painel em meetchat.com.br/entrar com o e-mail que você recebeu (chega um código, sem senha) ${panel}. Qualquer dúvida, é só chamar aqui, ${input.firstName}.`;
 }
 
 /** WhatsApp link (wa.me, opened by the seller) with the message ready. */

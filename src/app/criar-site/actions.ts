@@ -2,6 +2,8 @@
 
 import { z } from "zod";
 
+import { NICHES } from "@/brands";
+
 import { EMAIL_PATTERN } from "@/lib/email-typos";
 import { normalizeBrPhone } from "@/lib/phone";
 import { validCnpj, validCpf } from "@/lib/pix";
@@ -25,6 +27,8 @@ const schema = z
     template: z.enum([...WEB_SITE_TEMPLATES, ...WEB_STORE_TEMPLATES]),
     customSite: z.boolean(),
     businessName: z.string().trim().min(2).max(80),
+    /** Her niche (colors, photos and services of the site); "general" = generic. */
+    nicheKey: z.enum(["general", ...NICHES.map((b) => b.key)] as [string, ...string[]]),
     payerName: z.string().trim().min(3).max(120),
     email: z.string().trim().toLowerCase().max(254).regex(EMAIL_PATTERN),
     whatsapp: z
@@ -68,8 +72,8 @@ export async function startWebSaleAction(input: unknown): Promise<StartChatSaleR
   const result = await createAssistedSale(
     {
       businessName: data.businessName,
-      // Any business: the generic niche (texts and examples are the product's own).
-      nicheKey: "general",
+      // Her niche (colors, photos and services), or the generic one.
+      nicheKey: data.nicheKey,
       payerName: data.payerName,
       email: data.email,
       whatsapp: data.whatsapp,

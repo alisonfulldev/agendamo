@@ -8,7 +8,7 @@ import { requireAdmin } from "@/lib/admin";
 import { audit } from "@/lib/audit";
 import { adminOrderStep } from "@/lib/custom-site/orders";
 import { sendAnnouncement } from "@/lib/notifications/announcement";
-import { SITE_TEMPLATES } from "@/lib/db/types";
+import { SITE_TEMPLATES, WEB_SITE_TEMPLATES, WEB_STORE_TEMPLATES } from "@/lib/db/types";
 import { normalizeBrPhone } from "@/lib/phone";
 import { validCnpj, validCpf } from "@/lib/pix";
 import { connectDomain, checkDomain, renewDomain } from "@/lib/domains/jobs";
@@ -36,9 +36,11 @@ const saleSchema = z.object({
     }
     return value;
   }),
-  tier: z.enum(["complete", "site"]),
+  tier: z.enum(["complete", "site", "web"]),
   cycle: z.enum(["monthly", "yearly"]),
-  template: z.enum(SITE_TEMPLATES),
+  template: z.enum([...SITE_TEMPLATES, ...WEB_SITE_TEMPLATES, ...WEB_STORE_TEMPLATES]),
+  /** "Site ou Loja" (tier "web"): a site or a store. */
+  product: z.enum(["site", "store"]).optional(),
   couponCode: z
     .string()
     .trim()
@@ -60,6 +62,17 @@ const saleSchema = z.object({
     }),
 });
 
+/** The template must match the plan: booking templates, or the site's or the store's ones. */
+function templateFits(data: z.infer<typeof saleSchema>): boolean {
+  const allowed: readonly string[] =
+    data.tier !== "web"
+      ? SITE_TEMPLATES
+      : data.product === "store"
+        ? WEB_STORE_TEMPLATES
+        : WEB_SITE_TEMPLATES;
+  return allowed.includes(data.template) && (data.tier === "web") === Boolean(data.product);
+}
+
 export type SaleActionResult = { ok: true; saleId: string } | { ok: false; message: string };
 
 /** Admin › Vendas › Nova venda: creates the account and the Pix of the first payment. */
@@ -69,6 +82,7 @@ export async function createSaleAction(input: unknown): Promise<SaleActionResult
   if (!parsed.success) {
     return { ok: false, message: parsed.error.issues[0]?.message ?? "Confira os campos." };
   }
+  if (!templateFits(parsed.data)) return { ok: false, message: "Escolha o modelo do plano." };
   const result = await createAssistedSale(parsed.data, { id: admin.id, email: admin.email });
   if (!result.ok) {
     return {

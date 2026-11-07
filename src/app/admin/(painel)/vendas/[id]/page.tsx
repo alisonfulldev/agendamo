@@ -39,7 +39,13 @@ export default async function AdminSalePage({ params }: PageProps<"/admin/vendas
   const expired = status === "Pix vencido";
   const payUrl = siteUrl(`/pagar/${sale.token}`);
   const chatUrl = brandUrl(brand, `/${sale.business.slug}`);
-  const site = sale.tier === "site" ? brandUrl(brand, `/${sale.business.slug}/site`) : null;
+  // "Site ou Loja": the business link is the site itself (no booking link).
+  const site =
+    sale.tier === "site"
+      ? brandUrl(brand, `/${sale.business.slug}/site`)
+      : sale.tier === "web"
+        ? chatUrl
+        : null;
   const pixText =
     sale.pix_payload && !expired
       ? pixMessage({
@@ -51,7 +57,11 @@ export default async function AdminSalePage({ params }: PageProps<"/admin/vendas
           domain: sale.domain ? { name: sale.domain, cents: sale.domain_cents } : null,
         })
       : null;
-  const afterText = paidMessage({ firstName, siteUrl: site, chatUrl });
+  const afterText = paidMessage({
+    firstName,
+    siteUrl: site,
+    chatUrl: sale.tier === "web" ? null : chatUrl,
+  });
   const when = (iso: string, pattern: string) => formatInTimeZone(new Date(iso), TZ, pattern);
 
   return (

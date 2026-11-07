@@ -19,19 +19,24 @@ export function SaleForm({
   prices,
   domainPrice,
   customSitePrice,
+  webCustomSitePrice,
 }: {
   niches: Option[];
   /** Price labels of each plan and cycle ("R$ 49,00/mês"…). */
-  prices: Record<"site" | "complete", Record<"monthly" | "yearly", string>>;
+  prices: Record<"site" | "complete" | "web", Record<"monthly" | "yearly", string>>;
   /** "R$ 91,00/ano" */
   domainPrice: string;
   /** "R$ 148,00" */
   customSitePrice: string;
+  /** Custom site of "Site ou Loja" (R$ 197). */
+  webCustomSitePrice: string;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const [tier, setTier] = useState<"site" | "complete">("site");
+  const [tier, setTier] = useState<"site" | "complete" | "web">("site");
+  // "Site ou Loja" (2026-11-07): a site (services) or a store (catalog), no booking.
+  const [product, setProduct] = useState<"site" | "store">("site");
   const [cycle, setCycle] = useState<"monthly" | "yearly">("monthly");
   const [withDomain, setWithDomain] = useState(false);
   const [customSite, setCustomSite] = useState(false);
@@ -58,10 +63,11 @@ export function SaleForm({
         cpfCnpj: form.get("cpfCnpj"),
         tier,
         cycle,
-        template: form.get("template") ?? "vibrant",
+        template: form.get("template") ?? (tier === "web" ? "site_bold" : "vibrant"),
+        product: tier === "web" ? product : undefined,
         couponCode: form.get("couponCode"),
         domain: withDomain ? domain : "",
-        customSite: tier === "site" && customSite,
+        customSite: (tier === "site" || tier === "web") && customSite,
       });
       if (result.ok) router.push(`/admin/vendas/${result.saleId}`);
       else setError(result.message);
@@ -111,7 +117,7 @@ export function SaleForm({
       <fieldset className="flex flex-col gap-2 sm:col-span-2">
         <legend className="mb-1 text-sm font-medium">Plano</legend>
         <div className="flex flex-wrap gap-2">
-          {(["site", "complete"] as const).map((t) => (
+          {(["site", "complete", "web"] as const).map((t) => (
             <Button
               key={t}
               type="button"
@@ -119,7 +125,12 @@ export function SaleForm({
               aria-pressed={tier === t}
               onClick={() => setTier(t)}
             >
-              {t === "site" ? "Site + Agenda" : "Completo (só agenda)"} · {prices[t][cycle]}
+              {t === "site"
+                ? "Site + Agenda"
+                : t === "web"
+                  ? "Site ou Loja (sem agenda)"
+                  : "Completo (só agenda)"}{" "}
+              · {prices[t][cycle]}
             </Button>
           ))}
         </div>
@@ -150,15 +161,49 @@ export function SaleForm({
           </label>
         </fieldset>
       ) : null}
-      {tier === "site" ? (
+      {tier === "web" ? (
+        <fieldset className="flex flex-col gap-2 sm:col-span-2">
+          <legend className="mb-1 text-sm font-medium">Site ou loja</legend>
+          <div className="flex flex-wrap gap-2">
+            {(["site", "store"] as const).map((p) => (
+              <Button
+                key={p}
+                type="button"
+                size="sm"
+                variant={product === p ? "secondary" : "ghost"}
+                aria-pressed={product === p}
+                onClick={() => setProduct(p)}
+              >
+                {p === "site" ? "Site (serviços)" : "Loja (produtos)"}
+              </Button>
+            ))}
+          </div>
+          <legend className="mt-2 text-sm font-medium">Modelo</legend>
+          {(product === "site"
+            ? [
+                ["site_bold", "Impacto"],
+                ["site_clean", "Clean"],
+              ]
+            : [
+                ["store_showcase", "Vitrine"],
+                ["store_clean", "Boutique"],
+              ]
+          ).map(([value, label], i) => (
+            <label key={value} className="flex items-center gap-2 text-sm">
+              <input type="radio" name="template" value={value} defaultChecked={i === 0} /> {label}
+            </label>
+          ))}
+        </fieldset>
+      ) : null}
+      {tier === "site" || tier === "web" ? (
         <label className="flex items-center gap-2 text-sm font-medium sm:col-span-2">
           <input
             type="checkbox"
             checked={customSite}
             onChange={(e) => setCustomSite(e.target.checked)}
           />
-          Site personalizado (+{customSitePrice} no primeiro Pix; o cliente responde o briefing no
-          painel)
+          Site personalizado (+{tier === "web" ? webCustomSitePrice : customSitePrice} no primeiro
+          Pix; o cliente responde o briefing no painel)
         </label>
       ) : null}
       <fieldset className="flex flex-col gap-2 sm:col-span-2">

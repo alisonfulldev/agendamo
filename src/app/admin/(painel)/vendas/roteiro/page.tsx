@@ -54,6 +54,15 @@ export default async function AdminSalesScriptPage({
             ],
             ["Modelo 1 (Vibrante)", `${origin}/exemplo/${niche.niche!.route}`],
             ["Modelo 2 (Elegante)", `${origin}/exemplo/${niche.niche!.route}?modelo=elegante`],
+            // "Site ou Loja" (sem agenda): the site templates in this niche's colors and photos.
+            [
+              "Site ou Loja · Impacto",
+              `${origin}/exemplo/web/site_bold?ramo=${niche.niche!.route}`,
+            ],
+            ["Site ou Loja · Clean", `${origin}/exemplo/web/site_clean?ramo=${niche.niche!.route}`],
+            ["Loja · Vitrine", `${origin}/exemplo/web/store_showcase`],
+            ["Loja · Boutique", `${origin}/exemplo/web/store_clean`],
+            ["Chat de venda do Site ou Loja", `${origin}/criar-site`],
           ].map(([label, url]) => (
             <li key={label} className="flex flex-wrap items-center gap-x-3 gap-y-1">
               <span className="min-w-44 font-medium">{label}</span>

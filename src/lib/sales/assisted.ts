@@ -187,6 +187,17 @@ export async function createAssistedSale(
     await admin.from("services").delete().eq("business_id", business.id);
     await admin.from("businesses").update({ product: input.product }).eq("id", business.id);
     business.product = input.product;
+    // A site starts with its niche's services (names only), for the owner to adjust.
+    if (input.product === "site" && niche.niche) {
+      await admin.from("catalog_items").insert(
+        niche.suggestedServices.slice(0, 6).map((service, position) => ({
+          business_id: business.id,
+          kind: "service",
+          name: service.name,
+          position,
+        })),
+      );
+    }
   }
   await admin.from("site_settings").upsert({
     business_id: business.id,
