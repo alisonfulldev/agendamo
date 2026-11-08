@@ -140,6 +140,8 @@ export function SiteFooter() {
       links: [
         { label: "Preços", href: "/precos" },
         { label: "Site + agenda online", href: "/site-e-agenda" },
+        { label: "Site profissional", href: "/site-profissional" },
+        { label: "Loja virtual", href: "/loja-virtual" },
         { label: "Central de ajuda", href: "/ajuda" },
         { label: "Contato", href: `mailto:${CONTACT_EMAIL}` },
         { label: "Termos de uso", href: "/termos" },

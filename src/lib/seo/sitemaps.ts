@@ -3,6 +3,7 @@ import { ARTICLE_SECTIONS, publishedArticles, type ArticleSection } from "@/cont
 import { COMPARISONS, COMPARISONS_INDEX } from "@/content/comparisons";
 import { INTENT_INDEX, INTENT_PAGES } from "@/content/intent-pages";
 import { SITE_AGENDA_INDEX, SITE_AGENDA_PAGES } from "@/content/site-agenda-pages";
+import { WEB_HUBS, WEB_PAGES, webPagePath } from "@/content/web-landing-pages";
 import { publishedTopics } from "@/content/niche-guides";
 import { NICHE_SEO } from "@/content/niche-seo";
 import { NICHE_PAGES_UPDATED_AT, SITE_PAGES } from "@/content/site-pages";
@@ -80,6 +81,17 @@ export function siteAgendaUrls(url: (path: string) => string): SitemapUrl[] {
     { loc: url("/site-e-agenda"), lastmod: SITE_AGENDA_INDEX.updatedAt },
     ...SITE_AGENDA_PAGES.filter((p) => passesQualityGate(`/site-e-agenda/${p.slug}`)).map((p) => ({
       loc: url(`/site-e-agenda/${p.slug}`),
+      lastmod: p.updatedAt,
+    })),
+  ];
+}
+
+/** "Site ou Loja" pages (2026-11-08): the two hubs and each kind of business that passes the gate. */
+export function webLandingUrls(url: (path: string) => string): SitemapUrl[] {
+  return [
+    ...Object.values(WEB_HUBS).map((hub) => ({ loc: url(hub.path), lastmod: hub.updatedAt })),
+    ...WEB_PAGES.filter((p) => passesQualityGate(webPagePath(p))).map((p) => ({
+      loc: url(webPagePath(p)),
       lastmod: p.updatedAt,
     })),
   ];

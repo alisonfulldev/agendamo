@@ -4,6 +4,7 @@ import { COMPARISONS } from "@/content/comparisons";
 import { HOME } from "@/content/home";
 import { INTENT_PAGES } from "@/content/intent-pages";
 import { SITE_AGENDA_INDEX, SITE_AGENDA_PAGES } from "@/content/site-agenda-pages";
+import { WEB_HUBS, WEB_PAGES, webPagePath } from "@/content/web-landing-pages";
 import { nicheHomeContent } from "@/content/niche-pages";
 import { publishedTopics } from "@/content/niche-guides";
 import { PRICING } from "@/content/pricing";
@@ -48,6 +49,13 @@ export function llmsTxt(): string {
     line("Site + agenda online", "/site-e-agenda", SITE_AGENDA_INDEX.description),
     ...SITE_AGENDA_PAGES.filter((p) => passesQualityGate(`/site-e-agenda/${p.slug}`)).map((p) =>
       line(p.h1, `/site-e-agenda/${p.slug}`, p.description),
+    ),
+    "",
+    "## Site profissional e loja virtual (sem agenda)",
+    "",
+    ...Object.values(WEB_HUBS).map((hub) => line(hub.label, hub.path, hub.description)),
+    ...WEB_PAGES.filter((p) => passesQualityGate(webPagePath(p))).map((p) =>
+      line(p.h1, webPagePath(p), p.description),
     ),
     "",
     "## Guias",

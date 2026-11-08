@@ -16,6 +16,8 @@ export const META_PIXEL_ID = "3760458420790268";
 export const SITE_SECTIONS = [
   "agendamento",
   "site-e-agenda",
+  "site-profissional",
+  "loja-virtual",
   "ajuda",
   "cadastro",
   "comecar",

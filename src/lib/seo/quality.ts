@@ -3,6 +3,7 @@ import { publishedArticles } from "@/content/articles";
 import { NICHE_LANDINGS, type LandingCopy } from "@/content/copy/landing";
 import { INTENT_PAGES } from "@/content/intent-pages";
 import { SITE_AGENDA_PAGES } from "@/content/site-agenda-pages";
+import { WEB_PAGES, webPagePath } from "@/content/web-landing-pages";
 import { nicheHomeContent } from "@/content/niche-pages";
 import {
   getPublishedGuide,
@@ -204,6 +205,13 @@ export function qualityReport(): QualityResult[] {
     ...SITE_AGENDA_PAGES.map((page) => ({
       path: `/site-e-agenda/${page.slug}`,
       template: "site-e-agenda",
+      text: topicText(page),
+      blocks: topicBlocks(page),
+      minBlocks: QUALITY_CONFIG.minUniqueBlocks,
+    })),
+    ...WEB_PAGES.map((page) => ({
+      path: webPagePath(page),
+      template: page.kind === "site" ? "site-profissional" : "loja-virtual",
       text: topicText(page),
       blocks: topicBlocks(page),
       minBlocks: QUALITY_CONFIG.minUniqueBlocks,
