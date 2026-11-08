@@ -109,7 +109,8 @@ function Phone({
           </>
         ) : (
           <div className="grid grid-cols-2 gap-2 p-3">
-            {(pics?.grid ?? [null, null, null, null]).map((src, i) => (
+            {/* Stores sell anything: neutral product tiles, never photos of another niche. */}
+            {[null, null, null, null].map((src, i) => (
               <div key={i} className="overflow-hidden rounded-2xl bg-card">
                 {src ? (
                   // eslint-disable-next-line @next/next/no-img-element -- static example photo
