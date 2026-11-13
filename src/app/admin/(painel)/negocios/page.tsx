@@ -21,7 +21,7 @@ import {
 import { whatsappLink } from "@/content/sales-script";
 import { formatBRL } from "@/lib/money";
 import { normalizeBrPhone } from "@/lib/phone";
-import { signupOrigin, type SignupSource } from "@/lib/signup-origin";
+import { HEARD_FROM, signupOrigin, type HeardFrom, type SignupSource } from "@/lib/signup-origin";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 import { BusinessActions } from "../../admin-actions";
@@ -71,12 +71,12 @@ export default async function AdminBusinessesPage({ searchParams }: PageProps<"/
       .gte("occurred_at", daysAgoIso(7))
       .limit(50000),
     ownerEmails(),
-    // Where each account came from: saved with the sign-up in the conversation.
+    // Where each account came from: saved with the sign-up, plus "Como conheceu?" when answered.
     db
       .from("audit_log")
-      .select("business_id, details")
-      .eq("action", "business.created")
-      .limit(10000),
+      .select("business_id, action, details")
+      .in("action", ["business.created", "signup.heard_from"])
+      .limit(20000),
     // WhatsApp and photo of each account, for "Chamar no WhatsApp".
     db.from("page_settings").select("business_id, whatsapp_number, avatar_key").limit(10000),
   ]);
@@ -90,11 +90,15 @@ export default async function AdminBusinessesPage({ searchParams }: PageProps<"/
     ).map((p) => [p.business_id, p]),
   );
   const origins = new Map<string, SignupSource>();
+  const heard = new Map<string, string>();
   for (const row of (createdResult.data ?? []) as {
     business_id: string;
-    details: { source?: SignupSource | null } | null;
+    action: string;
+    details: { source?: SignupSource | null; heard_from?: HeardFrom } | null;
   }[]) {
     if (row.details?.source) origins.set(row.business_id, row.details.source);
+    const answer = row.details?.heard_from;
+    if (answer && answer in HEARD_FROM) heard.set(row.business_id, HEARD_FROM[answer]);
   }
   const now = new Date();
   const subs = new Map(
@@ -272,6 +276,11 @@ export default async function AdminBusinessesPage({ searchParams }: PageProps<"/
                         {origin.detail ? (
                           <span className="block truncate text-xs text-muted-foreground">
                             {origin.detail}
+                          </span>
+                        ) : null}
+                        {heard.has(b.id) ? (
+                          <span className="block truncate text-xs text-muted-foreground">
+                            Disse: {heard.get(b.id)}
                           </span>
                         ) : null}
                       </td>

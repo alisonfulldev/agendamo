@@ -7,7 +7,7 @@ import { LazyCreationChat } from "@/components/creation/lazy-creation-chat";
 import { NoShowBlock, TopicVisual } from "@/components/landing/topic-blocks";
 import { JsonLd } from "@/components/seo/json-ld";
 import { SiteTracker } from "@/components/seo/site-tracker";
-import { Breadcrumbs } from "@/components/site/breadcrumbs";
+import { Breadcrumbs, breadcrumbTrailNode, type Crumb } from "@/components/site/breadcrumbs";
 import { GuideArticle, GuideCta, GuideFaq } from "@/components/site/guide-article";
 import { SiteFooter, SiteHeader } from "@/components/site/site-chrome";
 import { NICHE_LANDINGS } from "@/content/copy/landing";
@@ -42,6 +42,10 @@ export function NicheTopicPage({ entry }: { entry: TopicEntry }) {
     .filter((b) => b?.niche)
     .slice(0, 4);
 
+  const crumbs: Crumb[] = [
+    { name: niche.name, path: hub },
+    { name: TOPIC_LABELS[entry.topic], path: entry.path },
+  ];
   return (
     <div
       data-theme-scope=""
@@ -50,12 +54,7 @@ export function NicheTopicPage({ entry }: { entry: TopicEntry }) {
     >
       <SiteHeader badge={niche.name} logo={brand.logo} />
       <main className="mx-auto w-full max-w-3xl flex-1 px-5 pt-4 pb-16">
-        <Breadcrumbs
-          items={[
-            { name: niche.name, path: hub },
-            { name: TOPIC_LABELS[entry.topic], path: entry.path },
-          ]}
-        />
+        <Breadcrumbs items={crumbs} jsonLd={false} />
         <GuideArticle
           h1={page.h1}
           updatedAt={page.updatedAt}
@@ -123,7 +122,13 @@ export function NicheTopicPage({ entry }: { entry: TopicEntry }) {
       <SiteFooter />
       <LazyCreationChat photos={isStorageConfigured()} />
       <SiteTracker template="subpagina" niche={brand.key} />
-      <JsonLd nodes={[organizationNode(), page.faq ? faqNode(page.faq) : null]} />
+      <JsonLd
+        nodes={[
+          organizationNode(),
+          breadcrumbTrailNode(crumbs),
+          page.faq ? faqNode(page.faq) : null,
+        ]}
+      />
     </div>
   );
 }

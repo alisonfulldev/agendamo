@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 
 import { NICHES } from "@/brands";
 import { JsonLd } from "@/components/seo/json-ld";
-import { Breadcrumbs } from "@/components/site/breadcrumbs";
+import { Breadcrumbs, breadcrumbTrailNode, type Crumb } from "@/components/site/breadcrumbs";
 import { GuideCta, GuideFaq } from "@/components/site/guide-article";
 import { LinkList } from "@/components/site/link-list";
 import { SitePage } from "@/components/site/site-page";
@@ -70,20 +70,19 @@ export default async function ToolRoute({ params }: PageProps<"/ferramentas/[fer
     href: `/ferramentas/${t.slug}`,
   }));
 
+  const crumbs: Crumb[] = [
+    { name: "Ferramentas", path: "/ferramentas" },
+    { name: tool.label, path },
+  ];
   return (
     <SitePage template="ferramenta" wide>
-      <Breadcrumbs
-        items={[
-          { name: "Ferramentas", path: "/ferramentas" },
-          { name: tool.label, path },
-        ]}
-      />
+      <Breadcrumbs items={crumbs} jsonLd={false} />
       <div className="max-w-3xl">
         <h1 className="mt-6 font-heading text-3xl leading-tight font-bold tracking-tight text-balance sm:text-4xl">
           {tool.h1}
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Atualizado em {formatPageDate(tool.updatedAt)}
+          Atualizado em <time dateTime={tool.updatedAt}>{formatPageDate(tool.updatedAt)}</time>
         </p>
         <p className="mt-6 text-lg leading-relaxed text-pretty">{tool.answer}</p>
       </div>
@@ -113,6 +112,7 @@ export default async function ToolRoute({ params }: PageProps<"/ferramentas/[fer
       <JsonLd
         nodes={[
           organizationNode(),
+          breadcrumbTrailNode(crumbs),
           toolNode({
             name: tool.label,
             url: withoutQuery(siteUrl(path)),

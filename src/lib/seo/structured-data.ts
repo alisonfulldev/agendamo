@@ -1,4 +1,5 @@
 import { PLATFORM, type BrandConfig } from "@/brands";
+import { COMPANY, MEETCHAT_SUMMARY } from "@/content/company";
 import { CONTACT_EMAIL } from "@/content/contact";
 import { PLAN_NAME, PLAN_PRICES, SITE_PLAN_NAME } from "@/lib/plans";
 import { siteUrl, withoutQuery } from "@/lib/site-url";
@@ -40,14 +41,40 @@ export function graph(nodes: (JsonLdNode | null | undefined | false)[]) {
 }
 
 const site = (path: string) => withoutQuery(siteUrl(path));
-export const ORGANIZATION_ID = site("/#organization");
-export const WEBSITE_ID = site("/#website");
+// The fragment goes after withoutQuery, which drops it (until 2026-11-13 both ids were the bare
+// home URL, so the organization and the website shared one @id).
+export const ORGANIZATION_ID = `${site("/")}#organization`;
+export const WEBSITE_ID = `${site("/")}#website`;
+export const COMPANY_ID = `${COMPANY.url}#organization`;
 
 // ---------------------------------------------------------------------------------- MeetChat
 
 /**
- * MeetChat as an organization. Only data that exists: no CNPJ, address or phone yet; social
- * profiles come from the platform's socialLinks (src/brands/platform.ts) once they exist.
+ * BrandCode Solutions, the company that makes MeetChat (src/content/company.ts). Inline in
+ * MeetChat's node with its own @id, so every page describes it the same way.
+ */
+function companyNode(): JsonLdNode {
+  return {
+    "@type": "Organization",
+    "@id": COMPANY_ID,
+    name: COMPANY.name,
+    url: COMPANY.url,
+    sameAs: [COMPANY.url, COMPANY.aboutUrl],
+    foundingDate: COMPANY.foundingYear,
+    founder: { "@type": "Person", name: COMPANY.founder.name, url: COMPANY.founder.url },
+    address: {
+      "@type": "PostalAddress",
+      addressLocality: COMPANY.city,
+      addressRegion: COMPANY.state,
+      addressCountry: "BR",
+    },
+  };
+}
+
+/**
+ * MeetChat as an organization, a product of BrandCode Solutions. Only data that exists: no CNPJ,
+ * address or phone of its own; social profiles come from the platform's socialLinks
+ * (src/brands/platform.ts) once they exist. Same node on every page (one @id, one description).
  */
 export function organizationNode(): JsonLdNode {
   return {
@@ -56,8 +83,10 @@ export function organizationNode(): JsonLdNode {
     name: "MeetChat",
     url: site("/"),
     logo: { "@type": "ImageObject", url: site(PLATFORM.logo) },
+    description: MEETCHAT_SUMMARY,
     email: CONTACT_EMAIL,
-    sameAs: Object.values(PLATFORM.socialLinks).filter(Boolean),
+    sameAs: [...Object.values(PLATFORM.socialLinks).filter(Boolean), COMPANY.portfolioUrl],
+    parentOrganization: companyNode(),
   };
 }
 
@@ -129,6 +158,7 @@ export function softwareApplicationNode({
     inLanguage: "pt-BR",
     offers: pricingOffers(),
     publisher: { "@id": ORGANIZATION_ID },
+    creator: { "@id": COMPANY_ID },
   };
 }
 

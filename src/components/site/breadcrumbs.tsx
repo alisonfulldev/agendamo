@@ -12,10 +12,28 @@ export interface Crumb {
   path: string;
 }
 
-/** Breadcrumb trail (Início › … › current page) with its BreadcrumbList structured data. */
-export function Breadcrumbs({ items, brand }: { items: Crumb[]; brand?: BrandConfig }) {
+/** The trail's BreadcrumbList, for pages that put it in their own @graph. */
+export function breadcrumbTrailNode(items: Crumb[], brand?: BrandConfig) {
   const trail: Crumb[] = [{ name: "Início", path: "/" }, ...items];
   const url = (path: string) => (brand ? canonicalUrl(brand, path) : withoutQuery(siteUrl(path)));
+  return breadcrumbNode(trail.map((c) => ({ name: c.name, url: url(c.path) })));
+}
+
+/**
+ * Breadcrumb trail (Início › … › current page). Its BreadcrumbList goes in a <script> of its own
+ * unless `jsonLd` is false: pages with their own structured data add breadcrumbTrailNode() to
+ * their @graph instead, so the page has a single JSON-LD block.
+ */
+export function Breadcrumbs({
+  items,
+  brand,
+  jsonLd = true,
+}: {
+  items: Crumb[];
+  brand?: BrandConfig;
+  jsonLd?: boolean;
+}) {
+  const trail: Crumb[] = [{ name: "Início", path: "/" }, ...items];
   return (
     <>
       <nav aria-label="Você está em" className="text-sm text-muted-foreground">
@@ -41,7 +59,7 @@ export function Breadcrumbs({ items, brand }: { items: Crumb[]; brand?: BrandCon
           })}
         </ol>
       </nav>
-      <JsonLd nodes={[breadcrumbNode(trail.map((c) => ({ name: c.name, url: url(c.path) })))]} />
+      {jsonLd ? <JsonLd nodes={[breadcrumbTrailNode(items, brand)]} /> : null}
     </>
   );
 }

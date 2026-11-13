@@ -39,7 +39,7 @@ export function GuideArticle({
         {h1}
       </h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        Atualizado em {formatPageDate(updatedAt)}
+        Atualizado em <time dateTime={updatedAt}>{formatPageDate(updatedAt)}</time>
       </p>
       <div className="mt-6 rounded-3xl border bg-brand-50 p-5 sm:p-6">
         <p className="text-sm font-semibold tracking-wide text-primary uppercase">

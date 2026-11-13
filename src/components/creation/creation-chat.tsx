@@ -21,6 +21,7 @@ import {
   saveDemoPhotoAction,
   signDemoPhotoAction,
 } from "./actions";
+import { HeardFromChips } from "./heard-from";
 import { useVisibleArea } from "./visible-area";
 import {
   CREATION_STORAGE_KEY,
@@ -197,12 +198,15 @@ function fakeTimes(dayLabel: string): string[] {
 function sourceInfo(viaName: boolean, viaNiche: boolean) {
   const params = new URLSearchParams(window.location.search);
   const pick = (k: string) => params.get(k)?.slice(0, 100) || undefined;
-  // From the visit's first page: in-site navigation loses the outside referrer and click ids.
-  const { referrer, click } = siteArrival();
+  // From the visit's first touch (30 days): the ?criar=1 button replaces the address's query, and
+  // in-site navigation loses the outside referrer and click ids.
+  const arrival = siteArrival();
+  const { referrer, click } = arrival;
+  const tagged = pick("utm_source") !== undefined;
   return {
-    utm_source: pick("utm_source"),
-    utm_medium: pick("utm_medium"),
-    utm_campaign: pick("utm_campaign"),
+    utm_source: tagged ? pick("utm_source") : arrival.utm_source,
+    utm_medium: tagged ? pick("utm_medium") : arrival.utm_medium,
+    utm_campaign: tagged ? pick("utm_campaign") : arrival.utm_campaign,
     via: viaName ? ("nome" as const) : viaNiche ? ("ramo" as const) : ("direct" as const),
     // Headline/CTA experiment of the page where the conversation started.
     variant: siteContext().experiment?.split(":")[1],
@@ -211,7 +215,7 @@ function sourceInfo(viaName: boolean, viaNiche: boolean) {
     referrer,
     click,
     // Funnel attribution (Fase 9): the session's first page and the template of this one.
-    landing: siteLanding() ?? undefined,
+    landing: arrival.landing ?? siteLanding() ?? undefined,
     template: siteContext().template,
   };
 }
@@ -1198,6 +1202,7 @@ function CreatedCard() {
         {SU.createdHint}
       </p>
       <GoPanelButton className="flex h-14 items-center justify-center gap-2 rounded-xl bg-primary text-lg font-semibold text-primary-foreground shadow-lg ring-4 ring-primary/30 motion-safe:animate-pulse" />
+      <HeardFromChips className="mt-2 rounded-2xl bg-card/80 p-3" />
     </div>
   );
 }

@@ -7,7 +7,7 @@ import { LazyCreationChat } from "@/components/creation/lazy-creation-chat";
 import { StickyCta } from "@/components/home/sticky-cta";
 import { JsonLd } from "@/components/seo/json-ld";
 import { SiteTracker } from "@/components/seo/site-tracker";
-import { Breadcrumbs, type Crumb } from "@/components/site/breadcrumbs";
+import { Breadcrumbs, breadcrumbTrailNode, type Crumb } from "@/components/site/breadcrumbs";
 import { SiteFooter, SiteHeader } from "@/components/site/site-chrome";
 import { EXAMPLE_GALLERY, EXAMPLE_NAMES } from "@/content/site-examples";
 import type { SiteAgendaPage } from "@/content/site-agenda-pages";
@@ -86,7 +86,7 @@ function Shell({
       <main className="flex-1">
         <div className="lp-lime lp-hero">
           <div className={`${container} pt-3`}>
-            <Breadcrumbs items={crumbs} />
+            <Breadcrumbs items={crumbs} jsonLd={false} />
           </div>
         </div>
         {children}
@@ -95,7 +95,9 @@ function Shell({
       <StickyCta hideOn={["cta-topo", "cta-final"]} label={CTA} niche={niche} />
       <LazyCreationChat photos={isStorageConfigured()} />
       <SiteTracker template="site-e-agenda" niche={niche ? brand.key : null} />
-      <JsonLd nodes={[organizationNode(), faq.length ? faqNode(faq) : null]} />
+      <JsonLd
+        nodes={[organizationNode(), breadcrumbTrailNode(crumbs), faq.length ? faqNode(faq) : null]}
+      />
     </div>
   );
 }

@@ -7,8 +7,11 @@ import { LazyCreationChat } from "@/components/creation/lazy-creation-chat";
 import { StickyCta } from "@/components/home/sticky-cta";
 import { JsonLd } from "@/components/seo/json-ld";
 import { SiteTracker } from "@/components/seo/site-tracker";
-import { Breadcrumbs } from "@/components/site/breadcrumbs";
+import { Breadcrumbs, breadcrumbTrailNode } from "@/components/site/breadcrumbs";
 import { SiteFooter, SiteHeader } from "@/components/site/site-chrome";
+import { DirectAnswerBlock } from "@/components/site/direct-answer";
+import { HOME_ANSWER, nicheAnswer } from "@/content/direct-answer";
+import { nichePageUpdatedAt, SITE_PAGES } from "@/content/site-pages";
 import type { LandingCopy } from "@/content/copy/landing";
 import type { Variant } from "@/lib/experiments";
 import { siteUrl } from "@/lib/site-url";
@@ -92,11 +95,16 @@ export function LandingPage({
         {niche ? (
           <div className="lp-lime lp-hero">
             <div className={`${container} pt-3`}>
-              <Breadcrumbs items={[{ name: niche.name, path: `/${niche.route}` }]} />
+              <Breadcrumbs items={[{ name: niche.name, path: `/${niche.route}` }]} jsonLd={false} />
             </div>
           </div>
         ) : null}
         <Hero copy={copy} niche={niche?.route} brand={brand} />
+        <DirectAnswerBlock
+          answer={niche ? nicheAnswer(brand) : HOME_ANSWER}
+          updatedAt={niche ? nichePageUpdatedAt(brand.key) : SITE_PAGES.home.updatedAt}
+          className={`${container} max-w-3xl py-10`}
+        />
         {copy.doors ? <PainDoors doors={copy.doors} /> : null}
         {copy.pains ? <PainScenes pains={copy.pains} /> : null}
         <StoryRows story={copy.story} mock={copy.mock} />
@@ -129,7 +137,9 @@ export function LandingPage({
       <JsonLd
         nodes={[
           organizationNode(),
-          niche ? null : websiteNode(),
+          niche
+            ? breadcrumbTrailNode([{ name: niche.name, path: `/${niche.route}` }])
+            : websiteNode(),
           softwareApplicationNode({
             name: niche ? `MeetChat para ${niche.name.toLowerCase()}` : "MeetChat",
             url: page,

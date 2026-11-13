@@ -17,6 +17,7 @@ function labels(): Map<string, string> {
   cache = new Map<string, string>([
     ["/", "Início"],
     ["/precos", "Preços"],
+    ["/sobre", "Sobre o MeetChat"],
     ["/privacidade", "Política de privacidade"],
     ["/termos", "Termos de uso"],
     ["/agendamento", "Guias de agendamento"],

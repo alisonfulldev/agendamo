@@ -4,6 +4,9 @@ import { Check, Copy, Download } from "lucide-react";
 import { useEffect, useRef, useState, useTransition } from "react";
 
 import { ServicesEditor, type ServiceDraft } from "@/components/business/services-editor";
+import { HeardFromChips } from "@/components/creation/heard-from";
+import { SignupTags } from "@/components/google-tag";
+import { siteArrival } from "@/components/seo/site-tracker";
 import {
   WeeklyHoursEditor,
   type WorkingRangeDraft,
@@ -125,7 +128,8 @@ export function OnboardingWizard({
   function submit() {
     if (!validate(STEP_FIELDS.flat())) return;
     startTransition(async () => {
-      const response = await createBusinessAction(draft);
+      // Where she first came from (first touch, kept in the browser): saved with the sign-up.
+      const response = await createBusinessAction(draft, { ...siteArrival(), page: "/cadastro" });
       if (response.ok) {
         clearDesiredSlug();
         setResult({ slug: response.slug, pageUrl: response.pageUrl });
@@ -388,6 +392,8 @@ function Success({ pageUrl, slug }: { pageUrl: string; slug: string }) {
           Ir para o painel
         </Button>
       </div>
+      <HeardFromChips className="mt-2" />
+      <SignupTags />
     </div>
   );
 }

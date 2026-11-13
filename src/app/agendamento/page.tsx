@@ -21,7 +21,8 @@ export default function IntentIndexPage() {
         {INTENT_INDEX.h1}
       </h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        Atualizado em {formatPageDate(INTENT_INDEX.updatedAt)}
+        Atualizado em{" "}
+        <time dateTime={INTENT_INDEX.updatedAt}>{formatPageDate(INTENT_INDEX.updatedAt)}</time>
       </p>
       <p className="mt-6 text-lg leading-relaxed text-muted-foreground">{INTENT_INDEX.intro}</p>
       <ul className="mt-8 grid gap-4 sm:grid-cols-2">

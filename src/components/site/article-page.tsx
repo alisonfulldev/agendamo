@@ -3,7 +3,7 @@ import Link from "next/link";
 
 import { getBrand } from "@/brands";
 import { JsonLd } from "@/components/seo/json-ld";
-import { Breadcrumbs } from "@/components/site/breadcrumbs";
+import { Breadcrumbs, breadcrumbTrailNode, type Crumb } from "@/components/site/breadcrumbs";
 import { GuideArticle, GuideCta, GuideFaq, sectionId } from "@/components/site/guide-article";
 import { LinkList } from "@/components/site/link-list";
 import { SitePage } from "@/components/site/site-page";
@@ -45,14 +45,13 @@ export function ArticlePage({ article }: { article: Article }) {
       .map((a) => ({ label: a.h1, href: articlePath(a) })),
   ];
 
+  const crumbs: Crumb[] = [
+    { name: section.name, path: `/${article.section}` },
+    { name: article.h1, path },
+  ];
   return (
     <SitePage template={article.section}>
-      <Breadcrumbs
-        items={[
-          { name: section.name, path: `/${article.section}` },
-          { name: article.h1, path },
-        ]}
-      />
+      <Breadcrumbs items={crumbs} jsonLd={false} />
       <GuideArticle
         h1={article.h1}
         updatedAt={article.dateModified}
@@ -62,8 +61,16 @@ export function ArticlePage({ article }: { article: Article }) {
         afterAnswer={
           <>
             <p className="mt-4 text-sm text-muted-foreground">
-              {article.category} · Por {article.author.name} · Publicado em{" "}
-              {formatPageDate(article.datePublished)}
+              {article.category} · Por{" "}
+              {article.author.url ? (
+                <a href={article.author.url} rel="author" className="text-primary hover:underline">
+                  {article.author.name}
+                </a>
+              ) : (
+                article.author.name
+              )}{" "}
+              · Publicado em{" "}
+              <time dateTime={article.datePublished}>{formatPageDate(article.datePublished)}</time>
             </p>
             <nav aria-labelledby="sumario" className="mt-6 rounded-2xl border bg-card p-5">
               <h2 id="sumario" className="text-sm font-semibold text-muted-foreground">
@@ -114,6 +121,7 @@ export function ArticlePage({ article }: { article: Article }) {
       <JsonLd
         nodes={[
           organizationNode(),
+          breadcrumbTrailNode(crumbs),
           blogPostingNode({
             url: withoutQuery(siteUrl(path)),
             title: article.h1,

@@ -5,8 +5,7 @@ import { INTENT_INDEX, INTENT_PAGES } from "@/content/intent-pages";
 import { SITE_AGENDA_INDEX, SITE_AGENDA_PAGES } from "@/content/site-agenda-pages";
 import { WEB_HUBS, WEB_PAGES, webPagePath } from "@/content/web-landing-pages";
 import { publishedTopics } from "@/content/niche-guides";
-import { NICHE_SEO } from "@/content/niche-seo";
-import { NICHE_PAGES_UPDATED_AT, SITE_PAGES } from "@/content/site-pages";
+import { nichePageUpdatedAt, SITE_PAGES } from "@/content/site-pages";
 import { TOOLS, TOOLS_INDEX } from "@/content/tools";
 
 import { passesQualityGate } from "./quality";
@@ -48,7 +47,7 @@ export function sitePageUrls(url: (path: string) => string): SitemapUrl[] {
 export function nicheHubUrls(url: (path: string) => string): SitemapUrl[] {
   return NICHES.filter((brand) => passesQualityGate(`/${brand.niche!.route}`)).map((brand) => ({
     loc: url(`/${brand.niche!.route}`),
-    lastmod: newest(NICHE_PAGES_UPDATED_AT, NICHE_SEO[brand.key]?.updatedAt),
+    lastmod: nichePageUpdatedAt(brand.key),
   }));
 }
 

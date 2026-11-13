@@ -7,6 +7,7 @@ export type AuditAction =
   | "account.deleted"
   | "business.created"
   | "business.niche_changed"
+  | "signup.heard_from"
   | "business.deleted"
   | "business.suspended"
   | "business.unsuspended"

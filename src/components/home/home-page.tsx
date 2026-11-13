@@ -34,8 +34,11 @@ import { OpenCreationLink } from "@/components/creation/open-creation";
 
 import { JsonLd } from "@/components/seo/json-ld";
 import { SiteTracker } from "@/components/seo/site-tracker";
-import { Breadcrumbs } from "@/components/site/breadcrumbs";
+import { Breadcrumbs, breadcrumbTrailNode } from "@/components/site/breadcrumbs";
 import { SiteFooter, SiteHeader } from "@/components/site/site-chrome";
+import { DirectAnswerBlock } from "@/components/site/direct-answer";
+import { HOME_ANSWER, nicheAnswer } from "@/content/direct-answer";
+import { nichePageUpdatedAt, SITE_PAGES } from "@/content/site-pages";
 
 import { PhoneDemo } from "./phone-demo";
 import { StickyCta } from "./sticky-cta";
@@ -60,7 +63,7 @@ function structuredData(content: HomeContent, niche?: { route: string; name: str
   const page = siteUrl(niche ? `/${niche.route}` : "/");
   return [
     organizationNode(),
-    niche ? null : websiteNode(),
+    niche ? breadcrumbTrailNode([{ name: niche.name, path: `/${niche.route}` }]) : websiteNode(),
     softwareApplicationNode({
       name: niche ? `MeetChat para ${niche.name.toLowerCase()}` : "MeetChat",
       url: page,
@@ -117,7 +120,7 @@ export function HomePage({
         {niche ? (
           <div className="lp-lime lp-hero">
             <div className={`${container} pt-3`}>
-              <Breadcrumbs items={[{ name: niche.name, path: `/${niche.route}` }]} />
+              <Breadcrumbs items={[{ name: niche.name, path: `/${niche.route}` }]} jsonLd={false} />
             </div>
           </div>
         ) : null}
@@ -166,6 +169,12 @@ export function HomePage({
             </div>
           </div>
         </section>
+
+        <DirectAnswerBlock
+          answer={niche ? nicheAnswer(brand) : HOME_ANSWER}
+          updatedAt={niche ? nichePageUpdatedAt(brand.key) : SITE_PAGES.home.updatedAt}
+          className={`${container} max-w-3xl py-10`}
+        />
 
         {/* Niches */}
         <section aria-labelledby="nichos" className="lp-deep">

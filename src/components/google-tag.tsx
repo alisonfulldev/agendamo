@@ -4,6 +4,8 @@ import { usePathname } from "next/navigation";
 import Script from "next/script";
 import { useEffect } from "react";
 
+import { rememberArrival } from "@/components/seo/site-tracker";
+import { campaignQuery } from "@/lib/analytics/arrival";
 import {
   GOOGLE_ADS_ID,
   GOOGLE_TAG_ID,
@@ -70,6 +72,7 @@ function fbq(...args: unknown[]) {
  * An account was just created in the creation conversation: one sign-up for Analytics, one
  * "Cadastro MeetChat" conversion for Google Ads and one CompleteRegistration for Meta. Nothing
  * about the person is sent. Only where the tags already run (the sales site); elsewhere nothing.
+ * The form path counts its own on the success screen (<SignupTags>).
  */
 export function trackSignup() {
   if (window.gtag) {
@@ -89,8 +92,11 @@ export function GoogleTag({ nicheRoutes }: { nicheRoutes: readonly string[] }) {
   const onSite = isSitePath(pathname, nicheRoutes);
   useEffect(() => {
     if (!onSite) return;
+    rememberArrival();
     gtag("event", "page_view", {
-      page_location: window.location.origin + pathname,
+      // Campaign tags and click ids only (?utm_source=chatgpt.com…): Analytics reads the source
+      // from them. Never ?nome=, ?ramo= or ?criar=.
+      page_location: window.location.origin + pathname + campaignQuery(window.location.search),
       page_title: document.title,
     });
     fbq("track", "PageView");
@@ -106,4 +112,25 @@ export function GoogleTag({ nicheRoutes }: { nicheRoutes: readonly string[] }) {
       <Script src="https://connect.facebook.net/en_US/fbevents.js" strategy="afterInteractive" />
     </>
   ) : null;
+}
+
+/**
+ * Sign-up of the form path (/cadastro → e-mail → /painel/novo): the panel never loads the tags, so
+ * its success screen loads them only to count this sign-up (no page view is sent).
+ */
+export function SignupTags() {
+  useEffect(() => {
+    gtag("event", "sign_up", { method: "form" });
+    gtag("event", "conversion", { send_to: SIGNUP_CONVERSION });
+    fbq("track", "CompleteRegistration");
+  }, []);
+  return (
+    <>
+      <Script
+        src={`https://www.googletagmanager.com/gtag/js?id=${GOOGLE_TAG_ID}`}
+        strategy="afterInteractive"
+      />
+      <Script src="https://connect.facebook.net/en_US/fbevents.js" strategy="afterInteractive" />
+    </>
+  );
 }

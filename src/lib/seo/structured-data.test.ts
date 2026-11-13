@@ -121,6 +121,21 @@ describe("MeetChat pages", () => {
     for (const url of (org.sameAs as string[] | undefined) ?? []) expect(url).toMatch(ABSOLUTE);
   });
 
+  it("organization, website and company have their own @id, linked to each other", () => {
+    const org = organizationNode();
+    const website = websiteNode();
+    const app = softwareApplicationNode({ url: "https://meetchat.com.br/", description: "x" });
+    expect(org["@id"]).toMatch(/#organization$/);
+    expect(website["@id"]).toMatch(/#website$/);
+    expect(org["@id"]).not.toBe(website["@id"]);
+    expect(website.publisher).toEqual({ "@id": org["@id"] });
+    expect(org.parentOrganization).toMatchObject({
+      "@id": "https://brandcodesolutions.com.br/#organization",
+      name: "BrandCode Solutions",
+    });
+    expect(app.creator).toEqual({ "@id": "https://brandcodesolutions.com.br/#organization" });
+  });
+
   it("FAQ is left out when there are no questions", () => {
     expect(faqNode([])).toBeNull();
   });
@@ -131,7 +146,7 @@ describe("MeetChat pages", () => {
         url: "https://meetchat.com.br/recursos/x",
         title: "Título",
         description: "Descrição",
-        author: { name: "Equipe MeetChat" },
+        author: { name: "Alison Lima", url: "https://brandcodesolutions.com.br/sobre" },
         datePublished: "2026-10-16",
         dateModified: "2026-10-16",
       }),

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { JsonLd } from "@/components/seo/json-ld";
-import { Breadcrumbs } from "@/components/site/breadcrumbs";
+import { Breadcrumbs, breadcrumbTrailNode, type Crumb } from "@/components/site/breadcrumbs";
 import { GuideArticle, GuideCta, GuideFaq, GuideSections } from "@/components/site/guide-article";
 import { SitePage } from "@/components/site/site-page";
 import {
@@ -43,14 +43,13 @@ export default async function ComparisonRoute({ params }: PageProps<"/comparar/[
   if (!page) notFound();
   const competitor = getCompetitor(page.competitor);
 
+  const crumbs: Crumb[] = [
+    { name: "Comparativos", path: "/comparar" },
+    { name: page.label, path: `/comparar/${page.slug}` },
+  ];
   return (
     <SitePage template="comparar">
-      <Breadcrumbs
-        items={[
-          { name: "Comparativos", path: "/comparar" },
-          { name: page.label, path: `/comparar/${page.slug}` },
-        ]}
-      />
+      <Breadcrumbs items={crumbs} jsonLd={false} />
       <GuideArticle
         h1={page.h1}
         updatedAt={page.updatedAt}
@@ -123,7 +122,7 @@ export default async function ComparisonRoute({ params }: PageProps<"/comparar/[
       />
       <GuideCta title="Teste o MeetChat com o seu negócio: o link fica pronto em 1 minuto." />
       <GuideFaq items={page.faq} />
-      <JsonLd nodes={[organizationNode(), faqNode(page.faq)]} />
+      <JsonLd nodes={[organizationNode(), breadcrumbTrailNode(crumbs), faqNode(page.faq)]} />
     </SitePage>
   );
 }

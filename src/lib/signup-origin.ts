@@ -1,9 +1,56 @@
+import { z } from "zod";
+
+import { SITE_TEMPLATES } from "@/lib/tracking/site-events";
+
 /**
  * Where a new account came from, in words for the admin panel ("Google (busca)", "ChatGPT",
  * "Anúncio Meta"…). Built from the `source` saved with the sign-up (audit_log business.created):
  * the ad click ids, the UTM tags, the referring site and the first page of the visit.
  * Nothing personal: only domains, tags and paths.
  */
+
+/** The `source` sent by the browser with a sign-up (creation conversation and form). */
+export const signupSourceSchema = z
+  .object({
+    utm_source: z.string().max(100).optional(),
+    utm_medium: z.string().max(100).optional(),
+    utm_campaign: z.string().max(100).optional(),
+    via: z.enum(["direct", "nome", "ramo"]).optional(),
+    /** Headline/CTA experiment (docs/design/experiments.md): variant id and "experiment:variant". */
+    variant: z
+      .string()
+      .regex(/^[a-z0-9]{1,8}$/)
+      .optional(),
+    experiment: z
+      .string()
+      .regex(/^[a-z0-9-]{1,60}:[a-z0-9]{1,8}$/)
+      .optional(),
+    page: z.string().max(200).optional(),
+    referrer: z.string().max(200).optional(),
+    /** Ad click id seen when the visit arrived (gclid → google, fbclid → meta). */
+    click: z.enum(["google", "meta"]).optional(),
+    /** First page of the visitor's first touch and the template of the page (SEO funnel). */
+    landing: z.string().max(200).optional(),
+    template: z.enum(SITE_TEMPLATES).optional(),
+  })
+  .default({});
+
+/**
+ * "Como conheceu o MeetChat?" (optional, asked once the account exists; audit_log
+ * signup.heard_from). Keys are stored; labels are shown.
+ */
+export const HEARD_FROM = {
+  google: "Google",
+  ai: "ChatGPT / outra IA",
+  instagram: "Instagram",
+  referral: "Indicação",
+  other: "Outro",
+} as const;
+
+export type HeardFrom = keyof typeof HEARD_FROM;
+
+export const heardFromSchema = z.enum(Object.keys(HEARD_FROM) as [HeardFrom, ...HeardFrom[]]);
+
 export interface SignupSource {
   utm_source?: string;
   utm_medium?: string;

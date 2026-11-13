@@ -31,6 +31,7 @@ export const SITE_SECTIONS = [
   "recuperar-senha",
   "recursos",
   "redefinir-senha",
+  "sobre",
   "termos",
 ] as const;
 

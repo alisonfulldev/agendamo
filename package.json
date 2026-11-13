@@ -20,6 +20,8 @@
     "db:new": "supabase migration new",
     "db:push": "supabase db push",
     "seo:indexnow": "node scripts/seo/indexnow.mts",
+    "indexnow": "node scripts/seo/indexnow.mts",
+    "seo:audit": "node scripts/seo/audit.mts",
     "seo:gate": "vitest run src/lib/seo/quality-gate.test.ts",
     "seo:links": "node scripts/seo/internal-links.mts",
     "seo:coverage": "node scripts/seo/report-index-coverage.mts"

@@ -1,3 +1,4 @@
+import { COMPANY } from "./company";
 import type { FaqItem, GuideSection } from "./niche-guides/types";
 
 /**
@@ -42,6 +43,12 @@ export interface Article {
 
 // TODO(conteúdo): trocar pela pessoa autora real (nome e página) quando houver.
 const TEAM: ArticleAuthor = { name: "Equipe MeetChat", type: "Organization" };
+/** Blog posts (/recursos): written by MeetChat's founder (src/content/company.ts). */
+const FOUNDER: ArticleAuthor = {
+  name: COMPANY.founder.name,
+  type: "Person",
+  url: COMPANY.founder.url,
+};
 
 export const ARTICLES: readonly Article[] = [
   {
@@ -54,7 +61,7 @@ export const ARTICLES: readonly Article[] = [
     h1: "Política de faltas e cancelamento: como escrever a sua",
     summary:
       "Uma política de faltas e cancelamento diz ao cliente, antes de marcar, com quanta antecedência ele precisa avisar, o que acontece se faltar e como remarcar. Ela funciona quando é curta, aparece antes do agendamento e é aplicada do mesmo jeito para todos.",
-    author: TEAM,
+    author: FOUNDER,
     datePublished: "2026-10-16",
     dateModified: "2026-10-16",
     category: "Faltas e cancelamentos",
@@ -124,7 +131,7 @@ export const ARTICLES: readonly Article[] = [
     h1: "Como colocar o link de agendamento no seu Perfil da Empresa no Google",
     summary:
       "Pelo Perfil da Empresa no Google você pode adicionar um link de agendamento que aparece para quem encontra o seu negócio na Pesquisa e no Maps. Na Pesquisa, abra o seu perfil, selecione Agendamento, depois Adicionar link, cole o seu link e salve.",
-    author: TEAM,
+    author: FOUNDER,
     datePublished: "2026-10-16",
     dateModified: "2026-10-16",
     category: "Divulgação",
@@ -197,7 +204,7 @@ export const ARTICLES: readonly Article[] = [
     h1: "Como organizar a agenda do salão de beleza",
     summary:
       "A agenda do salão fica organizada quando cada serviço tem a duração real, há intervalo entre atendimentos, cada profissional tem os próprios horários e existem regras claras de antecedência. Com isso definido uma vez, o sistema de agendamento só oferece horários que cabem de verdade.",
-    author: TEAM,
+    author: FOUNDER,
     datePublished: "2026-10-16",
     dateModified: "2026-10-16",
     category: "Organização da agenda",

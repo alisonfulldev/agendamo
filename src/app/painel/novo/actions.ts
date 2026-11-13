@@ -2,6 +2,7 @@
 
 import { getCurrentBrand } from "@/brands/server";
 import { businessUrl } from "@/brands/urls";
+import { audit } from "@/lib/audit";
 import { requireUser } from "@/lib/auth/session";
 import { onboardingSchema } from "@/lib/business/schemas";
 import { checkSlug, isSlugAvailable, type SlugCheck } from "@/lib/business/slug-check";
@@ -10,6 +11,7 @@ import type { Business } from "@/lib/db/types";
 import { notifyAdminsOfSignup } from "@/lib/notifications/admin-signup";
 import { startTrial } from "@/lib/trial";
 import { rateLimitRequest } from "@/lib/rate-limit";
+import { signupSourceSchema } from "@/lib/signup-origin";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export type { SlugCheck } from "@/lib/business/slug-check";
@@ -28,7 +30,10 @@ export type CreateBusinessResult =
   | { ok: false; message: string; errors?: Record<string, string> };
 
 /** Creates the business with the brand of the current domain (rule 14). */
-export async function createBusinessAction(input: unknown): Promise<CreateBusinessResult> {
+export async function createBusinessAction(
+  input: unknown,
+  rawSource?: unknown,
+): Promise<CreateBusinessResult> {
   const user = await requireUser();
   const parsed = onboardingSchema.safeParse(input);
   if (!parsed.success) {
@@ -93,6 +98,14 @@ export async function createBusinessAction(input: unknown): Promise<CreateBusine
     identity: { email: user.email, phone: data.whatsapp },
     userId: user.id,
     via: "signup",
+  });
+  // Where the account came from (same record as the creation conversation's, read by the admin).
+  const source = signupSourceSchema.safeParse(rawSource ?? {});
+  await audit({
+    businessId: (created as Business).id,
+    userId: user.id,
+    action: "business.created",
+    details: { via: "form", source: source.success ? source.data : null },
   });
   const pageUrl = businessUrl(brand, `/${data.slug}`);
   await notifyAdminsOfSignup({

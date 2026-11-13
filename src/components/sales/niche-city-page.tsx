@@ -7,7 +7,7 @@ import { canonicalUrl } from "@/brands/urls";
 import { LazyCreationChat } from "@/components/creation/lazy-creation-chat";
 import { JsonLd } from "@/components/seo/json-ld";
 import { SiteTracker } from "@/components/seo/site-tracker";
-import { Breadcrumbs } from "@/components/site/breadcrumbs";
+import { Breadcrumbs, breadcrumbTrailNode, type Crumb } from "@/components/site/breadcrumbs";
 import { GuideCta } from "@/components/site/guide-article";
 import { SiteFooter, SiteHeader } from "@/components/site/site-chrome";
 import { priceRange, type cityListing } from "@/lib/directory/build";
@@ -43,6 +43,10 @@ export function NicheCityPage({ brand, listing }: { brand: BrandConfig; listing:
   const hub = `/${niche.route}`;
   const path = `${hub}/${listing.citySlug}`;
 
+  const crumbs: Crumb[] = [
+    { name: niche.name, path: hub },
+    { name: listing.city, path },
+  ];
   return (
     <div
       data-theme-scope=""
@@ -51,12 +55,7 @@ export function NicheCityPage({ brand, listing }: { brand: BrandConfig; listing:
     >
       <SiteHeader badge={niche.name} logo={brand.logo} />
       <main className="mx-auto w-full max-w-4xl flex-1 px-5 pt-4 pb-16">
-        <Breadcrumbs
-          items={[
-            { name: niche.name, path: hub },
-            { name: listing.city, path },
-          ]}
-        />
+        <Breadcrumbs items={crumbs} jsonLd={false} />
         <h1 className="mt-6 font-heading text-3xl leading-tight font-bold tracking-tight text-balance sm:text-4xl">
           {niche.label} em {listing.city}
         </h1>
@@ -151,6 +150,7 @@ export function NicheCityPage({ brand, listing }: { brand: BrandConfig; listing:
       <JsonLd
         nodes={[
           organizationNode(),
+          breadcrumbTrailNode(crumbs),
           itemListNode(
             listing.businesses.map((b) => ({
               name: b.name,

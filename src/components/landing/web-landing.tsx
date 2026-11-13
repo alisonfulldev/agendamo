@@ -5,7 +5,7 @@ import type { BrandConfig } from "@/brands";
 import { brandThemeStyle } from "@/brands/theme";
 import { JsonLd } from "@/components/seo/json-ld";
 import { SiteTracker } from "@/components/seo/site-tracker";
-import { Breadcrumbs, type Crumb } from "@/components/site/breadcrumbs";
+import { Breadcrumbs, breadcrumbTrailNode, type Crumb } from "@/components/site/breadcrumbs";
 import { SiteFooter, SiteHeader } from "@/components/site/site-chrome";
 import { EXAMPLE_GALLERY } from "@/content/site-examples";
 import {
@@ -166,14 +166,16 @@ function Shell({
       <main className="flex-1">
         <div className="lp-lime lp-hero">
           <div className={`${container} pt-3`}>
-            <Breadcrumbs items={crumbs} />
+            <Breadcrumbs items={crumbs} jsonLd={false} />
           </div>
         </div>
         {children}
       </main>
       <SiteFooter />
       <SiteTracker template={kind === "site" ? "site-profissional" : "loja-virtual"} niche={null} />
-      <JsonLd nodes={[organizationNode(), faq.length ? faqNode(faq) : null]} />
+      <JsonLd
+        nodes={[organizationNode(), breadcrumbTrailNode(crumbs), faq.length ? faqNode(faq) : null]}
+      />
     </div>
   );
 }

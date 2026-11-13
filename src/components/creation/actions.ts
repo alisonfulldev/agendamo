@@ -6,10 +6,10 @@ import { z } from "zod";
 
 import { getNiche } from "@/brands";
 import { isReservedBusinessName } from "@/lib/business/reserved-names";
-import { SITE_TEMPLATES } from "@/lib/tracking/site-events";
 import { checkSlug } from "@/lib/business/slug-check";
 import { MAX_UPLOAD_BYTES, UPLOAD_CONTENT_TYPE } from "@/lib/images/presets";
 import { hashedClientIp, rateLimitRequest } from "@/lib/rate-limit";
+import { signupSourceSchema } from "@/lib/signup-origin";
 import { slugify } from "@/lib/slug";
 import {
   createUploadUrl,
@@ -23,31 +23,6 @@ import { createAdminClient } from "@/lib/supabase/admin";
 /** Below this, the form was filled by a robot (the conversation takes a few seconds at least). */
 const MIN_ELAPSED_MS = 1500;
 
-const sourceSchema = z
-  .object({
-    utm_source: z.string().max(100).optional(),
-    utm_medium: z.string().max(100).optional(),
-    utm_campaign: z.string().max(100).optional(),
-    via: z.enum(["direct", "nome", "ramo"]).optional(),
-    /** Headline/CTA experiment (docs/design/experiments.md): variant id and "experiment:variant". */
-    variant: z
-      .string()
-      .regex(/^[a-z0-9]{1,8}$/)
-      .optional(),
-    experiment: z
-      .string()
-      .regex(/^[a-z0-9-]{1,60}:[a-z0-9]{1,8}$/)
-      .optional(),
-    page: z.string().max(200).optional(),
-    referrer: z.string().max(200).optional(),
-    /** Ad click id seen when the visit arrived (gclid → google, fbclid → meta). */
-    click: z.enum(["google", "meta"]).optional(),
-    /** First page of the visitor's session and the template of the page (SEO funnel). */
-    landing: z.string().max(200).optional(),
-    template: z.enum(SITE_TEMPLATES).optional(),
-  })
-  .default({});
-
 const createSchema = z.object({
   name: z
     .string()
@@ -57,7 +32,7 @@ const createSchema = z.object({
     .refine((name) => !isReservedBusinessName(name)),
   brandKey: z.string().max(40),
   nicheDescription: z.string().trim().max(200).nullable().default(null),
-  source: sourceSchema,
+  source: signupSourceSchema,
   /** Honeypot: hidden field, always empty for people. */
   trap: z.string().max(0),
   elapsedMs: z.number().int().min(MIN_ELAPSED_MS),

@@ -2,11 +2,13 @@
 
 import { useEffect } from "react";
 
+import { arrivalFrom, keepArrival, parseArrival, type Arrival } from "@/lib/analytics/arrival";
 import type { SiteTemplate } from "@/lib/tracking/site-events";
 
 const SESSION_KEY = "mc_site_session";
 const LANDING_KEY = "mc_site_landing";
-const ARRIVAL_KEY = "mc_site_arrival";
+// localStorage since 2026-11-13 (was sessionStorage "mc_site_arrival", lost in a new tab).
+const ARRIVAL_KEY = "mc_first_touch";
 
 /** Template and niche of the page on screen, for the CTA click and the sign-up source. */
 let current: { template: SiteTemplate; niche: string | null; experiment: string | null } = {
@@ -37,49 +39,38 @@ export function siteLanding(): string | null {
   }
 }
 
+function currentArrival(): Arrival {
+  return arrivalFrom({
+    search: window.location.search,
+    referrer: document.referrer,
+    host: window.location.host,
+    path: window.location.pathname,
+    now: Date.now(),
+  });
+}
+
 /**
- * How this visit arrived, kept from its first page (in-site navigation loses it): the referring
- * site's domain and whether the address had an ad click id. Only domains, never full URLs.
+ * How the visitor first arrived (src/lib/analytics/arrival.ts): kept for 30 days in this browser,
+ * so in-site navigation, the ?criar=1 button and the confirmation e-mail's new tab keep it.
+ * Falls back to what the current page knows when storage is blocked.
  */
-export interface SiteArrival {
-  referrer?: string;
-  click?: "google" | "meta";
-}
-
-function readArrival(): SiteArrival {
-  let referrer: string | undefined;
+export function siteArrival(): Arrival {
   try {
-    const host = document.referrer ? new URL(document.referrer).host : "";
-    referrer = host && host !== window.location.host ? host.slice(0, 200) : undefined;
-  } catch {
-    referrer = undefined;
-  }
-  const params = new URLSearchParams(window.location.search);
-  const click =
-    params.has("gclid") || params.has("gbraid") || params.has("wbraid")
-      ? "google"
-      : params.has("fbclid")
-        ? "meta"
-        : undefined;
-  return { referrer, click };
-}
-
-/** The visit's arrival (first page of this tab's session), or the current page's own. */
-export function siteArrival(): SiteArrival {
-  try {
-    const saved = sessionStorage.getItem(ARRIVAL_KEY);
-    if (saved) return JSON.parse(saved) as SiteArrival;
+    const saved = parseArrival(localStorage.getItem(ARRIVAL_KEY), Date.now());
+    if (saved) return saved;
   } catch {
     // Blocked storage: use what this page knows.
   }
-  return readArrival();
+  return currentArrival();
 }
 
-function rememberArrival() {
+/** Saves the first touch (or replaces a direct or expired one). Called on every site page. */
+export function rememberArrival() {
   try {
-    if (!sessionStorage.getItem(ARRIVAL_KEY)) {
-      sessionStorage.setItem(ARRIVAL_KEY, JSON.stringify(readArrival()));
-    }
+    const now = Date.now();
+    const saved = parseArrival(localStorage.getItem(ARRIVAL_KEY), now);
+    const kept = keepArrival(saved, currentArrival());
+    if (kept !== saved) localStorage.setItem(ARRIVAL_KEY, JSON.stringify(kept));
   } catch {
     // Private mode: no attribution.
   }

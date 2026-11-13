@@ -20,6 +20,13 @@ export const AI_CRAWLERS = [
 /** User agents to block entirely. Empty = every crawler follows the rules for "*". */
 export const BLOCKED_CRAWLERS: readonly string[] = [];
 
+/**
+ * Crawlers named in their own group with the same rules as "*" (2026-11-13): OpenAI's search and
+ * user visits, so the permission is explicit for them. A named group replaces "*" for that
+ * crawler, so it must repeat every Disallow.
+ */
+export const EXPLICIT_CRAWLERS: readonly string[] = ["OAI-SearchBot", "ChatGPT-User", "GPTBot"];
+
 /** Private areas and states that must never be crawled. CSS/JS (/_next) stay open. */
 export const DISALLOWED_PATHS = [
   "/painel",
@@ -56,7 +63,10 @@ export function robotsTxt({
 }): string {
   // Previews and development are never indexed.
   if (!production) return "User-agent: *\nDisallow: /\n";
-  const lines = ["User-agent: *", "Allow: /", ...DISALLOWED_PATHS.map((p) => `Disallow: ${p}`)];
+  const rules = ["Allow: /", ...DISALLOWED_PATHS.map((p) => `Disallow: ${p}`)];
+  const lines = ["User-agent: *", ...rules];
+  const explicit = EXPLICIT_CRAWLERS.filter((agent) => !blocked.includes(agent));
+  if (explicit.length) lines.push("", ...explicit.map((agent) => `User-agent: ${agent}`), ...rules);
   for (const agent of blocked) lines.push("", `User-agent: ${agent}`, "Disallow: /");
   lines.push("", `Sitemap: ${sitemapUrl}`);
   return `${lines.join("\n")}\n`;

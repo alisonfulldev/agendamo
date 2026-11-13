@@ -6,8 +6,11 @@ import { LazyCreationChat } from "@/components/creation/lazy-creation-chat";
 import { OpenCreationLink } from "@/components/creation/open-creation";
 import { JsonLd } from "@/components/seo/json-ld";
 import { SiteTracker } from "@/components/seo/site-tracker";
-import { Breadcrumbs } from "@/components/site/breadcrumbs";
+import { Breadcrumbs, breadcrumbTrailNode } from "@/components/site/breadcrumbs";
 import { SiteFooter, SiteHeader } from "@/components/site/site-chrome";
+import { DirectAnswerBlock } from "@/components/site/direct-answer";
+import { PRICING_ANSWER } from "@/content/direct-answer";
+import { SITE_PAGES } from "@/content/site-pages";
 import { PRICING } from "@/content/pricing";
 import { pageMetadata } from "@/lib/seo/metadata";
 import { faqNode, organizationNode, softwareApplicationNode } from "@/lib/seo/structured-data";
@@ -33,13 +36,19 @@ export default function PricingPage() {
     >
       <SiteHeader />
       <main className="mx-auto w-full max-w-5xl flex-1 px-5 pt-4 pb-16">
-        <Breadcrumbs items={[{ name: "Preços", path: "/precos" }]} />
+        <Breadcrumbs items={[{ name: "Preços", path: "/precos" }]} jsonLd={false} />
         <h1 className="mt-6 font-heading text-3xl font-bold tracking-tight text-balance sm:text-4xl">
           {PRICING.title}
         </h1>
         <p className="mt-3 max-w-2xl text-lg leading-relaxed text-pretty text-muted-foreground">
           {PRICING.intro}
         </p>
+
+        <DirectAnswerBlock
+          answer={PRICING_ANSWER}
+          updatedAt={SITE_PAGES.pricing.updatedAt}
+          className="mt-8 max-w-3xl"
+        />
 
         <div className="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
           {PRICING.tiers.map((tier) => (
@@ -106,6 +115,7 @@ export default function PricingPage() {
       <JsonLd
         nodes={[
           organizationNode(),
+          breadcrumbTrailNode([{ name: "Preços", path: "/precos" }]),
           softwareApplicationNode({ url: siteUrl("/"), description: PRICING.meta.description }),
           faqNode(PRICING.faq),
         ]}

@@ -59,7 +59,14 @@ export default async function PrivacyPage() {
         cadastro e entrada) usamos também o Google Analytics, o Google Ads e o pixel da Meta
         (Facebook e Instagram), que gravam cookies próprios para medir visitas de forma agregada e
         saber quantas contas foram criadas a partir dos nossos anúncios. Nenhum nome, e-mail ou
-        telefone é enviado a eles. Eles não rodam no link de agendamento dos negócios nem no painel.
+        telefone é enviado a eles. Eles não rodam no link de agendamento dos negócios nem no painel
+        (só a tela de conta criada pelo formulário os carrega, para contar o cadastro).
+      </p>
+      <p>
+        Para saber como você nos conheceu, guardamos no seu navegador, por até 30 dias, de onde veio
+        a primeira visita: o nome do site ou da campanha (por exemplo, &quot;chatgpt.com&quot;) e a
+        primeira página aberta, nunca o endereço completo. Ao criar a conta, isso fica registrado
+        com ela, junto da resposta opcional a &quot;Como conheceu o MeetChat?&quot;.
       </p>
       <h2>4. Compartilhamento</h2>
       <p>

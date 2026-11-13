@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { getBrand, PLATFORM } from "@/brands";
+import { COMPANY, COMPANY_PLACE } from "@/content/company";
 import { CONTACT_EMAIL } from "@/content/contact";
 import { INTENT_PAGES } from "@/content/intent-pages";
 import { TOOLS } from "@/content/tools";
@@ -142,6 +143,7 @@ export function SiteFooter() {
         { label: "Site + agenda online", href: "/site-e-agenda" },
         { label: "Site profissional", href: "/site-profissional" },
         { label: "Loja virtual", href: "/loja-virtual" },
+        { label: "Sobre o MeetChat", href: "/sobre" },
         { label: "Central de ajuda", href: "/ajuda" },
         { label: "Contato", href: `mailto:${CONTACT_EMAIL}` },
         { label: "Termos de uso", href: "/termos" },
@@ -173,7 +175,11 @@ export function SiteFooter() {
         ))}
       </div>
       <div className="mx-auto w-full max-w-6xl border-t px-5 py-6 text-sm text-muted-foreground sm:px-8">
-        © 2026 MeetChat
+        © 2026 MeetChat, um produto{" "}
+        <a href={COMPANY.url} className="underline-offset-4 hover:text-foreground hover:underline">
+          {COMPANY.name}
+        </a>{" "}
+        ({COMPANY_PLACE})
       </div>
     </footer>
   );

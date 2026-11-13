@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 
 import { NoShowBlock, TopicVisual } from "@/components/landing/topic-blocks";
 import { JsonLd } from "@/components/seo/json-ld";
-import { Breadcrumbs } from "@/components/site/breadcrumbs";
+import { Breadcrumbs, breadcrumbTrailNode, type Crumb } from "@/components/site/breadcrumbs";
 import { GuideArticle, GuideCta, GuideFaq } from "@/components/site/guide-article";
 import { LinkList } from "@/components/site/link-list";
 import { SitePage } from "@/components/site/site-page";
@@ -52,14 +52,13 @@ export default async function IntentPageRoute({ params }: PageProps<"/agendament
     .filter((p) => p !== null)
     .map((p) => ({ label: p.label, href: `/agendamento/${p.slug}` }));
 
+  const crumbs: Crumb[] = [
+    { name: "Guias de agendamento", path: "/agendamento" },
+    { name: page.label, path },
+  ];
   return (
     <SitePage template="agendamento">
-      <Breadcrumbs
-        items={[
-          { name: "Guias de agendamento", path: "/agendamento" },
-          { name: page.label, path },
-        ]}
-      />
+      <Breadcrumbs items={crumbs} jsonLd={false} />
       <GuideArticle
         h1={page.h1}
         updatedAt={page.updatedAt}
@@ -95,7 +94,13 @@ export default async function IntentPageRoute({ params }: PageProps<"/agendament
         title="Veja também"
         links={[...related, ...(TOOL_LINKS_BY_INTENT[page.slug] ?? [])]}
       />
-      <JsonLd nodes={[organizationNode(), page.faq ? faqNode(page.faq) : null]} />
+      <JsonLd
+        nodes={[
+          organizationNode(),
+          breadcrumbTrailNode(crumbs),
+          page.faq ? faqNode(page.faq) : null,
+        ]}
+      />
     </SitePage>
   );
 }

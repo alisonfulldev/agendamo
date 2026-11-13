@@ -1,12 +1,15 @@
 import { NICHES } from "@/brands";
+import { NICHE_GROUPS } from "@/brands/schema";
 import { publishedArticles } from "@/content/articles";
 import { COMPARISONS } from "@/content/comparisons";
+import { COMPANY, COMPANY_PLACE, MEETCHAT_SUMMARY } from "@/content/company";
 import { HOME } from "@/content/home";
 import { INTENT_PAGES } from "@/content/intent-pages";
 import { SITE_AGENDA_INDEX, SITE_AGENDA_PAGES } from "@/content/site-agenda-pages";
 import { WEB_HUBS, WEB_PAGES, webPagePath } from "@/content/web-landing-pages";
 import { nicheHomeContent } from "@/content/niche-pages";
 import { publishedTopics } from "@/content/niche-guides";
+import { ABOUT } from "@/content/about";
 import { PRICING } from "@/content/pricing";
 import { TOOLS } from "@/content/tools";
 import { siteUrl, withoutQuery } from "@/lib/site-url";
@@ -28,15 +31,30 @@ export function llmsTxt(): string {
     "",
     `> ${HOME.meta.description}`,
     "",
-    "MeetChat é um chat de agendamento para negócios com hora marcada no Brasil: o cliente toca no link (Instagram, WhatsApp, Google ou site), escolhe o serviço, o profissional e um horário livre e confirma, sem baixar aplicativo. Inclui agenda por profissional, confirmação e lembrete por e-mail, sinal pelo Pix pago direto ao profissional e financeiro simples.",
+    MEETCHAT_SUMMARY,
     "",
-    `- Preços: ${PRICING.meta.description}`,
+    `O MeetChat é um produto da ${COMPANY.name} (${COMPANY_PLACE}), software house fundada em ${COMPANY.foundingYear} por ${COMPANY.founder.name}: ${COMPANY.url}`,
+    "",
+    "## Para quem é",
+    "",
+    "Negócios e profissionais que trabalham com hora marcada no Brasil:",
+    ...NICHE_GROUPS.map((group) =>
+      niches.filter((b) => b.niche!.group === group).map((b) => b.niche!.label),
+    )
+      .filter((labels) => labels.length > 0)
+      .map((labels) => `- ${labels.join(", ")}`),
+    "",
+    "## Planos",
+    "",
+    `- ${PRICING.meta.description}`,
+    ...PRICING.tiers.map((t) => `- ${t.name}: ${t.price}. ${t.summary}`),
     "- O MeetChat não envia mensagens por WhatsApp: o link é divulgado pelo próprio profissional.",
     "",
     "## Principais páginas",
     "",
     line("Início", "/", HOME.meta.description),
     line("Preços", "/precos", PRICING.meta.description),
+    line("Sobre o MeetChat", "/sobre", ABOUT.description),
     "",
     "## Por área",
     "",
