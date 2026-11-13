@@ -89,7 +89,7 @@ export const beautyGuide: NicheGuide = {
           ],
         },
         {
-          title: "Onde o link trabalha por você",
+          title: "Onde o link trabalha por você?",
           list: [
             "Perfil comercial do WhatsApp Business: quem abre a conversa já vê o link.",
             "Mensagem de ausência: à noite e no fim de semana, a cliente recebe o link e agenda na hora.",
@@ -135,7 +135,7 @@ export const beautyGuide: NicheGuide = {
           ],
         },
         {
-          title: "Como montar o caminho no Instagram",
+          title: "Como montar o caminho no Instagram?",
           ordered: true,
           list: [
             "Coloque o link do MeetChat como primeiro link da bio.",

@@ -89,7 +89,7 @@ export const nailsGuide: NicheGuide = {
           ],
         },
         {
-          title: "Onde deixar o link",
+          title: "Onde deixar o link?",
           list: [
             "No perfil do WhatsApp Business, no campo de site.",
             "Na mensagem de ausência, para quem chama enquanto você atende.",

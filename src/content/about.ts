@@ -1,8 +1,11 @@
+import { PLAN_NAME, PRICE_TEXT, SITE_PLAN_NAME, SITE_PRICE_TEXT, TRIAL_DAYS } from "@/lib/plans";
+
 import { COMPANY, COMPANY_PLACE } from "./company";
 
 /**
- * /sobre (2026-11-13): what MeetChat is, the problem it solves and who makes it. Facts only (no
- * user counts, reviews or prices); the company facts come from src/content/company.ts.
+ * /sobre (2026-11-13): what MeetChat is, the problem it solves, its price and who makes it. Facts
+ * only (no user counts or reviews); prices from src/lib/plans.ts, the company facts from
+ * src/content/company.ts.
  */
 export const ABOUT = {
   title: "Sobre o MeetChat: quem faz e para que serve",
@@ -21,6 +24,13 @@ export const ABOUT = {
       paragraphs: [
         "O link abre um chat de agendamento no navegador do celular, sem baixar aplicativo: o cliente escolhe o serviço, o profissional e um horário livre e confirma. O horário entra na sua agenda, e o cliente recebe a confirmação e o lembrete por e-mail.",
         "No painel ficam a agenda por profissional, os clientes e um financeiro simples. Se quiser, o chat pede um sinal pelo Pix, pago direto na sua chave: o MeetChat nunca recebe o dinheiro dos seus clientes.",
+      ],
+    },
+    {
+      title: "Quanto custa?",
+      paragraphs: [
+        `Criar a conta e colocar o link no ar é grátis, sem cartão. No modo grátis, o cliente escolhe o serviço, o dia e o turno e chama você no WhatsApp com a mensagem pronta. A agenda online completa, com horário reservado na hora e lembretes, é do plano ${PLAN_NAME}, que custa ${PRICE_TEXT.monthly} (ou ${PRICE_TEXT.yearlyPerMonth} no anual). O ${SITE_PLAN_NAME}, com um site profissional junto, custa ${SITE_PRICE_TEXT.monthly}.`,
+        `Todo cadastro começa com ${TRIAL_DAYS} dias do plano pago para testar, sem cartão e sem fidelidade.`,
       ],
     },
     {

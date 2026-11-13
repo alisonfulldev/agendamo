@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 import { getCurrentBrand } from "@/brands/server";
 import { LegalPage } from "@/components/sales/legal-page";
-import { formatPageDate, SITE_PAGES } from "@/content/site-pages";
+import { SITE_PAGES } from "@/content/site-pages";
 import { pageMetadata } from "@/lib/seo/metadata";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -23,7 +23,7 @@ export default async function TermsPage() {
       title="Termos de Uso"
       brand={brand}
       path="/termos"
-      updatedAt={formatPageDate(SITE_PAGES.terms.updatedAt)}
+      updatedAt={SITE_PAGES.terms.updatedAt}
     >
       <p>
         Estes Termos regulam o uso do {brand.name}, plataforma de página de apresentação, agenda e

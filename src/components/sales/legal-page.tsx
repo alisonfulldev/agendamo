@@ -1,6 +1,8 @@
+import type { ReactNode } from "react";
+
 import type { BrandConfig } from "@/brands";
 import { Breadcrumbs } from "@/components/site/breadcrumbs";
-import type { ReactNode } from "react";
+import { UpdatedAt } from "@/components/site/updated-at";
 
 /** Layout for legal texts. Shows the legal-review notice until the texts are reviewed. */
 export function LegalPage({
@@ -14,6 +16,7 @@ export function LegalPage({
   brand: BrandConfig;
   /** Clean path of the page ("/termos"), for the breadcrumb. */
   path: string;
+  /** YYYY-MM-DD (src/content/site-pages.ts). */
   updatedAt: string;
   children: ReactNode;
 }) {
@@ -21,7 +24,7 @@ export function LegalPage({
     <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-12">
       <Breadcrumbs items={[{ name: title, path }]} brand={brand} />
       <h1 className="mt-4 text-3xl font-bold">{title}</h1>
-      <p className="mt-1 text-sm text-muted-foreground">Atualizado em {updatedAt}</p>
+      <UpdatedAt date={updatedAt} className="mt-1" />
       <p
         role="note"
         className="mt-4 rounded-lg border border-dashed p-3 text-sm text-muted-foreground"

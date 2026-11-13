@@ -92,7 +92,7 @@ export const psychologyGuide: NicheGuide = {
           ],
         },
         {
-          title: "Onde colocar o link",
+          title: "Onde colocar o link?",
           list: [
             "No perfil do WhatsApp Business, no campo de site.",
             "Na mensagem de ausência: quem chama durante as sessões recebe o link.",
@@ -136,7 +136,7 @@ export const psychologyGuide: NicheGuide = {
           ],
         },
         {
-          title: "Como organizar o perfil",
+          title: "Como organizar o perfil?",
           list: [
             "Link do MeetChat na bio, com uma chamada simples como “Agende sua primeira conversa”.",
             "Destaque “Atendimento” explicando como funcionam as sessões presenciais e online.",

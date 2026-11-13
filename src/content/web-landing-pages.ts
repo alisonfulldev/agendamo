@@ -65,7 +65,7 @@ export const WEB_HUBS: Record<
 };
 
 const sitePrice: GuideSection = {
-  title: "Quanto custa",
+  title: "Quanto custa?",
   paragraphs: [
     `${WEB_PRICE.monthly} ou ${WEB_PRICE.yearly} no anual, sem taxa de criação e sem fidelidade: você cancela quando quiser.`,
     "Quer um site feito sob medida por uma pessoa da nossa equipe? Também tem, a partir de R$ 197.",
@@ -85,7 +85,7 @@ const SITE_PAGES: Omit<WebLandingPage, "kind" | "updatedAt">[] = [
       "Um bom site de advogado mostra as áreas de atuação, quem é o escritório e um jeito simples de falar com você. No MeetChat, cada área vira um bloco com o botão “Quero saber mais”, que abre o seu WhatsApp com a mensagem pronta, e o site já nasce preparado para aparecer no Google.",
     sections: [
       {
-        title: "O que o cliente procura antes de ligar",
+        title: "O que o cliente procura antes de ligar?",
         list: [
           "Se você atende a área do problema dele (trabalhista, família, previdenciário…)",
           "Onde fica o escritório e se atende online",
@@ -186,6 +186,11 @@ const SITE_PAGES: Omit<WebLandingPage, "kind" | "updatedAt">[] = [
     ],
     faq: [
       {
+        question: "Como o cliente pede um orçamento?",
+        answer:
+          "Todo botão do site abre o seu WhatsApp com uma mensagem pronta, e o cliente pede o orçamento ou marca uma visita ali. A conversa continua no seu WhatsApp, como hoje.",
+      },
+      {
         question: "Cabem muitas fotos?",
         answer: "A galeria comporta até 20 fotos, comprimidas para carregar rápido no celular.",
       },
@@ -214,7 +219,7 @@ const SITE_PAGES: Omit<WebLandingPage, "kind" | "updatedAt">[] = [
         ],
       },
       {
-        title: "O que passa confiança",
+        title: "O que passa confiança?",
         list: [
           "Sua foto e o seu CRECI",
           "Bairros e cidades em que você atua",
@@ -267,6 +272,11 @@ const SITE_PAGES: Omit<WebLandingPage, "kind" | "updatedAt">[] = [
     ],
     faq: [
       {
+        question: "Posso mudar os serviços e os preços depois?",
+        answer:
+          "Sim. Pelo painel você muda textos, fotos, serviços e preços quando quiser, pelo celular, sem precisar de ninguém.",
+      },
+      {
         question: "Serve para outros serviços, como encanador ou pintor?",
         answer:
           "Serve: o site é o mesmo para qualquer prestador de serviço. Você só troca os serviços e as fotos.",
@@ -308,6 +318,11 @@ const SITE_PAGES: Omit<WebLandingPage, "kind" | "updatedAt">[] = [
     ],
     faq: [
       {
+        question: "Tem taxa por cliente ou por orçamento?",
+        answer:
+          "Não. Você paga só a mensalidade do plano; o cliente fala com a oficina direto no WhatsApp, e nada do serviço passa pelo MeetChat.",
+      },
+      {
         question: "O cliente pode mandar foto do problema?",
         answer: "Pode: a conversa abre no seu WhatsApp, onde ele manda fotos e áudios como sempre.",
       },
@@ -329,7 +344,7 @@ const SITE_PAGES: Omit<WebLandingPage, "kind" | "updatedAt">[] = [
       "O site de um fotógrafo é o portfólio que vende: fotos grandes, os tipos de ensaio e eventos que você faz e um botão para chamar no WhatsApp. No MeetChat você monta isso em minutos e troca as fotos sempre que tiver um trabalho novo.",
     sections: [
       {
-        title: "O que costuma entrar",
+        title: "O que costuma entrar?",
         list: [
           "Ensaios: gestante, newborn, família e individual",
           "Casamentos e eventos",
@@ -347,6 +362,11 @@ const SITE_PAGES: Omit<WebLandingPage, "kind" | "updatedAt">[] = [
       sitePrice,
     ],
     faq: [
+      {
+        question: "Como o cliente fecha um ensaio?",
+        answer:
+          "Ele toca no botão do site e o seu WhatsApp abre com a mensagem pronta, dizendo o tipo de ensaio que quer. Data, valor e entrega você combina na conversa.",
+      },
       {
         question: "Posso separar por tipo de ensaio?",
         answer:
@@ -389,6 +409,11 @@ const SITE_PAGES: Omit<WebLandingPage, "kind" | "updatedAt">[] = [
     ],
     faq: [
       {
+        question: "O site funciona no celular do cliente?",
+        answer:
+          "Sim. Ele abre em qualquer navegador, no celular ou no computador, sem baixar aplicativo, e o botão de WhatsApp fica sempre à mão.",
+      },
+      {
         question: "Sou diarista autônoma. Serve para mim?",
         answer: "Serve: o site é o mesmo para uma pessoa ou para uma empresa com equipe.",
       },
@@ -425,6 +450,11 @@ const SITE_PAGES: Omit<WebLandingPage, "kind" | "updatedAt">[] = [
     ],
     faq: [
       {
+        question: "O cliente consegue me mandar a referência da tatuagem?",
+        answer:
+          "Sim. O botão do site abre o seu WhatsApp com a mensagem pronta, e ali o cliente manda as fotos de referência, o tamanho e o local do corpo, como já faz hoje.",
+      },
+      {
         question: "Posso mostrar só o portfólio, sem preços?",
         answer: "Pode: os serviços podem ficar sem preço, para você orçar pelo WhatsApp.",
       },
@@ -438,7 +468,7 @@ const SITE_PAGES: Omit<WebLandingPage, "kind" | "updatedAt">[] = [
 ];
 
 const storePrice: GuideSection = {
-  title: "Quanto custa",
+  title: "Quanto custa?",
   paragraphs: [
     `${WEB_PRICE.monthly} ou ${WEB_PRICE.yearly} no anual, sem taxa por venda e sem fidelidade: você cancela quando quiser.`,
     "Cada produto pode ir para a sacolinha do WhatsApp ou ter o link de onde você já vende, como Shopee ou Mercado Livre.",
@@ -640,6 +670,11 @@ const STORE_PAGES: Omit<WebLandingPage, "kind" | "updatedAt">[] = [
     ],
     faq: [
       {
+        question: "Como o cliente faz o pedido?",
+        answer:
+          "Ele escolhe as peças, coloca na sacolinha e finaliza: o pedido abre no seu WhatsApp com os itens e as quantidades, e vocês combinam pagamento e entrega por lá. Não há checkout nem taxa por venda.",
+      },
+      {
         question: "Faço peças sob encomenda. Como mostro o preço?",
         answer:
           "Coloque o preço inicial (“a partir de”) na descrição e combine o valor final no WhatsApp.",
@@ -694,8 +729,8 @@ const STORE_PAGES: Omit<WebLandingPage, "kind" | "updatedAt">[] = [
 ];
 
 export const WEB_PAGES: readonly WebLandingPage[] = [
-  ...SITE_PAGES.map((p) => ({ ...p, kind: "site" as const, updatedAt: "2026-11-08" })),
-  ...STORE_PAGES.map((p) => ({ ...p, kind: "store" as const, updatedAt: "2026-11-08" })),
+  ...SITE_PAGES.map((p) => ({ ...p, kind: "site" as const, updatedAt: "2026-11-13" })),
+  ...STORE_PAGES.map((p) => ({ ...p, kind: "store" as const, updatedAt: "2026-11-13" })),
 ];
 
 /** Questions of the hubs. */

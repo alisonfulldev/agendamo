@@ -6,7 +6,9 @@ import { JsonLd } from "@/components/seo/json-ld";
 import { Breadcrumbs, breadcrumbTrailNode, type Crumb } from "@/components/site/breadcrumbs";
 import { GuideArticle, GuideCta, GuideFaq, sectionId } from "@/components/site/guide-article";
 import { LinkList } from "@/components/site/link-list";
+import { IndexSections } from "@/components/site/index-sections";
 import { SitePage } from "@/components/site/site-page";
+import { UpdatedAt } from "@/components/site/updated-at";
 import { ARTICLE_SECTIONS, publishedArticles, type Article } from "@/content/articles";
 import { formatPageDate } from "@/content/site-pages";
 import { pageMetadata } from "@/lib/seo/metadata";
@@ -146,6 +148,7 @@ export function ArticleIndex({ section }: { section: Article["section"] }) {
     <SitePage template={section}>
       <Breadcrumbs items={[{ name: info.name, path: `/${section}` }]} />
       <h1 className="mt-6 font-heading text-3xl font-bold tracking-tight sm:text-4xl">{info.h1}</h1>
+      <UpdatedAt date={info.updatedAt} className="mt-2" />
       <p className="mt-4 text-lg text-muted-foreground">{info.intro}</p>
       <ul className="mt-8 grid gap-4">
         {articles.map((a) => (
@@ -161,6 +164,7 @@ export function ArticleIndex({ section }: { section: Article["section"] }) {
           </li>
         ))}
       </ul>
+      <IndexSections sections={info.sections} />
     </SitePage>
   );
 }

@@ -9,7 +9,7 @@ import { BRAND_QUERY_PARAM } from "@/brands/host";
 import { getCurrentBrand, isSharedDomain } from "@/brands/server";
 import { readableOn } from "@/brands/theme";
 import { canonicalUrl, nicheHubUrl } from "@/brands/urls";
-import { pageMetadata } from "@/lib/seo/metadata";
+import { metaSnippet, pageMetadata } from "@/lib/seo/metadata";
 import { breadcrumbNode, localBusinessNode, type JsonLdNode } from "@/lib/seo/structured-data";
 import { getPlanFeatures } from "@/lib/plans";
 import { isIndexable } from "@/lib/public/indexable";
@@ -70,7 +70,9 @@ export function businessMetadata(loaded: LoadedBusinessPage | null): Metadata {
   if (!loaded) return { title: "Página não encontrada", robots: { index: false } };
   const { data, brand } = loaded;
   const image = publicUrl(data.page?.cover_key) ?? publicUrl(data.page?.avatar_key);
-  const description = data.page?.bio ?? `${data.business.name}: veja serviços, preços e agende.`;
+  const description = data.page?.bio
+    ? metaSnippet(data.page.bio)
+    : `${data.business.name}: veja serviços, preços e agende.`;
   return pageMetadata({
     title: `${data.business.name} · ${brand.name}`,
     description,

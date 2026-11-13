@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 import { getCurrentBrand } from "@/brands/server";
 import { LegalPage } from "@/components/sales/legal-page";
-import { formatPageDate, SITE_PAGES } from "@/content/site-pages";
+import { SITE_PAGES } from "@/content/site-pages";
 import { pageMetadata } from "@/lib/seo/metadata";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -23,7 +23,7 @@ export default async function PrivacyPage() {
       title="Política de Privacidade"
       brand={brand}
       path="/privacidade"
-      updatedAt={formatPageDate(SITE_PAGES.privacy.updatedAt)}
+      updatedAt={SITE_PAGES.privacy.updatedAt}
     >
       <p>
         Esta Política explica como o {brand.name} trata dados pessoais, conforme a Lei Geral de

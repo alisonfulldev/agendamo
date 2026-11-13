@@ -120,7 +120,7 @@ export const COMPARISONS: readonly ComparisonPage[] = [
       "O agendamento de horários do Google Agenda é uma boa opção para quem já organiza a vida no Google e quer uma página simples de reserva, configurada no computador. O MeetChat foi feito para negócios de serviço: o cliente agenda numa conversa pelo celular, cada profissional tem a própria agenda, salas e aparelhos não entram em conflito e o sinal é pago pelo Pix direto na sua chave.",
     sections: [
       {
-        title: "Quando o Google Agenda basta",
+        title: "Quando o Google Agenda basta?",
         list: [
           "Você atende sozinho e já usa o Google Agenda no dia a dia.",
           "Seus horários são parecidos entre si (por exemplo, reuniões de duração fixa).",
@@ -128,7 +128,7 @@ export const COMPARISONS: readonly ComparisonPage[] = [
         ],
       },
       {
-        title: "Quando o MeetChat faz mais sentido",
+        title: "Quando o MeetChat faz mais sentido?",
         list: [
           "Seus clientes chegam pelo Instagram e pelo WhatsApp e agendam pelo celular.",
           "Você tem vários serviços com durações diferentes, ou uma equipe.",
@@ -137,7 +137,7 @@ export const COMPARISONS: readonly ComparisonPage[] = [
         ],
       },
       {
-        title: "Dá para usar os dois juntos",
+        title: "Dá para usar os dois juntos?",
         paragraphs: [
           "O MeetChat se conecta ao Google Agenda: seus compromissos do Google bloqueiam os horários do chat, para nenhum cliente marcar em cima de um compromisso pessoal.",
         ],
@@ -174,5 +174,24 @@ export const COMPARISONS_INDEX = {
   h1: "Comparativos",
   intro:
     "Comparamos o MeetChat com outras formas de agendar usando só informações públicas e oficiais, sempre com a fonte e a data da verificação.",
-  updatedAt: "2026-10-16",
+  sections: [
+    {
+      title: "Como os comparativos são feitos?",
+      paragraphs: [
+        "Cada comparativo usa só informações públicas da outra opção: a página oficial de preços, a central de ajuda ou a documentação. Ao lado de cada informação ficam a fonte e a data em que ela foi conferida, porque preços e recursos mudam. O que não está publicado oficialmente fica de fora.",
+        "Os comparativos também dizem quando a outra opção basta: nem todo negócio precisa de um sistema de agendamento, e quem atende poucos clientes por semana pode se organizar bem com uma agenda comum.",
+      ],
+    },
+    {
+      title: "O que olhar ao escolher um sistema de agendamento?",
+      list: [
+        "Se o cliente consegue marcar sozinho, sem baixar aplicativo nem criar conta",
+        "Se só aparecem horários livres de verdade, respeitando a duração do serviço, pausas e intervalos",
+        "Como o cliente recebe a confirmação e o lembrete, e se consegue remarcar sozinho",
+        "Se dá para pedir sinal e para quem vai o dinheiro",
+        "Quanto custa por mês e o que acontece com o seu link se você parar de pagar",
+      ],
+    },
+  ] as GuideSection[],
+  updatedAt: "2026-11-13",
 };

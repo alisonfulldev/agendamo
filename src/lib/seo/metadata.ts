@@ -7,6 +7,18 @@ import { siteUrl, withoutQuery } from "@/lib/site-url";
 /** Name of the product on every marketing page, whatever brand the visitor's cookie holds. */
 export const SITE_NAME = "MeetChat";
 
+/**
+ * Text written by an owner (bio) as a meta description: one line, cut at a word near `max`
+ * characters with "…" (search engines cut long ones anyway, mid-word).
+ */
+export function metaSnippet(text: string, max = 155): string {
+  const line = text.replace(/\s+/g, " ").trim();
+  if (line.length <= max) return line;
+  const cut = line.slice(0, max - 1);
+  const space = cut.lastIndexOf(" ");
+  return `${(space > max * 0.6 ? cut.slice(0, space) : cut).replace(/[\s,.;:!?-]+$/, "")}…`;
+}
+
 /** Default share image of the MeetChat site (src/app/og). */
 const DEFAULT_IMAGE = { url: "/og", width: 1200, height: 630 };
 

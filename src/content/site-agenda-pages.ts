@@ -28,7 +28,7 @@ const UPDATED = "2026-11-06";
 /** The price block, the same on every page (kept short so pages stay distinct). */
 function priceSection(customers: string): GuideSection {
   return {
-    title: "Quanto custa",
+    title: "Quanto custa?",
     paragraphs: [
       `O plano ${SITE_PLAN_NAME} custa ${SITE_PRICE_TEXT.monthly} (ou ${SITE_PRICE_TEXT.yearly} no anual), sem taxa de criação e sem fidelidade. Inclui o site, a agenda online e tudo do plano ${PLAN_NAME}. Se preferir só a agenda, sem o site, o ${PLAN_NAME} sai por ${PRICE_TEXT.monthly}.`,
       `Todo cadastro começa com ${TRIAL_DAYS} dias para testar, sem cartão: você monta o site, divulga o link e vê os ${customers} agendando antes de decidir.`,
@@ -53,14 +53,14 @@ export const SITE_AGENDA_PAGES: readonly SiteAgendaPage[] = [
       "Um site de nutricionista com agenda online junta, num endereço só, a sua apresentação profissional (formação, abordagem, tipos de consulta e valores) e um botão que abre a agenda: o paciente escolhe a consulta, o dia e um horário livre e confirma sozinho, inclusive à noite, sem precisar te chamar no WhatsApp.",
     sections: [
       {
-        title: "Por que o nutricionista precisa de um site próprio",
+        title: "Por que o nutricionista precisa de um site próprio?",
         paragraphs: [
           "Boa parte dos pacientes chega por indicação ou pelo Instagram, mas antes de marcar quase todos pesquisam o seu nome no Google. Um site com a sua formação, o tipo de acompanhamento (emagrecimento, nutrição esportiva, materno-infantil, clínica) e como funciona a primeira consulta responde as dúvidas que viram mensagem no direct.",
           "Também é o lugar certo para explicar consultas presenciais e on-line, retornos e o que o paciente precisa levar, sem repetir a mesma explicação a cada contato.",
         ],
       },
       {
-        title: "O que vai no seu site de nutrição",
+        title: "O que vai no seu site de nutrição?",
         list: [
           "Apresentação com foto, CRN e a sua linha de trabalho",
           "Consultas e retornos, com duração e valor (ou sem valor, se preferir)",
@@ -70,7 +70,7 @@ export const SITE_AGENDA_PAGES: readonly SiteAgendaPage[] = [
         ],
       },
       {
-        title: "Como o paciente marca a consulta",
+        title: "Como o paciente marca a consulta?",
         paragraphs: [
           "Ao tocar em “Agendar”, abre uma conversa rápida no celular: ele escolhe primeira consulta ou retorno, o dia e um horário livre. A consulta entra na sua agenda, ele recebe a confirmação e um lembrete antes, e você recebe um aviso no celular.",
           "Se você trabalha com retorno a cada 30 ou 45 dias, o painel mostra quem está na hora de voltar, para você chamar o paciente.",
@@ -109,14 +109,14 @@ export const SITE_AGENDA_PAGES: readonly SiteAgendaPage[] = [
       "Um site de psicólogo com agenda online apresenta a sua abordagem, o público que você atende e como funcionam as sessões, e deixa o paciente marcar sozinho, num horário livre da sua agenda. Você não precisa responder mensagens entre uma sessão e outra, e a primeira conversa já chega com dia e horário definidos.",
     sections: [
       {
-        title: "Por que o psicólogo precisa de um site",
+        title: "Por que o psicólogo precisa de um site?",
         paragraphs: [
           "Quem procura terapia costuma pesquisar com calma antes de dar o primeiro passo, muitas vezes no Google, com buscas como “psicólogo perto de mim” ou “terapia on-line”. Um site claro, com a sua abordagem (TCC, psicanálise, sistêmica…), o público que você atende e se as sessões são presenciais ou on-line, ajuda a pessoa a decidir que é com você.",
           "Para quem atende sozinho, sem secretária, a agenda online resolve outra dor: o paciente marca sem você precisar parar uma sessão para responder.",
         ],
       },
       {
-        title: "O que vai no seu site de psicologia",
+        title: "O que vai no seu site de psicologia?",
         list: [
           "Apresentação com foto, número do CRP e a sua abordagem",
           "Tipos de atendimento: individual, casal, adolescentes, on-line",
@@ -164,14 +164,14 @@ export const SITE_AGENDA_PAGES: readonly SiteAgendaPage[] = [
       "Um site de clínica de estética com agenda online mostra os procedimentos, os protocolos e o seu espaço, e deixa a cliente escolher o procedimento e o horário sozinha, com a opção de pagar um sinal pelo Pix para garantir a reserva. Assim os horários longos, como os de protocolos faciais e corporais, não ficam vazios por falta.",
     sections: [
       {
-        title: "Por que a clínica de estética precisa de site",
+        title: "Por que a clínica de estética precisa de site?",
         paragraphs: [
           "Procedimentos estéticos são uma compra pensada: a cliente compara clínicas, procura avaliações e quer entender o que é cada protocolo antes de marcar. Um site com os procedimentos bem explicados, fotos do espaço e avaliações reais passa a confiança que o perfil do Instagram sozinho não passa.",
           "No Google, quem busca “limpeza de pele” ou “clínica de estética” na sua cidade encontra um site com endereço, serviços e o botão de agendar.",
         ],
       },
       {
-        title: "O que vai no site da sua clínica",
+        title: "O que vai no site da sua clínica?",
         list: [
           "Procedimentos com duração e valor: limpeza de pele, peeling, drenagem, protocolos",
           "Galeria com fotos do espaço e dos equipamentos",
@@ -220,14 +220,14 @@ export const SITE_AGENDA_PAGES: readonly SiteAgendaPage[] = [
       "Um site de salão de beleza com agenda online reúne os seus serviços com preços, as fotos dos trabalhos e a equipe, e deixa a cliente marcar corte, escova, coloração ou manicure sozinha, escolhendo a profissional e um horário livre. O salão para de depender do WhatsApp para fechar cada horário.",
     sections: [
       {
-        title: "Por que o salão precisa de site além do Instagram",
+        title: "Por que o salão precisa de site além do Instagram?",
         paragraphs: [
           "O Instagram mostra os trabalhos, mas não responde “quanto custa a escova?” nem “tem horário sábado?”. O site mostra a tabela de serviços com preço e duração, e o botão de agendar resolve o resto, a qualquer hora.",
           "No Google, quem procura “salão de beleza perto de mim” encontra o seu endereço, as avaliações e o botão de agendar no mesmo lugar.",
         ],
       },
       {
-        title: "O que vai no site do seu salão",
+        title: "O que vai no site do seu salão?",
         list: [
           "Tabela de serviços: corte, escova, coloração, mechas, tratamentos, manicure",
           "Galeria com até 20 fotos dos trabalhos",
@@ -276,14 +276,14 @@ export const SITE_AGENDA_PAGES: readonly SiteAgendaPage[] = [
       "Um site de barbearia com agenda online mostra os cortes, os preços, os barbeiros e as fotos dos trabalhos, e deixa o cliente escolher o serviço, o barbeiro e um horário livre sozinho. Você continua na máquina enquanto a agenda se enche, sem parar para responder “tem horário hoje?”.",
     sections: [
       {
-        title: "Por que a barbearia precisa de site",
+        title: "Por que a barbearia precisa de site?",
         paragraphs: [
           "Muito cliente novo encontra barbearia pelo Google ou pelo mapa, com buscas como “barbearia perto de mim”. Um site com endereço, fotos dos cortes, preços e avaliações transforma essa busca em agendamento, sem passar pelo WhatsApp.",
           "Para o cliente fiel, o link de agendamento evita fila e espera: ele chega no horário marcado.",
         ],
       },
       {
-        title: "O que vai no site da sua barbearia",
+        title: "O que vai no site da sua barbearia?",
         list: [
           "Serviços: corte, barba, corte + barba, pezinho, sobrancelha, pigmentação",
           "Galeria com os cortes e o ambiente",
@@ -325,21 +325,21 @@ export const SITE_AGENDA_PAGES: readonly SiteAgendaPage[] = [
     slug: "designer-de-cilios-e-sobrancelhas",
     nicheKey: "lash-brow",
     label: "Cílios e sobrancelhas",
-    title: "Site + agenda online para designer de cílios e sobrancelhas | MeetChat",
+    title: "Site + agenda para designer de cílios e sobrancelhas | MeetChat",
     description: `Site para lash designer e designer de sobrancelhas, com fotos e preços, pronto para o Google, e agenda online com sinal pelo Pix. ${SITE_PRICE_TEXT.monthly}.`,
     h1: "Site + agenda online para designer de cílios e sobrancelhas",
     answer:
       "Um site de designer de cílios e sobrancelhas com agenda online mostra as técnicas que você faz (fio a fio, volume brasileiro, brow lamination, henna), com fotos e preços, e deixa a cliente marcar a aplicação ou a manutenção sozinha, no horário livre. Com o sinal pelo Pix, as aplicações longas ficam garantidas.",
     sections: [
       {
-        title: "Por que a lash e a brow designer precisam de site",
+        title: "Por que a lash e a brow designer precisam de site?",
         paragraphs: [
           "As técnicas mudam de nome a cada temporada e a cliente quer ver o resultado antes de marcar. Um site com a galeria dos seus trabalhos e a explicação de cada técnica responde “qual a diferença entre volume russo e brasileiro?” antes da mensagem.",
           "Também deixa claro o tempo de cada procedimento e a diferença entre aplicação e manutenção.",
         ],
       },
       {
-        title: "O que vai no seu site",
+        title: "O que vai no seu site?",
         list: [
           "Técnicas de cílios e sobrancelhas com duração e valor",
           "Aplicação e manutenção como serviços separados",
@@ -387,14 +387,14 @@ export const SITE_AGENDA_PAGES: readonly SiteAgendaPage[] = [
       "Um site de manicure com agenda online mostra as suas unhas (gel, fibra, esmaltação em gel, nail art) com fotos e preços, e deixa a cliente marcar a aplicação ou a manutenção sozinha, a qualquer hora. Você para de perder horário enquanto responde mensagem com a mão ocupada.",
     sections: [
       {
-        title: "Por que a manicure precisa de um site",
+        title: "Por que a manicure precisa de um site?",
         paragraphs: [
           "Quem atende sozinha passa o dia com as mãos ocupadas, e cada “tem horário?” no WhatsApp espera até o fim do atendimento. Com o link de agendamento na bio e o site com a tabela de preços, a cliente vê o valor, escolhe o horário e marca sem esperar.",
           "No Google, quem busca “manicure perto de mim” ou “unha de gel” na sua cidade encontra o seu site com as fotos.",
         ],
       },
       {
-        title: "O que vai no seu site",
+        title: "O que vai no seu site?",
         list: [
           "Serviços: mão, pé, pé e mão, alongamento em gel ou fibra, manutenção, esmaltação em gel",
           "Galeria com as fotos das unhas",
@@ -442,14 +442,14 @@ export const SITE_AGENDA_PAGES: readonly SiteAgendaPage[] = [
       "Um site de fisioterapeuta com agenda online apresenta as suas especialidades (ortopédica, esportiva, neurológica, pélvica, RPG), explica como é a avaliação e deixa o paciente marcar a primeira consulta e as sessões sozinho, nos horários livres. Pacotes de sessões e retornos ficam organizados no mesmo painel.",
     sections: [
       {
-        title: "Por que o fisioterapeuta precisa de site",
+        title: "Por que o fisioterapeuta precisa de site?",
         paragraphs: [
           "O paciente costuma chegar com indicação médica e pesquisa no Google antes de escolher onde fazer as sessões. Um site com as suas especialidades, a estrutura do consultório e as avaliações de pacientes ajuda a escolher você.",
           "Como o tratamento tem várias sessões, a agenda online evita a troca de mensagens para cada remarcação.",
         ],
       },
       {
-        title: "O que vai no seu site de fisioterapia",
+        title: "O que vai no seu site de fisioterapia?",
         list: [
           "Apresentação com foto, CREFITO e especialidades",
           "Avaliação inicial e sessões, com duração",
@@ -498,14 +498,14 @@ export const SITE_AGENDA_PAGES: readonly SiteAgendaPage[] = [
       "Um site de personal trainer com agenda online mostra a sua forma de trabalho (musculação, funcional, corrida, treino em casa ou on-line), os planos e os resultados que você acompanha, e deixa o aluno marcar a aula experimental e os treinos nos seus horários livres. Você organiza a semana sem ficar trocando mensagem com cada aluno.",
     sections: [
       {
-        title: "Por que o personal precisa de site",
+        title: "Por que o personal precisa de site?",
         paragraphs: [
           "O aluno novo quer saber onde você atende, como funciona a aula e quanto custa antes de mandar mensagem. Um site com isso tudo, as suas certificações e o botão de agendar a aula experimental converte quem chega pelo Instagram ou pelo Google.",
           "Para quem atende em vários lugares (academia, condomínio, parque), o site deixa claro onde é cada horário.",
         ],
       },
       {
-        title: "O que vai no seu site",
+        title: "O que vai no seu site?",
         list: [
           "Apresentação com foto, CREF e especialidades",
           "Aula experimental, treino avulso e planos mensais",
@@ -554,14 +554,14 @@ export const SITE_AGENDA_PAGES: readonly SiteAgendaPage[] = [
       "Um site de studio de pilates com agenda online apresenta o espaço, os aparelhos, os instrutores e os planos, e deixa o aluno marcar a aula experimental e as reposições sozinho, nos horários com vaga. O studio para de controlar reposição por mensagem e caderno.",
     sections: [
       {
-        title: "Por que o studio de pilates precisa de site",
+        title: "Por que o studio de pilates precisa de site?",
         paragraphs: [
           "Quem procura pilates quer ver o espaço, os aparelhos e saber se tem horário perto de casa ou do trabalho. Um site com fotos do studio, a explicação das modalidades (solo, aparelhos, clínico) e o botão para marcar a aula experimental transforma a busca no Google em aluno novo.",
           "Também é o lugar para explicar os planos (duas ou três vezes por semana) e as regras de reposição.",
         ],
       },
       {
-        title: "O que vai no site do seu studio",
+        title: "O que vai no site do seu studio?",
         list: [
           "Fotos do espaço e dos aparelhos",
           "Modalidades e instrutores",
@@ -606,7 +606,22 @@ export const SITE_AGENDA_INDEX = {
   h1: "Site + agenda online para o seu negócio",
   intro:
     "Um site do seu negócio, pronto para aparecer no Google, com a agenda online dentro: todo botão “Agendar” abre uma conversa em que o cliente escolhe o serviço, o dia e um horário livre e confirma sozinho. Escolha a sua área para ver como fica.",
-  updatedAt: UPDATED,
+  sections: [
+    {
+      title: "Qual a diferença entre o link de agendamento e o site?",
+      paragraphs: [
+        `O link de agendamento (plano ${PLAN_NAME}, ${PRICE_TEXT.monthly}) abre direto na conversa em que o cliente marca o horário: é o que você coloca na bio do Instagram e no WhatsApp. O ${SITE_PLAN_NAME} (${SITE_PRICE_TEXT.monthly}) inclui tudo isso e acrescenta um site do seu negócio, com apresentação, serviços, fotos, avaliações e endereço, em que todo botão “Agendar” abre a mesma conversa.`,
+        "O site é montado com os dados que você já cadastrou no painel e segue a cor do seu negócio. Você muda textos, fotos e seções pelo celular, em “Meu site”, sem precisar de designer.",
+      ],
+    },
+    {
+      title: "Para quem vale ter o site junto?",
+      paragraphs: [
+        "Para quem recebe clientes pelo Google, por indicação ou que pesquisam antes de marcar: o site responde as dúvidas de quem ainda não te conhece (o que você faz, quanto custa, onde fica) e leva direto para o horário livre. Se os seus clientes já chegam decididos pelo Instagram ou pelo WhatsApp, só o link de agendamento costuma bastar.",
+      ],
+    },
+  ] as GuideSection[],
+  updatedAt: "2026-11-13",
 };
 
 export function getSiteAgendaPage(slug: string): SiteAgendaPage | null {

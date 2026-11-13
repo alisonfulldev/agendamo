@@ -10,7 +10,7 @@ export const barberGuide: NicheGuide = {
     synonyms: ["barbeiro", "barber shop", "salão masculino", "corte masculino"],
   },
   notes: {
-    title: "Como o MeetChat funciona no ritmo de uma barbearia",
+    title: "Como o MeetChat funciona no ritmo de uma barbearia?",
     items: [
       "Cada barbeiro tem a própria agenda e os próprios serviços; o cliente escolhe com quem quer cortar ou pega o primeiro horário livre.",
       "O tempo de cada serviço é respeitado: um pezinho de 15 minutos encaixa onde um corte + barba de 1 hora não cabe.",
@@ -30,14 +30,14 @@ export const barberGuide: NicheGuide = {
       linkLabel: "reduzir faltas na barbearia",
       sections: [
         {
-          title: "Por que o cliente da barbearia falta",
+          title: "Por que o cliente da barbearia falta?",
           paragraphs: [
             "Quase nunca é má vontade. O corte foi marcado por mensagem há duas semanas, no meio de outras conversas, e o dia chegou sem ninguém lembrar. Ou surgiu um imprevisto e avisar parecia mais trabalhoso do que simplesmente não ir.",
             "Na barbearia isso pesa porque a agenda costuma ser de horários curtos: um corte que não acontece no sábado à tarde é um horário que outro cliente queria.",
           ],
         },
         {
-          title: "O que o MeetChat faz para o horário não ficar vazio",
+          title: "O que o MeetChat faz para o horário não ficar vazio?",
           list: [
             "Confirmação na hora: o cliente que informa o e-mail ao agendar recebe os detalhes do horário, do serviço e do barbeiro.",
             "Lembrete automático um dia antes, por e-mail, com os botões “Preciso remarcar” e “Cancelar horário”.",
@@ -82,7 +82,7 @@ export const barberGuide: NicheGuide = {
       linkLabel: "agendar corte pelo WhatsApp",
       sections: [
         {
-          title: "Onde colocar o link no WhatsApp Business",
+          title: "Onde colocar o link no WhatsApp Business?",
           ordered: true,
           list: [
             "No perfil comercial, no campo de site: quem abre a conversa vê o link antes de perguntar.",
@@ -92,7 +92,7 @@ export const barberGuide: NicheGuide = {
           ],
         },
         {
-          title: "Por que é melhor do que combinar horário na conversa",
+          title: "Por que é melhor do que combinar horário na conversa?",
           paragraphs: [
             "Na conversa, cada horário vira um vai e vem: “tem às 18h?”, “às 18h não, só 18h40”, “então deixa pra amanhã”. Enquanto isso o cliente da cadeira espera.",
             "No chat do MeetChat o cliente só vê horários que cabem de verdade para o serviço que escolheu, com o barbeiro que escolheu. Não tem como marcar dois clientes no mesmo horário do mesmo barbeiro.",
@@ -135,7 +135,7 @@ export const barberGuide: NicheGuide = {
           ],
         },
         {
-          title: "Onde colocar o link",
+          title: "Onde colocar o link?",
           list: [
             "Na bio, como primeiro link.",
             "Nos stories, com a figurinha de link, de preferência sobre a arte com os horários livres de hoje e amanhã que o painel gera.",

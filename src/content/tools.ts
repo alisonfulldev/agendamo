@@ -27,7 +27,7 @@ export const TOOLS: readonly ToolPage[] = [
       "Informe quantos atendimentos você marca por mês, quantos por cento faltam e o valor médio de cada atendimento. A calculadora mostra quanto deixa de entrar por mês e por ano e quanto voltaria se uma parte das faltas fosse evitada. É uma estimativa com os seus números, não uma promessa.",
     sections: [
       {
-        title: "Como chegar nos seus números",
+        title: "Como chegar nos seus números?",
         list: [
           "Atendimentos por mês: conte os horários marcados nas últimas quatro semanas.",
           "Taxa de faltas: dos horários marcados, quantos não apareceram nem avisaram.",
@@ -65,7 +65,7 @@ export const TOOLS: readonly ToolPage[] = [
       "Escolha a sua área e o tipo de mensagem, preencha nome, serviço, dia e hora, e copie o texto pronto para enviar pelo WhatsApp. As mensagens usam o vocabulário da sua área (horário, sessão, aula) e, se você tiver um link de agendamento, já incluem o caminho para o cliente remarcar sozinho.",
     sections: [
       {
-        title: "Quando usar cada mensagem",
+        title: "Quando usar cada mensagem?",
         list: [
           "Confirmação: logo depois de marcar, para o cliente ter tudo por escrito.",
           "Lembrete: na véspera, pedindo para confirmar presença.",
@@ -103,7 +103,7 @@ export const TOOLS: readonly ToolPage[] = [
       "Escreva a sua área, o que você faz de melhor e, se quiser, o bairro ou a cidade. O gerador monta opções de bio com até 150 caracteres, o limite do Instagram, terminando com uma chamada para agendar pelo link.",
     sections: [
       {
-        title: "O que uma boa bio de negócio responde",
+        title: "O que uma boa bio de negócio responde?",
         ordered: true,
         list: [
           "O que você faz, nas palavras que o cliente usa para procurar.",
@@ -121,6 +121,11 @@ export const TOOLS: readonly ToolPage[] = [
     ],
     faq: [
       {
+        question: "A bio cabe no limite do Instagram?",
+        answer:
+          "Sim. Todas as opções têm até 150 caracteres, o limite do Instagram para a bio, já contando a chamada para agendar.",
+      },
+      {
         question: "Posso usar emojis?",
         answer:
           "As opções já trazem alguns. Se preferir uma bio mais sóbria, apague-os depois de copiar.",
@@ -131,7 +136,7 @@ export const TOOLS: readonly ToolPage[] = [
           "Não para usar o gerador. Para ter o link de agendamento que a bio menciona, a conta é grátis e sem cartão.",
       },
     ],
-    updatedAt: "2026-10-16",
+    updatedAt: "2026-11-13",
   },
 ];
 
@@ -159,5 +164,20 @@ export const TOOLS_INDEX = {
   h1: "Ferramentas grátis",
   intro:
     "Ferramentas simples para quem trabalha com hora marcada. Funcionam no navegador, sem cadastro.",
-  updatedAt: "2026-10-16",
+  sections: [
+    {
+      title: "Para que servem essas ferramentas?",
+      paragraphs: [
+        "São ferramentas pequenas para tarefas que tomam tempo de quem atende com hora marcada: calcular quanto as faltas custam no mês, escrever as mensagens de confirmação e lembrete para mandar no WhatsApp e montar uma bio de Instagram que diga o que você faz e onde agendar.",
+        "Cada ferramenta tem uma explicação curta de como usar o resultado e perguntas frequentes sobre o assunto.",
+      ],
+    },
+    {
+      title: "As ferramentas são grátis?",
+      paragraphs: [
+        "Sim. Funcionam no navegador e não pedem cadastro nem cartão. Se depois você quiser que os clientes marquem sozinhos, sem trocar mensagens, o MeetChat cria o seu link de agendamento; a página de preços explica o que é grátis e o que é do plano pago.",
+      ],
+    },
+  ] as GuideSection[],
+  updatedAt: "2026-11-13",
 };

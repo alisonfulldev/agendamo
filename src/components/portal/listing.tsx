@@ -144,7 +144,9 @@ export function PortalListing({
         </h2>
         {faq.map((item) => (
           <details key={item.q} className="mb-2 rounded-xl border bg-card p-3">
-            <summary className="cursor-pointer font-medium">{item.q}</summary>
+            <summary className="cursor-pointer font-medium">
+              <h3 className="inline">{item.q}</h3>
+            </summary>
             <p className="mt-2 text-muted-foreground">{item.a}</p>
           </details>
         ))}

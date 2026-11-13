@@ -420,7 +420,8 @@ export function FaqAccordion({
           {items.map((item) => (
             <details key={item.question} className="group rounded-3xl bg-muted px-5 py-2 sm:px-7">
               <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 text-lg font-bold [&::-webkit-details-marker]:hidden">
-                {item.question}
+                {/* A heading inside <summary>: the question is a title for readers and robots. */}
+                <h3>{item.question}</h3>
                 <ChevronDown
                   className="site-chevron size-5 shrink-0 text-muted-foreground transition-transform"
                   aria-hidden

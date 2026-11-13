@@ -37,14 +37,14 @@ export const INTENT_PAGES: readonly IntentPage[] = [
       "Um link de agendamento na bio é um endereço que, ao ser tocado, abre uma página onde o cliente escolhe o serviço, o dia e um horário livre e confirma sozinho. No MeetChat esse link abre como uma conversa, no navegador do celular, sem aplicativo e sem cadastro.",
     sections: [
       {
-        title: "O que muda quando a bio tem um link de agendamento",
+        title: "O que muda quando a bio tem um link de agendamento?",
         paragraphs: [
           "Sem link, a bio diz “agende pelo direct” e cada interessado vira uma conversa que você precisa responder. Com o link, quem decidiu marcar resolve na hora, inclusive à noite e no fim de semana.",
           "Você continua recebendo mensagens, mas as de “tem horário?” deixam de ser a maioria.",
         ],
       },
       {
-        title: "Como montar em poucos minutos",
+        title: "Como montar em poucos minutos?",
         ordered: true,
         list: [
           "Crie sua conta no MeetChat: o link já vem com serviços do seu ramo.",
@@ -54,7 +54,7 @@ export const INTENT_PAGES: readonly IntentPage[] = [
         ],
       },
       {
-        title: "O que o cliente vê ao tocar no link",
+        title: "O que o cliente vê ao tocar no link?",
         list: [
           "Uma conversa que pergunta o serviço, o profissional (se houver mais de um) e o dia.",
           "Só os horários em que o serviço cabe inteiro, fora de pausas e de outros agendamentos.",
@@ -89,13 +89,13 @@ export const INTENT_PAGES: readonly IntentPage[] = [
       "Para receber agendamentos pelo WhatsApp sem combinar horário por mensagem, use um link de agendamento no perfil comercial, na mensagem de ausência e em respostas rápidas. O cliente toca, escolhe o serviço e um horário livre e confirma. O MeetChat não se conecta ao seu WhatsApp: ele só recebe o link que você divulga.",
     sections: [
       {
-        title: "Por que não combinar horário pela conversa",
+        title: "Por que não combinar horário pela conversa?",
         paragraphs: [
           "Combinar horário por mensagem é uma negociação: você oferece, o cliente não pode, você oferece outro. Cada agendamento leva várias mensagens, e quem chama à noite só recebe resposta no dia seguinte.",
         ],
       },
       {
-        title: "Onde o link entra no WhatsApp Business",
+        title: "Onde o link entra no WhatsApp Business?",
         list: [
           "Perfil comercial, no campo de site.",
           "Mensagem de saudação, para o primeiro contato.",
@@ -138,7 +138,7 @@ export const INTENT_PAGES: readonly IntentPage[] = [
       "No MeetChat, o lembrete automático é um e-mail enviado um dia antes do horário para o cliente que informou o e-mail ao agendar. Ele traz o serviço, o dia e a hora e dois botões: “Preciso remarcar” e “Cancelar horário”. O lembrete faz parte do plano pago.",
     sections: [
       {
-        title: "O que o cliente recebe",
+        title: "O que o cliente recebe?",
         ordered: true,
         list: [
           "Na hora do agendamento: a confirmação por e-mail, com os detalhes do horário.",
@@ -147,14 +147,14 @@ export const INTENT_PAGES: readonly IntentPage[] = [
         ],
       },
       {
-        title: "Por que o botão de remarcar importa",
+        title: "Por que o botão de remarcar importa?",
         paragraphs: [
           "Muita falta acontece porque avisar dá trabalho ou constrangimento. Quando remarcar é um toque, o cliente avisa, e o horário volta para a agenda a tempo de outra pessoa marcar.",
           "Se houver lista de espera para aquele dia e serviço, quem está nela recebe um e-mail quando o horário é liberado.",
         ],
       },
       {
-        title: "O que o lembrete não faz",
+        title: "O que o lembrete não faz?",
         list: [
           "Não vai por WhatsApp nem por SMS.",
           "Não chega para quem não informou o e-mail (o e-mail é opcional no agendamento).",
@@ -239,7 +239,7 @@ export const INTENT_PAGES: readonly IntentPage[] = [
     answer: `No MeetChat, o grátis é o modo WhatsApp: seu link e o chat ficam no ar, e o cliente escolhe serviço, dia e turno e chama você no WhatsApp com a mensagem pronta. Horário reservado automaticamente, lembretes e a agenda completa no painel são do plano pago (${PRICE_TEXT.monthly}). Todo cadastro começa com ${TRIAL_DAYS} dias do plano pago, sem cartão.`,
     sections: [
       {
-        title: "O que funciona de graça",
+        title: "O que funciona de graça?",
         list: [
           "Seu link de agendamento e o chat, no Instagram, no WhatsApp e no site.",
           "O cliente escolhe o serviço, o dia e o turno e informa o nome.",
@@ -248,7 +248,7 @@ export const INTENT_PAGES: readonly IntentPage[] = [
         ],
       },
       {
-        title: "O que é do plano pago",
+        title: "O que é do plano pago?",
         list: [
           "Horário reservado na hora, sem conflito entre clientes.",
           "Confirmação e lembrete automáticos por e-mail.",
@@ -257,7 +257,7 @@ export const INTENT_PAGES: readonly IntentPage[] = [
         ],
       },
       {
-        title: "Para quem o grátis basta",
+        title: "Para quem o grátis basta?",
         paragraphs: [
           "Se você atende poucas pessoas por semana e prefere confirmar cada horário pessoalmente, o modo WhatsApp já organiza os pedidos. Quando o volume cresce, o plano pago tira de você a parte de confirmar e lembrar.",
         ],
@@ -295,7 +295,7 @@ export const INTENT_PAGES: readonly IntentPage[] = [
         ],
       },
       {
-        title: "O que configurar no primeiro dia",
+        title: "O que configurar no primeiro dia?",
         ordered: true,
         list: [
           "Seus serviços, com duração e preço (o preço pode ficar escondido).",
@@ -305,7 +305,7 @@ export const INTENT_PAGES: readonly IntentPage[] = [
         ],
       },
       {
-        title: "O que fica organizado sem esforço",
+        title: "O que fica organizado sem esforço?",
         list: [
           "Histórico de cada cliente, com os horários já marcados.",
           "Financeiro simples: o que entrou com os atendimentos no mês.",
@@ -314,6 +314,11 @@ export const INTENT_PAGES: readonly IntentPage[] = [
       },
     ],
     faq: [
+      {
+        question: "Posso bloquear folgas e férias?",
+        answer:
+          "Sim. No painel você bloqueia um dia inteiro ou só algumas horas (folga, férias, um compromisso), e esses horários deixam de aparecer para o cliente no seu link.",
+      },
       {
         question: "Funciona só pelo celular?",
         answer: "Funciona. O painel foi feito para o celular, e também abre no computador.",
@@ -325,7 +330,7 @@ export const INTENT_PAGES: readonly IntentPage[] = [
       },
     ],
     related: ["agenda-gratis", "link-na-bio", "multiagenda"],
-    updatedAt: "2026-10-16",
+    updatedAt: "2026-11-13",
   },
   {
     slug: "multiagenda",
@@ -350,7 +355,7 @@ export const INTENT_PAGES: readonly IntentPage[] = [
         ],
       },
       {
-        title: "Quem vê o quê",
+        title: "Quem vê o quê?",
         list: [
           "A dona vê a agenda de todos, o financeiro e as configurações.",
           "Cada profissional recebe os avisos dos próprios horários.",
@@ -359,6 +364,11 @@ export const INTENT_PAGES: readonly IntentPage[] = [
       },
     ],
     faq: [
+      {
+        question: "Dá para controlar salas e aparelhos?",
+        answer:
+          "Sim. Salas, macas e aparelhos podem ser cadastrados como recursos: um horário só é oferecido quando a profissional e o recurso que o serviço usa estão livres ao mesmo tempo, então duas clientes nunca disputam a mesma sala.",
+      },
       {
         question: "Quantos profissionais posso ter?",
         answer: `O plano inclui 1 profissional; cada profissional a mais custa ${PRICE_TEXT.extraProfessional}. No teste de ${TRIAL_DAYS} dias, dá para cadastrar até 10.`,
@@ -370,7 +380,7 @@ export const INTENT_PAGES: readonly IntentPage[] = [
       },
     ],
     related: ["autonomo", "reduzir-faltas", "lembrete-automatico"],
-    updatedAt: "2026-10-16",
+    updatedAt: "2026-11-13",
   },
   {
     slug: "sem-app",
@@ -390,7 +400,7 @@ export const INTENT_PAGES: readonly IntentPage[] = [
         ],
       },
       {
-        title: "Como é o agendamento para o cliente",
+        title: "Como é o agendamento para o cliente?",
         ordered: true,
         list: [
           "Toca no seu link (Instagram, WhatsApp, Google ou site).",
@@ -408,6 +418,11 @@ export const INTENT_PAGES: readonly IntentPage[] = [
     ],
     faq: [
       {
+        question: "O cliente precisa informar e-mail para agendar?",
+        answer:
+          "Não. O e-mail é opcional: o cliente marca com o nome e o WhatsApp. Quem informa o e-mail recebe a confirmação e o lembrete, com os botões para remarcar ou cancelar sozinho.",
+      },
+      {
         question: "Funciona em qualquer celular?",
         answer: "Funciona em qualquer celular com navegador atualizado, Android ou iPhone.",
       },
@@ -418,7 +433,7 @@ export const INTENT_PAGES: readonly IntentPage[] = [
       },
     ],
     related: ["link-na-bio", "pelo-whatsapp", "autonomo"],
-    updatedAt: "2026-10-16",
+    updatedAt: "2026-11-13",
   },
   {
     slug: "parar-de-responder-tem-horario",
@@ -431,14 +446,14 @@ export const INTENT_PAGES: readonly IntentPage[] = [
       "A forma mais simples de parar de responder “tem horário?” é deixar o cliente ver a agenda e marcar sozinho. Você coloca um link de agendamento na saudação do WhatsApp Business, na bio e nas respostas rápidas; quem pergunta recebe o link, escolhe o serviço e um horário livre e confirma, e você só recebe o aviso.",
     sections: [
       {
-        title: "Por que essa pergunta toma tanto tempo",
+        title: "Por que essa pergunta toma tanto tempo?",
         paragraphs: [
           "Cada “tem horário?” vira uma troca de mensagens: você olha a agenda, oferece dois horários, o cliente não pode, você oferece outros. Muitas vezes a conversa acontece enquanto você está atendendo.",
           "Quando o cliente vê os horários livres sozinho, a troca acaba numa mensagem: o link.",
         ],
       },
       {
-        title: "Onde colocar o link",
+        title: "Onde colocar o link?",
         ordered: true,
         list: [
           "Na mensagem de saudação do WhatsApp Business, que chega sozinha para quem escreve pela primeira vez.",
@@ -455,7 +470,7 @@ export const INTENT_PAGES: readonly IntentPage[] = [
         ],
       },
       {
-        title: "O que o link faz por você",
+        title: "O que o link faz por você?",
         list: [
           "Mostra só horários em que o serviço cabe inteiro, fora das pausas e de outros agendamentos.",
           "Avisa você no celular a cada agendamento, cancelamento ou remarcação.",
@@ -490,7 +505,7 @@ export const INTENT_PAGES: readonly IntentPage[] = [
       "Para cobrar sinal pelo Pix, o agendamento online mostra o valor e a sua chave Pix na hora em que o cliente escolhe o horário. No MeetChat, o cliente paga direto para você, toca em “Já fiz o Pix” (o comprovante é opcional) e o horário fica reservado até você conferir no seu extrato e confirmar.",
     sections: [
       {
-        title: "Quando vale pedir sinal",
+        title: "Quando vale pedir sinal?",
         list: [
           "Serviços longos ou caros, em que uma falta pesa no mês.",
           "Horários muito disputados, como sábado e fim de tarde.",
@@ -498,7 +513,7 @@ export const INTENT_PAGES: readonly IntentPage[] = [
         ],
       },
       {
-        title: "Como funciona para o cliente",
+        title: "Como funciona para o cliente?",
         ordered: true,
         list: [
           "Escolhe o serviço, o dia e o horário no chat.",
@@ -508,14 +523,14 @@ export const INTENT_PAGES: readonly IntentPage[] = [
         ],
       },
       {
-        title: "Como funciona para você",
+        title: "Como funciona para você?",
         paragraphs: [
           "O dinheiro cai direto na sua conta: o MeetChat não recebe nem repassa o pagamento. Você confere no extrato pelo valor e pelo nome de quem pagou e confirma no painel.",
           "Se o Pix não chegou, você marca “Não recebi”. A partir daí, aquele cliente precisa anexar o comprovante nos próximos agendamentos.",
         ],
       },
       {
-        title: "O que você configura",
+        title: "O que você configura?",
         list: [
           "Valor fixo, porcentagem do preço ou pagamento total, por serviço.",
           "Quanto tempo o horário fica reservado esperando o Pix.",
@@ -557,7 +572,7 @@ export const INTENT_PAGES: readonly IntentPage[] = [
         ],
       },
       {
-        title: "O que olhar além do preço",
+        title: "O que olhar além do preço?",
         list: [
           "Se há limite de agendamentos por mês.",
           "Se os lembretes automáticos estão incluídos ou são cobrados à parte.",
@@ -566,7 +581,7 @@ export const INTENT_PAGES: readonly IntentPage[] = [
         ],
       },
       {
-        title: "O que está incluso no MeetChat",
+        title: "O que está incluso no MeetChat?",
         list: [
           "Agendamentos ilimitados pelo chat, 24 horas.",
           "Lembretes automáticos, agenda, clientes e financeiro.",
@@ -575,7 +590,7 @@ export const INTENT_PAGES: readonly IntentPage[] = [
         ],
       },
       {
-        title: "Como começar sem gastar",
+        title: "Como começar sem gastar?",
         paragraphs: [
           `Todo cadastro começa com ${PRICE_TEXT.trial}. Se você não assinar, o link continua no ar no modo WhatsApp: o cliente escolhe serviço, dia e turno e o pedido chega no seu WhatsApp. Lembretes automáticos e agenda completa ficam no plano pago.`,
         ],
@@ -607,7 +622,7 @@ export const INTENT_PAGES: readonly IntentPage[] = [
       "Para trocar a agenda de papel por uma online sem bagunça, cadastre primeiro seus serviços e horários de atendimento, passe para o sistema os horários já marcados das próximas semanas e só então divulgue o link. No MeetChat dá para fazer tudo pelo celular, e os clientes que você já tem podem ser importados por planilha.",
     sections: [
       {
-        title: "Por que a agenda de papel começa a atrapalhar",
+        title: "Por que a agenda de papel começa a atrapalhar?",
         list: [
           "Ela só está onde você está: longe dela, não dá para responder se tem horário.",
           "Remarcar vira rabisco, e um horário duplicado só aparece quando os dois clientes chegam.",
@@ -662,7 +677,7 @@ export const INTENT_PAGES: readonly IntentPage[] = [
       "Para controlar pacotes de sessões sem planilha, registre o pacote na ficha do cliente e deixe a agenda descontar uma sessão a cada atendimento concluído. No MeetChat você cria o pacote (serviço, número de sessões e preço), associa ao cliente quando ele paga e acompanha o saldo na ficha.",
     sections: [
       {
-        title: "Onde os pacotes costumam se perder",
+        title: "Onde os pacotes costumam se perder?",
         list: [
           "O saldo fica no caderno ou na memória, e cliente e profissional lembram números diferentes.",
           "A sessão é descontada no dia errado, ou não é descontada.",
@@ -670,7 +685,7 @@ export const INTENT_PAGES: readonly IntentPage[] = [
         ],
       },
       {
-        title: "Como funciona no MeetChat",
+        title: "Como funciona no MeetChat?",
         ordered: true,
         list: [
           "Crie o pacote: serviço, quantidade de sessões e preço.",
@@ -680,13 +695,18 @@ export const INTENT_PAGES: readonly IntentPage[] = [
         ],
       },
       {
-        title: "Para que tipo de negócio serve",
+        title: "Para que tipo de negócio serve?",
         paragraphs: [
           "Funciona para qualquer serviço feito em sessões: tratamentos estéticos, depilação, fisioterapia, pilates, aulas e massagem, por exemplo.",
         ],
       },
     ],
     faq: [
+      {
+        question: "Um horário cancelado desconta sessão do pacote?",
+        answer:
+          "Não. A sessão só é descontada quando você conclui o atendimento; se o horário for cancelado ou remarcado, o saldo do pacote continua o mesmo.",
+      },
       {
         question: "O pagamento do pacote passa pelo MeetChat?",
         answer:
@@ -698,7 +718,7 @@ export const INTENT_PAGES: readonly IntentPage[] = [
       },
     ],
     related: ["multiagenda", "reduzir-faltas", "autonomo"],
-    updatedAt: "2026-11-06",
+    updatedAt: "2026-11-13",
   },
   {
     slug: "lista-de-espera",
@@ -711,13 +731,13 @@ export const INTENT_PAGES: readonly IntentPage[] = [
       "Uma lista de espera automática preenche horários cancelados sem você mandar mensagem para ninguém. No MeetChat, quando não há horário no dia que o cliente quer, ele pode entrar na lista; se um horário daquele dia e serviço for cancelado, a lista recebe um e-mail na ordem de chegada e quem confirmar primeiro fica com a vaga.",
     sections: [
       {
-        title: "O problema do horário que vaga em cima da hora",
+        title: "Por que o horário cancelado em cima da hora fica vazio?",
         paragraphs: [
           "Um cancelamento de última hora quase sempre vira horário vazio: até você lembrar quem queria aquele dia e mandar mensagem, já passou.",
         ],
       },
       {
-        title: "Como funciona",
+        title: "Como funciona?",
         ordered: true,
         list: [
           "O cliente procura um dia sem horário livre e entra na lista de espera pelo chat.",
@@ -727,13 +747,18 @@ export const INTENT_PAGES: readonly IntentPage[] = [
         ],
       },
       {
-        title: "O que você acompanha",
+        title: "O que você acompanha?",
         paragraphs: [
           "No painel você vê quem está na lista, de qual dia e serviço, e pode marcar quem já foi atendido.",
         ],
       },
     ],
     faq: [
+      {
+        question: "A lista funciona para qualquer serviço?",
+        answer:
+          "Sim. O cliente entra na lista de um dia e de um serviço, e o aviso só vai para quem espera exatamente aquele dia e serviço quando um horário assim é cancelado.",
+      },
       {
         question: "Preciso fazer alguma coisa quando alguém cancela?",
         answer: "Não. O aviso para a lista sai sozinho; você só recebe o novo agendamento.",
@@ -744,7 +769,7 @@ export const INTENT_PAGES: readonly IntentPage[] = [
       },
     ],
     related: ["reduzir-faltas", "lembrete-automatico", "multiagenda"],
-    updatedAt: "2026-11-06",
+    updatedAt: "2026-11-13",
   },
 ];
 
@@ -760,5 +785,14 @@ export const INTENT_INDEX = {
   h1: "Guias de agendamento online",
   intro:
     "Respostas diretas para quem trabalha com hora marcada e quer que o cliente agende sozinho. Cada guia explica o que funciona e o que o MeetChat faz, sem promessa.",
-  updatedAt: "2026-10-16",
+  sections: [
+    {
+      title: "Por onde começar?",
+      paragraphs: [
+        "Se você ainda marca tudo pelo WhatsApp, comece pelos guias de link na bio e de agendamento sem aplicativo: eles mostram como o cliente passa a escolher o horário sozinho. Se o problema são as faltas, vá direto para os guias de lembrete automático, sinal pelo Pix e lista de espera.",
+        "Quem tem equipe ou trabalha com pacotes encontra guias próprios para várias agendas e para controlar o saldo de sessões de cada cliente.",
+      ],
+    },
+  ] as GuideSection[],
+  updatedAt: "2026-11-13",
 };

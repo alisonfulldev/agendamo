@@ -97,16 +97,16 @@ export default function PricingPage() {
           <h2 id="duvidas" className="text-2xl font-bold tracking-tight">
             Dúvidas sobre preços
           </h2>
-          <dl className="mt-6 flex flex-col gap-6">
+          <div className="mt-6 flex flex-col gap-6">
             {PRICING.faq.map((item) => (
               <div key={item.question}>
-                <dt className="font-semibold">{item.question}</dt>
-                <dd className="mt-1 leading-relaxed text-pretty text-muted-foreground">
+                <h3 className="font-semibold">{item.question}</h3>
+                <p className="mt-1 leading-relaxed text-pretty text-muted-foreground">
                   {item.answer}
-                </dd>
+                </p>
               </div>
             ))}
-          </dl>
+          </div>
         </section>
       </main>
       <SiteFooter />

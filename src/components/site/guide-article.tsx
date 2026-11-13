@@ -132,7 +132,7 @@ export function GuideFaq({ items }: { items: readonly FaqItem[] }) {
         {items.map((item) => (
           <details key={item.question} className="group py-4" open>
             <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-semibold [&::-webkit-details-marker]:hidden">
-              {item.question}
+              <h3>{item.question}</h3>
               <ChevronDown
                 className="site-chevron size-5 shrink-0 text-muted-foreground transition-transform"
                 aria-hidden

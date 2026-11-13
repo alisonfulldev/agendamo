@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { psychology } from "@/brands/psychology";
 
-import { pageMetadata } from "./metadata";
+import { metaSnippet, pageMetadata } from "./metadata";
 
 afterEach(() => vi.unstubAllEnvs());
 
@@ -34,5 +34,15 @@ describe("pageMetadata", () => {
     const brand = { ...psychology, domains: ["agendapsi.com.br"] };
     const meta = pageMetadata({ title: "t", description: "d", path: "/ana/perfil", brand });
     expect(meta.alternates?.canonical).toBe("https://agendapsi.com.br/ana/perfil");
+  });
+});
+
+describe("metaSnippet", () => {
+  it("keeps short text and cuts long text at a word, on one line", () => {
+    expect(metaSnippet("Corte e barba\n\nno centro")).toBe("Corte e barba no centro");
+    const long = `${"palavra ".repeat(40)}fim`;
+    const cut = metaSnippet(long);
+    expect(cut.length).toBeLessThanOrEqual(155);
+    expect(cut.endsWith("palavra…")).toBe(true);
   });
 });

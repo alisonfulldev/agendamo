@@ -7,6 +7,7 @@ import { JsonLd } from "@/components/seo/json-ld";
 import { SiteTracker } from "@/components/seo/site-tracker";
 import { Breadcrumbs, breadcrumbTrailNode, type Crumb } from "@/components/site/breadcrumbs";
 import { SiteFooter, SiteHeader } from "@/components/site/site-chrome";
+import { UpdatedAt } from "@/components/site/updated-at";
 import { EXAMPLE_GALLERY } from "@/content/site-examples";
 import {
   WEB_HUBS,
@@ -187,6 +188,7 @@ function Hero({
   nicheKey,
   exampleName,
   exampleHref,
+  updatedAt,
 }: {
   kind: WebLandingKind;
   title: string;
@@ -194,6 +196,8 @@ function Hero({
   nicheKey: string | null;
   exampleName: string;
   exampleHref: string;
+  /** YYYY-MM-DD, shown as "Atualizado em". */
+  updatedAt: string;
 }) {
   return (
     <section className="lp-lime lp-hero relative overflow-hidden">
@@ -222,6 +226,7 @@ function Hero({
             </Link>
           </div>
           <p className="mt-3 max-w-md text-sm text-muted-foreground">{NOTE}</p>
+          <UpdatedAt date={updatedAt} className="mt-1" />
           <ul className="mt-6 flex flex-wrap justify-center gap-x-5 gap-y-2 text-sm font-semibold lg:justify-start">
             {(kind === "site"
               ? ["Pronto para o Google", "Botão de WhatsApp", "Sem fidelidade"]
@@ -246,7 +251,7 @@ function PriceBlock({ kind, paragraphs }: { kind: WebLandingKind; paragraphs: re
       <div className={`${container} grid items-center gap-10 py-20 sm:py-28 lg:grid-cols-2`}>
         <div className="text-center lg:text-left">
           <h2 id="preco" className={h2}>
-            Quanto custa
+            Quanto custa?
           </h2>
           <p className="lp-title mt-6 text-[4.5rem] leading-none text-[color:var(--lp-heading)] sm:text-[6rem]">
             {WEB_PRICE.monthly}
@@ -300,7 +305,7 @@ export function WebLanding({
   others: { label: string; href: string }[];
 }) {
   const hub = WEB_HUBS[page.kind];
-  const price = page.sections.find((s) => s.title === "Quanto custa");
+  const price = page.sections.find((s) => s.title === "Quanto custa?");
   const body = page.sections.filter((s) => s !== price);
   const tones = ["lp-soft", "lp-brand", "lp-soft"];
   const name = page.kind === "site" ? "Seu Negócio" : "Sua Loja";
@@ -322,6 +327,7 @@ export function WebLanding({
         nicheKey={page.nicheKey}
         exampleName={name}
         exampleHref={exampleHref(page.kind, brand.niche?.route ?? null, name)}
+        updatedAt={page.updatedAt}
       />
 
       {body.map((section, i) => (
@@ -403,6 +409,7 @@ export function WebHubLanding({
         nicheKey={kind === "site" ? "consulting" : "beauty"}
         exampleName={kind === "site" ? "Seu Negócio" : "Sua Loja"}
         exampleHref={exampleHref(kind, null, kind === "site" ? "Seu Negócio" : "Sua Loja")}
+        updatedAt={hub.updatedAt}
       />
       <section aria-labelledby="tipos" className="lp-soft">
         <div className={`${container} py-20 sm:py-24`}>

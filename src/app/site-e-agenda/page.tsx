@@ -17,6 +17,8 @@ export default function SiteAgendaHub() {
       brand={PLATFORM}
       h1={SITE_AGENDA_INDEX.h1}
       intro={SITE_AGENDA_INDEX.intro}
+      updatedAt={SITE_AGENDA_INDEX.updatedAt}
+      sections={SITE_AGENDA_INDEX.sections}
       pages={SITE_AGENDA_PAGES.map((p) => ({ ...p, brand: getNiche(p.nicheKey) }))}
     />
   );

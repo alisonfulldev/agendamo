@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { Breadcrumbs } from "@/components/site/breadcrumbs";
+import { IndexSections } from "@/components/site/index-sections";
 import { SitePage } from "@/components/site/site-page";
 import { INTENT_INDEX, INTENT_PAGES } from "@/content/intent-pages";
 import { formatPageDate } from "@/content/site-pages";
@@ -38,6 +39,7 @@ export default function IntentIndexPage() {
           </li>
         ))}
       </ul>
+      <IndexSections sections={INTENT_INDEX.sections} />
     </SitePage>
   );
 }

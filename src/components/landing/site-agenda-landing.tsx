@@ -9,7 +9,9 @@ import { JsonLd } from "@/components/seo/json-ld";
 import { SiteTracker } from "@/components/seo/site-tracker";
 import { Breadcrumbs, breadcrumbTrailNode, type Crumb } from "@/components/site/breadcrumbs";
 import { SiteFooter, SiteHeader } from "@/components/site/site-chrome";
+import { UpdatedAt } from "@/components/site/updated-at";
 import { EXAMPLE_GALLERY, EXAMPLE_NAMES } from "@/content/site-examples";
+import type { GuideSection } from "@/content/niche-guides/types";
 import type { SiteAgendaPage } from "@/content/site-agenda-pages";
 import { SITE_PRICE_TEXT, TRIAL_DAYS } from "@/lib/plans";
 import { faqNode, organizationNode } from "@/lib/seo/structured-data";
@@ -109,6 +111,7 @@ function Hero({
   brandKey,
   exampleName,
   exampleHref,
+  updatedAt,
 }: {
   title: string;
   subtitle: string;
@@ -116,6 +119,8 @@ function Hero({
   brandKey: string;
   exampleName: string;
   exampleHref?: string;
+  /** YYYY-MM-DD, shown as "Atualizado em". */
+  updatedAt: string;
 }) {
   return (
     <section className="lp-lime lp-hero relative overflow-hidden">
@@ -148,6 +153,7 @@ function Hero({
             ) : null}
           </div>
           <p className="mt-3 max-w-md text-sm text-muted-foreground">{NOTE}</p>
+          <UpdatedAt date={updatedAt} className="mt-1" />
           <ul className="mt-6 flex flex-wrap justify-center gap-x-5 gap-y-2 text-sm font-semibold lg:justify-start">
             {["Pronto para o Google", "Agenda 24h", "Sem fidelidade"].map((item) => (
               <li key={item} className="flex items-center gap-1.5">
@@ -169,7 +175,7 @@ function PriceBlock({ paragraphs, niche }: { paragraphs: readonly string[]; nich
       <div className={`${container} grid items-center gap-10 py-20 sm:py-28 lg:grid-cols-2`}>
         <div className="text-center lg:text-left">
           <h2 id="preco" className={h2}>
-            Quanto custa
+            Quanto custa?
           </h2>
           <p className="lp-title mt-6 text-[4.5rem] leading-none text-[color:var(--lp-heading)] sm:text-[6rem]">
             {SITE_PRICE_TEXT.monthly}
@@ -205,7 +211,7 @@ export function SiteAgendaLanding({
   const path = `/site-e-agenda/${page.slug}`;
   const exampleName = EXAMPLE_NAMES[brand.key] ?? brand.niche?.name ?? "Seu negócio";
   const gallery = Math.min(EXAMPLE_GALLERY[brand.key] ?? 0, 4);
-  const price = page.sections.find((s) => s.title === "Quanto custa");
+  const price = page.sections.find((s) => s.title === "Quanto custa?");
   const body = page.sections.filter((s) => s !== price);
   const tones = ["lp-soft", "lp-brand", "lp-soft"];
 
@@ -227,6 +233,7 @@ export function SiteAgendaLanding({
         brandKey={brand.key}
         exampleName={exampleName}
         exampleHref={niche ? `/exemplo/${niche.route}` : undefined}
+        updatedAt={page.updatedAt}
       />
 
       {body.map((section, i) => (
@@ -323,11 +330,16 @@ export function SiteAgendaHubLanding({
   brand,
   h1,
   intro,
+  updatedAt,
+  sections,
   pages,
 }: {
   brand: BrandConfig;
   h1: string;
   intro: string;
+  updatedAt: string;
+  /** What the plan is and for whom (questions), after the list of areas. */
+  sections: readonly GuideSection[];
   pages: readonly (SiteAgendaPage & { brand: BrandConfig })[];
 }) {
   return (
@@ -336,7 +348,13 @@ export function SiteAgendaHubLanding({
       crumbs={[{ name: "Site + agenda online", path: "/site-e-agenda" }]}
       faq={[]}
     >
-      <Hero title={h1} subtitle={intro} brandKey="beauty" exampleName="Studio Bela" />
+      <Hero
+        title={h1}
+        subtitle={intro}
+        brandKey="beauty"
+        exampleName="Studio Bela"
+        updatedAt={updatedAt}
+      />
       <section aria-labelledby="areas" className="lp-soft">
         <div className={`${container} py-20 sm:py-24`}>
           <h2 id="areas" className={`${h2} text-center lg:text-left`}>
@@ -370,6 +388,20 @@ export function SiteAgendaHubLanding({
           </ul>
         </div>
       </section>
+      {sections.map((section, i) => (
+        <section key={section.title} className={i % 2 ? "lp-soft" : "lp-brand"}>
+          <div className={`${container} py-20 sm:py-24`}>
+            <h2 className={`${h2} max-w-3xl text-center lg:text-left`}>{section.title}</h2>
+            <div className="mt-8 grid gap-8 lg:grid-cols-2">
+              {section.paragraphs?.map((p) => (
+                <p key={p} className="text-lg leading-relaxed text-pretty">
+                  {p}
+                </p>
+              ))}
+            </div>
+          </div>
+        </section>
+      ))}
       <section id="cta-final" className="lp-deep">
         <div className={`${container} flex flex-col items-center gap-6 py-20 text-center sm:py-28`}>
           <h2 className="lp-title max-w-3xl text-[2.6rem] leading-[1] text-balance sm:text-6xl">

@@ -88,7 +88,7 @@ export const aestheticsGuide: NicheGuide = {
           ],
         },
         {
-          title: "Onde o link entra no WhatsApp",
+          title: "Onde o link entra no WhatsApp?",
           list: [
             "Perfil do WhatsApp Business, no campo de site.",
             "Mensagem de saudação para quem chama pela primeira vez.",
@@ -134,7 +134,7 @@ export const aestheticsGuide: NicheGuide = {
           ],
         },
         {
-          title: "Como usar o link nos lugares certos",
+          title: "Como usar o link nos lugares certos?",
           ordered: true,
           list: [
             "Link do MeetChat como primeiro link da bio.",

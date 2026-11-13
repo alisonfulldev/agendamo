@@ -1,7 +1,9 @@
 import Link from "next/link";
 
 import { Breadcrumbs } from "@/components/site/breadcrumbs";
+import { IndexSections } from "@/components/site/index-sections";
 import { SitePage } from "@/components/site/site-page";
+import { UpdatedAt } from "@/components/site/updated-at";
 import { TOOLS, TOOLS_INDEX } from "@/content/tools";
 import { pageMetadata } from "@/lib/seo/metadata";
 
@@ -19,6 +21,7 @@ export default function ToolsIndexPage() {
       <h1 className="mt-6 font-heading text-3xl font-bold tracking-tight sm:text-4xl">
         {TOOLS_INDEX.h1}
       </h1>
+      <UpdatedAt date={TOOLS_INDEX.updatedAt} className="mt-2" />
       <p className="mt-4 text-lg text-muted-foreground">{TOOLS_INDEX.intro}</p>
       <ul className="mt-8 grid gap-4">
         {TOOLS.map((tool) => (
@@ -33,6 +36,7 @@ export default function ToolsIndexPage() {
           </li>
         ))}
       </ul>
+      <IndexSections sections={TOOLS_INDEX.sections} />
     </SitePage>
   );
 }

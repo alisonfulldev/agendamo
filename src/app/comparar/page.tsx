@@ -1,7 +1,9 @@
 import Link from "next/link";
 
 import { Breadcrumbs } from "@/components/site/breadcrumbs";
+import { IndexSections } from "@/components/site/index-sections";
 import { SitePage } from "@/components/site/site-page";
+import { UpdatedAt } from "@/components/site/updated-at";
 import { COMPARISONS, COMPARISONS_INDEX } from "@/content/comparisons";
 import { pageMetadata } from "@/lib/seo/metadata";
 
@@ -19,6 +21,7 @@ export default function ComparisonsIndexPage() {
       <h1 className="mt-6 font-heading text-3xl font-bold tracking-tight sm:text-4xl">
         {COMPARISONS_INDEX.h1}
       </h1>
+      <UpdatedAt date={COMPARISONS_INDEX.updatedAt} className="mt-2" />
       <p className="mt-4 text-lg text-muted-foreground">{COMPARISONS_INDEX.intro}</p>
       <ul className="mt-8 grid gap-4">
         {COMPARISONS.filter((c) => c.published).map((c) => (
@@ -33,6 +36,7 @@ export default function ComparisonsIndexPage() {
           </li>
         ))}
       </ul>
+      <IndexSections sections={COMPARISONS_INDEX.sections} />
     </SitePage>
   );
 }

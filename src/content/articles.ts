@@ -1,4 +1,5 @@
 import { COMPANY } from "./company";
+import { CONTACT_EMAIL } from "./contact";
 import type { FaqItem, GuideSection } from "./niche-guides/types";
 
 /**
@@ -68,14 +69,14 @@ export const ARTICLES: readonly Article[] = [
     keywords: ["política de cancelamento", "política de faltas", "no-show", "sinal"],
     sections: [
       {
-        title: "Por que escrever uma política",
+        title: "Por que escrever uma política?",
         paragraphs: [
           "Sem regra combinada, cada falta vira uma conversa desconfortável: cobrar ou não cobrar, aceitar a desculpa ou não. Com a regra escrita e mostrada antes, a decisão já foi tomada, e o cliente sabe o que esperar.",
           "A política também ajuda quem quer cumprir: dizer até quando dá para remarcar sem problema é um convite para avisar em vez de sumir.",
         ],
       },
       {
-        title: "O que a política precisa dizer",
+        title: "O que a política precisa dizer?",
         list: [
           "Até quando o cliente pode remarcar ou cancelar sem custo (por exemplo, até 24 horas antes).",
           "O que acontece com quem falta sem avisar: perde o sinal, paga uma parte, ou passa a precisar de sinal nos próximos horários.",
@@ -92,7 +93,7 @@ export const ARTICLES: readonly Article[] = [
         ],
       },
       {
-        title: "Onde mostrar a política",
+        title: "Onde mostrar a política?",
         list: [
           "Na descrição do seu perfil, que o cliente vê antes de agendar.",
           "Na política do sinal pelo Pix, que o cliente aceita antes de pagar (no MeetChat, o texto e a data do aceite ficam registrados).",
@@ -267,12 +268,12 @@ export const ARTICLES: readonly Article[] = [
       "No painel, abra Configurações e ligue “Não aparecer nas buscas”. O seu perfil sai do portal e do diretório do MeetChat e passa a pedir ao Google e a outros buscadores para não mostrá-lo. O seu link continua funcionando para quem já o tem.",
     author: TEAM,
     datePublished: "2026-10-16",
-    dateModified: "2026-10-16",
+    dateModified: "2026-11-13",
     category: "Perfil e privacidade",
     keywords: ["privacidade", "perfil", "buscas"],
     sections: [
       {
-        title: "Passo a passo",
+        title: "Como esconder o perfil das buscas?",
         ordered: true,
         list: [
           "Entre no painel.",
@@ -281,7 +282,7 @@ export const ARTICLES: readonly Article[] = [
         ],
       },
       {
-        title: "O que muda",
+        title: "O que muda?",
         list: [
           "O perfil passa a sair com a marcação “noindex”, que pede aos buscadores para não mostrá-lo.",
           "Ele sai do portal, do diretório por cidade e do mapa do site do MeetChat.",
@@ -289,10 +290,22 @@ export const ARTICLES: readonly Article[] = [
         ],
       },
       {
-        title: "O que não muda",
+        title: "O que não muda?",
         paragraphs: [
           "O link continua no ar: quem tem o seu link (no Instagram, no WhatsApp ou salvo) agenda normalmente.",
         ],
+      },
+    ],
+    faq: [
+      {
+        question: "O meu link para de funcionar?",
+        answer:
+          "Não. Quem já tem o seu link, no Instagram, no WhatsApp ou salvo, continua agendando normalmente. Só deixa de ser encontrado pelas buscas.",
+      },
+      {
+        question: "Posso voltar a aparecer nas buscas depois?",
+        answer:
+          "Sim. Desligue “Não aparecer nas buscas” em Configurações. O perfil volta ao portal e ao diretório, e os buscadores podem levar alguns dias para mostrá-lo de novo.",
       },
     ],
     related: ["/ajuda/como-o-cliente-remarca-ou-cancela", "/privacidade"],
@@ -310,12 +323,12 @@ export const ARTICLES: readonly Article[] = [
       "O cliente que informou o e-mail ao agendar remarca ou cancela pelos botões do e-mail de confirmação e do lembrete. Ao remarcar, ele escolhe outro horário livre. Quem não informou e-mail fala com você, e você ajusta o horário no painel.",
     author: TEAM,
     datePublished: "2026-10-16",
-    dateModified: "2026-10-16",
+    dateModified: "2026-11-13",
     category: "Agendamentos",
     keywords: ["remarcar", "cancelar", "lembrete"],
     sections: [
       {
-        title: "Com e-mail informado",
+        title: "Como o cliente remarca pelo e-mail?",
         ordered: true,
         list: [
           "O cliente abre o e-mail de confirmação ou o lembrete enviado um dia antes.",
@@ -324,16 +337,28 @@ export const ARTICLES: readonly Article[] = [
         ],
       },
       {
-        title: "Sem e-mail informado",
+        title: "E se o cliente não informou o e-mail?",
         paragraphs: [
           "O e-mail é opcional no agendamento. Sem ele, o cliente não recebe confirmação nem lembrete e combina a mudança com você pelo WhatsApp, que fica salvo no agendamento.",
         ],
       },
       {
-        title: "Quando o horário liberado tem fila",
+        title: "O que acontece com o horário liberado?",
         paragraphs: [
           "Se houver lista de espera para aquele dia e serviço, quem está na lista recebe um e-mail, e o primeiro a confirmar fica com o horário.",
         ],
+      },
+    ],
+    faq: [
+      {
+        question: "Eu fico sabendo quando o cliente remarca ou cancela?",
+        answer:
+          "Sim. Quando o cliente usa os botões do e-mail, a agenda se ajusta sozinha e você recebe um aviso.",
+      },
+      {
+        question: "Posso remarcar o horário pelo painel?",
+        answer:
+          "Sim. Quando o cliente pede a mudança por mensagem ou não informou e-mail, você ajusta o horário no painel.",
       },
     ],
     related: ["/agendamento/lembrete-automatico", "/recursos/politica-de-faltas-e-cancelamento"],
@@ -343,7 +368,15 @@ export const ARTICLES: readonly Article[] = [
 
 export const ARTICLE_SECTIONS: Record<
   ArticleSection,
-  { name: string; title: string; description: string; h1: string; intro: string; updatedAt: string }
+  {
+    name: string;
+    title: string;
+    description: string;
+    h1: string;
+    intro: string;
+    sections: GuideSection[];
+    updatedAt: string;
+  }
 > = {
   recursos: {
     name: "Recursos",
@@ -352,7 +385,21 @@ export const ARTICLE_SECTIONS: Record<
       "Artigos práticos sobre agenda, faltas, divulgação e atendimento para negócios com hora marcada.",
     h1: "Recursos",
     intro: "Artigos práticos para organizar a agenda, reduzir faltas e receber mais agendamentos.",
-    updatedAt: "2026-10-16",
+    sections: [
+      {
+        title: "Sobre o que são os artigos?",
+        paragraphs: [
+          "Os artigos tratam de problemas do dia a dia de quem trabalha com hora marcada: faltas e cancelamentos, divulgação do link de agendamento e organização da agenda. Cada um começa com uma resposta rápida, segue com o passo a passo e termina com perguntas frequentes.",
+        ],
+      },
+      {
+        title: "Quem escreve os artigos?",
+        paragraphs: [
+          `Os artigos são escritos por ${COMPANY.founder.name}, fundador da ${COMPANY.name}, a empresa que faz o MeetChat. A data da última atualização fica no topo de cada artigo.`,
+        ],
+      },
+    ],
+    updatedAt: "2026-11-13",
   },
   ajuda: {
     name: "Ajuda",
@@ -361,7 +408,21 @@ export const ARTICLE_SECTIONS: Record<
       "Respostas sobre o MeetChat: perfil, privacidade, agendamentos, remarcações e cancelamentos.",
     h1: "Central de ajuda",
     intro: "Respostas rápidas sobre como o MeetChat funciona. Suporte só por e-mail.",
-    updatedAt: "2026-10-16",
+    sections: [
+      {
+        title: "O que a central de ajuda responde?",
+        paragraphs: [
+          "Respostas curtas sobre o funcionamento do MeetChat: o que aparece no seu perfil público e como tirá-lo das buscas, como o cliente remarca ou cancela um horário e outras dúvidas comuns. Para planos e valores, veja a página de preços.",
+        ],
+      },
+      {
+        title: "Como falar com o suporte?",
+        paragraphs: [
+          `O suporte do MeetChat é só por e-mail, em ${CONTACT_EMAIL}. Para agilizar, diga o nome do seu negócio, o endereço do seu link e o que aconteceu; se puder, mande um print da tela.`,
+        ],
+      },
+    ],
+    updatedAt: "2026-11-13",
   },
 };
 
