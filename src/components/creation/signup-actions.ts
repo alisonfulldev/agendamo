@@ -11,6 +11,7 @@ import { TERMS } from "@/content/legal";
 import { audit } from "@/lib/audit";
 import type { Business } from "@/lib/db/types";
 import { notifyAdminsOfSignup } from "@/lib/notifications/admin-signup";
+import { startActivationDemo } from "@/lib/activation";
 import { startTrial } from "@/lib/trial";
 import { sendEmailCode, verifyEmailCode, type SendCodeResult } from "@/lib/auth/email-code";
 import { DEFAULT_HOURS } from "@/lib/business/schemas";
@@ -87,8 +88,11 @@ export type VerifySignupResult =
       slug: string;
       pageUrl: string;
       qr: string;
-      /** "used": this person already had a trial, so the account starts in waiting mode. */
-      trial: "started" | "used";
+      /**
+       * "used": this person already had a trial, so the account starts in waiting mode. "demo":
+       * the Meta ad page's demonstration (until the test booking).
+       */
+      trial: "started" | "used" | "demo";
     }
   | { ok: true; outcome: "has_business" }
   | { ok: false; error: "expired" | "too_many" | "wrong" | "invalid" | "rate_limited" | "failed" };
@@ -105,6 +109,8 @@ export async function verifySignupCodeAction(input: unknown): Promise<VerifySign
       email,
       code: z.string().regex(/^\d{4}$/),
       whatsapp: z.string().max(30).nullable().default(null),
+      /** Meta ad page (/ativar): demonstration until the test booking instead of the trial. */
+      activation: z.boolean().default(false),
     })
     .safeParse(input);
   if (!parsed.success) return { ok: false, error: "invalid" };
@@ -195,23 +201,35 @@ export async function verifySignupCodeAction(input: unknown): Promise<VerifySign
     businessId,
     userId: verified.userId,
     action: "business.created",
-    details: { via: "conversation", source: demo.source, terms: consent ?? null },
+    details: {
+      via: parsed.data.activation ? "activation" : "conversation",
+      source: demo.source,
+      terms: consent ?? null,
+    },
   });
   await admin.from("demos").delete().eq("id", demo.id);
 
-  // Every account starts with the 14-day trial of Completo (once per person: e-mail and phone).
-  const { data: created } = await admin
-    .from("businesses")
-    .select("*")
-    .eq("id", businessId)
-    .single();
-  const started = await startTrial({
-    business: created as Business,
-    identity: { email: parsed.data.email, phone: parsed.data.whatsapp },
-    userId: verified.userId,
-    via: "signup",
-  });
-  const trial = started.ok ? "started" : "used";
+  const identity = { email: parsed.data.email, phone: parsed.data.whatsapp };
+  let trial: "started" | "used" | "demo";
+  if (parsed.data.activation) {
+    // Meta ad page: no trial, the agenda works until her test booking, then she pays.
+    await startActivationDemo({ businessId, identity, userId: verified.userId });
+    trial = "demo";
+  } else {
+    // Every account starts with the 14-day trial of Completo (once per person: e-mail and phone).
+    const { data: created } = await admin
+      .from("businesses")
+      .select("*")
+      .eq("id", businessId)
+      .single();
+    const started = await startTrial({
+      business: created as Business,
+      identity,
+      userId: verified.userId,
+      via: "signup",
+    });
+    trial = started.ok ? "started" : "used";
+  }
 
   const pageUrl = businessUrl(niche, `/${slug}`);
   await notifyAdminsOfSignup({
@@ -220,7 +238,7 @@ export async function verifySignupCodeAction(input: unknown): Promise<VerifySign
     email: parsed.data.email,
     whatsapp: normalizeBrPhone(parsed.data.whatsapp),
     pageUrl,
-    via: "conversa",
+    via: parsed.data.activation ? "anúncio (demonstração)" : "conversa",
     trial,
   });
   return {

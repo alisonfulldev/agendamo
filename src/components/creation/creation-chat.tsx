@@ -7,6 +7,7 @@ import { getBrand, getNiche, NICHES, PLATFORM } from "@/brands";
 import { brandThemeStyle } from "@/brands/theme";
 import { trackSignup } from "@/components/google-tag";
 import { nichesByGroup } from "@/components/sales/niche-cards";
+import { ACTIVATION } from "@/content/activation";
 import { CREATION, detectNiche } from "@/content/creation";
 import { siteArrival, siteContext, siteLanding } from "@/components/seo/site-tracker";
 import { isReservedBusinessName } from "@/lib/business/reserved-names";
@@ -132,9 +133,12 @@ function fresh(): CreationState {
   };
 }
 
-function load(): CreationState | null {
+/** The Meta ad page (/ativar) keeps its own conversation, apart from the home's. */
+const storageKey = (activation: boolean) => (activation ? `${STORAGE_KEY}_ativar` : STORAGE_KEY);
+
+function load(activation: boolean): CreationState | null {
   try {
-    const raw = sessionStorage.getItem(STORAGE_KEY);
+    const raw = sessionStorage.getItem(storageKey(activation));
     if (!raw) return null;
     const saved = JSON.parse(raw) as CreationState;
     // A conversation saved at the old plan question (removed) goes on to the terms.
@@ -144,10 +148,11 @@ function load(): CreationState | null {
   }
 }
 
-function save(state: CreationState | null) {
+function save(state: CreationState | null, activation: boolean) {
   try {
-    if (state) sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    else sessionStorage.removeItem(STORAGE_KEY);
+    const key = storageKey(activation);
+    if (state) sessionStorage.setItem(key, JSON.stringify(state));
+    else sessionStorage.removeItem(key);
   } catch {
     // Storage blocked: the conversation still works, it just does not survive closing.
   }
@@ -224,17 +229,33 @@ function sourceInfo(viaName: boolean, viaNiche: boolean) {
  * The creation conversation: opens over the site (full screen on phones, a phone frame on
  * desktop). The person names the business, the niche is detected or chosen, and the chat turns
  * into hers for a test booking. Progress survives closing (sessionStorage).
+ *
+ * `activation`: the Meta ad page (/ativar, 2026-11-17). No simulation and no trial: right after
+ * her chat is built she creates the account, which starts in the demonstration (her real link
+ * works until she books herself as a customer), and the page takes her to that test booking.
  */
-export function CreationChat({ photos = false }: { photos?: boolean }) {
+export function CreationChat({
+  photos = false,
+  activation = false,
+}: {
+  photos?: boolean;
+  activation?: boolean;
+}) {
   const open = useSyncExternalStore(subscribeCreation, isCreationOpen, () => false);
   if (!open) return null;
-  return <Conversation photos={photos} />;
+  return <Conversation photos={photos} activation={activation} />;
 }
 
-export function Conversation({ photos }: { photos: boolean }) {
+export function Conversation({
+  photos,
+  activation = false,
+}: {
+  photos: boolean;
+  activation?: boolean;
+}) {
   const area = useVisibleArea();
   const [state, setState] = useState<CreationState>(() => {
-    const saved = load();
+    const saved = load(activation);
     if (saved && saved.name && saved.phase !== "name") {
       return {
         ...saved,
@@ -251,9 +272,9 @@ export function Conversation({ photos }: { photos: boolean }) {
 
   // Persist (the resume prompt itself is not saved).
   useEffect(() => {
-    if (state.phase === "created" || state.phase === "has_business") save(null);
-    else if (state.phase !== "resume") save(state);
-  }, [state]);
+    if (state.phase === "created" || state.phase === "has_business") save(null, activation);
+    else if (state.phase !== "resume") save(state, activation);
+  }, [state, activation]);
 
   // Short "typing" pause before each system message; the person's answers appear at once.
   useEffect(() => {
@@ -313,8 +334,19 @@ export function Conversation({ photos }: { photos: boolean }) {
     // The loading screen stays at least ~2 s, so the transformation reads as a step.
     const left = BUILDING_MS - (Date.now() - buildingSince);
     if (left > 0) await new Promise((resolve) => setTimeout(resolve, left));
-    // The transformation: the chat is hers, and she chooses between signing up and the simulation.
     setRevealed(0);
+    // Ad page: no simulation, the account comes first (her real link is the demonstration).
+    if (activation) {
+      setState((s) => ({
+        ...s,
+        phase: "whatsapp",
+        demoId: result.id,
+        suggestedSlug: result.suggestedSlug,
+        log: [system(ACTIVATION.chat.ready), system(SU.askWhatsapp)],
+      }));
+      return;
+    }
+    // The transformation: the chat is hers, and she chooses between signing up and the simulation.
     setState((s) => ({
       ...s,
       phase: "ready",
@@ -379,7 +411,7 @@ export function Conversation({ photos }: { photos: boolean }) {
   }, []);
 
   function restart() {
-    save(null);
+    save(null, activation);
     setRevealed(0);
     setState(fresh());
   }
@@ -449,12 +481,13 @@ export function Conversation({ photos }: { photos: boolean }) {
       email: state.email,
       code,
       whatsapp: state.whatsapp,
+      activation,
     }).catch(() => ({ ok: false as const, error: "failed" as const }));
     if (result.ok && result.outcome === "created") {
       // Google Ads / Analytics sign-up, once per new account (never for an existing one).
       trackSignup();
       update({ phase: "created", created: result }, [
-        system(fill(SU.created, { nome: result.name })),
+        system(fill(activation ? ACTIVATION.chat.created : SU.created, { nome: result.name })),
         ...(result.trial === "used" ? [system(SU.trialUsed)] : []),
       ]);
     } else if (result.ok) {
@@ -600,9 +633,10 @@ export function Conversation({ photos }: { photos: boolean }) {
         ) : (
           <Options
             state={state}
+            activation={activation}
             days={days}
             onResume={(resume) => {
-              const saved = load();
+              const saved = load(activation);
               if (resume && saved) {
                 setRevealed(saved.log.length);
                 setState(saved);
@@ -942,6 +976,7 @@ const OPTION =
 
 function Options({
   state,
+  activation,
   days,
   onResume,
   onConfirm,
@@ -958,6 +993,7 @@ function Options({
   onChangeEmail,
 }: {
   state: CreationState;
+  activation: boolean;
   days: string[];
   onResume: (resume: boolean) => void;
   onConfirm: (yes: boolean) => void;
@@ -1144,7 +1180,8 @@ function Options({
         2,
       );
     case "created":
-      return state.created ? <CreatedCard /> : null;
+      if (!state.created) return null;
+      return activation ? <ActivationNext /> : <CreatedCard />;
     case "has_business":
       return wrap(
         <GoPanelButton className="flex h-12 items-center justify-center rounded-xl bg-primary text-base font-semibold text-primary-foreground" />,
@@ -1193,7 +1230,29 @@ function ResendButton({ sentAt, onResend }: { sentAt: number | null; onResend: (
   );
 }
 
-/** The link is live: copy, open the panel, QR code and next steps. */
+/**
+ * Ad page: the account exists and the demonstration started. A full load of /ativar (the session
+ * has just started), where she books herself as a customer on her real link.
+ */
+function ActivationNext() {
+  return (
+    <div className="mt-1 flex flex-col gap-3">
+      <p className="rounded-2xl bg-card px-4 py-3 text-center text-[17px] text-card-foreground shadow-sm">
+        {ACTIVATION.chat.createdHint}
+      </p>
+      <button
+        type="button"
+        className="flex h-14 items-center justify-center gap-2 rounded-xl bg-primary text-lg font-semibold text-primary-foreground shadow-lg ring-4 ring-primary/30"
+        // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+        onClick={() => window.location.assign("/ativar")}
+      >
+        {ACTIVATION.chat.next}
+        <ArrowRight className="size-5" aria-hidden />
+      </button>
+    </div>
+  );
+}
+
 /** End of the sign-up: one way only, into the panel (the link, the QR code and the tips are there). */
 function CreatedCard() {
   return (

@@ -11,7 +11,14 @@ const CreationChat = dynamic(() => import("./creation-chat").then((m) => m.Creat
 });
 
 /** The creation conversation over the page, loaded on demand. */
-export function LazyCreationChat({ photos }: { photos: boolean }) {
+export function LazyCreationChat({
+  photos,
+  activation = false,
+}: {
+  photos: boolean;
+  /** The Meta ad page (/ativar): the account comes right after the chat, no trial. */
+  activation?: boolean;
+}) {
   const open = useSyncExternalStore(subscribeCreation, isCreationOpen, () => false);
-  return open ? <CreationChat photos={photos} /> : null;
+  return open ? <CreationChat photos={photos} activation={activation} /> : null;
 }

@@ -36,6 +36,11 @@ export interface Business {
   plan_tier?: "complete" | "site" | "web";
   /** "booking" (agenda and chat), or the "Site ou Loja" product: "site" or "store". */
   product?: BusinessProduct;
+  /**
+   * Created on the Meta ad page (/ativar, 2026-11-17): no 14-day trial, the agenda works only
+   * until the owner's test booking (at most 1 hour), then waiting mode until she pays.
+   */
+  activation_demo?: boolean;
   /** Last time the owner opened the panel (updated at most once an hour). */
   owner_last_seen_at: string | null;
   slot_interval_minutes: 15 | 30 | 60;

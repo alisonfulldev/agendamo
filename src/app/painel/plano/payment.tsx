@@ -13,7 +13,7 @@ import { pendingPixAction, subscriptionStatusAction } from "./actions";
  * Waits for the payment confirmation (the Asaas webhook updates the subscription) and refreshes
  * the panel once it is active.
  */
-export function useWaitForActivation(waiting: boolean): boolean {
+export function useWaitForActivation(waiting: boolean, onActive?: () => void): boolean {
   const router = useRouter();
   const [active, setActive] = useState(false);
   useEffect(() => {
@@ -23,18 +23,28 @@ export function useWaitForActivation(waiting: boolean): boolean {
       if (status === "active") {
         setActive(true);
         clearInterval(timer);
+        onActive?.();
         router.refresh();
       }
     }, 4000);
     return () => clearInterval(timer);
-  }, [waiting, active, router]);
+  }, [waiting, active, router, onActive]);
   return active;
 }
 
 /** QR code + "copia e cola" inside the panel, waiting for the payment. */
-export function PixPanel({ pix, waitForPlan = true }: { pix: PixCharge; waitForPlan?: boolean }) {
+export function PixPanel({
+  pix,
+  waitForPlan = true,
+  onActive,
+}: {
+  pix: PixCharge;
+  waitForPlan?: boolean;
+  /** Called once when the payment is confirmed (the ad page sends its Purchase event). */
+  onActive?: () => void;
+}) {
   const [copied, setCopied] = useState(false);
-  const active = useWaitForActivation(waitForPlan);
+  const active = useWaitForActivation(waitForPlan, onActive);
   if (active) {
     return (
       <div

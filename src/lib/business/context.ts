@@ -91,7 +91,9 @@ export async function requireBusiness(options: RequireOptions = {}): Promise<Bus
     if (!web && options.web) redirect("/painel");
   }
   if (!options.allowWaiting && !getPlanFeatures(context.business).active) {
-    redirect(context.isOwner ? "/painel/plano" : "/painel/conta");
+    // An account from the Meta ad page pays on that page (its checkout carries the ad's pixel).
+    const plans = context.business.activation_demo ? "/ativar" : "/painel/plano";
+    redirect(context.isOwner ? plans : "/painel/conta");
   }
   return context;
 }

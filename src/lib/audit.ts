@@ -16,6 +16,8 @@ export type AuditAction =
   | "customer.blocked"
   | "customer.unblocked"
   | "plan.trial_started"
+  | "plan.activation_demo_started"
+  | "plan.activation_demo_ended"
   | "plan.trial_extended"
   | "plan.trial_ended"
   | "plan.changed"

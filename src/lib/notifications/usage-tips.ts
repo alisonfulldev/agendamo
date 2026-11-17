@@ -225,7 +225,10 @@ export async function sendUsageTips(now = Date.now()): Promise<number> {
     .is("suspended_at", null)
     .gt("trial_ends_at", new Date(now).toISOString());
   if (error) throw new Error(error.message);
-  const businesses = ((data ?? []) as Business[]).filter((b) => getPlanFeatures(b).trialActive);
+  // Not the Meta ad page demonstration (ends at the test booking): no trial tips for it.
+  const businesses = ((data ?? []) as Business[]).filter(
+    (b) => getPlanFeatures(b).trialActive && !b.activation_demo,
+  );
   if (businesses.length === 0) return 0;
 
   const facts = await factsOf(businesses, now);

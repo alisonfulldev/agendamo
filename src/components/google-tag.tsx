@@ -82,6 +82,31 @@ export function trackSignup() {
   window.fbq?.("track", "CompleteRegistration");
 }
 
+/** Sales events of the Meta ad page (/ativar): standard pixel events the campaign optimizes for. */
+export type MetaSalesEvent = "Lead" | "InitiateCheckout" | "Purchase";
+
+/**
+ * One Meta pixel event of the ad page, at most once per key in this browser session (a reload or
+ * the page polling again never counts it twice). `eventId` lets Meta merge it with a server copy
+ * later (Conversions API). Nothing about the person is sent; only where the pixel runs.
+ */
+export function trackMeta(
+  event: MetaSalesEvent,
+  options: { key: string; value?: number; eventId?: string },
+) {
+  const storageKey = `lv_meta_${event}_${options.key}`;
+  try {
+    if (sessionStorage.getItem(storageKey)) return;
+    sessionStorage.setItem(storageKey, "1");
+  } catch {
+    // Storage blocked: still sends it (a duplicate is better than a missing sale).
+  }
+  const params =
+    options.value !== undefined ? { value: options.value, currency: "BRL" } : undefined;
+  if (options.eventId) fbq("track", event, params ?? {}, { eventID: options.eventId });
+  else fbq("track", event, params);
+}
+
 /**
  * Google tag (gtag.js) and Meta pixel on the sales site only (src/lib/analytics/site-paths.ts).
  * Loaded the first time a site page opens; a page view goes out on each navigation to a site page,

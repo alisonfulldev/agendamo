@@ -14,9 +14,12 @@ export interface NewSignup {
   email: string;
   whatsapp: string | null;
   pageUrl: string;
-  via: "conversa" | "formulário";
-  /** "used": this person already had a trial, so the account started in waiting mode. */
-  trial: "started" | "used";
+  via: "conversa" | "formulário" | "anúncio (demonstração)";
+  /**
+   * "used": this person already had a trial, so the account started in waiting mode. "demo": the
+   * Meta ad page (/ativar), agenda only until the test booking, then pays.
+   */
+  trial: "started" | "used" | "demo";
 }
 
 /**
@@ -49,7 +52,9 @@ export async function notifyAdminsOfSignup(signup: NewSignup): Promise<void> {
             value:
               signup.trial === "started"
                 ? `${TRIAL_DAYS} dias do ${PLAN_NAME}`
-                : "Já usou o teste antes (sem teste)",
+                : signup.trial === "demo"
+                  ? "Sem teste: demonstração até o agendamento de teste, depois o pagamento"
+                  : "Já usou o teste antes (sem teste)",
           },
         ],
         cta: { label: "Abrir o admin", url: siteUrl("/admin") },

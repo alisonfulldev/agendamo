@@ -14,6 +14,8 @@ export const META_PIXEL_ID = "3760458420790268";
 
 /** First path segments of the sales site that are not niche pages. */
 export const SITE_SECTIONS = [
+  // Meta ad page (2026-11-17): demonstration and payment, with the pixel's sales events.
+  "ativar",
   "agendamento",
   "site-e-agenda",
   "site-profissional",
