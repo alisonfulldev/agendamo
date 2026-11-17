@@ -17,7 +17,7 @@ export interface NewSignup {
   via: "conversa" | "formulário" | "anúncio (demonstração)";
   /**
    * "used": this person already had a trial, so the account started in waiting mode. "demo": the
-   * Meta ad page (/ativar), agenda only until the test booking, then pays.
+   * Meta ad page (/ativar): watched the tutorial, pays right away.
    */
   trial: "started" | "used" | "demo";
 }
@@ -53,7 +53,7 @@ export async function notifyAdminsOfSignup(signup: NewSignup): Promise<void> {
               signup.trial === "started"
                 ? `${TRIAL_DAYS} dias do ${PLAN_NAME}`
                 : signup.trial === "demo"
-                  ? "Sem teste: demonstração até o agendamento de teste, depois o pagamento"
+                  ? "Sem teste: viu o tutorial e vai para o pagamento"
                   : "Já usou o teste antes (sem teste)",
           },
         ],

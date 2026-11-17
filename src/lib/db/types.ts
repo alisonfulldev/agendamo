@@ -37,8 +37,8 @@ export interface Business {
   /** "booking" (agenda and chat), or the "Site ou Loja" product: "site" or "store". */
   product?: BusinessProduct;
   /**
-   * Created on the Meta ad page (/ativar, 2026-11-17): no 14-day trial, the agenda works only
-   * until the owner's test booking (at most 1 hour), then waiting mode until she pays.
+   * Created on the Meta ad page (/ativar, 2026-11-17): no 14-day trial, she watched the tutorial
+   * and pays right away (waiting mode until then; the panel sends her back to /ativar).
    */
   activation_demo?: boolean;
   /** Last time the owner opened the panel (updated at most once an hour). */

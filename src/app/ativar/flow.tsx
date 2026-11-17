@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, CalendarCheck, Check, ExternalLink, Mail, Repeat } from "lucide-react";
+import { Check } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState, useTransition } from "react";
 
@@ -14,142 +14,28 @@ import { subscriptionPrice, type Cycle } from "@/lib/plans";
 import { checkoutAction } from "../painel/plano/actions";
 import { PixPanel } from "../painel/plano/payment";
 
-import { testBookingAction } from "./actions";
-import type { TestBooking } from "./data";
-
 const T = ACTIVATION;
-const POLL_MS = 3000;
 
 type PaidTier = "complete" | "site";
 
 const cents = (value: number) => Math.round(value) / 100;
 
 /**
- * The ad page after the account exists: the owner books herself on her real link (another tab),
- * this screen notices the booking by itself, shows what happened and asks for the payment.
- * Meta pixel: Lead (test booking), InitiateCheckout (Pix shown) and Purchase (paid).
+ * The ad page after the account exists (she watched the tutorial): her link and the payment.
+ * Meta pixel: InitiateCheckout (Pix shown) and Purchase (paid).
  */
-export function ActivationFlow({
-  businessId,
-  pageUrl,
-  initialBooking,
-  demoActive,
-}: {
-  businessId: string;
-  pageUrl: string;
-  initialBooking: TestBooking | null;
-  /** The demonstration is still open (before the test booking, at most 1 hour). */
-  demoActive: boolean;
-}) {
-  const [booking, setBooking] = useState<TestBooking | null>(initialBooking);
-  const [skipped, setSkipped] = useState(false);
-
-  // Waits for the test booking made in the other tab.
-  useEffect(() => {
-    if (booking || !demoActive) return;
-    let stopped = false;
-    const timer = setInterval(async () => {
-      const found = await testBookingAction().catch(() => null);
-      if (found && !stopped) {
-        setBooking(found);
-        clearInterval(timer);
-      }
-    }, POLL_MS);
-    return () => {
-      stopped = true;
-      clearInterval(timer);
-    };
-  }, [booking, demoActive]);
-
-  useEffect(() => {
-    if (booking) trackMeta("Lead", { key: businessId });
-  }, [booking, businessId]);
-
-  if (!booking && demoActive && !skipped) {
-    return <TestStep pageUrl={pageUrl} onSkip={() => setSkipped(true)} />;
-  }
+export function ActivationFlow({ businessId, pageUrl }: { businessId: string; pageUrl: string }) {
   return (
-    <div className="flex flex-col gap-8">
-      {booking ? (
-        <Result booking={booking} />
-      ) : !demoActive ? (
-        <p className="rounded-2xl border bg-card p-4 text-[17px]">{T.test.ended}</p>
-      ) : null}
+    <div className="flex flex-col gap-6">
+      <section className="flex flex-col gap-3">
+        <h1 className="font-heading text-3xl font-bold tracking-tight">{T.checkout.created}</h1>
+        <p className="text-muted-foreground">{T.checkout.yourLink}</p>
+        <p className="rounded-xl bg-muted px-4 py-3 text-center font-medium break-all">
+          {pageUrl.replace(/^https?:\/\//, "")}
+        </p>
+      </section>
       <Checkout businessId={businessId} />
     </div>
-  );
-}
-
-function TestStep({ pageUrl, onSkip }: { pageUrl: string; onSkip: () => void }) {
-  return (
-    <section className="flex flex-col gap-5">
-      <h1 className="font-heading text-3xl font-bold tracking-tight text-balance">
-        {T.test.title}
-      </h1>
-      <p className="text-lg leading-relaxed text-pretty text-muted-foreground">{T.test.intro}</p>
-      <p className="rounded-xl bg-muted px-4 py-3 text-center font-medium break-all">
-        {pageUrl.replace(/^https?:\/\//, "")}
-      </p>
-      <a
-        href={pageUrl}
-        target="_blank"
-        rel="noopener"
-        className="flex h-14 items-center justify-center gap-2 rounded-xl bg-primary text-lg font-semibold text-primary-foreground shadow-lg ring-4 ring-primary/30"
-      >
-        {T.test.open}
-        <ExternalLink className="size-5" aria-hidden />
-      </a>
-      <p
-        className="flex items-center justify-center gap-2 text-sm text-muted-foreground"
-        aria-live="polite"
-      >
-        <span className="size-2 animate-pulse rounded-full bg-primary" />
-        {T.test.waiting}
-      </p>
-      <p className="text-center text-sm text-muted-foreground">{T.test.note}</p>
-      <button
-        type="button"
-        onClick={onSkip}
-        className="self-center text-sm font-medium underline underline-offset-2"
-      >
-        {T.test.skip}
-      </button>
-    </section>
-  );
-}
-
-function Result({ booking }: { booking: TestBooking }) {
-  const lines = [
-    { icon: Bell, text: T.result.ownerNotice },
-    { icon: Mail, text: T.result.customerNotice },
-    { icon: Repeat, text: T.result.reminder },
-  ];
-  return (
-    <section className="flex flex-col gap-4 motion-safe:animate-in motion-safe:fade-in">
-      <h1 className="font-heading text-3xl font-bold tracking-tight">{T.result.title}</h1>
-      <p className="text-lg text-muted-foreground">{T.result.intro}</p>
-      <div className="rounded-2xl border bg-card p-4 shadow-sm">
-        <p className="mb-2 flex items-center gap-2 font-semibold">
-          <CalendarCheck className="size-5 text-primary" aria-hidden /> {T.result.booked}
-        </p>
-        <div className="rounded-lg bg-accent px-3 py-2 text-accent-foreground">
-          <p className="font-semibold">
-            {booking.date}, às {booking.time}
-          </p>
-          <p className="text-sm">
-            {booking.service} · {booking.customer}
-          </p>
-        </div>
-      </div>
-      <ul className="flex flex-col gap-3">
-        {lines.map(({ icon: Icon, text }) => (
-          <li key={text} className="flex items-start gap-3 text-[17px]">
-            <Icon className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden />
-            {text}
-          </li>
-        ))}
-      </ul>
-    </section>
   );
 }
 

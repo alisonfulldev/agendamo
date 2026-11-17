@@ -1,67 +1,79 @@
 /**
- * Texts of the Meta ad page (/ativar, 2026-11-17): the person creates her real link, books
- * herself as a customer to see it working, and pays right after. No 14-day trial on this page.
+ * Texts of the Meta ad page (/ativar, 2026-11-17): an animated tutorial (a customer booking, then
+ * the panel step by step), then the account and the payment right away. No 14-day trial here.
  */
 export const ACTIVATION = {
   meta: {
-    title: "Veja sua agenda online funcionando",
+    title: "Veja como funciona a agenda online",
     description:
-      "Crie seu link de agendamento, marque um horário como se fosse seu cliente e veja tudo chegar para você.",
+      "Veja um cliente agendando sozinho pelo link e o que aparece no seu painel, passo a passo.",
   },
   landing: {
     eyebrow: "Agenda online pelo chat",
-    title: "Veja sua agenda funcionando antes de pagar",
-    intro:
-      "Em 1 minuto você cria o seu link de agendamento de verdade, marca um horário nele como se fosse seu cliente e vê o aviso chegar para você. Gostou? Ativa na hora pelo Pix.",
-    cta: "Criar meu link e testar",
-    steps: [
-      {
-        title: "Crie seu link",
-        text: "Nome do negócio, área e e-mail. Os serviços e horários já vêm prontos.",
-      },
-      {
-        title: "Seja seu cliente",
-        text: "Abra o seu link, escolha um serviço e um horário e confirme.",
-      },
-      {
-        title: "Veja chegar",
-        text: "O horário entra na sua agenda e você recebe o aviso na hora.",
-      },
-      { title: "Ative pelo Pix", text: "Seus clientes passam a marcar sozinhos, 24h por dia." },
-    ],
+    title: "Seu cliente agenda sozinho, 24h por dia",
+    intro: "Veja em 1 minuto como funciona: do cliente agendando ao seu painel.",
+    cta: "Quero o meu",
+    ctaHint: "Você cria seu link em 1 minuto e ativa na hora pelo Pix.",
     noApp: "Seu cliente não baixa nada: o link abre direto no navegador do celular.",
     login: "Já tenho conta",
   },
+  /** The animated tutorial: one caption per step (the screens are drawn in tutorial.tsx). */
+  tutorial: {
+    label: "Tutorial: como funciona",
+    stepOf: "Passo {n} de {total}",
+    previous: "Voltar",
+    next: "Próximo",
+    pause: "Pausar",
+    play: "Continuar",
+    replay: "Ver de novo",
+    customer: "Juliana",
+    steps: [
+      {
+        title: "O cliente abre o seu link",
+        text: "Pelo Instagram, WhatsApp ou Google. Abre uma conversa com a cara do seu negócio.",
+      },
+      {
+        title: "Escolhe o serviço",
+        text: "Com a duração e o preço que você definiu.",
+      },
+      {
+        title: "Escolhe o dia e um horário livre",
+        text: "Só aparecem os horários vagos da sua agenda. Nada de marcar em cima de outro.",
+      },
+      {
+        title: "Confirma em segundos",
+        text: "Nome e WhatsApp, e pronto: ele recebe a confirmação com o link para remarcar ou cancelar.",
+      },
+      {
+        title: "Você recebe o aviso na hora",
+        text: "No celular e no e-mail, a cada novo agendamento. Sem responder mensagem.",
+      },
+      {
+        title: "No painel, já está na sua agenda",
+        text: "O dia organizado, com cada horário, serviço e cliente.",
+      },
+      {
+        title: "Lembrete automático no dia anterior",
+        text: "O cliente recebe o lembrete sozinho, e falta menos.",
+      },
+      {
+        title: "Clientes e faturamento num lugar só",
+        text: "Histórico de cada cliente e quanto entrou no mês, sem planilha.",
+      },
+    ],
+    end: "Pronto para ter o seu?",
+  },
   /** Lines of the creation conversation in this page's mode. */
   chat: {
-    ready:
-      "Seu chat está pronto ✨ Agora vamos criar a sua conta para você testar no seu link de verdade.",
-    created: "🎉 Seu link está no ar, {nome}!",
-    createdHint:
-      "Agora o teste de verdade: marque um horário no seu link como se fosse seu cliente.",
-    next: "Fazer meu agendamento de teste",
-  },
-  test: {
-    title: "Agora seja seu cliente",
-    intro:
-      "Abra o seu link, escolha um serviço, um dia e um horário e confirme. Use o seu nome e o seu e-mail para ver a confirmação chegando como o seu cliente recebe.",
-    open: "Abrir meu link e agendar",
-    waiting: "Esperando o seu agendamento… esta tela atualiza sozinha.",
-    note: "Este horário de teste fica na sua agenda: depois você pode cancelar no painel.",
-    skip: "Pular o teste e ativar agora",
-    ended: "O tempo da demonstração acabou. Ative agora para seus clientes marcarem sozinhos.",
-  },
-  result: {
-    title: "Funcionou! 🎉",
-    intro: "Foi isso que aconteceu agora no seu link:",
-    booked: "Horário marcado na sua agenda",
-    ownerNotice: "Você recebeu o aviso de novo agendamento (e-mail e, com o app, no celular).",
-    customerNotice:
-      "Seu cliente recebeu a confirmação por e-mail, com o link para remarcar ou cancelar sozinho.",
-    reminder: "No dia anterior, ele recebe o lembrete automático, e falta menos.",
+    ready: "Seu chat está pronto ✨ Agora é só criar sua conta e ativar.",
+    created: "🎉 Sua conta está criada, {nome}!",
+    createdHint: "Falta só ativar pelo Pix para seus clientes começarem a agendar.",
+    next: "Ativar agora",
   },
   checkout: {
-    title: "Ative para seus clientes agendarem assim",
+    created: "Sua conta está criada! 🎉",
+    yourLink: "Este é o seu link de agendamento:",
+    title: "Ative para seus clientes agendarem",
     intro:
       "Enquanto não ativar, seu link manda os pedidos para o seu WhatsApp e nada fica marcado sozinho.",
     choosePlan: "Escolha o plano",

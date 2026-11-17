@@ -91,8 +91,8 @@ export const POST = cronRoute(async () => {
   for (const business of (data ?? []) as Business[]) {
     const ends = new Date(business.trial_ends_at!).getTime();
     const key = business.trial_ends_at!;
-    // Meta ad page demonstration (1 hour at most): no trial notices, only its end below.
-    if (business.activation_demo && ends > now) continue;
+    // Meta ad page accounts never had a trial: no trial notices or "trial ended" record.
+    if (business.activation_demo) continue;
 
     if (ends <= now) {
       // Ended without a subscription: waiting mode (the last-day notice already explained it).

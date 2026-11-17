@@ -4,8 +4,8 @@ import path from "node:path";
 import { expect, test } from "@playwright/test";
 
 /**
- * Meta ad page (/ativar, 2026-11-17): real account without the 14-day trial, the owner books
- * herself on her link (the demonstration ends right there), sees what happened and pays by Pix.
+ * Meta ad page (/ativar, 2026-11-17): animated tutorial (a customer booking, then the panel),
+ * real account without the 14-day trial and the Pix right away.
  */
 
 interface CapturedEmail {
@@ -28,20 +28,36 @@ function codes(address: string): string[] {
 
 const unique = () => Date.now().toString(36);
 
-test("ad page: account, test booking on the real link, then the Pix", async ({ page }) => {
+test("ad page: tutorial, account and the Pix right away", async ({ page }) => {
   const name = `Barbearia Ativa ${unique()}`;
   const email = `ativa-${unique()}@gmail.com`;
   const slug = name.toLowerCase().replace(/\s+/g, "-");
+  const shots = path.join("test-results", "ativar");
 
-  // The ad link: the niche is already chosen, the conversation opens by itself.
-  await page.goto("/ativar?ramo=barbearia");
+  // Older ad links with ?ramo= move to ?area=, so the tutorial shows before the conversation.
+  await page.setViewportSize({ width: 412, height: 915 });
+  await page.goto("/ativar?ramo=barbearia&utm_source=meta");
+  await expect(page).toHaveURL(/\/ativar\?area=barbearia&utm_source=meta$/);
+  const tutorial = page.getByRole("region", { name: "Tutorial: como funciona" });
+  await expect(tutorial.getByText("Passo 1 de 8")).toBeVisible();
+  await expect(tutorial.getByText("O cliente abre o seu link")).toBeVisible();
+  // It moves on by itself: paused here to go step by hand, with a screenshot of each.
+  await tutorial.getByRole("button", { name: "Pausar" }).click();
+  for (let i = 1; i <= 8; i++) {
+    await expect(tutorial.getByText(`Passo ${i} de 8`)).toBeVisible();
+    await page.waitForTimeout(3800);
+    await tutorial.screenshot({ path: path.join(shots, `passo-${i}.png`) });
+    if (i < 8) await tutorial.getByRole("button", { name: "Próximo" }).click();
+  }
+  await expect(tutorial.getByText("Clientes e faturamento num lugar só")).toBeVisible();
+
+  // "Quero o meu": the conversation opens with the niche already chosen.
+  await page.getByRole("link", { name: "Quero o meu" }).click();
   const dialog = page.locator("[data-creation]");
   await dialog.getByLabel("Nome do negócio").fill(name);
   await page.waitForTimeout(1600);
   await dialog.getByRole("button", { name: "Enviar", exact: true }).click();
-
-  // No simulation and no trial: straight to the account.
-  await expect(dialog.getByText(/testar no seu link de verdade/)).toBeVisible();
+  await expect(dialog.getByText(/Agora é só criar sua conta e ativar/)).toBeVisible();
   await dialog.getByLabel("(11) 99999-8888").fill(`119${Date.now().toString().slice(-8)}`);
   await dialog.getByRole("button", { name: "Enviar", exact: true }).click();
   await dialog.getByLabel("seu@email.com").fill(email);
@@ -51,52 +67,22 @@ test("ad page: account, test booking on the real link, then the Pix", async ({ p
   await expect.poll(() => codes(email).length).toBeGreaterThan(before);
   await dialog.getByLabel("Código de 4 números").fill(codes(email)[0]!);
   await dialog.getByRole("button", { name: "Enviar", exact: true }).click();
-  // The session starts and the page re-renders straight into the test step, with her real link.
-  await expect(page.getByRole("heading", { name: "Agora seja seu cliente" })).toBeVisible();
-  await expect(page.getByRole("link", { name: /Abrir meu link e agendar/ })).toHaveAttribute(
-    "href",
-    new RegExp(`/${slug}$`),
-  );
 
-  // She books herself on her link, in another tab.
+  // The session starts and the page goes straight to her link and the payment.
+  await expect(page.getByRole("heading", { name: "Sua conta está criada! 🎉" })).toBeVisible();
+  await expect(page.getByText(new RegExp(`/${slug}$`))).toBeVisible();
+  await page.screenshot({ path: path.join(shots, "pagamento.png"), fullPage: true });
+
+  // No trial: until she pays, the link hands off to the WhatsApp (waiting mode card).
   const client = await page.context().newPage();
   await client.goto(`/${slug}?brand=barber`);
-  await client
-    .getByRole("button", { name: /^Corte/ })
-    .first()
-    .click();
-  await client
-    .getByRole("button", { name: /, \d{1,2} de [a-zç]+$/i })
-    .first()
-    .click();
-  await client
-    .locator("button")
-    .filter({ hasText: /^\d{2}:\d{2}$/ })
-    .first()
-    .click();
-  await client.getByLabel("Seu nome").fill("Dona Testando");
-  await client.getByRole("button", { name: "Enviar" }).click();
-  await client.getByLabel("WhatsApp").fill(`119${Date.now().toString().slice(-8)}`);
-  await client.getByRole("button", { name: "Enviar" }).click();
-  await client.getByLabel("E-mail").fill(email);
-  await client.getByRole("button", { name: "Enviar" }).click();
-  const noCoupon = client.getByRole("button", { name: "Não tenho" });
-  if (await noCoupon.isVisible().catch(() => false)) await noCoupon.click();
-  await client.getByRole("button", { name: "Confirmar agendamento" }).click();
-  await expect(client.getByRole("link", { name: "Google Agenda" })).toBeVisible();
-
-  // The ad page notices the booking by itself and asks for the payment.
-  await expect(page.getByRole("heading", { name: "Funcionou! 🎉" })).toBeVisible({
-    timeout: 20_000,
-  });
-  await expect(page.getByText(/Dona Testando/)).toBeVisible();
-
-  // The demonstration is over: the link hands off to the WhatsApp until she pays.
-  await client.goto(`/${slug}?brand=barber`);
-  // (waiting mode: the full "Agende também com o MeetChat" card in the footer).
   await expect(
     client.getByRole("link", { name: /Agende também com o MeetChat/ }).first(),
   ).toBeVisible();
+  // And her panel sends her back here to pay.
+  await client.goto("/painel/agenda");
+  await expect(client).toHaveURL(/\/ativar/);
+  await client.close();
 
   await page.getByLabel(/Nome ou razão social/).fill("Barbearia Ativa LTDA");
   await page.getByLabel("CPF ou CNPJ").fill("529.982.247-25");

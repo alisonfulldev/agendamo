@@ -32,7 +32,7 @@ export async function grantLinkBonus(businessId: string, bonus: LinkBonus): Prom
     .select("id, plan, plan_tier, trial_ends_at, timezone, activation_demo")
     .eq("id", businessId)
     .maybeSingle();
-  // The Meta ad page demonstration is not a trial: no extra days.
+  // Meta ad page accounts have no trial: no extra days.
   if (!business?.trial_ends_at || business.activation_demo) return false;
   const features = getPlanFeatures({
     plan: business.plan as "free" | "complete",

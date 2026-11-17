@@ -11,7 +11,7 @@ import { TERMS } from "@/content/legal";
 import { audit } from "@/lib/audit";
 import type { Business } from "@/lib/db/types";
 import { notifyAdminsOfSignup } from "@/lib/notifications/admin-signup";
-import { startActivationDemo } from "@/lib/activation";
+import { startActivationAccount } from "@/lib/activation";
 import { startTrial } from "@/lib/trial";
 import { sendEmailCode, verifyEmailCode, type SendCodeResult } from "@/lib/auth/email-code";
 import { DEFAULT_HOURS } from "@/lib/business/schemas";
@@ -90,7 +90,7 @@ export type VerifySignupResult =
       qr: string;
       /**
        * "used": this person already had a trial, so the account starts in waiting mode. "demo":
-       * the Meta ad page's demonstration (until the test booking).
+       * the Meta ad page (no trial, pays right away).
        */
       trial: "started" | "used" | "demo";
     }
@@ -109,7 +109,7 @@ export async function verifySignupCodeAction(input: unknown): Promise<VerifySign
       email,
       code: z.string().regex(/^\d{4}$/),
       whatsapp: z.string().max(30).nullable().default(null),
-      /** Meta ad page (/ativar): demonstration until the test booking instead of the trial. */
+      /** Meta ad page (/ativar): no trial, the account pays right away. */
       activation: z.boolean().default(false),
     })
     .safeParse(input);
@@ -212,8 +212,8 @@ export async function verifySignupCodeAction(input: unknown): Promise<VerifySign
   const identity = { email: parsed.data.email, phone: parsed.data.whatsapp };
   let trial: "started" | "used" | "demo";
   if (parsed.data.activation) {
-    // Meta ad page: no trial, the agenda works until her test booking, then she pays.
-    await startActivationDemo({ businessId, identity, userId: verified.userId });
+    // Meta ad page: no trial, she watched the tutorial and pays right away.
+    await startActivationAccount({ businessId, identity, userId: verified.userId });
     trial = "demo";
   } else {
     // Every account starts with the 14-day trial of Completo (once per person: e-mail and phone).

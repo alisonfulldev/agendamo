@@ -14,8 +14,8 @@ import { getPlanFeatures, subscriptionPrice } from "@/lib/plans";
 import { isStorageConfigured } from "@/lib/storage/r2";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-import { loadTestBooking } from "./data";
 import { ActivationFlow, PaidTracker } from "./flow";
+import { Tutorial } from "./tutorial";
 
 export const metadata: Metadata = {
   title: ACTIVATION.meta.title,
@@ -28,28 +28,38 @@ export const dynamic = "force-dynamic";
 const T = ACTIVATION;
 
 /**
- * Meta ad page (2026-11-17): booking only, no 14-day trial. The person creates her real link in
- * the creation conversation (?ramo= from the ad skips the niche question), books herself as a
- * customer to see it working (the "demonstration", until that booking or 1 hour) and pays right
- * after by Pix. Without paying, the link stays in waiting mode (requests go to her WhatsApp).
- * The Meta pixel runs here (site-paths.ts): PageView, CompleteRegistration, Lead, InitiateCheckout
- * and Purchase.
+ * Meta ad page (2026-11-17): booking only, no 14-day trial. An animated tutorial in the colors
+ * and services of the ad's niche (?area=<niche route>) shows a customer booking and then the
+ * panel step by step; "Quero o meu" opens the creation conversation, and the new account goes
+ * straight to the Pix. Without paying, the link stays in waiting mode (requests go to her
+ * WhatsApp). The Meta pixel runs here (site-paths.ts): PageView, ViewContent (tutorial watched),
+ * CompleteRegistration, InitiateCheckout and Purchase.
  */
 export default async function ActivatePage({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const { ramo } = await searchParams;
+  const params = await searchParams;
+  // ?ramo= opens the conversation over the page at once: on this page the ad's niche comes as
+  // ?area= so the tutorial shows first (older ad links with ?ramo= are moved to ?area=).
+  if (typeof params.ramo === "string" && params.criar === undefined) {
+    const query = new URLSearchParams();
+    for (const [key, value] of Object.entries(params)) {
+      if (typeof value === "string") query.set(key === "ramo" ? "area" : key, value);
+    }
+    redirect(`/ativar?${query.toString()}`);
+  }
+
   const user = await getSessionUser();
   const context = user ? await getBusinessContext() : null;
 
   if (!context) {
-    const niche =
-      typeof ramo === "string" && NICHES.some((b) => b.niche!.route === ramo) ? ramo : undefined;
+    const area = typeof params.area === "string" ? params.area : null;
+    const niche = NICHES.find((b) => b.niche!.route === area) ?? null;
     return (
       <Shell>
-        <Landing niche={niche} />
+        <Landing nicheKey={niche?.key ?? "beauty"} nicheRoute={niche?.niche!.route} />
         <LazyCreationChat photos={isStorageConfigured()} activation />
       </Shell>
     );
@@ -85,12 +95,7 @@ export default async function ActivatePage({
 
   return (
     <Shell>
-      <ActivationFlow
-        businessId={business.id}
-        pageUrl={pageUrl}
-        initialBooking={await loadTestBooking(business.id)}
-        demoActive={features.trialActive}
-      />
+      <ActivationFlow businessId={business.id} pageUrl={pageUrl} />
     </Shell>
   );
 }
@@ -113,39 +118,28 @@ function Shell({ children }: { children: React.ReactNode }) {
   );
 }
 
-function Landing({ niche }: { niche?: string }) {
+function Landing({ nicheKey, nicheRoute }: { nicheKey: string; nicheRoute?: string }) {
   return (
     <section className="flex flex-col gap-6">
-      <div>
+      <div className="text-center">
         <p className="text-sm font-semibold tracking-wide text-primary uppercase">
           {T.landing.eyebrow}
         </p>
         <h1 className="mt-2 font-heading text-3xl font-bold tracking-tight text-balance sm:text-4xl">
           {T.landing.title}
         </h1>
-        <p className="mt-3 text-lg leading-relaxed text-pretty text-muted-foreground">
-          {T.landing.intro}
-        </p>
+        <p className="mt-2 text-lg text-pretty text-muted-foreground">{T.landing.intro}</p>
       </div>
-      <OpenCreationLink
-        niche={niche}
-        className="flex h-14 items-center justify-center rounded-xl bg-primary text-lg font-semibold text-primary-foreground shadow-lg"
-      >
-        {T.landing.cta}
-      </OpenCreationLink>
-      <ol className="flex flex-col gap-3">
-        {T.landing.steps.map((step, i) => (
-          <li key={step.title} className="flex gap-3 rounded-2xl border bg-card p-4">
-            <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary font-semibold text-primary-foreground">
-              {i + 1}
-            </span>
-            <span>
-              <span className="block font-semibold">{step.title}</span>
-              <span className="block text-muted-foreground">{step.text}</span>
-            </span>
-          </li>
-        ))}
-      </ol>
+      <Tutorial nicheKey={nicheKey} />
+      <div className="flex flex-col gap-2">
+        <OpenCreationLink
+          niche={nicheRoute}
+          className="flex h-14 items-center justify-center rounded-xl bg-primary text-lg font-semibold text-primary-foreground shadow-lg"
+        >
+          {T.landing.cta}
+        </OpenCreationLink>
+        <p className="text-center text-sm text-muted-foreground">{T.landing.ctaHint}</p>
+      </div>
       <p className="text-center text-muted-foreground">{T.landing.noApp}</p>
       <Link href="/entrar" className="self-center text-sm font-medium underline underline-offset-2">
         {T.landing.login}

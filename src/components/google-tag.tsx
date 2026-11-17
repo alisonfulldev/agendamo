@@ -83,7 +83,7 @@ export function trackSignup() {
 }
 
 /** Sales events of the Meta ad page (/ativar): standard pixel events the campaign optimizes for. */
-export type MetaSalesEvent = "Lead" | "InitiateCheckout" | "Purchase";
+export type MetaSalesEvent = "ViewContent" | "Lead" | "InitiateCheckout" | "Purchase";
 
 /**
  * One Meta pixel event of the ad page, at most once per key in this browser session (a reload or

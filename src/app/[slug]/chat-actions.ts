@@ -4,7 +4,6 @@ import { formatInTimeZone } from "date-fns-tz";
 import QRCode from "qrcode";
 import { z } from "zod";
 
-import { endActivationDemo } from "@/lib/activation";
 import { createBooking } from "@/lib/booking/create";
 import {
   getDays,
@@ -386,8 +385,6 @@ export async function confirmChatBookingAction(input: unknown): Promise<ConfirmR
       .eq("id", data.abandonedId);
   }
   await notifyBookingCreated(result.booking.id);
-  // Account from the Meta ad page: this was the owner's test booking, the demonstration ends.
-  if (ctx.catalog.business.activation_demo) await endActivationDemo(ctx.catalog.business);
 
   const details = await loadAppointmentDetails(result.booking.id);
   const tz = ctx.catalog.business.timezone;
