@@ -95,9 +95,12 @@ test("ad page: tutorial, account, mandatory panel tutorial and the Pix at the en
   await expect(tour.getByText("Seu link de agendamento")).toBeVisible();
   await tap("link-copy");
   await expect(tour.getByText("Veja como seus clientes veem")).toBeVisible();
-  const popup = page.waitForEvent("popup");
+  // The chat opens over the panel (never in another tab, where she could get lost).
   await tap("view-chat");
-  await (await popup).close();
+  const preview = page.getByRole("dialog", { name: "É assim que seus clientes veem" });
+  await expect(preview.frameLocator("iframe").getByText(/Você está na agenda de/)).toBeVisible();
+  expect(page.context().pages()).toHaveLength(1);
+  await preview.getByRole("button", { name: "Continuar" }).click();
 
   // Last step: the payment, with the two plans.
   await expect(tour.getByText("Ative sua agenda 🚀")).toBeVisible();

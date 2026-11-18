@@ -75,6 +75,8 @@ export function PanelTour({ plans = null }: { plans?: TourPlan[] | null }) {
   const [index, setIndex] = useState<number | null>(null);
   const [target, setTarget] = useState<HTMLElement | null>(null);
   const [rect, setRect] = useState<Rect | null>(null);
+  /** Ad page accounts: "Ver chat" opens the chat over the panel (a new tab could lose her). */
+  const [chatPreview, setChatPreview] = useState<string | null>(null);
 
   const { t } = usePanelWords();
   const step = index === null ? null : steps[index];
@@ -169,15 +171,54 @@ export function PanelTour({ plans = null }: { plans?: TourPlan[] | null }) {
       frame = requestAnimationFrame(track);
     };
     frame = requestAnimationFrame(track);
-    const onTap = () => advance();
+    const onTap = (event: MouseEvent) => {
+      const href = target.getAttribute("href");
+      // Mandatory tutorial: the chat opens over the panel, never in another tab.
+      if (mandatory && step.id === "chat" && href) {
+        event.preventDefault();
+        setChatPreview(href);
+        return;
+      }
+      advance();
+    };
     if (step.advance === "tap") target.addEventListener("click", onTap);
     return () => {
       cancelAnimationFrame(frame);
       target.removeEventListener("click", onTap);
     };
-  }, [target, step, advance]);
+  }, [target, step, advance, mandatory]);
 
   if (!step || index === null) return null;
+
+  if (chatPreview) {
+    return (
+      <div
+        className="fixed inset-0 z-[70] flex flex-col bg-background"
+        role="dialog"
+        aria-modal="true"
+        aria-label={TOUR_TEXT.chatPreview}
+        data-testid="tour"
+      >
+        <div className="flex items-center justify-between gap-3 border-b bg-card px-4 py-3">
+          <p className="text-sm font-semibold">{TOUR_TEXT.chatPreview}</p>
+          <Button
+            type="button"
+            onClick={() => {
+              setChatPreview(null);
+              advance();
+            }}
+          >
+            {TOUR_TEXT.chatContinue}
+          </Button>
+        </div>
+        <iframe
+          src={chatPreview}
+          title={TOUR_TEXT.chatPreview}
+          className="min-h-0 w-full flex-1 border-0"
+        />
+      </div>
+    );
+  }
   // Waiting for the step's page or element.
   if ((step.path && pathname !== step.path) || (step.target && !rect)) return null;
 
@@ -206,7 +247,9 @@ export function PanelTour({ plans = null }: { plans?: TourPlan[] | null }) {
       <p id="tour-title" className="mt-1 text-lg font-semibold">
         {t(step.title)}
       </p>
-      <p className="mt-1 text-[15px] leading-relaxed text-muted-foreground">{t(step.text)}</p>
+      <p className="mt-1 text-[15px] leading-relaxed text-muted-foreground">
+        {t(mandatory && step.id === "chat" ? TOUR_TEXT.chatStepText : step.text)}
+      </p>
       {step.id === ACTIVATION_PAY_STEP.id && plans ? (
         <div className="mt-4 flex flex-col gap-2">
           {plans.map((plan, i) => (

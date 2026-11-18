@@ -107,4 +107,7 @@ export const TOUR_TEXT = {
   step: "{n} de {total}",
   replay: "Ver tutorial",
   payNote: "Pagamento pelo Pix. Sem fidelidade: cancele quando quiser.",
+  chatPreview: "É assim que seus clientes veem",
+  chatContinue: "Continuar",
+  chatStepText: "Toque em Ver chat para ver o seu chat de agendamento como seus clientes veem.",
 };
