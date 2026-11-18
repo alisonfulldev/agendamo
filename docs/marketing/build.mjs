@@ -303,6 +303,38 @@ function original(fmt) {
 }
 
 // ---------------------------------------------------------------------------------------------
+// Agendamento para salão (2026-11-17): o anúncio da página /ativar (só a agenda, plano Completo
+// R$ 23,90/mês, mesmo valor de src/lib/plans.ts). Mesmo estilo do clássico, nos 3 formatos.
+const AGENDA_PRICE = { reais: "23", cents: ",90" };
+function agendaSalao(fmt) {
+  const f = CLASSIC_FORMATS[fmt];
+  const k = f.scale;
+  const serif = "font-family:'Playfair Display',serif;font-weight:900;font-variant-numeric:lining-nums;letter-spacing:-0.015em;color:#111;text-shadow:7px 7px 0 " + Y;
+  const perk = (icon, text) => `<div style="display:flex;align-items:center;gap:18px"><span style="width:70px;height:70px;flex:none">${icon}</span><span style="font-size:30px;font-weight:600;line-height:1.15;color:#111">${text}</span></div>`;
+  return `<div class="slide" style="width:${f.width}px;height:${f.height}px;padding:${f.top}px 60px 60px;align-items:center;text-align:center;${f.center ? "justify-content:center;" : ""}
+      background:radial-gradient(120% 60% at 50% 0%, #ffffff 0%, #f1f1f1 55%, #e9e9e9 100%)">
+    <div style="position:absolute;inset:-200px;background:repeating-radial-gradient(ellipse at 50% -10%, rgba(0,0,0,.035) 0 2px, transparent 2px 60px);pointer-events:none"></div>
+    <span class="pill" style="background:#111;color:${Y};font-size:${30 * k}px;padding:${12 * k}px ${30 * k}px;margin-bottom:${22 * k}px;text-transform:uppercase;letter-spacing:.06em">para salão de beleza</span>
+    <p style="${serif};font-size:${78 * k}px;line-height:1">Sistema de</p>
+    <p style="${serif};font-size:124px;line-height:.95;margin-top:${4 * k}px">AGENDAMENTO</p>
+    <p style="font-family:'Playfair Display',serif;font-weight:800;font-size:${64 * k}px;color:#111;margin-top:${18 * k}px;line-height:1;display:inline-block;padding-bottom:10px;background:linear-gradient(${Y},${Y}) bottom/100% 12px no-repeat">por apenas</p>
+    <p style="${serif};font-size:${190 * k}px;line-height:1;margin-top:${10 * k}px;white-space:nowrap;display:flex;align-items:baseline;justify-content:center">R$${AGENDA_PRICE.reais}<span style="font-size:${110 * k}px">${AGENDA_PRICE.cents}</span><span style="font-size:${80 * k}px">/mês</span></p>
+    <div style="display:flex;align-items:center;gap:26px;margin-top:${26 * k}px">
+      <span style="color:${Y};font-size:${60 * k}px;font-weight:900">\\</span>
+      <span class="pill" style="background:${Y};color:#111;font-size:${46 * k}px;font-weight:800;padding:${18 * k}px ${50 * k}px">pronto em 1 minuto</span>
+      <span style="color:${Y};font-size:${60 * k}px;font-weight:900">//</span>
+    </div>
+    <p style="font-size:${30 * k}px;font-weight:700;color:#111;margin-top:${18 * k}px">sem fidelidade · cancele quando quiser</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:28px;margin-top:${46 * k}px;width:100%;text-align:left">
+      ${perk(ICON.calendar, "clientes agendam sozinhas 24h")}
+      ${perk(ICON.bell, "lembrete automático: menos faltas")}
+      ${perk(ICON.chart, "agenda, clientes e faturamento")}
+    </div>
+    ${fmt === "story" ? `<div class="pill" style="margin-top:60px;background:#111;color:${Y};font-size:40px;padding:28px 44px">Toque e veja como funciona →</div>` : ""}
+  </div>`;
+}
+
+// ---------------------------------------------------------------------------------------------
 const browser = await chromium.launch({ channel: "chrome" });
 const page = await browser.newPage({ deviceScaleFactor: 1 });
 async function render(html, width, height, file) {
@@ -314,6 +346,15 @@ async function render(html, width, height, file) {
 
 // ONLY=nichos gera só as peças por ramo.
 // ONLY=classico gera só o anúncio clássico.
+// ONLY=agenda gera só o anúncio de agendamento para salão (/ativar), nos 3 formatos.
+if (process.env.ONLY === "agenda") {
+  for (const [fmt, f] of Object.entries(CLASSIC_FORMATS)) {
+    await render(agendaSalao(fmt), f.width, f.height, `docs/marketing/anuncios/nichos/agenda-salao-${fmt}.png`);
+  }
+  await browser.close();
+  console.log("ok");
+  process.exit(0);
+}
 const onlyNiches = ["nichos", "classico", "classico-nichos"].includes(process.env.ONLY ?? "");
 const skipNiches = ["classico", "classico-nichos"].includes(process.env.ONLY ?? "");
 mkdirSync("docs/marketing/apresentacao", { recursive: true });

@@ -106,3 +106,29 @@ test("ad page: tutorial, account and the Pix right away", async ({ page }) => {
   await page.getByRole("link", { name: "Entrar no meu painel" }).click();
   await expect(page).toHaveURL(/\/painel/);
 });
+
+test("a name of another niche wins over the ad's niche (Mara Nail from a beauty ad)", async ({
+  page,
+}) => {
+  await page.goto("/ativar?area=beleza");
+  await page.getByRole("link", { name: "Quero o meu" }).click();
+  const dialog = page.locator("[data-creation]");
+  await dialog.getByLabel("Nome do negócio").fill(`Mara Nail ${unique()}`);
+  await page.waitForTimeout(1600);
+  await dialog.getByRole("button", { name: "Enviar", exact: true }).click();
+  // Asked about nails (not built as a beauty salon right away).
+  await expect(dialog.getByText(/você trabalha com manicure, certo\?/i)).toBeVisible();
+  await dialog.getByRole("button", { name: "Isso mesmo" }).click();
+  await expect(dialog.getByText(/Agora é só criar sua conta e ativar/)).toBeVisible();
+});
+
+test("the ad's niche is used when the name says nothing else", async ({ page }) => {
+  await page.goto("/ativar?area=beleza");
+  await page.getByRole("link", { name: "Quero o meu" }).click();
+  const dialog = page.locator("[data-creation]");
+  await dialog.getByLabel("Nome do negócio").fill(`Espaço Carla ${unique()}`);
+  await page.waitForTimeout(1600);
+  await dialog.getByRole("button", { name: "Enviar", exact: true }).click();
+  await expect(dialog.getByText(/Agora é só criar sua conta e ativar/)).toBeVisible();
+  await expect(dialog.getByText(/trabalha com/)).toHaveCount(0);
+});

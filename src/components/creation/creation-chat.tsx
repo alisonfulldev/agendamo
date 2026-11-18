@@ -375,12 +375,14 @@ export function Conversation({
     }
     const next = { ...current, name, log: [...current.log, user(name)] };
     const preset = nicheFromParam(creationParams().niche);
-    if (preset) {
+    const detected = detectNiche(name);
+    // The link's niche (an ad, a niche page) is used only when the name does not point to another
+    // one: "Mara Nail" from a beauty ad is asked about nails, not built as a beauty salon.
+    if (preset && (!detected || detected === preset)) {
       setState(next);
       void build(preset, null, next);
       return;
     }
-    const detected = detectNiche(name);
     if (detected) {
       setState({
         ...next,
