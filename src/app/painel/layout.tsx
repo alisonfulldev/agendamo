@@ -15,7 +15,13 @@ import { HelpChat } from "@/components/panel/help-chat";
 import { Button } from "@/components/ui/button";
 import { requireUser } from "@/lib/auth/session";
 import { getBusinessContext } from "@/lib/business/context";
-import { getPlanFeatures } from "@/lib/plans";
+import {
+  getPlanFeatures,
+  PLAN_NAME,
+  PRICE_TEXT,
+  SITE_PLAN_NAME,
+  SITE_PRICE_TEXT,
+} from "@/lib/plans";
 import { panelWords } from "@/lib/panel-words";
 import { trialCounter } from "@/lib/plan-text";
 
@@ -27,7 +33,7 @@ import { PanelNav, SectionTabs } from "./panel-nav";
 import { AppPrompt } from "./app-prompt";
 import { NewsPrompt } from "./news-prompt";
 import { PhotoPrompt } from "./photo-prompt";
-import { PanelTour } from "./tour";
+import { PanelTour, type TourPlan } from "./tour";
 
 export const metadata: Metadata = { title: "Painel", robots: { index: false } };
 
@@ -64,6 +70,15 @@ export default async function PanelLayout({ children }: LayoutProps<"/painel">) 
       : null,
   };
   const booking = !features.web;
+  // Account from the Meta ad page not paid yet (2026-11-18): the panel is open only for the
+  // mandatory tutorial, whose last step is the payment. No trial banner for it.
+  const activation = Boolean(context.business.activation_demo) && !features.subscribed;
+  const tourPlans: TourPlan[] | null = activation
+    ? [
+        { tier: "complete", name: PLAN_NAME, price: PRICE_TEXT.monthly },
+        { tier: "site", name: SITE_PLAN_NAME, price: SITE_PRICE_TEXT.monthly },
+      ]
+    : null;
   const customers = context.brand.terms.customer.plural;
   const customersLabel = customers.charAt(0).toUpperCase() + customers.slice(1);
 
@@ -117,7 +132,7 @@ export default async function PanelLayout({ children }: LayoutProps<"/painel">) 
             </div>
           </div>
         </header>
-        {features.trialActive && context.isOwner ? (
+        {features.trialActive && context.isOwner && !activation ? (
           <Link
             href="/painel/plano"
             className="block bg-primary px-4 py-2 text-center text-sm font-medium text-primary-foreground"
@@ -140,7 +155,7 @@ export default async function PanelLayout({ children }: LayoutProps<"/painel">) 
         {booking ? <HelpChat isOwner={context.isOwner} waiting={!features.active} /> : null}
         {booking && context.isOwner && features.active ? (
           <Suspense>
-            <PanelTour />
+            <PanelTour plans={tourPlans} />
           </Suspense>
         ) : null}
         {booking &&

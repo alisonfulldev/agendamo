@@ -88,6 +88,17 @@ export const TOUR_STEPS: TourStep[] = [
   },
 ];
 
+/**
+ * Last step of the tutorial for accounts from the Meta ad page (/ativar): the payment, in place
+ * of "Pronto!". The plans and prices come from src/lib/plans.ts (panel layout).
+ */
+export const ACTIVATION_PAY_STEP: TourStep = {
+  id: "pay",
+  title: "Ative sua agenda 🚀",
+  text: "Pronto, você já conhece seu painel! Para seus clientes começarem a agendar sozinhos pelo seu link, escolha seu plano:",
+  advance: "next",
+};
+
 export const TOUR_TEXT = {
   start: "Começar",
   next: "Próximo",
@@ -95,4 +106,5 @@ export const TOUR_TEXT = {
   skip: "Pular tutorial",
   step: "{n} de {total}",
   replay: "Ver tutorial",
+  payNote: "Pagamento pelo Pix. Sem fidelidade: cancele quando quiser.",
 };

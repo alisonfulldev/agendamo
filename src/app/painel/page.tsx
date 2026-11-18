@@ -179,7 +179,10 @@ export default async function PanelHomePage({ searchParams }: PageProps<"/painel
         .eq("business_id", business.id)
         .eq("type", "checklist_qr")
         .maybeSingle(),
-      features.trialActive ? earnedBonuses(business.id) : Promise.resolve(null),
+      // The link bonus adds trial days: not for the ad page accounts (no trial).
+      features.trialActive && !business.activation_demo
+        ? earnedBonuses(business.id)
+        : Promise.resolve(null),
     ]);
     const greeting = `Olá! Que bom falar com você 😊 Para agendar com ${business.name}, escolha o serviço e um horário livre aqui: ${pageUrl}?${LINK_BONUS_PARAM}=saudacao`;
     steps = [
@@ -267,7 +270,13 @@ export default async function PanelHomePage({ searchParams }: PageProps<"/painel
     <div className="flex flex-col gap-5">
       <PageHeader
         title={`Olá, ${business.name}!`}
-        description={features.trialActive ? trialCounter(features) : planLabel(features)}
+        description={
+          business.activation_demo && !features.subscribed
+            ? "Conhecendo o seu painel"
+            : features.trialActive
+              ? trialCounter(features)
+              : planLabel(features)
+        }
         actions={
           isOwner ? (
             <Button asChild variant="ghost" size="sm">

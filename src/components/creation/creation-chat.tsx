@@ -487,7 +487,7 @@ export function Conversation({
     }).catch(() => ({ ok: false as const, error: "failed" as const }));
     if (result.ok && result.outcome === "created") {
       // Google Ads / Analytics sign-up, once per new account (never for an existing one).
-      trackSignup();
+      trackSignup({ meta: !activation });
       update({ phase: "created", created: result }, [
         system(fill(activation ? ACTIVATION.chat.created : SU.created, { nome: result.name })),
         ...(result.trial === "used" ? [system(SU.trialUsed)] : []),

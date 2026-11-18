@@ -21,10 +21,45 @@ type PaidTier = "complete" | "site";
 const cents = (value: number) => Math.round(value) / 100;
 
 /**
- * The ad page after the account exists (she watched the tutorial): her link and the payment.
- * Meta pixel: InitiateCheckout (Pix shown) and Purchase (paid).
+ * Account just created on the ad page: one step to the panel, where the mandatory tutorial ends
+ * on the payment. Counts the sign-up on the Meta pixel here (the panel never loads it).
  */
-export function ActivationFlow({ businessId, pageUrl }: { businessId: string; pageUrl: string }) {
+export function MeetPanel({ businessId, pageUrl }: { businessId: string; pageUrl: string }) {
+  useEffect(() => {
+    trackMeta("CompleteRegistration", { key: businessId });
+  }, [businessId]);
+  return (
+    <section className="flex flex-col gap-4 text-center">
+      <h1 className="font-heading text-3xl font-bold tracking-tight">{T.panel.title}</h1>
+      <p className="text-lg text-pretty text-muted-foreground">{T.panel.intro}</p>
+      <p className="rounded-xl bg-muted px-4 py-3 font-medium break-all">
+        {pageUrl.replace(/^https?:\/\//, "")}
+      </p>
+      {/* Full load: the panel layout renders from scratch for the new session. */}
+      {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+      <a
+        href="/painel"
+        className="flex h-14 items-center justify-center rounded-xl bg-primary text-lg font-semibold text-primary-foreground shadow-lg ring-4 ring-primary/30"
+      >
+        {T.panel.cta}
+      </a>
+    </section>
+  );
+}
+
+/**
+ * The ad page after the panel tutorial: her link and the payment, with the plan chosen on the
+ * tutorial's last step. Meta pixel: InitiateCheckout (Pix shown) and Purchase (paid).
+ */
+export function ActivationFlow({
+  businessId,
+  pageUrl,
+  initialTier,
+}: {
+  businessId: string;
+  pageUrl: string;
+  initialTier: PaidTier;
+}) {
   return (
     <div className="flex flex-col gap-6">
       <section className="flex flex-col gap-3">
@@ -34,14 +69,14 @@ export function ActivationFlow({ businessId, pageUrl }: { businessId: string; pa
           {pageUrl.replace(/^https?:\/\//, "")}
         </p>
       </section>
-      <Checkout businessId={businessId} />
+      <Checkout businessId={businessId} initialTier={initialTier} />
     </div>
   );
 }
 
-function Checkout({ businessId }: { businessId: string }) {
+function Checkout({ businessId, initialTier }: { businessId: string; initialTier: PaidTier }) {
   const router = useRouter();
-  const [tier, setTier] = useState<PaidTier>("complete");
+  const [tier, setTier] = useState<PaidTier>(initialTier);
   const [cycle, setCycle] = useState<Cycle>("monthly");
   const [name, setName] = useState("");
   const [document, setDocument] = useState("");

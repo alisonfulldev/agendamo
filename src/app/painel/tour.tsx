@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { usePanelWords } from "@/components/panel/use-panel-words";
-import { TOUR_STEPS, TOUR_TEXT } from "@/content/tour";
+import { ACTIVATION_PAY_STEP, TOUR_STEPS, TOUR_TEXT, type TourStep } from "@/content/tour";
 
 import { finishTourAction, tourPendingAction } from "./tour-actions";
 
@@ -48,12 +48,27 @@ function findTarget(id: string): HTMLElement | null {
   return null;
 }
 
+/** A plan offered on the last step of the ad page's tutorial. */
+export interface TourPlan {
+  tier: "complete" | "site";
+  name: string;
+  price: string;
+}
+
 /**
  * First-access tutorial (src/content/tour.ts). Starts by itself for accounts created in the
  * sign-up conversation, or with ?tour=1 ("Ver tutorial" on Início). The step survives page
  * changes (the panel layout stays mounted) and reloads (sessionStorage).
+ *
+ * `plans`: account from the Meta ad page (/ativar) not paid yet. The tutorial is mandatory (no
+ * "Pular tutorial", only forward) and its last step is the payment: choosing a plan closes the
+ * panel and opens the Pix on /ativar.
  */
-export function PanelTour() {
+export function PanelTour({ plans = null }: { plans?: TourPlan[] | null }) {
+  const mandatory = plans !== null;
+  const steps: TourStep[] = mandatory
+    ? [...TOUR_STEPS.filter((s) => s.id !== "done"), ACTIVATION_PAY_STEP]
+    : TOUR_STEPS;
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -62,7 +77,7 @@ export function PanelTour() {
   const [rect, setRect] = useState<Rect | null>(null);
 
   const { t } = usePanelWords();
-  const step = index === null ? null : TOUR_STEPS[index];
+  const step = index === null ? null : steps[index];
 
   const current = useRef<number | null>(null);
   const go = useCallback((next: number | null) => {
@@ -82,9 +97,9 @@ export function PanelTour() {
 
   const advance = useCallback(() => {
     if (index === null) return;
-    if (index + 1 >= TOUR_STEPS.length) finish();
+    if (index + 1 >= steps.length) finish();
     else go(index + 1);
-  }, [index, finish, go]);
+  }, [index, finish, go, steps.length]);
 
   const replay = searchParams.get("tour") === "1";
 
@@ -100,7 +115,7 @@ export function PanelTour() {
     if (new URLSearchParams(window.location.search).get("tour") === "1") return;
     let cancelled = false;
     const saved = readStep();
-    if (saved !== null && saved < TOUR_STEPS.length) {
+    if (saved !== null && saved < steps.length) {
       queueMicrotask(() => go(saved));
       return;
     }
@@ -112,6 +127,7 @@ export function PanelTour() {
     return () => {
       cancelled = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- once per panel load
   }, [go]);
 
   // On the step's page (it waits there, never redirects), find its element, or skip the step when
@@ -167,8 +183,16 @@ export function PanelTour() {
 
   const counter = TOUR_TEXT.step
     .replace("{n}", String(index + 1))
-    .replace("{total}", String(TOUR_STEPS.length));
-  const last = index + 1 >= TOUR_STEPS.length;
+    .replace("{total}", String(steps.length));
+  const last = index + 1 >= steps.length;
+
+  /** Last step of the ad page's tutorial: the panel closes and the Pix opens on /ativar. */
+  async function pay(tier: TourPlan["tier"]) {
+    writeStep(null);
+    await finishTourAction().catch(() => undefined);
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+    window.location.assign(`/ativar?plano=${tier}`);
+  }
 
   const balloon = (style?: React.CSSProperties) => (
     <div
@@ -183,20 +207,43 @@ export function PanelTour() {
         {t(step.title)}
       </p>
       <p className="mt-1 text-[15px] leading-relaxed text-muted-foreground">{t(step.text)}</p>
-      <div className="mt-4 flex items-center justify-between gap-3">
-        <button
-          type="button"
-          onClick={finish}
-          className="text-sm font-medium text-muted-foreground underline-offset-2 hover:underline"
-        >
-          {TOUR_TEXT.skip}
-        </button>
-        {step.advance === "next" ? (
-          <Button type="button" onClick={advance}>
-            {index === 0 ? TOUR_TEXT.start : last ? TOUR_TEXT.finish : TOUR_TEXT.next}
-          </Button>
-        ) : null}
-      </div>
+      {step.id === ACTIVATION_PAY_STEP.id && plans ? (
+        <div className="mt-4 flex flex-col gap-2">
+          {plans.map((plan, i) => (
+            <Button
+              key={plan.tier}
+              type="button"
+              size="lg"
+              variant={i === 0 ? "default" : "outline"}
+              className="h-auto justify-between py-3"
+              onClick={() => void pay(plan.tier)}
+            >
+              <span>{plan.name}</span>
+              <span className="font-bold">{plan.price}</span>
+            </Button>
+          ))}
+          <p className="text-center text-xs text-muted-foreground">{TOUR_TEXT.payNote}</p>
+        </div>
+      ) : (
+        <div className="mt-4 flex items-center justify-between gap-3">
+          {mandatory ? (
+            <span />
+          ) : (
+            <button
+              type="button"
+              onClick={finish}
+              className="text-sm font-medium text-muted-foreground underline-offset-2 hover:underline"
+            >
+              {TOUR_TEXT.skip}
+            </button>
+          )}
+          {step.advance === "next" ? (
+            <Button type="button" onClick={advance}>
+              {index === 0 ? TOUR_TEXT.start : last ? TOUR_TEXT.finish : TOUR_TEXT.next}
+            </Button>
+          ) : null}
+        </div>
+      )}
     </div>
   );
 

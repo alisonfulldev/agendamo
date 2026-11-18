@@ -65,13 +65,20 @@ export const ACTIVATION = {
   },
   /** Lines of the creation conversation in this page's mode. */
   chat: {
-    ready: "Seu chat está pronto ✨ Agora é só criar sua conta e ativar.",
+    ready: "Seu chat está pronto ✨ Agora é só criar sua conta para conhecer o seu painel.",
     created: "🎉 Sua conta está criada, {nome}!",
-    createdHint: "Falta só ativar pelo Pix para seus clientes começarem a agendar.",
-    next: "Ativar agora",
+    createdHint: "Agora vamos conhecer o seu painel em 1 minuto.",
+    next: "Conhecer meu painel",
+  },
+  /** Right after the account: to the panel, where the mandatory tutorial ends on the payment. */
+  panel: {
+    title: "Sua conta está criada! 🎉",
+    intro:
+      "Agora conheça o seu painel em 1 minuto, passo a passo. No fim, você escolhe seu plano e ativa pelo Pix.",
+    cta: "Conhecer meu painel",
   },
   checkout: {
-    created: "Sua conta está criada! 🎉",
+    created: "Falta só ativar! 🚀",
     yourLink: "Este é o seu link de agendamento:",
     title: "Ative para seus clientes agendarem",
     intro:

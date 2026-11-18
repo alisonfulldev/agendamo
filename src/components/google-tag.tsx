@@ -74,16 +74,18 @@ function fbq(...args: unknown[]) {
  * about the person is sent. Only where the tags already run (the sales site); elsewhere nothing.
  * The form path counts its own on the success screen (<SignupTags>).
  */
-export function trackSignup() {
+export function trackSignup({ meta = true }: { meta?: boolean } = {}) {
   if (window.gtag) {
     window.gtag("event", "sign_up", { method: "creation_chat" });
     window.gtag("event", "conversion", { send_to: SIGNUP_CONVERSION });
   }
-  window.fbq?.("track", "CompleteRegistration");
+  // The ad page counts it on its next screen (trackMeta, once per account).
+  if (meta) window.fbq?.("track", "CompleteRegistration");
 }
 
 /** Sales events of the Meta ad page (/ativar): standard pixel events the campaign optimizes for. */
-export type MetaSalesEvent = "ViewContent" | "Lead" | "InitiateCheckout" | "Purchase";
+export type MetaSalesEvent =
+  "ViewContent" | "CompleteRegistration" | "Lead" | "InitiateCheckout" | "Purchase";
 
 /**
  * One Meta pixel event of the ad page, at most once per key in this browser session (a reload or

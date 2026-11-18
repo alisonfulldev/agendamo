@@ -28,7 +28,9 @@ function codes(address: string): string[] {
 
 const unique = () => Date.now().toString(36);
 
-test("ad page: tutorial, account and the Pix right away", async ({ page }) => {
+test("ad page: tutorial, account, mandatory panel tutorial and the Pix at the end", async ({
+  page,
+}) => {
   const name = `Barbearia Ativa ${unique()}`;
   const email = `ativa-${unique()}@gmail.com`;
   const slug = name.toLowerCase().replace(/\s+/g, "-");
@@ -45,8 +47,6 @@ test("ad page: tutorial, account and the Pix right away", async ({ page }) => {
   await tutorial.getByRole("button", { name: "Pausar" }).click();
   for (let i = 1; i <= 8; i++) {
     await expect(tutorial.getByText(`Passo ${i} de 8`)).toBeVisible();
-    await page.waitForTimeout(3800);
-    await tutorial.screenshot({ path: path.join(shots, `passo-${i}.png`) });
     if (i < 8) await tutorial.getByRole("button", { name: "Próximo" }).click();
   }
   await expect(tutorial.getByText("Clientes e faturamento num lugar só")).toBeVisible();
@@ -57,7 +57,7 @@ test("ad page: tutorial, account and the Pix right away", async ({ page }) => {
   await dialog.getByLabel("Nome do negócio").fill(name);
   await page.waitForTimeout(1600);
   await dialog.getByRole("button", { name: "Enviar", exact: true }).click();
-  await expect(dialog.getByText(/Agora é só criar sua conta e ativar/)).toBeVisible();
+  await expect(dialog.getByText(/criar sua conta para conhecer o seu painel/)).toBeVisible();
   await dialog.getByLabel("(11) 99999-8888").fill(`119${Date.now().toString().slice(-8)}`);
   await dialog.getByRole("button", { name: "Enviar", exact: true }).click();
   await dialog.getByLabel("seu@email.com").fill(email);
@@ -68,18 +68,59 @@ test("ad page: tutorial, account and the Pix right away", async ({ page }) => {
   await dialog.getByLabel("Código de 4 números").fill(codes(email)[0]!);
   await dialog.getByRole("button", { name: "Enviar", exact: true }).click();
 
-  // The session starts and the page goes straight to her link and the payment.
+  // The session starts: one step to the panel.
   await expect(page.getByRole("heading", { name: "Sua conta está criada! 🎉" })).toBeVisible();
   await expect(page.getByText(new RegExp(`/${slug}$`))).toBeVisible();
+  await page.getByRole("link", { name: "Conhecer meu painel" }).click();
+
+  // The panel tutorial is mandatory: no "Pular tutorial", only forward.
+  const tour = page.getByTestId("tour");
+  await expect(tour.getByText("Este é o seu painel! 👋")).toBeVisible();
+  await expect(tour.getByRole("button", { name: "Pular tutorial" })).toHaveCount(0);
+  await expect(page.getByText(/Teste do Completo/)).toHaveCount(0);
+  await tour.getByRole("button", { name: "Começar" }).click();
+  const tap = async (id: string) => {
+    const target = page.locator(`[data-tour="${id}"]:visible`).first();
+    await expect(tour).toBeVisible();
+    await target.click();
+  };
+  await tap("nav-agenda");
+  await expect(tour.getByText("Aqui caem os agendamentos")).toBeVisible();
+  await tour.getByRole("button", { name: "Próximo" }).click();
+  await tap("nav-more");
+  await tap("nav-configuracoes");
+  await expect(tour.getByText("Dias e horários de atendimento")).toBeVisible();
+  await tour.getByRole("button", { name: "Próximo" }).click();
+  await tap("nav-inicio");
+  await expect(tour.getByText("Seu link de agendamento")).toBeVisible();
+  await tap("link-copy");
+  await expect(tour.getByText("Veja como seus clientes veem")).toBeVisible();
+  const popup = page.waitForEvent("popup");
+  await tap("view-chat");
+  await (await popup).close();
+
+  // Last step: the payment, with the two plans.
+  await expect(tour.getByText("Ative sua agenda 🚀")).toBeVisible();
+  await expect(tour.getByRole("button", { name: "Pular tutorial" })).toHaveCount(0);
+  await page.screenshot({ path: path.join(shots, "tutorial-pagamento.png") });
+  await tour.getByRole("button", { name: /Site \+ Agenda/ }).click();
+
+  // The Pix page, with the plan chosen in the tutorial.
+  await expect(page).toHaveURL(/\/ativar\?plano=site/);
+  await expect(page.getByRole("heading", { name: "Falta só ativar! 🚀" })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Site \+ Agenda/ })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  await page.getByRole("button", { name: /^Completo/ }).click();
   await page.screenshot({ path: path.join(shots, "pagamento.png"), fullPage: true });
 
-  // No trial: until she pays, the link hands off to the WhatsApp (waiting mode card).
+  // The panel is closed until she pays, and the link hands off to the WhatsApp.
   const client = await page.context().newPage();
   await client.goto(`/${slug}?brand=barber`);
   await expect(
     client.getByRole("link", { name: /Agende também com o MeetChat/ }).first(),
   ).toBeVisible();
-  // And her panel sends her back here to pay.
   await client.goto("/painel/agenda");
   await expect(client).toHaveURL(/\/ativar/);
   await client.close();
@@ -119,7 +160,7 @@ test("a name of another niche wins over the ad's niche (Mara Nail from a beauty 
   // Asked about nails (not built as a beauty salon right away).
   await expect(dialog.getByText(/você trabalha com manicure, certo\?/i)).toBeVisible();
   await dialog.getByRole("button", { name: "Isso mesmo" }).click();
-  await expect(dialog.getByText(/Agora é só criar sua conta e ativar/)).toBeVisible();
+  await expect(dialog.getByText(/criar sua conta para conhecer o seu painel/)).toBeVisible();
 });
 
 test("the ad's niche is used when the name says nothing else", async ({ page }) => {
@@ -129,6 +170,6 @@ test("the ad's niche is used when the name says nothing else", async ({ page }) 
   await dialog.getByLabel("Nome do negócio").fill(`Espaço Carla ${unique()}`);
   await page.waitForTimeout(1600);
   await dialog.getByRole("button", { name: "Enviar", exact: true }).click();
-  await expect(dialog.getByText(/Agora é só criar sua conta e ativar/)).toBeVisible();
+  await expect(dialog.getByText(/criar sua conta para conhecer o seu painel/)).toBeVisible();
   await expect(dialog.getByText(/trabalha com/)).toHaveCount(0);
 });

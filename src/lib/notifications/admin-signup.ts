@@ -53,7 +53,7 @@ export async function notifyAdminsOfSignup(signup: NewSignup): Promise<void> {
               signup.trial === "started"
                 ? `${TRIAL_DAYS} dias do ${PLAN_NAME}`
                 : signup.trial === "demo"
-                  ? "Sem teste: viu o tutorial e vai para o pagamento"
+                  ? "Sem teste: tutorial obrigatório do painel e pagamento no fim"
                   : "Já usou o teste antes (sem teste)",
           },
         ],

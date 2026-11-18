@@ -14,7 +14,7 @@ import { getPlanFeatures, subscriptionPrice } from "@/lib/plans";
 import { isStorageConfigured } from "@/lib/storage/r2";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-import { ActivationFlow, PaidTracker } from "./flow";
+import { ActivationFlow, MeetPanel, PaidTracker } from "./flow";
 import { Tutorial } from "./tutorial";
 
 export const metadata: Metadata = {
@@ -95,7 +95,16 @@ export default async function ActivatePage({
 
   return (
     <Shell>
-      <ActivationFlow businessId={business.id} pageUrl={pageUrl} />
+      {features.trialActive ? (
+        // The panel is open: the mandatory tutorial there ends on the payment.
+        <MeetPanel businessId={business.id} pageUrl={pageUrl} />
+      ) : (
+        <ActivationFlow
+          businessId={business.id}
+          pageUrl={pageUrl}
+          initialTier={params.plano === "site" ? "site" : "complete"}
+        />
+      )}
     </Shell>
   );
 }
