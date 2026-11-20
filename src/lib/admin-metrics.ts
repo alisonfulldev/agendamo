@@ -20,9 +20,7 @@ export function monthlyRevenue(
   const featured =
     (subscription.addons.featured ?? []).filter((f) => f.status === "active").length *
     PLAN_PRICES.featured.monthly;
-  const domain =
-    subscription.addons.custom_domain?.status === "active" ? PLAN_PRICES.customDomain.monthly : 0;
-  return plan + featured + domain;
+  return plan + featured;
 }
 
 export interface BrandMetrics {

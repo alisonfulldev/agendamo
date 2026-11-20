@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
-import { createSaleAction, domainAvailabilityAction } from "@/app/admin/sales-actions";
+import { createSaleAction } from "@/app/admin/sales-actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,15 +17,12 @@ interface Option {
 export function SaleForm({
   niches,
   prices,
-  domainPrice,
   customSitePrice,
   webCustomSitePrice,
 }: {
   niches: Option[];
   /** Price labels of each plan and cycle ("R$ 49,00/mês"…). */
   prices: Record<"site" | "complete" | "web", Record<"monthly" | "yearly", string>>;
-  /** "R$ 91,00/ano" */
-  domainPrice: string;
   /** "R$ 148,00" */
   customSitePrice: string;
   /** Custom site of "Site ou Loja" (R$ 197). */
@@ -38,18 +35,7 @@ export function SaleForm({
   // "Site ou Loja" (2026-11-07): a site (services) or a store (catalog), no booking.
   const [product, setProduct] = useState<"site" | "store">("site");
   const [cycle, setCycle] = useState<"monthly" | "yearly">("monthly");
-  const [withDomain, setWithDomain] = useState(false);
   const [customSite, setCustomSite] = useState(false);
-  const [domain, setDomain] = useState("");
-  const [availability, setAvailability] = useState<string | null>(null);
-  const [checking, startCheck] = useTransition();
-
-  const AVAILABILITY = {
-    available: "Disponível ✓",
-    taken: "Já tem dono: escolha outro",
-    unknown: "Não deu para consultar agora: confira no registro.br",
-    invalid: "Domínio inválido. Ex.: studiobela.com.br",
-  } as const;
 
   function submit(form: FormData) {
     setError(null);
@@ -66,7 +52,6 @@ export function SaleForm({
         template: form.get("template") ?? (tier === "web" ? "site_bold" : "vibrant"),
         product: tier === "web" ? product : undefined,
         couponCode: form.get("couponCode"),
-        domain: withDomain ? domain : "",
         customSite: (tier === "site" || tier === "web") && customSite,
       });
       if (result.ok) router.push(`/admin/vendas/${result.saleId}`);
@@ -206,49 +191,6 @@ export function SaleForm({
           Pix; o cliente responde o briefing no painel)
         </label>
       ) : null}
-      <fieldset className="flex flex-col gap-2 sm:col-span-2">
-        <label className="flex items-center gap-2 text-sm font-medium">
-          <input
-            type="checkbox"
-            checked={withDomain}
-            onChange={(e) => setWithDomain(e.target.checked)}
-          />
-          Domínio próprio .com.br (+{domainPrice}, 1º ano no primeiro Pix)
-        </label>
-        {withDomain ? (
-          <div className="flex flex-wrap items-center gap-2">
-            <Input
-              aria-label="Domínio"
-              placeholder="studiobela.com.br"
-              value={domain}
-              onChange={(e) => {
-                setDomain(e.target.value);
-                setAvailability(null);
-              }}
-              className="max-w-xs"
-            />
-            <Button
-              type="button"
-              variant="outline"
-              disabled={checking || !domain}
-              onClick={() =>
-                startCheck(async () => {
-                  const result = await domainAvailabilityAction(domain);
-                  if (result.domain) setDomain(result.domain);
-                  setAvailability(AVAILABILITY[result.status]);
-                })
-              }
-            >
-              {checking ? "Consultando…" : "Ver se está livre"}
-            </Button>
-            {availability ? (
-              <span role="status" className="text-sm">
-                {availability}
-              </span>
-            ) : null}
-          </div>
-        ) : null}
-      </fieldset>
       <div className={field}>
         <Label htmlFor="couponCode">Cupom (opcional)</Label>
         <Input id="couponCode" name="couponCode" maxLength={40} />

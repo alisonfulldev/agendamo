@@ -20,7 +20,6 @@ import { freeSlotsMessage, listTimes } from "@/lib/sales/free-slots";
 import { TOUR_TEXT } from "@/content/tour";
 import { ACTIVE_APPOINTMENT_STATUSES } from "@/lib/db/types";
 import { depositSetup, type DepositSetupService } from "@/lib/deposits/setup";
-import { getLiveDomain } from "@/lib/public/site";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { earnedBonuses } from "@/lib/trial-bonus";
@@ -55,11 +54,7 @@ export default async function PanelHomePage({ searchParams }: PageProps<"/painel
   const { t } = panelWords(brand);
   const { senha } = await searchParams;
   const pageUrl = businessUrl(brand, `/${business.slug}`);
-  // The own domain once live (sold with the plan), else the MeetChat address.
-  const liveDomain = await getLiveDomain(business.slug, business.id);
-  const siteUrl = liveDomain
-    ? `https://${liveDomain}/`
-    : businessUrl(brand, `/${business.slug}/site`);
+  const siteUrl = businessUrl(brand, `/${business.slug}/site`);
   const features = getPlanFeatures(business);
   const admin = createAdminClient();
   const tz = business.timezone;

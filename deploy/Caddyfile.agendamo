@@ -1,0 +1,11 @@
+# Trechos do agendamo para o /opt/apps/Caddyfile da VPS (o arquivo completo vive no repositório
+# TopSitesAdm, em deploy/Caddyfile). Não substitui o arquivo: são os blocos a descomentar/acrescentar.
+
+meetchat.com.br {
+	encode zstd gzip
+	reverse_proxy agendamo:3000
+}
+
+www.meetchat.com.br {
+	redir https://meetchat.com.br{uri} permanent
+}

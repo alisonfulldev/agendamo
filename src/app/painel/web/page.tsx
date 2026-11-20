@@ -8,13 +8,10 @@ import { PageHeader, Section } from "@/components/panel/page-header";
 import { Button } from "@/components/ui/button";
 import { addDaysToDate } from "@/lib/availability";
 import { requireOwner } from "@/lib/business/context";
-import { formatBRL } from "@/lib/money";
-import { getPlanFeatures, PLAN_PRICES, planLabel } from "@/lib/plans";
+import { getPlanFeatures, planLabel } from "@/lib/plans";
 import { displayCount } from "@/lib/stats";
 import { createClient } from "@/lib/supabase/server";
 import { formatInTimeZone } from "date-fns-tz";
-
-import { DomainRequest } from "./domain-request";
 
 export const metadata: Metadata = { title: "Início" };
 
@@ -99,13 +96,6 @@ export default async function WebHomePage() {
           Por privacidade, números abaixo de 5 aparecem como “menos de 5”. Suas próprias visitas não
           são contadas.
         </p>
-      </Section>
-
-      <Section
-        title="Seu próprio endereço (opcional)"
-        description={`Em vez do link do MeetChat, um endereço só seu, tipo seunegocio.com.br: ${formatBRL(PLAN_PRICES.webDomainYearly)} por ano, registrado no seu nome. Pode deixar para depois.`}
-      >
-        <DomainRequest price={formatBRL(PLAN_PRICES.webDomainYearly)} />
       </Section>
 
       <Section title="Deixe o site com a sua cara">

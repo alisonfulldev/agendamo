@@ -44,7 +44,7 @@ Revise antes de aplicar no Supabase de produção.
 - Limite de chamadas em tabela do Postgres (`rate_limits` + `check_rate_limit`), sem Redis. Chaves são HMAC (nunca IP ou e-mail em texto).
 - A sessão só é renovada no proxy em rotas que precisam (painel, admin, telas de login, APIs autenticadas). A página pública não paga esse custo.
 - Em produção, se a dona entrar pelo domínio de outra marca, o painel redireciona para o domínio da marca do negócio. Em desenvolvimento o painel usa as cores da marca do negócio.
-- Links para fora (e-mails, QR) usam o domínio da marca só em produção (`VERCEL_ENV=production`). Em desenvolvimento e prévias usam `NEXT_PUBLIC_APP_URL` + `?brand=<marca>`.
+- Links para fora (e-mails, QR) usam o domínio da marca só em produção (`APP_ENV=production` na VPS; `VERCEL_ENV=production` ainda vale). Em desenvolvimento e prévias usam `NEXT_PUBLIC_APP_URL` + `?brand=<marca>`.
 - O topo do e-mail mostra o nome da marca em texto (Gmail e outros bloqueiam SVG).
 
 ## Prompt 6 — Cadastro guiado
@@ -251,7 +251,6 @@ Revise antes de aplicar no Supabase de produção.
   3. O log registra só a etapa que falhou ("photo converted on the server" / "photo fallback failed"), sem dados da foto. A limpeza diária apaga o que sobrar em `incoming/` com mais de 1 dia.
 - Cloudflare Images foi descartado (pago). O editor de recorte fica para depois, se ainda houver falhas.
 
-
 ## Preço do Completo: R$ 23,90/mês ou R$ 19,90/mês no anual (2026-10-23)
 
 - Mensal baixou de R$ 29,90 para R$ 23,90; anual de R$ 298,80 para R$ 238,80 (R$ 19,90/mês). Profissional extra continua R$ 9/mês (R$ 90/ano).
@@ -354,3 +353,16 @@ Revise antes de aplicar no Supabase de produção.
 - Primeiro lote de 10 áreas (nutricionista, psicólogo, clínica de estética, salão de beleza, barbearia, cílios e sobrancelhas, manicure, fisioterapeuta, personal trainer, studio de pilates); semelhança máxima entre elas de 16% no filtro de qualidade (limite 70%). As outras áreas entram depois, com texto próprio.
 - No sitemap (arquivo "site-e-agenda"), no `llms.txt` (seção "Site + agenda online por área"), no rodapé e nos guias da página de cada ramo. Tipo de página `site-e-agenda` nos eventos do site. Slug reservado.
 - `/precos` com três colunas (Grátis no modo WhatsApp, Site + Agenda em destaque, Completo) e a FAQ da diferença entre os planos; as ofertas do JSON-LD seguem a mesma ordem.
+
+## Produção na VPS em vez da Vercel (2026-11-20)
+
+- meetchat.com.br sai da Vercel e vai para a VPS da Magalu Cloud (a mesma do TopSitesAdm), em Docker atrás do Caddy; o banco segue no Supabase e os crons seguem no pg_cron chamando `/api/cron/*` no mesmo domínio. Passo a passo em `DEPLOY-VPS.md`.
+- Build no GitHub Actions (`output: "standalone"`), imagem só de execução no GHCR (`Dockerfile.ci`), e o workflow reinicia só o serviço `agendamo` na VPS por SSH.
+- "Produção" passa a ser `APP_ENV=production` (`src/lib/deployment.ts`); `VERCEL_ENV=production` continua aceito enquanto a Vercel existir.
+- Sem domínio próprio de cliente na VPS: o recurso foi removido (ver a seção abaixo), então o Caddy só serve meetchat.com.br e www.
+
+## Fim do domínio próprio dos clientes (2026-11-20)
+
+- Removidos os três caminhos: o adicional "Domínio próprio" no painel (Integrações; já não era vendido desde 2026-10-06), o domínio .br na venda pelo WhatsApp (R$ 91/ano, Admin › Vendas › Domínios, renovação anual no Asaas, tarefa diária de DNS) e o pedido de domínio do "Site ou Loja" (R$ 120/ano). Sai também o proxy que servia o negócio no domínio dele e o redirect de /<slug>/site para esse domínio.
+- Nenhum cliente usava (0 domínios, 0 adicionais, 0 vendas com domínio em 2026-11-20).
+- O banco fica como está (tabela `custom_domains`, função `get_custom_domain`, colunas `assisted_sales.domain`/`domain_cents`): sem uso no código, podem ser apagados numa migração futura.

@@ -103,9 +103,6 @@ que copiar e onde colar. Ao final, `npm run check:setup` confere tudo sem mostra
 4. Volte ao passo 1.6 (tarefas agendadas) e ao passo 4.3 (webhook do Asaas) com o endereço final.
 5. Domínios das marcas (quando tiver): **Settings → Domains → Add**, um por marca (com o `www`
    redirecionando), e atualize `src/brands/<marca>.ts`.
-6. Opcional, só para o adicional _Domínio próprio_ dos clientes: **Account Settings → Tokens** →
-   `VERCEL_API_TOKEN`; _Project Settings → General_ → `VERCEL_PROJECT_ID` (e `VERCEL_TEAM_ID` se for
-   time).
 
 ## 4. Asaas (mensalidade com checkout próprio)
 

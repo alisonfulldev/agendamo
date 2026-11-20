@@ -9,10 +9,9 @@ import {
   isBrandSelectableHost,
   normalizeHost,
 } from "@/brands/resolve";
-import { getBrand, getBrandByDomain } from "@/brands";
 import { DEMO_SESSION_COOKIE, isDemoMode } from "@/lib/demo/mode";
 import { decodeDemoSession } from "@/lib/demo/session";
-import { resolveCustomDomain } from "@/lib/domains/resolve";
+import { isProductionDeployment } from "@/lib/deployment";
 import { PATH_HEADER } from "@/lib/request-headers";
 import { BUCKET_HEADER, BUCKETS, EXPERIMENT_COOKIE } from "@/lib/experiments";
 import { securityHeaders } from "@/lib/security-headers";
@@ -53,7 +52,7 @@ export async function proxy(request: NextRequest) {
   // One host per site: www.<domain> redirects permanently to <domain> (canonicals and sitemaps
   // use the domain without www; serving both duplicates every page for search engines).
   const rawHost = (host ?? "").toLowerCase();
-  if (process.env.VERCEL_ENV === "production" && rawHost.startsWith("www.")) {
+  if (isProductionDeployment() && rawHost.startsWith("www.")) {
     const target = new URL(request.url);
     target.host = rawHost.slice(4);
     target.protocol = "https:";
@@ -62,19 +61,7 @@ export async function proxy(request: NextRequest) {
   }
   const brandParam = request.nextUrl.searchParams.get(BRAND_QUERY_PARAM);
   const brandCookie = request.cookies.get(BRAND_COOKIE)?.value;
-  let brand = getBrandByHost(host, { brandParam, brandCookie });
-
-  // Prompt 38: a verified custom domain shows its business in its brand. Its root is the business
-  // site (2026-11-06; without the site plan, the site page sends visitors on to the chat).
-  let rewriteTo: string | null = null;
-  const normalized = normalizeHost(host);
-  if (!getBrandByDomain(normalized) && !isBrandSelectableHost(normalized)) {
-    const target = await resolveCustomDomain((host ?? "").toLowerCase().split(":")[0] ?? "");
-    if (target) {
-      brand = getBrand(target.brandKey) ?? brand;
-      if (path === "/") rewriteTo = `/${target.slug}/site`;
-    }
-  }
+  const brand = getBrandByHost(host, { brandParam, brandCookie });
 
   // Experiments (docs/design/experiments.md): a stable anonymous bucket for people on the
   // marketing pages, drawn on the first visit and also passed to this request (so the first page
@@ -96,12 +83,7 @@ export async function proxy(request: NextRequest) {
     return headers;
   };
 
-  const pass = () =>
-    rewriteTo
-      ? NextResponse.rewrite(new URL(rewriteTo, request.url), {
-          request: { headers: forwardedHeaders() },
-        })
-      : NextResponse.next({ request: { headers: forwardedHeaders() } });
+  const pass = () => NextResponse.next({ request: { headers: forwardedHeaders() } });
 
   let response = pass();
   let userId: string | null = null;

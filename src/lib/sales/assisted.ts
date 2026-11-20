@@ -33,8 +33,6 @@ export interface AssistedSale {
   pix_image: string | null;
   pix_expires_at: string | null;
   coupon_code: string | null;
-  domain: string | null;
-  domain_cents: number;
   created_at: string;
   paid_at: string | null;
 }
@@ -52,8 +50,6 @@ export interface NewSaleInput {
   /** "Site ou Loja" (tier "web"): a site or a store, without booking. Absent: booking. */
   product?: "site" | "store";
   couponCode: string | null;
-  /** Own .br domain (first year in the first Pix). */
-  domain: string | null;
   /** Custom site (its creation in the first Pix; the customer fills the briefing in the panel). */
   customSite: boolean;
 }
@@ -62,7 +58,7 @@ export type NewSaleResult =
   | { ok: true; saleId: string; token: string }
   | {
       ok: false;
-      error: "has_business" | "has_account" | "coupon_invalid" | "domain_taken" | "failed";
+      error: "has_business" | "has_account" | "coupon_invalid" | "failed";
     };
 
 /** The custom site's creation: R$ 158 with "Site + Agenda", R$ 197 with "Site ou Loja". */
@@ -130,14 +126,6 @@ export async function createAssistedSale(
 ): Promise<NewSaleResult> {
   const admin = createAdminClient();
   const email = input.email.trim().toLowerCase();
-  if (input.domain) {
-    const { data: used } = await admin
-      .from("custom_domains")
-      .select("id")
-      .eq("domain", input.domain)
-      .maybeSingle();
-    if (used) return { ok: false, error: "domain_taken" };
-  }
   const account = await accountFor(email, !seller);
   if ("error" in account) return { ok: false, error: account.error };
   const userId = account.id;
@@ -204,14 +192,6 @@ export async function createAssistedSale(
     template: input.template,
     updated_at: new Date().toISOString(),
   });
-  if (input.domain) {
-    await admin.from("custom_domains").insert({
-      business_id: business.id,
-      domain: input.domain,
-      verified: false,
-      status: "awaiting_payment",
-    });
-  }
   // First access opens the panel tutorial, like any new booking account.
   if (!input.product) {
     await admin.auth.admin.updateUserById(userId, { user_metadata: { tour_pending: true } });
@@ -234,9 +214,7 @@ export async function createAssistedSale(
       tier: input.tier,
       payer: { name: input.payerName, cpfCnpj: input.cpfCnpj, email },
       couponCode: input.couponCode,
-      firstExtraCents:
-        (input.domain ? PLAN_PRICES.domainYearly : 0) +
-        (input.customSite ? customSitePrice(input.tier) : 0),
+      firstExtraCents: input.customSite ? customSitePrice(input.tier) : 0,
     });
     if (result.kind !== "pix") throw new Error("unexpected_change");
     pix = result.pix;
@@ -262,8 +240,6 @@ export async function createAssistedSale(
       payer_email: email,
       payer_whatsapp: input.whatsapp,
       coupon_code: input.couponCode,
-      domain: input.domain,
-      domain_cents: input.domain ? PLAN_PRICES.domainYearly : 0,
       ...PIX_FIELDS(pix),
     })
     .select("id")
@@ -334,7 +310,7 @@ export async function renewSalePix(
     // The Asaas customer already exists: its document is not asked again.
     payer: { name: sale.payer_name, cpfCnpj: "", email: sale.payer_email },
     couponCode: sale.coupon_code,
-    firstExtraCents: sale.domain_cents + (order ? customSitePrice(sale.tier) : 0),
+    firstExtraCents: order ? customSitePrice(sale.tier) : 0,
   });
   if (result.kind !== "pix") return false;
   if (order) {

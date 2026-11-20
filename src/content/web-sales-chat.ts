@@ -80,7 +80,6 @@ export const WEB_CHAT = {
     "Agora é só responder umas perguntas no painel (Site personalizado) para a nossa equipe criar o seu.",
   paidEmail:
     "Agora é com você: entre no painel e deixe do seu jeito, com seu logo, fotos, textos e o que você vende. Também mandei o acesso para {email}.",
-  domain: `Quer um endereço só seu, tipo seunegocio.com.br? É opcional: custa ${formatBRL(PLAN_PRICES.webDomainYearly)} por ano e dá para pedir depois, com calma.`,
   openSite: "Ver meu site",
   openStore: "Ver minha loja",
   openPanel: "Entrar no painel",

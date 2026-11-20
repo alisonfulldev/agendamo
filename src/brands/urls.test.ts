@@ -2,7 +2,14 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { psychology } from "@/brands/psychology";
 import { GENERAL_NICHE } from "@/brands";
-import { brandUrl, businessUrl, canonicalUrl, hasRealDomain, nicheHubUrl } from "@/brands/urls";
+import {
+  brandUrl,
+  businessUrl,
+  canonicalUrl,
+  hasRealDomain,
+  isProductionDeployment,
+  nicheHubUrl,
+} from "@/brands/urls";
 
 afterEach(() => vi.unstubAllEnvs());
 
@@ -20,6 +27,19 @@ describe("brandUrl", () => {
     const brand = { ...psychology, domains: ["psicologia.example.com"] };
     expect(hasRealDomain(brand)).toBe(false);
     expect(brandUrl(brand, "/x")).toBe("https://agendamo.vercel.app/x?brand=psychology");
+  });
+});
+
+describe("isProductionDeployment", () => {
+  it("is on with APP_ENV=production (VPS) or VERCEL_ENV=production, off otherwise", () => {
+    vi.stubEnv("APP_ENV", "");
+    vi.stubEnv("VERCEL_ENV", "");
+    expect(isProductionDeployment()).toBe(false);
+    vi.stubEnv("APP_ENV", "production");
+    expect(isProductionDeployment()).toBe(true);
+    vi.stubEnv("APP_ENV", "");
+    vi.stubEnv("VERCEL_ENV", "production");
+    expect(isProductionDeployment()).toBe(true);
   });
 });
 

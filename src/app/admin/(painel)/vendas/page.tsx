@@ -53,9 +53,6 @@ export default async function AdminSalesPage() {
         <h1 className="text-2xl font-bold">Vendas pelo WhatsApp</h1>
         <div className="flex flex-wrap gap-2">
           <Button asChild variant="outline">
-            <Link href="/admin/vendas/dominios">Domínios</Link>
-          </Button>
-          <Button asChild variant="outline">
             <Link href="/admin/vendas/roteiro">Roteiro de mensagens</Link>
           </Button>
         </div>
@@ -76,7 +73,6 @@ export default async function AdminSalesPage() {
         <SaleForm
           niches={niches}
           prices={prices}
-          domainPrice={`${brl(PLAN_PRICES.domainYearly)}/ano`}
           customSitePrice={brl(PLAN_PRICES.customSite)}
           webCustomSitePrice={brl(PLAN_PRICES.webCustomSite)}
         />

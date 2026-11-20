@@ -166,7 +166,7 @@ export async function previewPlatformCouponAction(code: string): Promise<number 
 }
 
 const addonSchema = payerSchema.extend({
-  // Only the portal highlight is sold (no custom domain since 2026-10-06).
+  // Only the portal highlight is sold.
   addon: z.enum(["featured"]),
   city: z.string().trim().max(80).optional(),
 });
@@ -176,8 +176,7 @@ export async function addonAction(input: unknown): Promise<CheckoutResult> {
   if (!isAsaasConfigured()) return { ok: false, message: "Cobrança ainda não configurada." };
   const parsed = addonSchema.safeParse(input);
   if (!parsed.success) return { ok: false, message: parsed.error.issues[0]!.message };
-  if (parsed.data.addon === "featured" && !parsed.data.city)
-    return { ok: false, message: "Informe a cidade do Destaque." };
+  if (!parsed.data.city) return { ok: false, message: "Informe a cidade do Destaque." };
   try {
     const pix = await subscribeAddon({
       business,

@@ -88,7 +88,6 @@ export async function startChatSaleAction(input: unknown): Promise<StartChatSale
       cycle: data.cycle,
       template: data.template,
       couponCode: null,
-      domain: null,
       customSite: false,
     },
     null,

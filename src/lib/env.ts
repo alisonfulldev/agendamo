@@ -40,9 +40,6 @@ export const serverEnvSchema = clientEnvSchema.extend({
   ASAAS_ENV: z.preprocess(empty, z.enum(["sandbox", "production"]).default("sandbox")),
   GOOGLE_CLIENT_ID: optionalString,
   GOOGLE_CLIENT_SECRET: optionalString,
-  VERCEL_API_TOKEN: optionalString,
-  VERCEL_PROJECT_ID: optionalString,
-  VERCEL_TEAM_ID: optionalString,
   /** 32 bytes, base64. Encrypts Google tokens and hashes rate-limit keys. */
   ENCRYPTION_KEY: z.preprocess(
     empty,

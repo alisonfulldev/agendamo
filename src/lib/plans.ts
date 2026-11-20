@@ -38,13 +38,8 @@ export const PLAN_PRICES = {
   web: { monthly: testPrice || 2900, yearly: testPrice || 29000 },
   /** Custom site made by a person for "Site ou Loja": R$ 197 once, plus the R$ 29 month. */
   webCustomSite: 19700,
-  /** Own domain for "Site ou Loja": R$ 120 a year, optional (asked in its sales chat). */
-  webDomainYearly: 12000,
   extraProfessional: { monthly: 900, yearly: 9000 },
   featured: { monthly: 4900 },
-  customDomain: { monthly: 1900 },
-  /** Own .br domain sold with "Site + Agenda" (2026-11-06): first year in the first Pix. */
-  domainYearly: 9100,
   /** Custom site (2026-11-06): the creation; with the first month of "Site + Agenda" = R$ 197. */
   customSite: 15800,
 } as const;

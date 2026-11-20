@@ -33,7 +33,7 @@ npm run dev:demo             # abra http://localhost:3000/demo
 - **E-mails:** nada sai do computador. Cada e-mail aparece na caixa de entrada da página `/demo`, com os links funcionando (confirmar conta, cancelar, avaliar…).
 - **Fotos:** o upload segue o mesmo fluxo de URL assinada, mas grava em `.demo-data/files`.
 - **Também em `/demo`:** trocar o plano de qualquer negócio na hora, rodar as tarefas agendadas (lembretes, sinais vencidos, resumo semanal…) e apagar tudo para recomeçar.
-- **Fica de fora:** cobrança Asaas, Google Agenda, notificação push, domínio próprio (Vercel) e Sentry. Essas telas abrem, mas as ações delas avisam que a integração não está configurada.
+- **Fica de fora:** cobrança Asaas, Google Agenda, notificação push e Sentry. Essas telas abrem, mas as ações delas avisam que a integração não está configurada.
 
 O modo só liga com `npm run dev:demo` (variável `DEMO_MODE=1`) e nunca em produção (`NODE_ENV=production` desliga). `npm run test:e2e:demo` abre todas as telas com cada conta e falha em qualquer erro.
 
@@ -57,8 +57,7 @@ Um único projeto e um único banco atendem várias marcas, cada uma no seu dom�
 1. [src/proxy.ts](src/proxy.ts) (o antigo `middleware.ts`) lê o `Host`, resolve a marca com `getBrandByHost` ([src/brands/resolve.ts](src/brands/resolve.ts)) e repassa a chave no cabeçalho interno `x-brand`. Um `x-brand` enviado pelo navegador é sobrescrito.
 2. Domínio de produção (com ou sem `www`) → marca dona do domínio. Ali `?brand=` é ignorado.
 3. Em `localhost` e nas prévias `*.vercel.app`: `?brand=<key>` escolhe a marca e fica gravado no cookie `brand`.
-4. Domínio próprio verificado de um negócio → marca do negócio, e `/` mostra a página dele.
-5. Qualquer outro host → `DEFAULT_BRAND`.
+4. Qualquer outro host → `DEFAULT_BRAND`.
 
 Para testar localmente: `/?brand=beauty`, `/?brand=barber`, `/?brand=aesthetics`, `/?brand=psychology`, `/?brand=physio`.
 
@@ -186,7 +185,6 @@ Faça nesta ordem. Cada item tem como conferir.
 - [ ] Todas as variáveis do `.env.example` em Production (e Preview, apontando para o Supabase de desenvolvimento e Asaas sandbox).
 - [ ] `CRON_SECRET` (32+ caracteres) e `ENCRYPTION_KEY` (`node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`). **Guarde a ENCRYPTION_KEY**: trocá-la invalida os tokens do Google salvos.
 - [ ] Domínios de **todas** as marcas em Settings → Domains (com `www` redirecionando).
-- [ ] Domínio próprio de clientes: token da Vercel com acesso ao projeto → `VERCEL_API_TOKEN`, `VERCEL_PROJECT_ID` (e `VERCEL_TEAM_ID` se for time).
 - [ ] `ADMIN_EMAILS` com o seu e-mail.
 
 ### 8. Sentry e monitoramento

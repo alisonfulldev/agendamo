@@ -35,7 +35,6 @@ const TABLES = [
   "page_stats_daily",
   "marketing_settings",
   "subscriptions",
-  "custom_domains",
   "audit_log",
 ] as const;
 

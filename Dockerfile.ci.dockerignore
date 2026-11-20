@@ -1,0 +1,6 @@
+# Contexto do Dockerfile.ci: só o que a imagem copia (o build já rodou no runner)
+*
+!public
+!.next/standalone
+!.next/static
+!assets/fonts

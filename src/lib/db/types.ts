@@ -345,11 +345,6 @@ export interface Subscription {
       subscription_id: string;
       status: "pending" | "active" | "cancelled";
     }[];
-    custom_domain?: {
-      subscription_id: string;
-      status: "pending" | "active" | "cancelled";
-      paid_until?: string;
-    };
   };
   status: "pending" | "active" | "overdue" | "cancelled";
   current_period_end: string | null;
@@ -393,14 +388,6 @@ export interface Referral {
   appointment_id: string | null;
   status: "pending" | "valid";
   reward_applied: boolean;
-  created_at: string;
-}
-
-export interface CustomDomain {
-  id: string;
-  business_id: string;
-  domain: string;
-  verified: boolean;
   created_at: string;
 }
 

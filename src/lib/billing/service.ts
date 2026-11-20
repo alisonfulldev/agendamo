@@ -129,11 +129,6 @@ async function pixOfPayment(payment: AsaasPayment): Promise<PixCharge> {
   };
 }
 
-/** Open charge of an add-on subscription (the yearly domain), as a Pix to send by e-mail. */
-export function addonPendingPix(subscriptionId: string): Promise<PixCharge | null> {
-  return pixOfPendingPayment(subscriptionId);
-}
-
 async function pixOfPendingPayment(subscriptionId: string): Promise<PixCharge | null> {
   const payments = await listSubscriptionPayments(subscriptionId);
   const pending = payments.find((p) => p.status === "PENDING" || p.status === "OVERDUE");
@@ -204,7 +199,7 @@ export async function subscribePlan(input: {
   tier?: Tier;
   payer: { name: string; cpfCnpj: string; email: string };
   couponCode?: string | null;
-  /** Added to the first payment only (the own domain's first year in a WhatsApp sale). */
+  /** Added to the first payment only (the custom site's creation in a sale). */
   firstExtraCents?: number;
 }): Promise<SubscribeResult> {
   const tier: Tier = input.tier ?? "complete";
@@ -312,7 +307,7 @@ export async function subscribePlan(input: {
       firstValueCents: value + (input.firstExtraCents ?? 0),
     });
   } catch (error) {
-    // The regular Pix cannot charge a different first value: a sale with a domain tries again.
+    // The regular Pix cannot charge a different first value: a sale with an extra tries again.
     if (input.firstExtraCents) throw new Error("pix_automatic_required");
     // Asaas could not create the authorization: the subscription starts on the regular Pix and
     // the next charge offers the Pix Automático again.
@@ -571,22 +566,16 @@ interface FeaturedAddon {
   subscription_id: string;
   status: "pending" | "active" | "cancelled";
 }
-interface DomainAddon {
-  subscription_id: string;
-  status: "pending" | "active" | "cancelled";
-  paid_until?: string;
-}
 interface Addons {
   featured?: FeaturedAddon[];
-  custom_domain?: DomainAddon;
 }
 
 export async function subscribeAddon(input: {
   business: Business;
   brand: BrandConfig;
   userId: string;
-  addon: "featured" | "custom_domain";
-  city?: string;
+  addon: "featured";
+  city: string;
   payer: { name: string; cpfCnpj: string; email: string };
 }): Promise<PixCharge | null> {
   const admin = createAdminClient();
@@ -594,36 +583,32 @@ export async function subscribeAddon(input: {
   if (!existing) throw new Error("no_plan");
   const addons = (existing.addons ?? {}) as Addons;
   const customerId = await ensureCustomer(input.business, existing, input.payer);
-  const isFeatured = input.addon === "featured";
-  const city = input.city?.trim() ?? "";
+  const city = input.city.trim();
   if (
-    isFeatured &&
-    (!city ||
-      addons.featured?.some(
-        (f) => f.city.toLowerCase() === city.toLowerCase() && f.status !== "cancelled",
-      ))
+    !city ||
+    addons.featured?.some(
+      (f) => f.city.toLowerCase() === city.toLowerCase() && f.status !== "cancelled",
+    )
   ) {
     throw new Error("featured_exists");
   }
 
   const subscription = await createSubscription({
     customer: customerId,
-    valueCents: isFeatured ? PLAN_PRICES.featured.monthly : PLAN_PRICES.customDomain.monthly,
+    valueCents: PLAN_PRICES.featured.monthly,
     cycle: "MONTHLY",
     nextDueDate: today(),
-    description: `${input.brand.name} · ${isFeatured ? `Destaque no portal (${city})` : "Domínio próprio"}`,
-    externalReference: `${input.business.id}:${isFeatured ? `featured:${city}` : "domain"}`,
+    description: `${input.brand.name} · Destaque no portal (${city})`,
+    externalReference: `${input.business.id}:featured:${city}`,
   });
 
-  const next: Addons = isFeatured
-    ? {
-        ...addons,
-        featured: [
-          ...(addons.featured ?? []),
-          { city, subscription_id: subscription.id, status: "pending" },
-        ],
-      }
-    : { ...addons, custom_domain: { subscription_id: subscription.id, status: "pending" } };
+  const next: Addons = {
+    ...addons,
+    featured: [
+      ...(addons.featured ?? []),
+      { city, subscription_id: subscription.id, status: "pending" },
+    ],
+  };
   await admin
     .from("subscriptions")
     .update({
@@ -649,10 +634,7 @@ export async function cancelAddon(
   const existing = await loadSubscription(business.id);
   if (!existing) return;
   const addons = (existing.addons ?? {}) as Addons;
-  const owned =
-    addons.featured?.some((f) => f.subscription_id === subscriptionId) ||
-    addons.custom_domain?.subscription_id === subscriptionId;
-  if (!owned) return;
+  if (!addons.featured?.some((f) => f.subscription_id === subscriptionId)) return;
   await deleteSubscription(subscriptionId);
   await applyAddonStatus(existing, subscriptionId, "cancelled");
   await audit({
@@ -672,27 +654,21 @@ async function applyAddonStatus(
   const admin = createAdminClient();
   const addons = (row.addons ?? {}) as Addons;
   const featured = addons.featured?.find((f) => f.subscription_id === subscriptionId);
-  if (featured) {
-    featured.status = status;
-    if (status === "active" && paidUntil) {
-      await admin
-        .from("portal_featured")
-        .upsert(
-          { business_id: row.business_id, city: featured.city, active_until: paidUntil },
-          { onConflict: "business_id,city" },
-        );
-    } else if (status === "cancelled") {
-      await admin
-        .from("portal_featured")
-        .update({ active_until: new Date().toISOString() })
-        .eq("business_id", row.business_id)
-        .eq("city", featured.city);
-    }
-  } else if (addons.custom_domain?.subscription_id === subscriptionId) {
-    addons.custom_domain.status = status;
-    if (paidUntil) addons.custom_domain.paid_until = paidUntil;
-  } else {
-    return;
+  if (!featured) return;
+  featured.status = status;
+  if (status === "active" && paidUntil) {
+    await admin
+      .from("portal_featured")
+      .upsert(
+        { business_id: row.business_id, city: featured.city, active_until: paidUntil },
+        { onConflict: "business_id,city" },
+      );
+  } else if (status === "cancelled") {
+    await admin
+      .from("portal_featured")
+      .update({ active_until: new Date().toISOString() })
+      .eq("business_id", row.business_id)
+      .eq("city", featured.city);
   }
   await admin
     .from("subscriptions")
@@ -734,13 +710,7 @@ async function findBySubscription(
     .select("*")
     .contains("addons", { featured: [{ subscription_id: subscriptionId }] })
     .maybeSingle();
-  if (featured) return { row: featured as Subscription, kind: "addon" };
-  const { data: domain } = await admin
-    .from("subscriptions")
-    .select("*")
-    .contains("addons", { custom_domain: { subscription_id: subscriptionId } })
-    .maybeSingle();
-  return domain ? { row: domain as Subscription, kind: "addon" } : null;
+  return featured ? { row: featured as Subscription, kind: "addon" } : null;
 }
 
 async function findByAuthorization(authorizationId: string): Promise<Subscription | null> {
@@ -800,10 +770,6 @@ async function activateBusinessPlan(row: Subscription): Promise<void> {
     });
     invalidatePublicPage(business.slug);
   }
-  // An own domain sold with the plan: paid now, to be registered (and billed once a year).
-  await activatePaidDomain(business.id, row).catch((error) =>
-    console.error("paid domain activation failed", error),
-  );
   // A custom site paid with this first payment (R$ 197 with the first month).
   await markPlanOrderPaid(business.id).catch((error) =>
     console.error("custom site order (plan) failed", error),
@@ -812,54 +778,6 @@ async function activateBusinessPlan(row: Subscription): Promise<void> {
   await completeAssistedSale(business.id).catch((error) =>
     console.error("assisted sale completion failed", error),
   );
-}
-
-/**
- * Own domain of a WhatsApp sale, paid with the first payment (2026-11-06): one year at Registro.br
- * from today, and a yearly Pix charge of the domain starting 10 days before it expires (the
- * customer gets that Pix by e-mail, see src/lib/domains/jobs.ts). Idempotent.
- */
-async function activatePaidDomain(businessId: string, row: Subscription): Promise<void> {
-  const admin = createAdminClient();
-  const expires = new Date();
-  expires.setFullYear(expires.getFullYear() + 1);
-  const expiresAt = dateOnly(expires.toISOString());
-  const { data: domains } = await admin
-    .from("custom_domains")
-    .update({
-      status: "awaiting_registration",
-      expires_at: expiresAt,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("business_id", businessId)
-    .eq("status", "awaiting_payment")
-    .select("domain");
-  const domain = domains?.[0]?.domain as string | undefined;
-  if (!domain || !row.provider_customer_id) return;
-  const due = new Date(expires.getTime() - 10 * 86_400_000);
-  const subscription = await createSubscription({
-    customer: row.provider_customer_id,
-    valueCents: PLAN_PRICES.domainYearly,
-    cycle: "YEARLY",
-    nextDueDate: dateOnly(due.toISOString()),
-    description: `Domínio ${domain} (renovação anual)`,
-    externalReference: `${businessId}:domain`,
-  });
-  const addons = (row.addons ?? {}) as Addons;
-  await admin
-    .from("subscriptions")
-    .update({
-      addons: {
-        ...addons,
-        custom_domain: {
-          subscription_id: subscription.id,
-          status: "active",
-          paid_until: expiresAt,
-        },
-      },
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", row.id);
 }
 
 /**

@@ -194,10 +194,6 @@ const SITE_PAGES: Omit<WebLandingPage, "kind" | "updatedAt">[] = [
         question: "Cabem muitas fotos?",
         answer: "A galeria comporta até 20 fotos, comprimidas para carregar rápido no celular.",
       },
-      {
-        question: "Posso usar o meu domínio?",
-        answer: "Pode, como opcional: um endereço só seu, registrado no seu nome.",
-      },
     ],
   },
   {

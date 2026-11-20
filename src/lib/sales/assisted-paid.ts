@@ -24,7 +24,7 @@ export async function completeAssistedSale(businessId: string): Promise<void> {
     .eq("business_id", businessId)
     .eq("status", "awaiting_payment")
     .select(
-      "payer_name, payer_email, tier, value_cents, domain, business:businesses(name, slug, brand_key)",
+      "payer_name, payer_email, tier, value_cents, business:businesses(name, slug, brand_key)",
     );
   const sale = rows?.[0] as
     | {
@@ -32,7 +32,6 @@ export async function completeAssistedSale(businessId: string): Promise<void> {
         payer_email: string;
         tier: Tier;
         value_cents: number;
-        domain: string | null;
         business: { name: string; slug: string; brand_key: string };
       }
     | undefined;
@@ -79,11 +78,6 @@ export async function completeAssistedSale(businessId: string): Promise<void> {
         web
           ? "Entre no painel com este e-mail: você recebe um código para entrar, sem senha. Lá você coloca seu logo, fotos, textos e o que você vende."
           : "Entre no painel com este e-mail: você recebe um código para entrar, sem senha. Lá você coloca sua foto, ajusta serviços, preços e horários.",
-        ...(sale.domain
-          ? [
-              `Seu endereço próprio, ${sale.domain}, está sendo registrado no seu nome. Avisamos por e-mail assim que o site estiver no ar nele.`,
-            ]
-          : []),
       ],
       details: [
         ...(web ? [] : [{ label: "Seu link de agendamento", value: chat }]),
@@ -104,14 +98,7 @@ export async function completeAssistedSale(businessId: string): Promise<void> {
       subject: `Venda paga: ${sale.business.name} (${formatBRL(sale.value_cents)})`,
       content: {
         heading: "Venda paga 💰",
-        paragraphs: [
-          `${sale.payer_name} pagou. A conta de ${sale.business.name} foi liberada.`,
-          ...(sale.domain
-            ? [
-                `Falta registrar o domínio ${sale.domain} no Registro.br, no nome do cliente: veja em Admin › Vendas › Domínios.`,
-              ]
-            : []),
-        ],
+        paragraphs: [`${sale.payer_name} pagou. A conta de ${sale.business.name} foi liberada.`],
         details: [
           { label: "Plano", value: TIER_NAME[sale.tier] },
           { label: "Valor", value: formatBRL(sale.value_cents) },

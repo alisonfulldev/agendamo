@@ -312,7 +312,6 @@ export function WebSalesChat({ initialName }: { initialName: string | null }) {
             ...(s.customSite ? [system(W.paidCustom)] : []),
             system(fill(W.paidEmail, { email: status.email })),
             system(T.loginLater),
-            system(W.domain),
           ],
         }));
       } else if (status?.status === "awaiting_payment" && status.expired) {

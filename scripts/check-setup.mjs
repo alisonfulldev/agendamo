@@ -94,23 +94,6 @@ if (has("ASAAS_API_KEY")) {
   else fail("Asaas", "ASAAS_WEBHOOK_TOKEN vazio: o webhook recusa os avisos de pagamento");
 } else warn("Asaas", "ASAAS_API_KEY vazio: a assinatura fica indisponível");
 
-// Vercel (domínio próprio dos negócios — opcional)
-if (has("VERCEL_API_TOKEN") && has("VERCEL_PROJECT_ID")) {
-  const team = has("VERCEL_TEAM_ID") ? `?teamId=${env.VERCEL_TEAM_ID}` : "";
-  await probe(
-    "Vercel",
-    "API do projeto",
-    `https://api.vercel.com/v9/projects/${env.VERCEL_PROJECT_ID}${team}`,
-    {
-      headers: { Authorization: `Bearer ${env.VERCEL_API_TOKEN}` },
-    },
-  );
-} else
-  warn(
-    "Vercel",
-    "VERCEL_API_TOKEN/PROJECT_ID vazios: só o adicional Domínio próprio fica desligado",
-  );
-
 // Opcionais
 for (const [group, keys] of [
   [

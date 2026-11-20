@@ -4,6 +4,8 @@
  * at /indexnow-key.txt (keyLocation). Only production submits; failures are logged, never thrown.
  */
 
+import { isProductionDeployment } from "@/lib/deployment";
+
 export const INDEXNOW_ENDPOINT = "https://api.indexnow.org/indexnow";
 /** Protocol limit of URLs per request. */
 export const INDEXNOW_MAX_URLS = 10_000;
@@ -48,7 +50,7 @@ export function indexNowPayloads(urls: string[], key: string) {
 /** Submits the URLs. Returns how many requests were accepted (0 when off or nothing to send). */
 export async function submitIndexNow(urls: string[]): Promise<number> {
   const key = indexNowKey();
-  if (!key || process.env.VERCEL_ENV !== "production") return 0;
+  if (!key || !isProductionDeployment()) return 0;
   let accepted = 0;
   for (const payload of indexNowPayloads(urls, key)) {
     try {

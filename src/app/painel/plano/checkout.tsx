@@ -85,7 +85,7 @@ export function PlanCheckout({
   const [discount, setDiscount] = useState<number | null>(null);
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
   const [pending, startTransition] = useTransition();
-  const [addon, setAddon] = useState<"featured" | "custom_domain" | null>(null);
+  const [addon, setAddon] = useState<"featured" | null>(null);
   const [city, setCity] = useState("");
   const [pix, setPix] = useState<{ charge: PixCharge; plan: boolean } | null>(null);
 
@@ -339,16 +339,14 @@ export function PlanCheckout({
           </div>
           {addon ? (
             <div className="flex flex-col gap-3">
-              {addon === "featured" ? (
-                <FieldShell name="addon-city" label="Cidade">
-                  <Input
-                    id="addon-city"
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                    className="h-10"
-                  />
-                </FieldShell>
-              ) : null}
+              <FieldShell name="addon-city" label="Cidade">
+                <Input
+                  id="addon-city"
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
+                  className="h-10"
+                />
+              </FieldShell>
               <PayerFields
                 name={name}
                 setName={setName}

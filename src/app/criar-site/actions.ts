@@ -83,7 +83,6 @@ export async function startWebSaleAction(input: unknown): Promise<StartChatSaleR
       template: data.template,
       product: data.product,
       couponCode: null,
-      domain: null,
       customSite: data.customSite,
     },
     null,

@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 
 import { physio } from "../../src/brands/physio";
 import { psychology } from "../../src/brands/psychology";
-import { createUser, db, deleteUser, signIn, skipUnlessFull, uniqueSuffix } from "./helpers";
+import { createUser, db, deleteUser, skipUnlessFull, uniqueSuffix } from "./helpers";
 
 /**
  * Prompt 41: extended flows on two brands. Data is prepared straight in the database (service
@@ -276,14 +276,6 @@ for (const brand of [psychology, physio]) {
       await page.locator("#fixture-link").click();
       const frame = page.frameLocator("iframe[title='Agendamento']");
       await expect(frame.getByRole("heading", { name: /Agendar com/ })).toBeVisible();
-    });
-    test("custom domain: panel requires the add-on and shows DNS instructions once added", async ({
-      page,
-    }) => {
-      await signIn(page, brand.key, fx.owner.email, fx.owner.password);
-      await page.goto("/painel/integracoes");
-      await expect(page.getByRole("heading", { name: "Domínio próprio" })).toBeVisible();
-      await expect(page.getByRole("link", { name: "Contratar Domínio próprio" })).toBeVisible();
     });
   });
 }

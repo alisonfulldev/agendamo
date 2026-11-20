@@ -22,7 +22,6 @@ const env = {
   ASAAS_API_KEY: "",
   GOOGLE_CLIENT_ID: "",
   GOOGLE_CLIENT_SECRET: "",
-  VERCEL_API_TOKEN: "",
   NEXT_PUBLIC_SENTRY_DSN: "",
 };
 

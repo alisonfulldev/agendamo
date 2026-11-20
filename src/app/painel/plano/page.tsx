@@ -213,7 +213,7 @@ export default async function PlanPage() {
               </ul>
             </div>
           ) : null}
-          {subscription.addons.featured?.length || subscription.addons.custom_domain ? (
+          {subscription.addons.featured?.length ? (
             <div className="mt-4">
               <h3 className="mb-2 text-sm font-semibold">Adicionais</h3>
               <ul className="divide-y rounded-lg border text-sm">
@@ -241,30 +241,6 @@ export default async function PlanPage() {
                     )}
                   </li>
                 ))}
-                {(() => {
-                  const domain = (
-                    subscription.addons as {
-                      custom_domain?: { subscription_id: string; status: string };
-                    }
-                  ).custom_domain;
-                  return domain ? (
-                    <li className="flex items-center justify-between gap-2 px-3 py-2">
-                      <span>Domínio próprio</span>
-                      <span className="text-muted-foreground">
-                        {domain.status === "active"
-                          ? "Ativo"
-                          : domain.status === "pending"
-                            ? "Aguardando pagamento"
-                            : "Cancelado"}
-                      </span>
-                      {domain.status !== "cancelled" ? (
-                        <CancelAddonButton subscriptionId={domain.subscription_id} />
-                      ) : (
-                        <span />
-                      )}
-                    </li>
-                  ) : null;
-                })()}
               </ul>
             </div>
           ) : null}

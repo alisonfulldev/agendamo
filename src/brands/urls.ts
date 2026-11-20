@@ -1,11 +1,9 @@
 import { getBrandBaseUrl, type BrandConfig } from "@/brands";
 import { BRAND_QUERY_PARAM } from "@/brands/host";
+import { isProductionDeployment } from "@/lib/deployment";
 import { siteUrl, withoutQuery } from "@/lib/site-url";
 
-/** True on the production deployment (Vercel), where each brand answers on its own domain. */
-export function isProductionDeployment(): boolean {
-  return process.env.VERCEL_ENV === "production";
-}
+export { isProductionDeployment };
 
 /** False while the brand still has the provisional "*.example.com" domain. */
 export function hasRealDomain(brand: BrandConfig): boolean {
