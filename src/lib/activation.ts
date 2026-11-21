@@ -28,7 +28,7 @@ export async function startActivationAccount(input: {
     .eq("id", input.businessId)
     .is("trial_started_at", null);
   if (error) throw new Error(`activation account failed: ${error.message}`);
-  // Her e-mail and phone count as a used trial: no 14 days through the normal sign-up later.
+  // Her e-mail and phone count as a used trial: no trial through the normal sign-up later.
   await recordTrialClaims(input.businessId, input.identity);
   await audit({
     businessId: input.businessId,

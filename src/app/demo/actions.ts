@@ -86,7 +86,7 @@ export async function demoSetPlanAction(formData: FormData): Promise<void> {
            else now() end,
          trial_ends_at = case
            when $2 = 'ended' then now() - interval '5 days'
-           else now() + interval '14 days' end
+           else now() + interval '3 days' end
        where id = $1 returning slug`,
       [businessId, plan],
     )

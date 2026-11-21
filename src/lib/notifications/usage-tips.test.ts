@@ -14,6 +14,7 @@ const base: TipFacts = {
   pushPossible: true,
   missing: ["foto do perfil"],
   bonuses: 0,
+  bonusDays: 7,
 };
 
 describe("trial incentive tips (2026-11-05)", () => {

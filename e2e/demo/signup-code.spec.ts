@@ -99,8 +99,8 @@ test("sign-up in the conversation: WhatsApp, e-mail fix, terms, code and the lin
   await expect(page.getByRole("navigation", { name: "Painel" }).first()).toBeVisible();
   await page.getByRole("button", { name: "Pular tutorial" }).click();
   await expect(page.getByTestId("tour")).toHaveCount(0);
-  // The 14-day trial of Completo: counter in the panel, everything unlocked.
-  await expect(page.getByRole("link", { name: /Teste do Completo: faltam 14 dias/ })).toBeVisible();
+  // The 3-day trial of Completo: counter in the panel, everything unlocked.
+  await expect(page.getByRole("link", { name: /Teste do Completo: faltam 3 dias/ })).toBeVisible();
   await page.goto(`/${slug}`);
   await expect(page.getByText(/Você está na agenda de/)).toBeVisible();
 

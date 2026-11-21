@@ -3,14 +3,26 @@ import { formatBRL } from "@/lib/money";
 
 /**
  * One plan, Completo (2026-10-12): unlimited bookings, reminders, a discreet brand line, chat on
- * external sites, team, finance, deposit / full payment by Pix with a receipt and everything else. Every sign-up starts with a 14-day trial of
+ * external sites, team, finance, deposit / full payment by Pix with a receipt and everything else. Every sign-up starts with a TRIAL_DAYS trial of
  * it (no card, once per person). Without a trial or an active subscription the account is in
  * "waiting mode": the public chat keeps working but ends on WhatsApp (nothing is booked), with
  * "Agende também com o MeetChat" in the footer, and the panel opens only the subscription screen.
  * Nothing is deleted; subscribing brings everything back at once.
  * Stored values: plan "free" (no subscription: trial or waiting) or "complete" (subscribed).
  */
-export const TRIAL_DAYS = 14;
+export const TRIAL_DAYS = 3;
+
+/**
+ * Shorter trial (2026-11-21): trials started from 2026-11-22 00:00 in Brasília last TRIAL_DAYS;
+ * the ones started before keep the 14 days (and the +7 link bonus) they signed up with.
+ */
+export const SHORT_TRIAL_FROM = Date.parse("2026-11-22T03:00:00Z");
+export const LEGACY_TRIAL_DAYS = 14;
+
+/** Trial length for a trial starting at `now`. */
+export function trialDaysAt(now: Date): number {
+  return now.getTime() < SHORT_TRIAL_FROM ? LEGACY_TRIAL_DAYS : TRIAL_DAYS;
+}
 
 /** Deposit / full payment by Pix with a receipt (lib/deposits), included in Completo. */
 export const DEPOSITS_ENABLED = true;
@@ -108,7 +120,7 @@ export const SITE_PRICE_TEXT = {
   yearlySavings: `economize ${reais(yearlySavings(0, "site"))} por ano`,
 };
 
-/** trial: the 14 days; subscribed: paying; waiting: neither (chat ends on WhatsApp). */
+/** trial: the test days; subscribed: paying; waiting: neither (chat ends on WhatsApp). */
 export type PlanStatus = "trial" | "subscribed" | "waiting";
 
 export interface PlanFeatures {

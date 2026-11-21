@@ -6,7 +6,7 @@ import type { Business } from "@/lib/db/types";
 import { getPlanFeatures } from "@/lib/plans";
 import { PROFILE_INDEX_RULES } from "@/lib/public/indexable";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { LINK_BONUS_DAYS } from "@/lib/trial-bonus-shared";
+import { linkBonusDays } from "@/lib/trial-bonus-shared";
 
 import { claimNotification, notifyTeam } from "./owner";
 
@@ -25,6 +25,8 @@ export interface TipFacts {
   pushPossible: boolean;
   missing: string[];
   bonuses: number;
+  /** Days each link bonus adds (by when the trial started). */
+  bonusDays: number;
 }
 
 export type TipKey = "link" | "app" | "profile" | "share" | "week";
@@ -78,7 +80,7 @@ export function tipCopy(
           `Seu link: ${ctx.link}`,
           ...(bonusLeft > 0
             ? [
-                `E tem bônus: quando a primeira visita chegar por cada um desses links, seu teste ganha +${LINK_BONUS_DAYS} dias. Os links certos, prontos para copiar, estão no Início do painel.`,
+                `E tem bônus: quando a primeira visita chegar por cada um desses links, seu teste ganha +${facts.bonusDays} dias. Os links certos, prontos para copiar, estão no Início do painel.`,
               ]
             : []),
         ],
@@ -205,6 +207,7 @@ async function factsOf(businesses: Business[], now: number): Promise<Map<string,
       pushPossible,
       missing,
       bonuses: count(logs.data, business.id),
+      bonusDays: linkBonusDays(business.trial_started_at),
     });
   }
   return result;

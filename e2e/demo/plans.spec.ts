@@ -89,7 +89,7 @@ test("trial ends without payment: waiting mode, nothing deleted, subscribing bri
 }) => {
   await setPlan(page, "Espaço Escuta", "Teste do Completo");
   await signIn(page, "psi@demo.com");
-  await expect(page.getByRole("link", { name: /Teste do Completo: faltam 14 dias/ })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Teste do Completo: faltam 3 dias/ })).toBeVisible();
   await page.goto("/painel/clientes");
   const customers = page.locator('a[href^="/painel/clientes/"]');
   await expect(customers.first()).toBeVisible();
@@ -199,7 +199,7 @@ test("every sign-up starts with 14 days; the same person gets no second trial", 
     .getByRole("button", { name: "Entrar no meu painel" })
     .click();
   await page.getByRole("button", { name: "Pular tutorial" }).click();
-  await expect(page.getByRole("link", { name: /Teste do Completo: faltam 14 dias/ })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Teste do Completo: faltam 3 dias/ })).toBeVisible();
 
   // Another account with the same WhatsApp: no trial, straight to waiting mode.
   const other = await browser.newContext();

@@ -5,7 +5,7 @@ import { formatInTimeZone } from "date-fns-tz";
 import { PLATFORM } from "@/brands";
 import { sendEmail } from "@/lib/email/send";
 import { getServerEnv } from "@/lib/env";
-import { PLAN_NAME, TRIAL_DAYS } from "@/lib/plans";
+import { PLAN_NAME, trialDaysAt } from "@/lib/plans";
 import { siteUrl } from "@/lib/site-url";
 
 export interface NewSignup {
@@ -29,7 +29,8 @@ export interface NewSignup {
 export async function notifyAdminsOfSignup(signup: NewSignup): Promise<void> {
   const admins = getServerEnv().ADMIN_EMAILS;
   if (!admins.length) return;
-  const when = formatInTimeZone(new Date(), "America/Sao_Paulo", "dd/MM/yyyy 'às' HH:mm");
+  const now = new Date();
+  const when = formatInTimeZone(now, "America/Sao_Paulo", "dd/MM/yyyy 'às' HH:mm");
   try {
     await sendEmail({
       brand: PLATFORM,
@@ -51,7 +52,7 @@ export async function notifyAdminsOfSignup(signup: NewSignup): Promise<void> {
             label: "Teste",
             value:
               signup.trial === "started"
-                ? `${TRIAL_DAYS} dias do ${PLAN_NAME}`
+                ? `${trialDaysAt(now)} dias do ${PLAN_NAME}`
                 : signup.trial === "demo"
                   ? "Sem teste: tutorial obrigatório do painel e pagamento no fim"
                   : "Já usou o teste antes (sem teste)",

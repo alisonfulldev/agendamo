@@ -23,7 +23,7 @@ import { depositSetup, type DepositSetupService } from "@/lib/deposits/setup";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { earnedBonuses } from "@/lib/trial-bonus";
-import { LINK_BONUS_DAYS, LINK_BONUS_PARAM } from "@/lib/trial-bonus-shared";
+import { LINK_BONUS_PARAM, linkBonusDays } from "@/lib/trial-bonus-shared";
 
 import { NextStepCard, type HomeStep } from "./next-step";
 import { panelWords } from "@/lib/panel-words";
@@ -204,7 +204,7 @@ export default async function PanelHomePage({ searchParams }: PageProps<"/painel
               hint: t(
                 "No Instagram: Editar perfil › Links › Adicionar link externo. Quando o primeiro cliente chegar por ele, seu teste ganha mais dias.",
               ),
-              badge: `+${LINK_BONUS_DAYS} dias`,
+              badge: `+${linkBonusDays(business.trial_started_at)} dias`,
               action: { copy: `${pageUrl}?${LINK_BONUS_PARAM}=bio`, label: "Copiar link da bio" },
             },
             {
@@ -212,7 +212,7 @@ export default async function PanelHomePage({ searchParams }: PageProps<"/painel
               done: bonuses.has("saudacao"),
               label: "Coloque o link na saudação do WhatsApp",
               hint: "No WhatsApp Business: Ferramentas comerciais › Mensagem de saudação. Ative e cole o texto abaixo.",
-              badge: `+${LINK_BONUS_DAYS} dias`,
+              badge: `+${linkBonusDays(business.trial_started_at)} dias`,
               action: { copy: greeting, label: "Copiar saudação" },
             },
           ] satisfies HomeStep[])

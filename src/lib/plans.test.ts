@@ -118,9 +118,9 @@ describe("prices", () => {
     expect(PRICE_TEXT.yearlySavings).toBe("economize R$ 48 por ano");
   });
 
-  it("trial copy uses the 14 days", () => {
-    expect(TRIAL_DAYS).toBe(14);
-    expect(PRICE_TEXT.trial).toBe("14 dias grátis, sem cartão");
+  it("trial copy uses the 3 days (from 2026-11-22)", () => {
+    expect(TRIAL_DAYS).toBe(3);
+    expect(PRICE_TEXT.trial).toBe("3 dias grátis, sem cartão");
   });
 });
 

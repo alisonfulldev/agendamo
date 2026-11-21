@@ -5,7 +5,7 @@ import { claimNotification, notifyTeam } from "@/lib/notifications/owner";
 import { getPlanFeatures } from "@/lib/plans";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-import { LINK_BONUS_DAYS, LINK_BONUSES, type LinkBonus } from "./trial-bonus-shared";
+import { LINK_BONUSES, linkBonusDays, type LinkBonus } from "./trial-bonus-shared";
 
 /** Already-earned bonuses of a business (notification_log, one row per bonus). */
 export async function earnedBonuses(businessId: string): Promise<Set<LinkBonus>> {
@@ -22,14 +22,14 @@ export async function earnedBonuses(businessId: string): Promise<Set<LinkBonus>>
 
 /**
  * Link bonus (2026-11-05): the first visit of a customer through the bio link (?de=bio) or the
- * WhatsApp greeting link (?de=saudacao) adds 7 days to a running trial, once per bonus. The visit
+ * WhatsApp greeting link (?de=saudacao) adds linkBonusDays to a running trial, once per bonus. The visit
  * already passed the event filters (no bots, no owner or staff signed in). Idempotent.
  */
 export async function grantLinkBonus(businessId: string, bonus: LinkBonus): Promise<boolean> {
   const admin = createAdminClient();
   const { data: business } = await admin
     .from("businesses")
-    .select("id, plan, plan_tier, trial_ends_at, timezone, activation_demo")
+    .select("id, plan, plan_tier, trial_started_at, trial_ends_at, timezone, activation_demo")
     .eq("id", businessId)
     .maybeSingle();
   // Meta ad page accounts have no trial: no extra days.
@@ -43,8 +43,9 @@ export async function grantLinkBonus(businessId: string, bonus: LinkBonus): Prom
   if (!features.trialActive) return false;
   if (!(await claimNotification(businessId, `bonus_${bonus}`, "granted"))) return false;
 
+  const days = linkBonusDays(business.trial_started_at as string | null);
   const current = business.trial_ends_at as string;
-  const ends = new Date(new Date(current).getTime() + LINK_BONUS_DAYS * 86_400_000).toISOString();
+  const ends = new Date(new Date(current).getTime() + days * 86_400_000).toISOString();
   // Optimistic: only moves the date it read (the two bonuses never overwrite each other).
   const { data: updated, error } = await admin
     .from("businesses")
@@ -66,26 +67,26 @@ export async function grantLinkBonus(businessId: string, bonus: LinkBonus): Prom
     businessId,
     userId: null,
     action: "plan.trial_extended",
-    details: { days: LINK_BONUS_DAYS, ends_at: ends, by: `link_bonus:${bonus}` },
+    details: { days, ends_at: ends, by: `link_bonus:${bonus}` },
   });
   const where = bonus === "bio" ? "pelo link da bio do Instagram" : "pela saudação do WhatsApp";
   await notifyTeam({
     businessId,
     type: "account",
-    subject: `Você ganhou +${LINK_BONUS_DAYS} dias de teste`,
+    subject: `Você ganhou +${days} dias de teste`,
     content: {
-      heading: `+${LINK_BONUS_DAYS} dias de teste para você`,
+      heading: `+${days} dias de teste para você`,
       paragraphs: [
-        `Um cliente chegou ${where}. Seu link está funcionando, e o seu teste ganhou mais ${LINK_BONUS_DAYS} dias.`,
+        `Um cliente chegou ${where}. Seu link está funcionando, e o seu teste ganhou mais ${days} dias.`,
         bonus === "bio"
-          ? "Coloque também o link na saudação do WhatsApp e ganhe mais 7 dias."
-          : "Coloque também o link na bio do Instagram e ganhe mais 7 dias.",
+          ? `Coloque também o link na saudação do WhatsApp e ganhe mais ${days} dias.`
+          : `Coloque também o link na bio do Instagram e ganhe mais ${days} dias.`,
       ],
       cta: { label: "Abrir meu painel", url: "/painel" },
     },
     push: {
-      title: `+${LINK_BONUS_DAYS} dias de teste`,
-      body: `Um cliente chegou ${where}. Seu teste ganhou mais ${LINK_BONUS_DAYS} dias.`,
+      title: `+${days} dias de teste`,
+      body: `Um cliente chegou ${where}. Seu teste ganhou mais ${days} dias.`,
       url: "/painel",
     },
   });

@@ -366,3 +366,9 @@ Revise antes de aplicar no Supabase de produção.
 - Removidos os três caminhos: o adicional "Domínio próprio" no painel (Integrações; já não era vendido desde 2026-10-06), o domínio .br na venda pelo WhatsApp (R$ 91/ano, Admin › Vendas › Domínios, renovação anual no Asaas, tarefa diária de DNS) e o pedido de domínio do "Site ou Loja" (R$ 120/ano). Sai também o proxy que servia o negócio no domínio dele e o redirect de /<slug>/site para esse domínio.
 - Nenhum cliente usava (0 domínios, 0 adicionais, 0 vendas com domínio em 2026-11-20).
 - O banco fica como está (tabela `custom_domains`, função `get_custom_domain`, colunas `assisted_sales.domain`/`domain_cents`): sem uso no código, podem ser apagados numa migração futura.
+
+## Teste grátis de 3 dias (2026-11-21)
+
+- Testes iniciados a partir de 22/11/2026 00:00 (Brasília) duram 3 dias (`TRIAL_DAYS`), com +2 dias por link de bônus (bio e saudação, até 7 dias no total). Os iniciados antes mantêm os 14 dias e o bônus de +7 (`trialDaysAt`, `linkBonusDays`, corte em `SHORT_TRIAL_FROM`). A data de fim fica gravada em `trial_ends_at` no início do teste, então quem já testava não muda.
+- Avisos de fim de teste seguem pelos limites de tempo restante (≤5, ≤2 e ≤1 dia): num teste de 3 dias saem os três, um por dia. As dicas de uso só saem com mais de 5 dias restantes, então ficam para os testes antigos.
+- Termos de uso: "teste de 3 dias", versão 2026-11-22. Textos de venda usam `TRIAL_DAYS` e passam a dizer 3 dias.

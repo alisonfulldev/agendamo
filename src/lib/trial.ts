@@ -5,7 +5,7 @@ import { createHash } from "node:crypto";
 import { audit } from "@/lib/audit";
 import type { Business } from "@/lib/db/types";
 import { normalizeBrPhone } from "@/lib/phone";
-import { getPlanFeatures, TRIAL_DAYS } from "@/lib/plans";
+import { getPlanFeatures, trialDaysAt } from "@/lib/plans";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export type ClaimKind = "email" | "phone" | "document";
@@ -67,7 +67,7 @@ export type StartTrialResult =
   { ok: true; endsAt: string } | { ok: false; error: "used" | "subscribed" };
 
 /**
- * Starts the 14-day trial of Completo: only once per account and per person (e-mail, phone and
+ * Starts the trial of Completo (trialDaysAt: 3 days, 14 before 2026-11-22): only once per account and per person (e-mail, phone and
  * CPF/CNPJ when informed). No card. When it ends without payment the account is in waiting mode.
  */
 export async function startTrial(input: {
@@ -85,7 +85,7 @@ export async function startTrial(input: {
   }
   if (await trialAlreadyUsed(input.identity)) return { ok: false, error: "used" };
 
-  const endsAt = new Date(now.getTime() + TRIAL_DAYS * 86_400_000).toISOString();
+  const endsAt = new Date(now.getTime() + trialDaysAt(now) * 86_400_000).toISOString();
   const admin = createAdminClient();
   // Only an account that never had a trial (checked again in the update itself).
   const { data, error } = await admin

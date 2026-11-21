@@ -7,6 +7,8 @@ vi.mock("server-only", () => ({}));
 vi.mock("@/lib/email/send", () => ({ sendEmail: (...args: unknown[]) => sendEmail(...args) }));
 vi.mock("@/lib/env", () => ({ getServerEnv: () => ({ ADMIN_EMAILS: admins }) }));
 
+import { trialDaysAt } from "@/lib/plans";
+
 const { notifyAdminsOfSignup } = await import("./admin-signup");
 
 const signup = {
@@ -37,7 +39,7 @@ describe("notifyAdminsOfSignup", () => {
         { label: "E-mail", value: "ze@gmail.com" },
         { label: "WhatsApp", value: "Não informado" },
         { label: "Link", value: signup.pageUrl },
-        { label: "Teste", value: "14 dias do Completo" },
+        { label: "Teste", value: `${trialDaysAt(new Date())} dias do Completo` },
       ]),
     );
   });
