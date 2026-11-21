@@ -129,6 +129,11 @@
   body {
     @apply bg-background text-foreground;
   }
+  /* The text color is inherited as already computed: a scope with another theme (a dark niche
+     on the light shared site) must set it again, or unstyled text keeps the outer theme's ink. */
+  [data-theme-scope] {
+    @apply text-foreground;
+  }
   html {
     @apply font-sans;
   }
