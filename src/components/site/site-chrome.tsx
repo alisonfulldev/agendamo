@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { getBrand, PLATFORM } from "@/brands";
 import { COMPANY, COMPANY_PLACE } from "@/content/company";
-import { CONTACT_EMAIL } from "@/content/contact";
+import { CONTACT_EMAIL, SALES_WHATSAPP } from "@/content/contact";
 import { INTENT_PAGES } from "@/content/intent-pages";
 import { TOOLS } from "@/content/tools";
 
@@ -180,6 +180,22 @@ export function SiteFooter() {
           {COMPANY.name}
         </a>{" "}
         ({COMPANY_PLACE})
+        <p className="mt-2">
+          WhatsApp:{" "}
+          <a
+            href={`https://wa.me/${SALES_WHATSAPP}`}
+            className="underline-offset-4 hover:text-foreground hover:underline"
+          >
+            (18) 99674-2364
+          </a>{" "}
+          · E-mail:{" "}
+          <a
+            href={`mailto:${CONTACT_EMAIL}`}
+            className="underline-offset-4 hover:text-foreground hover:underline"
+          >
+            {CONTACT_EMAIL}
+          </a>
+        </p>
       </div>
     </footer>
   );

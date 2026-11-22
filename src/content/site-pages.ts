@@ -9,8 +9,8 @@ export const SITE_PAGES = {
   home: { path: "/", updatedAt: "2026-11-13" },
   pricing: { path: "/precos", updatedAt: "2026-11-13" },
   about: { path: "/sobre", updatedAt: "2026-11-13" },
-  terms: { path: "/termos", updatedAt: "2026-10-12" },
-  privacy: { path: "/privacidade", updatedAt: "2026-11-13" },
+  terms: { path: "/termos", updatedAt: "2026-11-22" },
+  privacy: { path: "/privacidade", updatedAt: "2026-11-22" },
 } as const;
 
 /**

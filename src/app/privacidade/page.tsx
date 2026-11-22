@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { getCurrentBrand } from "@/brands/server";
 import { LegalPage } from "@/components/sales/legal-page";
+import { CONTACT_EMAIL } from "@/content/contact";
 import { SITE_PAGES } from "@/content/site-pages";
 import { pageMetadata } from "@/lib/seo/metadata";
 
@@ -17,7 +18,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function PrivacyPage() {
   const brand = await getCurrentBrand();
-  const contact = brand.emailFrom.address;
+  const contact = CONTACT_EMAIL;
   return (
     <LegalPage
       title="Política de Privacidade"

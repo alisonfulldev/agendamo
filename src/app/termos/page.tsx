@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { getCurrentBrand } from "@/brands/server";
 import { LegalPage } from "@/components/sales/legal-page";
+import { CONTACT_EMAIL } from "@/content/contact";
 import { SITE_PAGES } from "@/content/site-pages";
 import { pageMetadata } from "@/lib/seo/metadata";
 
@@ -17,7 +18,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function TermsPage() {
   const brand = await getCurrentBrand();
-  const contact = brand.emailFrom.address;
+  const contact = CONTACT_EMAIL;
   return (
     <LegalPage
       title="Termos de Uso"
@@ -47,7 +48,7 @@ export default async function TermsPage() {
       <h2>2. Planos e pagamentos</h2>
       <ul>
         <li>
-          Há um único plano, cobrado de forma recorrente (mensal ou anual) até o cancelamento.
+          Há um modo gratuito e planos pagos, descritos na página de preços. Os planos pagos são cobrados de forma recorrente (mensal ou anual) até o cancelamento.
         </li>
         <li>
           Todo cadastro começa com um teste de 3 dias, sem cartão, que pode ser usado uma vez por

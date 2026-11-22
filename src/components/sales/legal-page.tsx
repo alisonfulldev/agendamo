@@ -4,7 +4,7 @@ import type { BrandConfig } from "@/brands";
 import { Breadcrumbs } from "@/components/site/breadcrumbs";
 import { UpdatedAt } from "@/components/site/updated-at";
 
-/** Layout for legal texts. Shows the legal-review notice until the texts are reviewed. */
+/** Layout for legal texts (terms, privacy). */
 export function LegalPage({
   title,
   brand,
@@ -25,12 +25,6 @@ export function LegalPage({
       <Breadcrumbs items={[{ name: title, path }]} brand={brand} />
       <h1 className="mt-4 text-3xl font-bold">{title}</h1>
       <UpdatedAt date={updatedAt} className="mt-1" />
-      <p
-        role="note"
-        className="mt-4 rounded-lg border border-dashed p-3 text-sm text-muted-foreground"
-      >
-        Texto-base para revisão jurídica antes da publicação.
-      </p>
       <div className="mt-8 flex flex-col gap-4 leading-relaxed [&_h2]:mt-4 [&_h2]:text-xl [&_h2]:font-semibold [&_ul]:list-disc [&_ul]:pl-6">
         {children}
       </div>
