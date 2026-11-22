@@ -13,7 +13,21 @@ export const COMPANY = {
   state: "SP",
   foundingYear: "2022",
   founder: { name: "Alison Lima", url: "https://brandcodesolutions.com.br/sobre" },
+  /** Logo shown on the company's own site (checked 2026-11-22). */
+  logo: "https://brandcodesolutions.com.br/logo.png",
+  /** The company's WhatsApp as shown on its site ((18) 99733-0574), in E.164. */
+  whatsapp: "+5518997330574",
 } as const;
+
+/**
+ * Official profiles of BrandCode Solutions (structured data `sameAs`). Only profiles that exist
+ * and are linked from the company's site; add the others here when they are created/approved.
+ */
+export const COMPANY_PROFILES: readonly string[] = [
+  "https://www.linkedin.com/company/122534364/",
+  // TODO: Instagram da BrandCode, quando existir.
+  // TODO: perfil no Crunchbase, quando for aprovado.
+];
 
 /** "Presidente Prudente/SP". */
 export const COMPANY_PLACE = `${COMPANY.city}/${COMPANY.state}`;

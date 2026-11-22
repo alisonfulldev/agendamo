@@ -1,6 +1,6 @@
 import { PLATFORM, type BrandConfig } from "@/brands";
-import { COMPANY, MEETCHAT_SUMMARY } from "@/content/company";
-import { CONTACT_EMAIL } from "@/content/contact";
+import { COMPANY, COMPANY_PROFILES, MEETCHAT_SUMMARY } from "@/content/company";
+import { CONTACT_EMAIL, SALES_WHATSAPP } from "@/content/contact";
 import { PLAN_NAME, PLAN_PRICES, SITE_PLAN_NAME } from "@/lib/plans";
 import { siteUrl, withoutQuery } from "@/lib/site-url";
 
@@ -59,7 +59,8 @@ function companyNode(): JsonLdNode {
     "@id": COMPANY_ID,
     name: COMPANY.name,
     url: COMPANY.url,
-    sameAs: [COMPANY.url, COMPANY.aboutUrl],
+    logo: { "@type": "ImageObject", url: COMPANY.logo },
+    sameAs: [...COMPANY_PROFILES],
     foundingDate: COMPANY.foundingYear,
     founder: { "@type": "Person", name: COMPANY.founder.name, url: COMPANY.founder.url },
     address: {
@@ -68,12 +69,29 @@ function companyNode(): JsonLdNode {
       addressRegion: COMPANY.state,
       addressCountry: "BR",
     },
+    contactPoint: [
+      {
+        "@type": "ContactPoint",
+        contactType: "customer support",
+        email: CONTACT_EMAIL,
+        availableLanguage: "pt-BR",
+        areaServed: "BR",
+      },
+      {
+        "@type": "ContactPoint",
+        contactType: "sales",
+        telephone: COMPANY.whatsapp,
+        url: `https://wa.me/${COMPANY.whatsapp.replace(/\D/g, "")}`,
+        availableLanguage: "pt-BR",
+        areaServed: "BR",
+      },
+    ],
   };
 }
 
 /**
- * MeetChat as an organization, a product of BrandCode Solutions. Only data that exists: no CNPJ,
- * address or phone of its own; social profiles come from the platform's socialLinks
+ * MeetChat as an organization, a product of BrandCode Solutions. Only data that exists: no CNPJ
+ * or address of its own (the sales WhatsApp is the footer's); social profiles come from the platform's socialLinks
  * (src/brands/platform.ts) once they exist. Same node on every page (one @id, one description).
  */
 export function organizationNode(): JsonLdNode {
@@ -86,6 +104,15 @@ export function organizationNode(): JsonLdNode {
     description: MEETCHAT_SUMMARY,
     email: CONTACT_EMAIL,
     sameAs: [...Object.values(PLATFORM.socialLinks).filter(Boolean), COMPANY.portfolioUrl],
+    // MeetChat's own sales WhatsApp, as shown in the site's footer.
+    contactPoint: {
+      "@type": "ContactPoint",
+      contactType: "sales",
+      telephone: `+${SALES_WHATSAPP}`,
+      url: `https://wa.me/${SALES_WHATSAPP}`,
+      availableLanguage: "pt-BR",
+      areaServed: "BR",
+    },
     parentOrganization: companyNode(),
   };
 }
@@ -157,7 +184,8 @@ export function softwareApplicationNode({
     operatingSystem: "Web",
     inLanguage: "pt-BR",
     offers: pricingOffers(),
-    publisher: { "@id": ORGANIZATION_ID },
+    // Published and made by BrandCode Solutions (its node is inline in MeetChat's organization).
+    publisher: { "@id": COMPANY_ID },
     creator: { "@id": COMPANY_ID },
   };
 }

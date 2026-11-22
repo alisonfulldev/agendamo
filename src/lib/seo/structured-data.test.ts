@@ -134,6 +134,16 @@ describe("MeetChat pages", () => {
       name: "BrandCode Solutions",
     });
     expect(app.creator).toEqual({ "@id": "https://brandcodesolutions.com.br/#organization" });
+    expect(app.publisher).toEqual({ "@id": "https://brandcodesolutions.com.br/#organization" });
+    const company = org.parentOrganization as Record<string, unknown>;
+    expect(company.logo).toMatchObject({ url: "https://brandcodesolutions.com.br/logo.png" });
+    expect(company.contactPoint).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ contactType: "customer support", email: expect.any(String) }),
+        expect.objectContaining({ contactType: "sales", telephone: "+5518997330574" }),
+      ]),
+    );
+    for (const url of company.sameAs as string[]) expect(url).toMatch(ABSOLUTE);
   });
 
   it("FAQ is left out when there are no questions", () => {

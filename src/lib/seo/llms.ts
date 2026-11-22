@@ -3,6 +3,7 @@ import { NICHE_GROUPS } from "@/brands/schema";
 import { publishedArticles } from "@/content/articles";
 import { COMPARISONS } from "@/content/comparisons";
 import { COMPANY, COMPANY_PLACE, MEETCHAT_SUMMARY } from "@/content/company";
+import { CONTACT_EMAIL, SALES_WHATSAPP } from "@/content/contact";
 import { HOME } from "@/content/home";
 import { INTENT_PAGES } from "@/content/intent-pages";
 import { SITE_AGENDA_INDEX, SITE_AGENDA_PAGES } from "@/content/site-agenda-pages";
@@ -49,6 +50,12 @@ export function llmsTxt(): string {
     `- ${PRICING.meta.description}`,
     ...PRICING.tiers.map((t) => `- ${t.name}: ${t.price}. ${t.summary}`),
     "- O MeetChat não envia mensagens por WhatsApp: o link é divulgado pelo próprio profissional.",
+    "",
+    "## Contato",
+    "",
+    `- Suporte (só por e-mail): ${CONTACT_EMAIL}`,
+    `- Vendas pelo WhatsApp: https://wa.me/${SALES_WHATSAPP}`,
+    `- Empresa: ${COMPANY.name}, ${COMPANY.url}`,
     "",
     "## Principais páginas",
     "",

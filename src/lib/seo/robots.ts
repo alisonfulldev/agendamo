@@ -21,11 +21,24 @@ export const AI_CRAWLERS = [
 export const BLOCKED_CRAWLERS: readonly string[] = [];
 
 /**
- * Crawlers named in their own group with the same rules as "*" (2026-11-13): OpenAI's search and
- * user visits, so the permission is explicit for them. A named group replaces "*" for that
+ * Crawlers named in their own group with the same rules as "*" (2026-11-13, more on 2026-11-22):
+ * AI search, user visits and training crawlers and Bing, so the permission is explicit for them. A named group replaces "*" for that
  * crawler, so it must repeat every Disallow.
  */
-export const EXPLICIT_CRAWLERS: readonly string[] = ["OAI-SearchBot", "ChatGPT-User", "GPTBot"];
+export const EXPLICIT_CRAWLERS: readonly string[] = [
+  "OAI-SearchBot",
+  "ChatGPT-User",
+  "GPTBot",
+  // 2026-11-22: the other AI and search crawlers, named too (same rules as "*").
+  "ClaudeBot",
+  "Claude-User",
+  "Claude-SearchBot",
+  "PerplexityBot",
+  "Perplexity-User",
+  "Google-Extended",
+  "Applebot-Extended",
+  "bingbot",
+];
 
 /** Private areas and states that must never be crawled. CSS/JS (/_next) stay open. */
 export const DISALLOWED_PATHS = [

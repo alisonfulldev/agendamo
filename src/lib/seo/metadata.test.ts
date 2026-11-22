@@ -16,6 +16,10 @@ describe("pageMetadata", () => {
     });
     expect(meta.title).toEqual({ absolute: "Agenda para psicólogos | MeetChat" });
     expect(meta.alternates?.canonical).toBe("https://meetchat.com.br/psicologia");
+    expect(meta.alternates?.languages).toEqual({
+      "pt-BR": "https://meetchat.com.br/psicologia",
+      "x-default": "https://meetchat.com.br/psicologia",
+    });
     expect(meta.openGraph?.url).toBe("https://meetchat.com.br/psicologia");
     expect(meta.openGraph?.siteName).toBe("MeetChat");
     expect(meta.robots).toBeUndefined();

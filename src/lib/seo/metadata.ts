@@ -52,7 +52,8 @@ export function pageMetadata(seo: PageSeo): Metadata {
   return {
     title: { absolute: seo.title },
     description: seo.description,
-    alternates: { canonical: url },
+    // The site is only in Brazilian Portuguese: hreflang points to the page itself.
+    alternates: { canonical: url, languages: { "pt-BR": url, "x-default": url } },
     robots: seo.index === false ? { index: false, follow: true } : undefined,
     openGraph: {
       title: socialTitle,
