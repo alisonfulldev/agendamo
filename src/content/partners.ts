@@ -18,6 +18,30 @@ const first = commissionOf(monthly, true);
 const recurring = commissionOf(monthly, false);
 const brl = (cents: number) => `R$ ${formatAmount(cents)}`;
 
+/** Marketing goal of the income pages ("fature até R$ 3 mil por mês"), always shown with the math. */
+export const INCOME_GOAL_CENTS = 300_000;
+
+/** Numbers shared by /parceiros and the income pages (/renda-extra), already formatted. */
+export const PARTNER_NUMBERS = {
+  first: brl(first),
+  recurring: brl(recurring),
+  firstSite: brl(commissionOf(PLAN_PRICES.site.monthly, true)),
+  recurringSite: brl(commissionOf(PLAN_PRICES.site.monthly, false)),
+  goal: brl(INCOME_GOAL_CENTS).replace(",00", ""),
+  /** Active Completo clients that reach the goal in recurring commissions alone. */
+  goalClients: Math.ceil(INCOME_GOAL_CENTS / recurring / 10) * 10,
+  goalClientsSite:
+    Math.ceil(INCOME_GOAL_CENTS / commissionOf(PLAN_PRICES.site.monthly, false) / 10) * 10,
+  percent: RECURRING_PERCENT,
+  holdDays: HOLD_DAYS,
+  minPayout: brl(MIN_PAYOUT_CENTS),
+  planName: PLAN_NAME,
+  sitePlanName: SITE_PLAN_NAME,
+} as const;
+
+/** "Até R$ 3 mil por mês com cerca de 630 negócios ativos no plano Completo." */
+export const INCOME_GOAL_NOTE = `até ${PARTNER_NUMBERS.goal} por mês com cerca de ${PARTNER_NUMBERS.goalClients} negócios ativos no plano ${PLAN_NAME} (ou ${PARTNER_NUMBERS.goalClientsSite} no ${SITE_PLAN_NAME}), só com as mensalidades`;
+
 /** Commission of each plan: first payment and every later monthly one. */
 const PLAN_COMMISSIONS = (
   [
@@ -111,9 +135,10 @@ const FAQ = [
 
 export const PARTNERS = {
   updatedAt: "2026-11-23",
-  title: "Renda extra indicando agenda online | Parceiros MeetChat",
+  title: `Renda extra de até ${PARTNER_NUMBERS.goal}/mês indicando agenda online | MeetChat`,
   description: `Seja parceiro do MeetChat: indique a agenda online para salões, barbearias e clínicas e ganhe 100% do 1º pagamento e ${RECURRING_PERCENT}% todo mês. Grátis, com Pix.`,
-  h1: "Renda extra indicando o MeetChat",
+  h1: `Fature até ${PARTNER_NUMBERS.goal} por mês indicando o MeetChat`,
+  goalNote: `É possível chegar a ${INCOME_GOAL_NOTE}. Quanto mais negócios você indicar, maior a renda; não é uma promessa de ganho.`,
   lead: `Todo negócio que trabalha com hora marcada perde tempo agendando pelo WhatsApp. Você mostra o MeetChat, o negócio assina, e você ganha a 1ª mensalidade inteira e ${RECURRING_PERCENT}% de todas as seguintes, todo mês, enquanto o cliente usar.`,
   cta: "Quero ser parceiro",
   login: "Já sou parceiro",

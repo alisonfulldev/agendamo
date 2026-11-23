@@ -25,7 +25,7 @@ describe("quality gate", () => {
   it.each([
     ...publishedTopics().map((t) => t.path),
     ...report
-      .filter((r) => ["agendamento", "recursos", "ajuda"].includes(r.template))
+      .filter((r) => ["agendamento", "recursos", "ajuda", "renda-extra"].includes(r.template))
       .map((r) => r.path),
   ])("%s passes", (path) => {
     const result = report.find((r) => r.path === path)!;

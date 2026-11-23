@@ -5,6 +5,7 @@ import { COMPARISONS } from "@/content/comparisons";
 import { COMPANY, COMPANY_PLACE, MEETCHAT_SUMMARY } from "@/content/company";
 import { CONTACT_EMAIL, SALES_WHATSAPP } from "@/content/contact";
 import { HOME } from "@/content/home";
+import { INCOME_INDEX, INCOME_PAGES } from "@/content/income-pages";
 import { INTENT_PAGES } from "@/content/intent-pages";
 import { SITE_AGENDA_INDEX, SITE_AGENDA_PAGES } from "@/content/site-agenda-pages";
 import { WEB_HUBS, WEB_PAGES, webPagePath } from "@/content/web-landing-pages";
@@ -69,6 +70,11 @@ export function llmsTxt(): string {
     "",
     ...PARTNERS.answer.sentences.map((s) => `- ${s}`),
     "- Sem pagamento de entrada, sem CNPJ e sem ganho por recrutar outros parceiros (não é multinível).",
+    `- ${PARTNERS.goalNote}`,
+    line("Renda extra com o MeetChat", "/renda-extra", INCOME_INDEX.description),
+    ...INCOME_PAGES.filter((p) => passesQualityGate(`/renda-extra/${p.slug}`)).map((p) =>
+      line(p.h1, `/renda-extra/${p.slug}`, p.description),
+    ),
     "",
     "## Por área",
     "",

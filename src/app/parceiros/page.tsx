@@ -5,7 +5,9 @@ import { NICHES } from "@/brands";
 import { JsonLd } from "@/components/seo/json-ld";
 import { Breadcrumbs, breadcrumbTrailNode } from "@/components/site/breadcrumbs";
 import { DirectAnswerBlock } from "@/components/site/direct-answer";
+import { LinkList } from "@/components/site/link-list";
 import { SitePage } from "@/components/site/site-page";
+import { INCOME_PAGES } from "@/content/income-pages";
 import { Button } from "@/components/ui/button";
 import { PARTNER_TERMS, PARTNERS } from "@/content/partners";
 import { formatPageDate } from "@/content/site-pages";
@@ -39,6 +41,7 @@ export default function PartnersPage() {
       <p className="mt-4 text-lg leading-relaxed text-pretty text-muted-foreground">
         {PARTNERS.lead}
       </p>
+      <p className="mt-3 text-sm text-muted-foreground">{PARTNERS.goalNote}</p>
       <div className="mt-6 flex flex-wrap gap-3">
         <Button asChild size="lg">
           <Link href="/parceiros/cadastro">{PARTNERS.cta}</Link>
@@ -216,6 +219,12 @@ export default function PartnersPage() {
           ))}
         </ul>
       </section>
+
+      <LinkList
+        id="guias-renda-extra"
+        title="Guias de renda extra"
+        links={INCOME_PAGES.map((p) => ({ label: p.label, href: `/renda-extra/${p.slug}` }))}
+      />
 
       <div className="mt-12 flex flex-col items-start gap-2">
         <Button asChild size="lg">

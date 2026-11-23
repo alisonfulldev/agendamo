@@ -1,6 +1,7 @@
 import { NICHES } from "@/brands";
 import { ARTICLE_SECTIONS, publishedArticles, type ArticleSection } from "@/content/articles";
 import { COMPARISONS, COMPARISONS_INDEX } from "@/content/comparisons";
+import { INCOME_INDEX, INCOME_PAGES } from "@/content/income-pages";
 import { INTENT_INDEX, INTENT_PAGES } from "@/content/intent-pages";
 import { SITE_AGENDA_INDEX, SITE_AGENDA_PAGES } from "@/content/site-agenda-pages";
 import { WEB_HUBS, WEB_PAGES, webPagePath } from "@/content/web-landing-pages";
@@ -184,4 +185,15 @@ export function sitemapIndexXml(files: { loc: string; lastmod?: string }[]): str
 ${files.map((f) => `  <sitemap><loc>${escapeXml(f.loc)}</loc>${lastmodTag(f.lastmod)}</sitemap>`).join("\n")}
 </sitemapindex>
 `;
+}
+
+/** Income pages (/renda-extra and each page that passes the gate), 2026-11-23. */
+export function incomeUrls(url: (path: string) => string): SitemapUrl[] {
+  return [
+    { loc: url("/renda-extra"), lastmod: INCOME_INDEX.updatedAt },
+    ...INCOME_PAGES.filter((p) => passesQualityGate(`/renda-extra/${p.slug}`)).map((p) => ({
+      loc: url(`/renda-extra/${p.slug}`),
+      lastmod: p.updatedAt,
+    })),
+  ];
 }

@@ -17,6 +17,7 @@ export const SITE_SECTIONS = [
   // Meta ad page (2026-11-17): demonstration and payment, with the pixel's sales events.
   "ativar",
   "agendamento",
+  "renda-extra",
   "site-e-agenda",
   "site-profissional",
   "loja-virtual",
