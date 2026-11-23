@@ -28,6 +28,7 @@ export const SITE_SECTIONS = [
   "entrar",
   "explorar",
   "ferramentas",
+  "parceiros",
   "precos",
   "privacidade",
   "recuperar-senha",

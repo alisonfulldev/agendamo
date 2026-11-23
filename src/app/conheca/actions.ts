@@ -10,6 +10,7 @@ import { audit } from "@/lib/audit";
 import { EMAIL_PATTERN } from "@/lib/email-typos";
 import { normalizeBrPhone } from "@/lib/phone";
 import { validCnpj, validCpf } from "@/lib/pix";
+import { attachPartnerFromCookie } from "@/lib/partners/service";
 import { rateLimitRequest } from "@/lib/rate-limit";
 import { createAssistedSale, pixExpired, renewSalePix, saleByToken } from "@/lib/sales/assisted";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -103,6 +104,8 @@ export async function startChatSaleAction(input: unknown): Promise<StartChatSale
     };
   }
   const sale = await saleByToken(result.token);
+  if (sale)
+    await attachPartnerFromCookie(sale.business_id, { email: data.email, phone: data.whatsapp });
   if (!sale?.pix_payload || !sale.pix_image) return { ok: false, error: "failed" };
   return {
     ok: true,

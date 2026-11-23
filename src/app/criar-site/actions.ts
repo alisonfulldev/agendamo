@@ -7,6 +7,7 @@ import { NICHES } from "@/brands";
 import { EMAIL_PATTERN } from "@/lib/email-typos";
 import { normalizeBrPhone } from "@/lib/phone";
 import { validCnpj, validCpf } from "@/lib/pix";
+import { attachPartnerFromCookie } from "@/lib/partners/service";
 import { rateLimitRequest } from "@/lib/rate-limit";
 import { WEB_SITE_TEMPLATES, WEB_STORE_TEMPLATES } from "@/lib/db/types";
 import { createAssistedSale, saleByToken } from "@/lib/sales/assisted";
@@ -98,6 +99,8 @@ export async function startWebSaleAction(input: unknown): Promise<StartChatSaleR
     };
   }
   const sale = await saleByToken(result.token);
+  if (sale)
+    await attachPartnerFromCookie(sale.business_id, { email: data.email, phone: data.whatsapp });
   if (!sale?.pix_payload || !sale.pix_image) return { ok: false, error: "failed" };
   const pix: ChatPix = {
     payload: sale.pix_payload,

@@ -9,6 +9,7 @@ import { checkSlug, isSlugAvailable, type SlugCheck } from "@/lib/business/slug-
 import { fieldErrors } from "@/lib/forms";
 import type { Business } from "@/lib/db/types";
 import { notifyAdminsOfSignup } from "@/lib/notifications/admin-signup";
+import { attachPartnerFromCookie } from "@/lib/partners/service";
 import { startTrial } from "@/lib/trial";
 import { rateLimitRequest } from "@/lib/rate-limit";
 import { signupSourceSchema } from "@/lib/signup-origin";
@@ -98,6 +99,11 @@ export async function createBusinessAction(
     identity: { email: user.email, phone: data.whatsapp },
     userId: user.id,
     via: "signup",
+  });
+  await attachPartnerFromCookie((created as Business).id, {
+    userId: user.id,
+    email: user.email,
+    phone: data.whatsapp,
   });
   // Where the account came from (same record as the creation conversation's, read by the admin).
   const source = signupSourceSchema.safeParse(rawSource ?? {});

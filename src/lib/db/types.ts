@@ -50,6 +50,8 @@ export interface Business {
   no_show_limit: number | null;
   portal_opt_out: boolean;
   suspended_at: string | null;
+  /** Partner whose link brought this account (partner program, 2026-11-23). */
+  partner_id?: string | null;
   /** Professionals paid for (1 included + extras). */
   professional_seats: number;
   /** What the owner said they do when picking "Outro / Geral". */

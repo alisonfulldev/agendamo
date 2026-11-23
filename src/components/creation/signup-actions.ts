@@ -12,6 +12,7 @@ import { audit } from "@/lib/audit";
 import type { Business } from "@/lib/db/types";
 import { notifyAdminsOfSignup } from "@/lib/notifications/admin-signup";
 import { startActivationAccount } from "@/lib/activation";
+import { attachPartnerFromCookie } from "@/lib/partners/service";
 import { startTrial } from "@/lib/trial";
 import { sendEmailCode, verifyEmailCode, type SendCodeResult } from "@/lib/auth/email-code";
 import { DEFAULT_HOURS } from "@/lib/business/schemas";
@@ -210,6 +211,7 @@ export async function verifySignupCodeAction(input: unknown): Promise<VerifySign
   await admin.from("demos").delete().eq("id", demo.id);
 
   const identity = { email: parsed.data.email, phone: parsed.data.whatsapp };
+  await attachPartnerFromCookie(businessId, { userId: verified.userId, ...identity });
   let trial: "started" | "used" | "demo";
   if (parsed.data.activation) {
     // Meta ad page: no trial, she watched the tutorial and pays right away.

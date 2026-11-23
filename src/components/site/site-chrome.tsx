@@ -144,6 +144,7 @@ export function SiteFooter() {
         { label: "Site profissional", href: "/site-profissional" },
         { label: "Loja virtual", href: "/loja-virtual" },
         { label: "Sobre o MeetChat", href: "/sobre" },
+        { label: "Seja parceiro (renda extra)", href: "/parceiros" },
         { label: "Central de ajuda", href: "/ajuda" },
         { label: "Contato", href: `mailto:${CONTACT_EMAIL}` },
         { label: "Termos de uso", href: "/termos" },

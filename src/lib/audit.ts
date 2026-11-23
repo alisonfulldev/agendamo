@@ -44,7 +44,11 @@ export type AuditAction =
   | "admin.signed_in"
   | "finance.entry_deleted"
   | "api_key.created"
-  | "api_key.revoked";
+  | "api_key.revoked"
+  | "partner.created"
+  | "admin.partner_paid"
+  | "admin.partner_blocked"
+  | "admin.partner_unblocked";
 
 export async function audit(entry: {
   businessId: string | null;

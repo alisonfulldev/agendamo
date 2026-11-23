@@ -11,6 +11,7 @@ const ITEMS = [
   { href: "/admin/vendas", label: "Vendas" },
   { href: "/admin/sites", label: "Sites personalizados" },
   { href: "/admin/cupons", label: "Cupons" },
+  { href: "/admin/parceiros", label: "Parceiros" },
   { href: "/admin/anuncio", label: "Anúncio" },
 ];
 

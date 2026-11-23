@@ -14,6 +14,12 @@ import { decodeDemoSession } from "@/lib/demo/session";
 import { isProductionDeployment } from "@/lib/deployment";
 import { PATH_HEADER } from "@/lib/request-headers";
 import { BUCKET_HEADER, BUCKETS, EXPERIMENT_COOKIE } from "@/lib/experiments";
+import {
+  PARTNER_COOKIE,
+  PARTNER_COOKIE_DAYS,
+  PARTNER_PARAM,
+  isPartnerCode,
+} from "@/lib/partners/rules";
 import { securityHeaders } from "@/lib/security-headers";
 import { BOT_PATTERN } from "@/lib/tracking/events";
 
@@ -36,6 +42,7 @@ const SESSION_PREFIXES = [
   "/api/push",
   "/api/events",
   "/api/google",
+  "/parceiros",
 ];
 
 const matches = (path: string, prefixes: string[]) =>
@@ -149,6 +156,19 @@ export async function proxy(request: NextRequest) {
       secure: request.nextUrl.protocol === "https:",
       path: "/",
       maxAge: 60 * 60 * 24 * 180,
+    });
+  }
+
+  // Partner link (?parceiro=<code>): remembered for the sign-up (src/lib/partners). The latest
+  // link visited wins.
+  const partnerCode = request.nextUrl.searchParams.get(PARTNER_PARAM)?.toLowerCase();
+  if (isPartnerCode(partnerCode) && request.cookies.get(PARTNER_COOKIE)?.value !== partnerCode) {
+    response.cookies.set(PARTNER_COOKIE, partnerCode, {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: request.nextUrl.protocol === "https:",
+      path: "/",
+      maxAge: 60 * 60 * 24 * PARTNER_COOKIE_DAYS,
     });
   }
 

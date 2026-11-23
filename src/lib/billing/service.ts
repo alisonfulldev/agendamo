@@ -7,6 +7,7 @@ import type { Business, Subscription } from "@/lib/db/types";
 import { isDemoMode } from "@/lib/demo/mode";
 import { claimNotification, notifyTeam } from "@/lib/notifications/owner";
 import { PLAN_PRICES, subscriptionPrice, TIER_NAME, type Cycle, type Tier } from "@/lib/plans";
+import { cancelPartnerCommission, recordPartnerCommission } from "@/lib/partners/service";
 import { recordTrialClaims } from "@/lib/trial";
 import { markPlanOrderPaid, markSingleOrderPaid } from "@/lib/custom-site/paid";
 import { completeAssistedSale } from "@/lib/sales/assisted-paid";
@@ -210,6 +211,8 @@ export async function subscribePlan(input: {
   const description = planDescription(input.brand.name, input.cycle, extras, tier);
 
   let discount = 0;
+  // Accounts from a partner link pay full price (the partner earns the first payment).
+  if (input.couponCode && input.business.partner_id) throw new Error("coupon_invalid");
   if (input.couponCode) {
     const { data } = await admin.rpc("redeem_platform_coupon", {
       p_code: input.couponCode,
@@ -887,6 +890,25 @@ async function handleDebitRefused(event: AsaasEvent): Promise<string> {
 const formatValue = (valueCents: number) => `R$ ${(valueCents / 100).toFixed(2).replace(".", ",")}`;
 
 /** Applies one Asaas event. Callers guarantee each event id is handled once. */
+const PAYMENT_REVERSED_EVENTS = new Set([
+  "PAYMENT_REFUNDED",
+  "PAYMENT_PARTIALLY_REFUNDED",
+  "PAYMENT_REFUND_IN_PROGRESS",
+  "PAYMENT_CHARGEBACK_REQUESTED",
+  "PAYMENT_CHARGEBACK_DISPUTE",
+  "PAYMENT_DELETED",
+]);
+
+/** Partner commission of a confirmed plan payment (never fails the webhook). */
+async function commissionOf(businessId: string, event: AsaasEvent): Promise<void> {
+  if (!event.payment?.id) return;
+  await recordPartnerCommission({
+    businessId,
+    paymentId: event.payment.id,
+    paymentCents: cents(event.payment.value),
+  }).catch((error) => console.error("partner commission failed", error));
+}
+
 export async function handleAsaasEvent(event: AsaasEvent): Promise<string> {
   const admin = createAdminClient();
 
@@ -895,6 +917,11 @@ export async function handleAsaasEvent(event: AsaasEvent): Promise<string> {
   }
   if (event.event === "PIX_AUTOMATIC_RECURRING_PAYMENT_INSTRUCTION_REFUSED") {
     return handleDebitRefused(event);
+  }
+
+  // Refund or chargeback of a client payment: the partner commission of it is not paid.
+  if (event.payment?.id && PAYMENT_REVERSED_EVENTS.has(event.event)) {
+    await cancelPartnerCommission(event.payment.id);
   }
 
   const subscriptionId = event.payment?.subscription ?? event.subscription?.id;
@@ -914,6 +941,7 @@ export async function handleAsaasEvent(event: AsaasEvent): Promise<string> {
       .maybeSingle();
     if (data) {
       await applyAutomaticFirstPayment(data as Subscription, event.payment.id);
+      await commissionOf((data as Subscription).business_id, event);
       return "plan active (pix automatic first payment)";
     }
   }
@@ -932,6 +960,7 @@ export async function handleAsaasEvent(event: AsaasEvent): Promise<string> {
   if (event.event === "PAYMENT_CONFIRMED" || event.event === "PAYMENT_RECEIVED") {
     if (kind === "plan" && row.pix_automatic_status === "created") {
       await applyAutomaticFirstPayment(row, event.payment!.id);
+      await commissionOf(row.business_id, event);
       return "plan active (pix automatic first payment)";
     }
     const cycle: Cycle = kind === "plan" ? row.billing_cycle : "monthly";
@@ -956,6 +985,7 @@ export async function handleAsaasEvent(event: AsaasEvent): Promise<string> {
       })
       .eq("id", row.id);
     await activateBusinessPlan(row);
+    await commissionOf(row.business_id, event);
     return "plan active";
   }
 

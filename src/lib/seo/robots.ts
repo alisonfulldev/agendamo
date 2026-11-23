@@ -43,6 +43,7 @@ export const EXPLICIT_CRAWLERS: readonly string[] = [
 /** Private areas and states that must never be crawled. CSS/JS (/_next) stay open. */
 export const DISALLOWED_PATHS = [
   "/painel",
+  "/parceiros/painel",
   "/admin",
   "/api/",
   "/auth/",

@@ -11,6 +11,7 @@ import { WEB_HUBS, WEB_PAGES, webPagePath } from "@/content/web-landing-pages";
 import { nicheHomeContent } from "@/content/niche-pages";
 import { publishedTopics } from "@/content/niche-guides";
 import { ABOUT } from "@/content/about";
+import { PARTNERS } from "@/content/partners";
 import { PRICING } from "@/content/pricing";
 import { TOOLS } from "@/content/tools";
 import { siteUrl, withoutQuery } from "@/lib/site-url";
@@ -62,6 +63,12 @@ export function llmsTxt(): string {
     line("Início", "/", HOME.meta.description),
     line("Preços", "/precos", PRICING.meta.description),
     line("Sobre o MeetChat", "/sobre", ABOUT.description),
+    line("Programa de parceiros (renda extra)", "/parceiros", PARTNERS.description),
+    "",
+    "## Programa de parceiros",
+    "",
+    ...PARTNERS.answer.sentences.map((s) => `- ${s}`),
+    "- Sem pagamento de entrada, sem CNPJ e sem ganho por recrutar outros parceiros (não é multinível).",
     "",
     "## Por área",
     "",
