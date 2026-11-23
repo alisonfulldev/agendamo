@@ -899,13 +899,17 @@ const PAYMENT_REVERSED_EVENTS = new Set([
   "PAYMENT_DELETED",
 ]);
 
-/** Partner commission of a confirmed plan payment (never fails the webhook). */
+/**
+ * Partner commission of a confirmed plan payment (never fails the webhook). It is computed on the
+ * net value, after Asaas's fee, so the first payment never costs more than what came in.
+ */
 async function commissionOf(businessId: string, event: AsaasEvent): Promise<void> {
   if (!event.payment?.id) return;
+  const { value, netValue } = event.payment;
   await recordPartnerCommission({
     businessId,
     paymentId: event.payment.id,
-    paymentCents: cents(event.payment.value),
+    paymentCents: cents(netValue && netValue > 0 && netValue <= value ? netValue : value),
   }).catch((error) => console.error("partner commission failed", error));
 }
 

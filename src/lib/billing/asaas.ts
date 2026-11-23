@@ -34,6 +34,8 @@ export interface AsaasPayment {
   subscription?: string;
   status: string;
   value: number;
+  /** What reaches the account after Asaas's fee (sent in the payment webhooks). */
+  netValue?: number | null;
   dueDate: string;
   invoiceUrl: string;
   paymentDate?: string | null;

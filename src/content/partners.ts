@@ -57,7 +57,7 @@ const FAQ = [
   },
   {
     question: "Quanto eu ganho por indicação?",
-    answer: `No plano ${PLAN_NAME} (${brl(monthly)} por mês), você ganha ${brl(first)} no 1º pagamento e ${brl(recurring)} em cada mensalidade seguinte. Nos planos ${SITE_PLAN_NAME} e ${WEB_PLAN_NAME}, a comissão é maior porque o preço é maior. No plano anual, o 1º pagamento rende o valor de uma mensalidade.`,
+    answer: `No plano ${PLAN_NAME} (${brl(monthly)} por mês), você ganha até ${brl(first)} no 1º pagamento e até ${brl(recurring)} em cada mensalidade seguinte (a comissão é sobre o valor líquido, depois da taxa da cobrança). Nos planos ${SITE_PLAN_NAME} e ${WEB_PLAN_NAME}, a comissão é maior porque o preço é maior. No plano anual, o 1º pagamento rende o valor de uma mensalidade.`,
   },
   {
     question: "A comissão é recorrente?",
@@ -121,7 +121,7 @@ export const PARTNERS = {
     question: "Como ganhar renda extra com o MeetChat?",
     sentences: [
       "Cadastre-se grátis no programa de parceiros, pegue o seu link e indique o MeetChat para negócios que trabalham com hora marcada, como salões, barbearias e clínicas.",
-      `Cada negócio que assinar pelo seu link paga a você 100% do 1º pagamento (${brl(first)} no plano ${PLAN_NAME}) e ${RECURRING_PERCENT}% de todas as mensalidades seguintes (${brl(recurring)} por mês), enquanto continuar assinando.`,
+      `Cada negócio que assinar pelo seu link paga a você 100% do 1º pagamento (até ${brl(first)} no plano ${PLAN_NAME}) e ${RECURRING_PERCENT}% de todas as mensalidades seguintes (até ${brl(recurring)} por mês), sobre o valor líquido da cobrança, enquanto continuar assinando.`,
       `Você recebe por Pix, ${HOLD_DAYS} dias depois de cada pagamento do cliente, sem taxa, sem meta e sem precisar de CNPJ.`,
     ],
   } satisfies DirectAnswer,
@@ -141,14 +141,14 @@ export const PARTNERS = {
   ],
   commissions: {
     title: "Quanto você ganha por cliente",
-    intro: `100% do 1º pagamento e ${RECURRING_PERCENT}% de cada mensalidade seguinte, em todos os planos:`,
+    intro: `100% do 1º pagamento e ${RECURRING_PERCENT}% de cada mensalidade seguinte, em todos os planos. A comissão é sobre o valor líquido, depois da taxa da cobrança (Pix, boleto ou cartão), por isso o valor final fica um pouco abaixo da tabela:`,
     rows: PLAN_COMMISSIONS,
   },
   simulation: {
     title: "Simulação de renda extra",
     intro: `Quanto dá para ganhar com o plano ${PLAN_NAME}, se os negócios indicados continuarem assinando por 12 meses:`,
     rows: SIMULATION,
-    note: "É uma simulação, não uma promessa de ganho. O resultado depende de quantos negócios você indicar e de quantos continuarem assinando.",
+    note: "É uma simulação com valores antes da taxa da cobrança, não uma promessa de ganho. O resultado depende de quantos negócios você indicar e de quantos continuarem assinando.",
   },
   who: {
     title: "Quem pode ser parceiro",
@@ -174,7 +174,7 @@ export const PARTNER_TERMS = {
   version: PARTNER_TERMS_VERSION,
   text: [
     "Para ser parceiro é preciso ter 18 anos ou mais, CPF próprio e uma chave Pix em seu nome.",
-    `Comissão: 100% do 1º pagamento de cada negócio que criar a conta pelo seu link (limitado a uma mensalidade do plano) e ${RECURRING_PERCENT}% de cada mensalidade seguinte, enquanto o negócio pagar.`,
+    `Comissão: 100% do 1º pagamento de cada negócio que criar a conta pelo seu link (limitado a uma mensalidade do plano) e ${RECURRING_PERCENT}% de cada mensalidade seguinte, enquanto o negócio pagar. A comissão é calculada sobre o valor líquido, depois da taxa da cobrança (Pix, boleto ou cartão).`,
     `A comissão é liberada ${HOLD_DAYS} dias após o pagamento do cliente e paga por Pix na chave cadastrada, a partir de ${brl(MIN_PAYOUT_CENTS)} liberados. Pagamentos estornados ou contestados não geram comissão.`,
     "Não há comissão sobre a sua própria conta nem sobre contas com o seu CPF, e-mail ou telefone. Contas vindas do seu link não usam cupom de desconto.",
     "Você ganha só pelos negócios que indicar. Não existe ganho por indicar outros parceiros.",
