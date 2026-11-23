@@ -42,7 +42,9 @@ export type AuditAction =
   | "admin.custom_site"
   | "admin.announcement_sent"
   | "admin.signed_in"
-  | "finance.entry_deleted";
+  | "finance.entry_deleted"
+  | "api_key.created"
+  | "api_key.revoked";
 
 export async function audit(entry: {
   businessId: string | null;

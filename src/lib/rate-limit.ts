@@ -37,6 +37,8 @@ export const RATE_LIMITS = {
   chatSaleStatus: { limit: 240, windowSeconds: 60 * 60 },
   /** Pix receipt uploads, per appointment and per IP. */
   receipt: { limit: 10, windowSeconds: 60 * 60 },
+  /** The owner's own AI (MCP / REST API), per API key. */
+  api: { limit: 600, windowSeconds: 60 * 60 },
 } as const satisfies Record<string, RateLimitRule>;
 
 export type RateLimitName = keyof typeof RATE_LIMITS;

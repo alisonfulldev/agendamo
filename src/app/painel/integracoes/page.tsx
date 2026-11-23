@@ -11,6 +11,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 import { disconnectGoogleAction } from "./actions";
+import { AiSection } from "./ai-section";
 import { EmbedSection } from "./embed";
 
 export const metadata: Metadata = { title: "Integrações" };
@@ -97,6 +98,7 @@ export default async function IntegrationsPage({ searchParams }: PageProps<"/pai
       </Section>
 
       {isOwner ? <EmbedSection /> : null}
+      {isOwner ? <AiSection /> : null}
     </div>
   );
 }
