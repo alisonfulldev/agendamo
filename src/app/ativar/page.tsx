@@ -1,3 +1,4 @@
+import { ArrowRight } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -59,7 +60,8 @@ export default async function ActivatePage({
     const niche = NICHES.find((b) => b.niche!.route === area) ?? null;
     return (
       <Shell>
-        <Landing nicheKey={niche?.key ?? "beauty"} nicheRoute={niche?.niche!.route} />
+        {/* No ?area= (the general ad): the neutral "general" look, not one niche's colors. */}
+        <Landing nicheKey={niche?.key ?? "general"} nicheRoute={niche?.niche!.route} />
         <LazyCreationChat photos={isStorageConfigured()} activation />
       </Shell>
     );
@@ -129,7 +131,7 @@ function Shell({ children }: { children: React.ReactNode }) {
 
 function Landing({ nicheKey, nicheRoute }: { nicheKey: string; nicheRoute?: string }) {
   return (
-    <section className="flex flex-col gap-6">
+    <section className="flex flex-col gap-6 pb-28">
       <div className="text-center">
         <p className="text-sm font-semibold tracking-wide text-primary uppercase">
           {T.landing.eyebrow}
@@ -140,19 +142,23 @@ function Landing({ nicheKey, nicheRoute }: { nicheKey: string; nicheRoute?: stri
         <p className="mt-2 text-lg text-pretty text-muted-foreground">{T.landing.intro}</p>
       </div>
       <Tutorial nicheKey={nicheKey} />
-      <div className="flex flex-col gap-2">
-        <OpenCreationLink
-          niche={nicheRoute}
-          className="flex h-14 items-center justify-center rounded-xl bg-primary text-lg font-semibold text-primary-foreground shadow-lg"
-        >
-          {T.landing.cta}
-        </OpenCreationLink>
-        <p className="text-center text-sm text-muted-foreground">{T.landing.ctaHint}</p>
-      </div>
       <p className="text-center text-muted-foreground">{T.landing.noApp}</p>
       <Link href="/entrar" className="self-center text-sm font-medium underline underline-offset-2">
         {T.landing.login}
       </Link>
+      {/* Always in view (2026-11-25): fixed at the bottom, below the creation chat (z-50). */}
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 px-4 pt-3 pb-[max(env(safe-area-inset-bottom),0.75rem)] shadow-[0_-8px_24px_rgba(0,0,0,0.08)] backdrop-blur">
+        <div className="mx-auto flex w-full max-w-xl flex-col gap-1.5">
+          <OpenCreationLink
+            niche={nicheRoute}
+            className="cta-pulse flex h-16 items-center justify-center gap-2 rounded-2xl bg-primary text-xl font-bold text-primary-foreground shadow-xl"
+          >
+            {T.landing.cta}
+            <ArrowRight className="size-6" aria-hidden />
+          </OpenCreationLink>
+          <p className="text-center text-xs text-muted-foreground">{T.landing.ctaHint}</p>
+        </div>
+      </div>
     </section>
   );
 }

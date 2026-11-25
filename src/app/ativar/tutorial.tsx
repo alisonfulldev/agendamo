@@ -62,7 +62,8 @@ function exampleOf(nicheKey: string): Example {
   }));
   return {
     niche,
-    business: EXAMPLE_NAMES[niche.key] ?? "Seu negócio",
+    // The general ad (no ?area=) gets a neutral example name, not "Seu negócio".
+    business: EXAMPLE_NAMES[niche.key] ?? "Espaço Aurora",
     services,
     chosen: services[1] ?? services[0]!,
   };

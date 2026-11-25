@@ -581,3 +581,25 @@
     box-shadow: 0 0 0 4px color-mix(in oklch, var(--primary) 55%, transparent);
   }
 }
+
+/* "Quero o meu" on the ad page (/ativar, 2026-11-25): a soft pulse and a ring that keep calling
+   for the click, always in view at the bottom of the screen. */
+.cta-pulse {
+  animation: cta-pulse 1.8s ease-in-out infinite;
+}
+@keyframes cta-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 color-mix(in oklch, var(--primary) 55%, transparent);
+  }
+  50% {
+    transform: scale(1.035);
+    box-shadow: 0 0 0 14px transparent;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cta-pulse {
+    animation: none;
+  }
+}
