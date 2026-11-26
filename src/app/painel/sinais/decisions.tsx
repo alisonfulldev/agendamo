@@ -14,11 +14,24 @@ export function DepositDecision({ appointmentId }: { appointmentId: string }) {
   const [pending, startTransition] = useTransition();
   const [refusing, setRefusing] = useState(false);
   const [reason, setReason] = useState("");
+  const [failed, setFailed] = useState(false);
   const decide = (decision: "confirm" | "refuse") =>
     startTransition(async () => {
-      await decideDepositAction({ appointmentId, decision, reason: reason || undefined });
+      setFailed(false);
+      const result = await decideDepositAction({
+        appointmentId,
+        decision,
+        reason: reason || undefined,
+      }).catch(() => ({ ok: false }));
+      // Never silent: a click that changed nothing says so.
+      if (!result.ok) setFailed(true);
       router.refresh();
     });
+  const failure = failed ? (
+    <p role="alert" className="w-full text-sm text-destructive">
+      Não foi possível salvar. Atualize a página e tente de novo.
+    </p>
+  ) : null;
   if (refusing) {
     return (
       <div className="flex flex-col gap-2">
@@ -50,6 +63,7 @@ export function DepositDecision({ appointmentId }: { appointmentId: string }) {
             Voltar
           </Button>
         </div>
+        {failure}
       </div>
     );
   }
@@ -61,6 +75,7 @@ export function DepositDecision({ appointmentId }: { appointmentId: string }) {
       <Button type="button" variant="outline" disabled={pending} onClick={() => setRefusing(true)}>
         Não recebi
       </Button>
+      {failure}
     </div>
   );
 }

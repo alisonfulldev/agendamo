@@ -329,7 +329,8 @@ export type ConfirmResult =
         | "coupon_invalid"
         | "rate_limited"
         | "limit"
-        | "policy_required";
+        | "policy_required"
+        | "email_required";
     };
 
 export async function confirmChatBookingAction(input: unknown): Promise<ConfirmResult> {
@@ -369,6 +370,7 @@ export async function confirmChatBookingAction(input: unknown): Promise<ConfirmR
     source: "chat",
     couponCode: features.salesTools ? data.couponCode : null,
     depositPolicyAccepted: data.depositPolicyAccepted,
+    requireEmailForDeposit: true,
     referralCode: data.referralCode,
   });
   if (!result.ok) {

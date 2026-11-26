@@ -16,7 +16,8 @@ export type ReceiptActionError =
   | "rate_limited"
   | "missing"
   | "invalid_file"
-  | "duplicate";
+  | "duplicate"
+  | "taken";
 
 /** "Já fiz o Pix": no receipt needed (the owner checks the payment in the bank). */
 export async function declarePaidAction(

@@ -224,6 +224,7 @@ export async function createManualAppointmentAction(input: unknown): Promise<Man
       coupon_invalid: "Cupom inválido.",
       limit: "Assinatura inativa: assine o Completo para agendar pelo chat.",
       policy_required: "Aceite da política do sinal pendente.",
+      email_required: "Informe o e-mail do cliente.",
     } as const;
     return { ok: false, message: messages[result.error] };
   }

@@ -27,6 +27,8 @@ export type BookingError =
   | "coupon_invalid"
   /** A deposit applies and the policy was not accepted (the chat shows it first). */
   | "policy_required"
+  /** A deposit applies and the chat customer gave no e-mail (it carries the Pix and the link). */
+  | "email_required"
   /** Grátis plan: the 10 chat bookings of the cycle are used (the chat hands off to WhatsApp). */
   | "limit";
 
@@ -53,6 +55,11 @@ export interface CreateBookingInput {
   customerPackageId?: string | null;
   /** The customer accepted the deposit policy shown in the chat (required when a deposit applies). */
   depositPolicyAccepted?: boolean;
+  /**
+   * Booking chat: with a deposit the e-mail is required (Pix, "Já fiz o Pix" link, reminders and
+   * the expiry notice go by e-mail). The AI API sends the Pix in its own conversation instead.
+   */
+  requireEmailForDeposit?: boolean;
   now?: Date;
 }
 
@@ -219,6 +226,13 @@ export async function createBooking(input: CreateBookingInput): Promise<CreateBo
   const policyText = (page?.deposit_policy_text as string | null)?.trim() || null;
   if (status === "awaiting_deposit" && policyText && !input.depositPolicyAccepted)
     return { ok: false, error: "policy_required" };
+  if (
+    status === "awaiting_deposit" &&
+    input.requireEmailForDeposit &&
+    "email" in input.customer &&
+    !input.customer.email
+  )
+    return { ok: false, error: "email_required" };
   // The time stays reserved while waiting for the receipt (20 minutes by default).
   const depositExpiresAt =
     status === "awaiting_deposit"

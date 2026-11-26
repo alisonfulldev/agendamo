@@ -33,7 +33,6 @@ export const metadata: Metadata = { title: "Modo demonstração", robots: { inde
 export const dynamic = "force-dynamic";
 
 const CRON_LABELS: Record<(typeof CRON_JOBS)[number], string> = {
-  reminders: "Lembretes de horário",
   deposits: "Sinais Pix vencidos",
   trial: "Fim do teste grátis",
   "daily-alert": "Alerta diário da dona",

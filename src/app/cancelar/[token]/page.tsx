@@ -3,12 +3,15 @@ import { notFound, redirect } from "next/navigation";
 import QRCode from "qrcode";
 
 import { getCurrentBrand } from "@/brands/server";
+import { CalendarSave } from "@/components/booking/calendar-save";
+import { googleCalendarUrl } from "@/lib/ics";
 import { brandUrl } from "@/brands/urls";
 import {
   formatDateLong,
   formatTime,
   loadAppointmentDetails,
   priceText,
+  serviceEnd,
   serviceNames,
   totalPrice,
 } from "@/lib/booking/details";
@@ -52,7 +55,15 @@ export default async function ManageAppointmentPage({
 
   const { appointment, business, page } = details;
   const changeable = await canChange(appointment, business.min_notice_minutes);
-  const code = appointment.status === "awaiting_deposit" ? depositBrCode(details) : null;
+  // Hold expired by the system and not started yet: "Já fiz o Pix" can still get the time back.
+  const reclaimable =
+    appointment.status === "cancelled" &&
+    appointment.deposit_status === "expired" &&
+    appointment.cancelled_by === "system" &&
+    new Date(appointment.starts_at) > new Date();
+  const holding =
+    appointment.status === "awaiting_deposit" && appointment.deposit_status === "waiting";
+  const code = holding || reclaimable ? depositBrCode(details) : null;
   const pix = code ? { code, qr: await QRCode.toDataURL(code, { width: 320, margin: 1 }) } : null;
   // "Já fiz o Pix" without a receipt: it can still be attached here, until the owner decides.
   let canAttachReceipt = false;
@@ -73,7 +84,9 @@ export default async function ManageAppointmentPage({
       </div>
       <dl className="grid grid-cols-[6rem_1fr] gap-y-2 rounded-xl border bg-card p-4 text-sm">
         <dt className="text-muted-foreground">Status</dt>
-        <dd className="font-medium">{STATUS_TEXT[appointment.status]}</dd>
+        <dd className="font-medium">
+          {reclaimable ? "Horário liberado (Pix não avisado)" : STATUS_TEXT[appointment.status]}
+        </dd>
         <dt className="text-muted-foreground">Serviço</dt>
         <dd>{serviceNames(details)}</dd>
         {details.showProfessional ? (
@@ -102,10 +115,7 @@ export default async function ManageAppointmentPage({
         canChange={changeable}
         startRescheduling={reschedule}
         deposit={
-          pix &&
-          appointment.status === "awaiting_deposit" &&
-          appointment.deposit_status === "waiting" &&
-          appointment.deposit_expires_at
+          pix && (holding || reclaimable) && appointment.deposit_expires_at
             ? {
                 amount: priceText(appointment.deposit_cents),
                 pix,
@@ -117,6 +127,19 @@ export default async function ManageAppointmentPage({
         }
         attachReceipt={canAttachReceipt ? { businessName: business.name } : null}
       />
+
+      {["confirmed", "pending"].includes(appointment.status) &&
+      new Date(appointment.starts_at) > new Date() ? (
+        <CalendarSave
+          googleCalendarUrl={googleCalendarUrl({
+            start: new Date(appointment.starts_at),
+            end: serviceEnd(details),
+            title: `${serviceNames(details)} · ${business.name}`,
+          })}
+          cancelToken={token}
+          linkClass="flex h-11 items-center justify-center gap-2 rounded-xl border bg-card text-sm font-medium text-primary"
+        />
+      ) : null}
 
       {!changeable && ["confirmed", "pending", "awaiting_deposit"].includes(appointment.status) ? (
         <p className="text-sm text-muted-foreground">

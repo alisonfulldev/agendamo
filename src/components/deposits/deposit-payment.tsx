@@ -21,6 +21,9 @@ const ERRORS: Record<string, string> = {
   not_waiting: "Esse horário não está mais aguardando pagamento.",
   invalid: "Não conseguimos enviar agora. Tente de novo.",
   receipt_required: "Para este agendamento, envie o comprovante do Pix.",
+  expired: "Esse horário não está mais reservado. Fale com {business} pelo WhatsApp.",
+  taken:
+    "Esse horário já foi ocupado por outra pessoa. Avisamos {business}: fale pelo WhatsApp para combinar outro horário ou a devolução do Pix.",
 };
 
 function errorText(failure: unknown, businessName: string): string {
@@ -158,7 +161,10 @@ export function DepositPayment({
   businessName,
   whatsapp,
   onExpired,
+  afterDeclared,
 }: {
+  /** Shown once the customer said "Já fiz o Pix" (e.g. "Salvar na agenda do celular"). */
+  afterDeclared?: React.ReactNode;
   /** The customer's secret link token. */
   token: string;
   /** "30,00" (the exact amount set by the owner). */
@@ -204,10 +210,13 @@ export function DepositPayment({
 
   if (state === "sent") {
     return (
-      <p role="status" className="rounded-2xl bg-card px-4 py-3 text-card-foreground shadow-sm">
-        Recebemos seu comprovante! Seu horário está pré-confirmado. Você recebe a confirmação assim
-        que {businessName} conferir.
-      </p>
+      <div className="flex flex-col gap-2">
+        <p role="status" className="rounded-2xl bg-card px-4 py-3 text-card-foreground shadow-sm">
+          Recebemos seu comprovante! Seu horário está pré-confirmado. Você recebe a confirmação
+          assim que {businessName} conferir.
+        </p>
+        {afterDeclared}
+      </div>
     );
   }
 
@@ -225,24 +234,57 @@ export function DepositPayment({
           label="Quer agilizar? Anexar comprovante (opcional)"
           onSent={() => setState("sent")}
         />
+        {afterDeclared}
       </div>
     );
   }
 
   if (expired) {
+    // Many pay in the bank app and come back after the countdown: they can still say so, and the
+    // time comes back if nobody took it.
     return (
       <div className="flex flex-col gap-2">
         <p role="status" className="rounded-2xl bg-card px-4 py-3 text-card-foreground shadow-sm">
-          Seu horário expirou. Quer escolher outro?
+          O tempo de reserva acabou. Já fez o Pix? Toque em “Já fiz o Pix”: se o horário ainda
+          estiver livre, ele continua seu.
         </p>
+        {receiptRequired ? null : (
+          <button
+            type="button"
+            disabled={state === "declaring"}
+            onClick={() => void declare()}
+            className="flex h-12 items-center justify-center gap-2 rounded-xl bg-primary font-semibold text-primary-foreground disabled:opacity-60"
+          >
+            <CircleCheck className="size-4" aria-hidden />
+            {state === "declaring" ? "Avisando…" : "Já fiz o Pix"}
+          </button>
+        )}
         {onExpired ? (
           <button
             type="button"
             onClick={onExpired}
-            className="h-12 rounded-xl bg-primary font-semibold text-primary-foreground"
+            className="h-12 rounded-xl border bg-card font-medium"
           >
             Escolher outro horário
           </button>
+        ) : null}
+        {whatsapp ? (
+          <a
+            href={whatsappLink(
+              whatsapp,
+              `Olá, ${businessName}! Fiz o Pix do meu agendamento, mas o tempo de reserva acabou.`,
+            )}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex h-12 items-center justify-center gap-2 rounded-xl border bg-card font-medium text-primary"
+          >
+            <LifeBuoy className="size-4" aria-hidden /> Preciso de ajuda
+          </a>
+        ) : null}
+        {error ? (
+          <p role="alert" className="px-1 text-sm text-destructive">
+            {error}
+          </p>
         ) : null}
       </div>
     );

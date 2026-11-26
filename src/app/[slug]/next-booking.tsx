@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarPlus } from "lucide-react";
+import { CalendarSave } from "@/components/booking/calendar-save";
 import { useState, useTransition } from "react";
 
 import {
@@ -220,21 +220,11 @@ export function NextBooking({
                 Ver o Pix do sinal
               </a>
             ) : null}
-            <div className="grid grid-cols-2 gap-1.5">
-              {result.googleCalendarUrl ? (
-                <a
-                  href={result.googleCalendarUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={linkClass}
-                >
-                  <CalendarPlus className="size-4" /> Google Agenda
-                </a>
-              ) : null}
-              <a href={`/api/ics/${result.cancelToken}`} className={linkClass}>
-                <CalendarPlus className="size-4" /> Calendário do iPhone
-              </a>
-            </div>
+            <CalendarSave
+              googleCalendarUrl={result.googleCalendarUrl}
+              cancelToken={result.cancelToken}
+              linkClass={linkClass}
+            />
           </ChatOptions>
         </>
       ) : null}

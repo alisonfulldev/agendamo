@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarPlus, MessageCircle } from "lucide-react";
+import { MessageCircle } from "lucide-react";
 import { useCallback, useEffect, useState, useTransition } from "react";
 
 import { useBrand } from "@/components/brand-provider";
@@ -18,7 +18,9 @@ import {
 } from "@/components/chat/chat-ui";
 import { Checkbox } from "@/components/ui/checkbox";
 import { formatAmount, formatDuration } from "@/lib/money";
+import { CalendarSave } from "@/components/booking/calendar-save";
 import { DepositPayment } from "@/components/deposits/deposit-payment";
+import { EMAIL_PATTERN, suggestEmailFix } from "@/lib/email-typos";
 import { maskBrPhone, normalizeBrPhone, whatsappLink } from "@/lib/phone";
 import { track } from "@/lib/tracking/client";
 
@@ -165,6 +167,8 @@ export function BookingChat({
   const [slots, setSlots] = useState<{ startsAt: string; time: string }[] | null>(null);
   const [couponOpen, setCouponOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  /** E-mail with a likely typo in the domain, waiting for "Sim, corrigir" / "Não, está certo". */
+  const [emailFix, setEmailFix] = useState<{ typed: string; fix: string } | null>(null);
   const [waitlistDone, setWaitlistDone] = useState(false);
   // A failed or slow load shows "Tentar de novo" instead of "digitando…" forever.
   const [loadFailed, setLoadFailed] = useState(false);
@@ -359,6 +363,15 @@ export function BookingChat({
     return result;
   };
 
+  const selectedServiceIds = state.comboId
+    ? (catalog.combos.find((c) => c.id === state.comboId)?.serviceIds ?? [])
+    : state.serviceIds;
+  const needsDeposit = Boolean(
+    catalog.deposit && selectedServiceIds.some((id) => catalog.deposit!.serviceIds.includes(id)),
+  );
+  // With a deposit the e-mail carries the Pix, the "Já fiz o Pix" link and the expiry notice.
+  const requireEmail = needsDeposit && Boolean(state.startsAt);
+
   // ---- transcript of completed steps ----
   const transcript: { prompt: string; answer: string | null }[] = [];
   const prompts: Partial<Record<Step, string>> = {
@@ -368,7 +381,9 @@ export function BookingChat({
     time: fill(messages.askTime, vars),
     name: fill(messages.askName, vars),
     phone: fill(messages.askPhone, vars),
-    email: fill(messages.askEmail, vars),
+    email: requireEmail
+      ? "Qual é o seu e-mail? É por ele que você recebe o Pix e a confirmação do horário."
+      : fill(messages.askEmail, vars),
     coupon: fill(messages.askCoupon, vars),
     summary: fill(summaryTemplate(messages.summary), vars),
   };
@@ -386,13 +401,6 @@ export function BookingChat({
   for (const step of state.history) {
     if (prompts[step]) transcript.push({ prompt: prompts[step]!, answer: answers[step] ?? null });
   }
-
-  const selectedServiceIds = state.comboId
-    ? (catalog.combos.find((c) => c.id === state.comboId)?.serviceIds ?? [])
-    : state.serviceIds;
-  const needsDeposit = Boolean(
-    catalog.deposit && selectedServiceIds.some((id) => catalog.deposit!.serviceIds.includes(id)),
-  );
 
   function confirm() {
     startTransition(async () => {
@@ -435,6 +443,13 @@ export function BookingChat({
       } else if (result.error === "coupon_invalid") {
         setState((s) => ({ ...s, couponCode: null, discountCents: 0 }));
         setError("Esse cupom não vale mais. Confirme sem ele ou tente outro.");
+      } else if (result.error === "email_required") {
+        setState((s) => ({
+          ...s,
+          step: "email",
+          history: s.history.slice(0, Math.max(0, s.history.indexOf("email"))),
+        }));
+        setError("Informe seu e-mail: é por ele que você recebe o Pix e a confirmação.");
       } else {
         setError(fill(messages.error, vars));
       }
@@ -532,17 +547,31 @@ export function BookingChat({
       <ChatComposer
         key="email"
         label="E-mail"
-        placeholder="seu@email.com (opcional)"
+        placeholder={requireEmail ? "seu@email.com" : "seu@email.com (opcional)"}
         type="email"
         inputMode="email"
         autoComplete="email"
-        initial={state.email}
-        allowEmpty
+        initial={emailFix?.typed ?? state.email}
+        allowEmpty={!requireEmail}
         pending={pending}
         validate={(v) =>
-          v && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v.trim()) ? "E-mail inválido" : null
+          requireEmail && !v.trim()
+            ? "Informe seu e-mail para receber o Pix"
+            : v && !EMAIL_PATTERN.test(v.trim())
+              ? "E-mail inválido"
+              : null
         }
-        onSubmit={(email) => submitEmail(email.trim().toLowerCase())}
+        onSubmit={(raw) => {
+          const email = raw.trim().toLowerCase();
+          // "ana@gmail.co" -> ask before using it (a wrong e-mail never receives the Pix).
+          const fix = email ? suggestEmailFix(email) : null;
+          if (fix) {
+            setEmailFix({ typed: email, fix });
+            return;
+          }
+          setEmailFix(null);
+          submitEmail(email);
+        }}
         above={
           <label className="flex items-start gap-2 rounded-lg bg-card px-3 py-2 text-sm text-card-foreground shadow-sm">
             <Checkbox
@@ -792,7 +821,37 @@ export function BookingChat({
         )
       ) : null}
 
-      {current === "email" ? (
+      {current === "email" && emailFix ? (
+        <>
+          <p className="px-1 text-sm">
+            Você quis dizer <strong>{emailFix.fix}</strong>?
+          </p>
+          <ChatOptions columns={2}>
+            <ChatOption
+              className="text-center"
+              disabled={pending}
+              onClick={() => {
+                const email = emailFix.fix;
+                setEmailFix(null);
+                submitEmail(email);
+              }}
+            >
+              Sim, corrigir
+            </ChatOption>
+            <ChatOption
+              className="text-center"
+              disabled={pending}
+              onClick={() => {
+                const email = emailFix.typed;
+                setEmailFix(null);
+                submitEmail(email);
+              }}
+            >
+              Não, está certo
+            </ChatOption>
+          </ChatOptions>
+        </>
+      ) : current === "email" && !requireEmail ? (
         <ChatOptions>
           <ChatOption className="text-center" disabled={pending} onClick={() => submitEmail("")}>
             Prefiro não informar
@@ -882,6 +941,13 @@ export function BookingChat({
               expiresAt={state.result.depositExpiresAt}
               businessName={catalog.businessName}
               whatsapp={catalog.whatsapp}
+              afterDeclared={
+                <CalendarSave
+                  googleCalendarUrl={state.result.googleCalendarUrl}
+                  cancelToken={state.result.cancelToken}
+                  linkClass={linkClass}
+                />
+              }
               onExpired={() =>
                 setState((s) => ({
                   ...s,
@@ -896,26 +962,11 @@ export function BookingChat({
           ) : null}
           <ChatOptions>
             {state.result.status !== "awaiting_deposit" ? (
-              <>
-                <p className="px-1 pt-1 text-sm text-muted-foreground">
-                  Salvar na minha agenda (com lembrete):
-                </p>
-                <div className="grid grid-cols-2 gap-1.5">
-                  {state.result.googleCalendarUrl ? (
-                    <a
-                      href={state.result.googleCalendarUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={linkClass}
-                    >
-                      <CalendarPlus className="size-4" /> Google Agenda
-                    </a>
-                  ) : null}
-                  <a href={`/api/ics/${state.result.cancelToken}`} className={linkClass}>
-                    <CalendarPlus className="size-4" /> Calendário do iPhone
-                  </a>
-                </div>
-              </>
+              <CalendarSave
+                googleCalendarUrl={state.result.googleCalendarUrl}
+                cancelToken={state.result.cancelToken}
+                linkClass={linkClass}
+              />
             ) : null}
             {state.result.whatsappSummary && catalog.whatsapp ? (
               <a

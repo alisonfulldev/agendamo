@@ -58,11 +58,14 @@ export function buildIcs(event: IcsEvent): string {
     ...(event.url ? [`URL:${event.url}`] : []),
     `STATUS:${event.status ?? "CONFIRMED"}`,
     `SEQUENCE:${event.sequence ?? 0}`,
-    "BEGIN:VALARM",
-    "TRIGGER:-PT2H",
-    "ACTION:DISPLAY",
-    `DESCRIPTION:${escapeText(event.title)}`,
-    "END:VALARM",
+    // The phone's calendar is the reminder (no reminder e-mail since 2026-11-26): 1 day and 2 hours before.
+    ...["-P1D", "-PT2H"].flatMap((trigger) => [
+      "BEGIN:VALARM",
+      `TRIGGER:${trigger}`,
+      "ACTION:DISPLAY",
+      `DESCRIPTION:${escapeText(event.title)}`,
+      "END:VALARM",
+    ]),
     "END:VEVENT",
     "END:VCALENDAR",
   ];

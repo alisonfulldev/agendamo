@@ -171,8 +171,15 @@ export interface Appointment {
   referral_code: string | null;
   package_id: string | null;
   google_event_id: string | null;
+  /** Set when cancelled (null for cancellations before 2026-11-25). */
+  cancelled_at: string | null;
+  cancelled_by: CancelledBy | null;
+  cancel_reason: string | null;
   created_at: string;
 }
+
+/** "system": the deposit hold expired without "Já fiz o Pix". */
+export type CancelledBy = "customer" | "business" | "system";
 
 export interface AppointmentService {
   id: string;

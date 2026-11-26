@@ -2,11 +2,11 @@ import "server-only";
 
 import QRCode from "qrcode";
 
+import type { CancelledBy } from "@/lib/db/types";
 import type { EmailAttachment } from "@/lib/email/send";
 import { sendEmail } from "@/lib/email/send";
 import type { EmailContent } from "@/lib/email/layout";
 import { buildIcs } from "@/lib/ics";
-import { getPlanFeatures } from "@/lib/plans";
 import { claimNotification, notifyTeam } from "@/lib/notifications/owner";
 import { formatBrPhone, whatsappLink } from "@/lib/phone";
 import { buildPixBrCode } from "@/lib/pix";
@@ -206,15 +206,31 @@ export async function notifyBookingConfirmed(appointmentId: string): Promise<voi
   );
 }
 
-/** Cancellation by the customer or the business. */
+/** Cancellation by the customer, the business, or the system (deposit hold expired). */
 export async function notifyBookingCancelled(
   appointmentId: string,
-  by: "customer" | "business",
+  by: CancelledBy,
   reason?: string,
 ): Promise<void> {
   const d = await loadAppointmentDetails(appointmentId);
   if (!d) return;
-  if (by === "business") {
+  if (by === "system") {
+    // The hold ended without "Já fiz o Pix": who already paid can still get the time back.
+    await sendToCustomer(
+      d,
+      `Seu horário foi liberado · ${d.business.name}`,
+      {
+        heading: "O tempo para o Pix acabou",
+        paragraphs: [
+          `Não recebemos o aviso do Pix a tempo, então o horário foi liberado.`,
+          `Já fez o Pix? Toque em “Já fiz o Pix” abaixo: se o horário ainda estiver livre, ele volta para você na hora.`,
+        ],
+        details: detailLines(d),
+        cta: { label: "Já fiz o Pix", url: manageUrl(d) },
+      },
+      [icsAttachment(d, "CANCELLED")],
+    );
+  } else if (by === "business") {
     await sendToCustomer(
       d,
       `Horário cancelado · ${d.business.name}`,
@@ -243,7 +259,9 @@ export async function notifyBookingCancelled(
     content: {
       heading: "Agendamento cancelado",
       paragraphs: [
-        `${d.customer.name} ${by === "customer" ? "cancelou" : "teve o horário cancelado"}. O horário já está livre de novo.`,
+        by === "system"
+          ? `${d.customer.name} não avisou o Pix a tempo. O horário já está livre de novo (se a pessoa tiver pago e o horário continuar livre, ela pode recuperá-lo).`
+          : `${d.customer.name} ${by === "customer" ? "cancelou" : "teve o horário cancelado"}. O horário já está livre de novo.`,
       ],
       details: detailLines(d),
       cta: { label: "Abrir agenda", url: "/painel/agenda" },
@@ -320,26 +338,6 @@ export async function notifyBookingRescheduled(
   );
 }
 
-/** 24h reminder, once per appointment (notification_log). */
-export async function sendReminder(appointmentId: string): Promise<boolean> {
-  const d = await loadAppointmentDetails(appointmentId);
-  if (!d || d.appointment.status !== "confirmed" || !d.customer.email) return false;
-  // Reminders are part of Agenda and Pro (not Grátis).
-  if (!getPlanFeatures(d.business).reminders) return false;
-  if (!(await claimNotification(d.business.id, "reminder_24h", d.appointment.id))) return false;
-  await sendToCustomer(d, `Lembrete: ${serviceNames(d)} amanhã · ${d.business.name}`, {
-    heading: `Até amanhã, ${d.customer.name.split(" ")[0]}!`,
-    paragraphs: [
-      "Passando para lembrar do seu horário.",
-      "Se não puder vir, remarque em poucos toques: o horário fica livre para outra pessoa.",
-    ],
-    details: detailLines(d),
-    cta: { label: "Preciso remarcar", url: manageUrl(d, { reschedule: true }) },
-    secondaryLinks: [{ label: "Cancelar horário", url: manageUrl(d) }],
-  });
-  return true;
-}
-
 /** "{cliente} enviou comprovante de R$ {valor} para {serviço} em {data} às {hora}. Confira no seu banco." */
 function receiptLine(d: AppointmentDetails): string {
   return `${d.customer.name.split(" ")[0]} enviou comprovante de R$ ${priceText(d.appointment.deposit_cents)} para ${serviceNames(d)} em ${formatDateLong(d.appointment.starts_at, d.business.timezone)} às ${formatTime(d.appointment.starts_at, d.business.timezone)}. Confira no seu banco.`;
@@ -369,6 +367,42 @@ export async function notifyPixDeclared(appointmentId: string): Promise<void> {
       cta: { label: "Conferir Pix", url: "/painel/sinais" },
     },
     push: { title: "Pix para conferir", body: pixLine(d), url: "/painel/sinais" },
+  });
+}
+
+/**
+ * The customer says they paid after the hold expired, but someone else already took the time: the
+ * owner checks the bank and refunds or reschedules (once per appointment).
+ */
+export async function notifyPixAfterSlotTaken(appointmentId: string): Promise<void> {
+  const d = await loadAppointmentDetails(appointmentId);
+  if (!d) return;
+  if (!(await claimNotification(d.business.id, "deposit_paid_slot_taken", d.appointment.id)))
+    return;
+  await notifyTeam({
+    businessId: d.business.id,
+    type: "deposit_informed",
+    professionalId: d.professional.id,
+    subject: `${d.customer.name.split(" ")[0]} disse que pagou, mas o horário já foi ocupado`,
+    content: {
+      heading: "Pix depois do horário liberado",
+      paragraphs: [
+        `${d.customer.name} avisou que fez o Pix de R$ ${priceText(d.appointment.deposit_cents)} depois que o tempo de reserva acabou, e o horário já tinha sido ocupado por outra pessoa.`,
+        "Confira no banco. Se o Pix entrou, combine outro horário ou devolva o valor.",
+      ],
+      details: [
+        ...detailLines(d),
+        ...(d.customer.phone
+          ? [{ label: "WhatsApp", value: formatBrPhone(d.customer.phone) }]
+          : []),
+      ],
+      cta: { label: "Abrir agenda", url: "/painel/agenda" },
+    },
+    push: {
+      title: "Pix depois do horário liberado",
+      body: `${d.customer.name} · ${when(d)}`,
+      url: "/painel/agenda",
+    },
   });
 }
 

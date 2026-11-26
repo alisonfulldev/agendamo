@@ -3,7 +3,7 @@ import "server-only";
 import { formatInTimeZone } from "date-fns-tz";
 
 import { layoutBlock } from "@/lib/availability";
-import type { Appointment, AppointmentStatus } from "@/lib/db/types";
+import type { Appointment, AppointmentStatus, CancelledBy } from "@/lib/db/types";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 import { getSlots, loadCatalog, stepsFor } from "./data";
@@ -38,10 +38,15 @@ async function transition(
 
 export async function cancelAppointment(
   appointmentId: string,
-  by: "customer" | "business",
+  by: CancelledBy,
   reason?: string,
 ): Promise<boolean> {
-  const changed = await transition(appointmentId, ACTIVE, { status: "cancelled" });
+  const changed = await transition(appointmentId, ACTIVE, {
+    status: "cancelled",
+    cancelled_at: new Date().toISOString(),
+    cancelled_by: by,
+    cancel_reason: reason?.trim().slice(0, 500) || null,
+  });
   if (!changed) return false;
   // Cancelling frees the slot immediately (exclusion constraints only cover active statuses).
   await notifyBookingCancelled(appointmentId, by, reason);
@@ -49,7 +54,22 @@ export async function cancelAppointment(
   return true;
 }
 
+/**
+ * Approves a pending appointment. When the customer said "Já fiz o Pix", approving means the owner
+ * accepted the Pix: the deposit is confirmed too (otherwise it stayed "to check" and kept sending
+ * reminders).
+ */
 export async function approveAppointment(appointmentId: string): Promise<boolean> {
+  const appointment = await load(appointmentId);
+  if (appointment?.status === "pending" && appointment.deposit_status === "sent") {
+    if (!(await confirmDeposit(appointmentId))) return false;
+    await createAdminClient()
+      .from("deposit_receipts")
+      .update({ status: "accepted", decided_at: new Date().toISOString() })
+      .eq("appointment_id", appointmentId)
+      .eq("status", "received");
+    return true;
+  }
   const changed = await transition(appointmentId, ["pending"], { status: "confirmed" });
   if (changed) await notifyBookingConfirmed(appointmentId);
   return changed;
@@ -60,20 +80,29 @@ export async function approveAppointment(appointmentId: string): Promise<boolean
  * waiting for the receipt or with the receipt sent (pre-confirmed).
  */
 export async function confirmDeposit(appointmentId: string): Promise<boolean> {
-  const { data } = await createAdminClient()
+  const admin = createAdminClient();
+  const decidedAt = new Date().toISOString();
+  const { data } = await admin
     .from("appointments")
-    .update({
-      status: "confirmed",
-      deposit_status: "confirmed",
-      deposit_decided_at: new Date().toISOString(),
-    })
+    .update({ status: "confirmed", deposit_status: "confirmed", deposit_decided_at: decidedAt })
     .eq("id", appointmentId)
     .in("status", ["awaiting_deposit", "pending"])
     .in("deposit_status", ["waiting", "sent"])
     .select("id");
-  const changed = (data?.length ?? 0) > 0;
-  if (changed) await notifyBookingConfirmed(appointmentId);
-  return changed;
+  if ((data?.length ?? 0) > 0) {
+    await notifyBookingConfirmed(appointmentId);
+    return true;
+  }
+  // The appointment was already approved (or cancelled, attended…) before the Pix was checked:
+  // only the deposit is recorded as received, without touching the appointment or telling anyone.
+  const { data: depositOnly } = await admin
+    .from("appointments")
+    .update({ deposit_status: "confirmed", deposit_decided_at: decidedAt })
+    .eq("id", appointmentId)
+    .in("status", ["confirmed", "cancelled", "completed", "no_show"])
+    .eq("deposit_status", "sent")
+    .select("id");
+  return (depositOnly?.length ?? 0) > 0;
 }
 
 export async function completeAppointment(appointmentId: string): Promise<boolean> {

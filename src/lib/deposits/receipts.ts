@@ -4,11 +4,13 @@ import { createHash, randomBytes } from "node:crypto";
 
 import { cancelAppointment, confirmDeposit } from "@/lib/booking/manage";
 import {
+  notifyPixAfterSlotTaken,
   notifyPixDeclared,
   notifyPixDueSoon,
   notifyReceiptReceived,
   notifyReceiptReminder,
 } from "@/lib/booking/notify";
+import { syncAppointmentToGoogle } from "@/lib/google/sync";
 import type { Appointment, DepositReceipt } from "@/lib/db/types";
 import { rateLimit } from "@/lib/rate-limit";
 import { createPrivateUploadUrl, deleteObject, readObject } from "@/lib/storage/r2";
@@ -36,7 +38,8 @@ type ReceiptError =
   | "rate_limited"
   | "missing"
   | "invalid_file"
-  | "duplicate";
+  | "duplicate"
+  | "taken";
 
 /** The appointment of the customer's secret link (cancel token), or null. */
 async function appointmentByToken(token: string): Promise<Appointment | null> {
@@ -64,9 +67,60 @@ function canAttach(appointment: Appointment, now: Date): ReceiptError | null {
 }
 
 /**
+ * The hold expired (by the system, since 2026-11-25) and the appointment has not started: the
+ * customer who paid late, or forgot the button, can still get the time back if it is free.
+ * Cancellations before that date (cancelled_by null) are never reopened.
+ */
+function canReclaim(appointment: Appointment, now: Date): boolean {
+  return (
+    appointment.status === "cancelled" &&
+    appointment.deposit_status === "expired" &&
+    appointment.cancelled_by === "system" &&
+    new Date(appointment.starts_at) > now
+  );
+}
+
+/** Reopens an expired hold as "Pix sent, to check". The exclusion constraints refuse a taken time. */
+async function reclaimExpiredHold(
+  appointment: Appointment,
+  now: Date,
+): Promise<{ ok: true } | { ok: false; error: ReceiptError }> {
+  const { data, error } = await createAdminClient()
+    .from("appointments")
+    .update({
+      status: "pending",
+      deposit_status: "sent",
+      deposit_sent_at: now.toISOString(),
+      deposit_decided_at: null,
+      cancelled_at: null,
+      cancelled_by: null,
+      cancel_reason: null,
+    })
+    .eq("id", appointment.id)
+    .eq("status", "cancelled")
+    .eq("deposit_status", "expired")
+    .select("id");
+  if (error?.code === "23P01") {
+    await notifyPixAfterSlotTaken(appointment.id);
+    return { ok: false, error: "taken" };
+  }
+  if (error) {
+    console.error("reclaim expired hold failed", error.message);
+    return { ok: false, error: "invalid" };
+  }
+  if (!data?.length) return { ok: false, error: "not_waiting" };
+  await notifyPixDeclared(appointment.id);
+  await syncAppointmentToGoogle(appointment.id).catch((e) =>
+    console.error("google sync failed", e),
+  );
+  return { ok: true };
+}
+
+/**
  * "Já fiz o Pix" (the receipt is optional): the time stays reserved, never confirmed, until the
  * owner finds the payment in the bank. A customer marked "Não recebi" before must
- * attach the receipt instead.
+ * attach the receipt instead. Still accepted after the hold's deadline: while the cron has not
+ * run the hold is simply kept, and after it ran the time comes back if nobody took it.
  */
 export async function declarePaid(input: {
   token: string;
@@ -75,8 +129,12 @@ export async function declarePaid(input: {
   const now = input.now ?? new Date();
   const appointment = await appointmentByToken(input.token);
   if (!appointment) return { ok: false, error: "invalid" };
-  const waiting = stillWaiting(appointment, now);
-  if (waiting) return { ok: false, error: waiting };
+  const reclaim = canReclaim(appointment, now);
+  if (!reclaim) {
+    if (appointment.status !== "awaiting_deposit" || appointment.deposit_status !== "waiting")
+      return { ok: false, error: "not_waiting" };
+    if (new Date(appointment.starts_at) <= now) return { ok: false, error: "expired" };
+  }
   const admin = createAdminClient();
   if (appointment.customer_id) {
     const { data: customer } = await admin
@@ -84,8 +142,12 @@ export async function declarePaid(input: {
       .select("deposit_receipt_required")
       .eq("id", appointment.customer_id)
       .maybeSingle();
-    if (customer?.deposit_receipt_required) return { ok: false, error: "receipt_required" };
+    // Reclaiming needs the hold (the receipt can only be attached while waiting).
+    if (customer?.deposit_receipt_required)
+      return { ok: false, error: reclaim ? "expired" : "receipt_required" };
   }
+  if (reclaim) return reclaimExpiredHold(appointment, now);
+
   const { data: moved } = await admin
     .from("appointments")
     .update({ status: "pending", deposit_status: "sent", deposit_sent_at: now.toISOString() })
@@ -93,7 +155,12 @@ export async function declarePaid(input: {
     .eq("status", "awaiting_deposit")
     .eq("deposit_status", "waiting")
     .select("id");
-  if (!moved?.length) return { ok: false, error: "not_waiting" };
+  if (!moved?.length) {
+    // The cron expired it in the meantime: try to get the time back.
+    const fresh = await appointmentByToken(input.token);
+    if (fresh && canReclaim(fresh, now)) return reclaimExpiredHold(fresh, now);
+    return { ok: false, error: "not_waiting" };
+  }
   await notifyPixDeclared(appointment.id);
   return { ok: true };
 }
@@ -323,11 +390,7 @@ export async function expireDepositHolds(now: Date = new Date()): Promise<number
       .eq("deposit_status", "waiting")
       .select("id");
     if (!marked?.length) continue;
-    await cancelAppointment(
-      row.id as string,
-      "business",
-      "O comprovante do sinal não chegou a tempo",
-    );
+    await cancelAppointment(row.id as string, "system", "O aviso do Pix não chegou a tempo");
     expired++;
   }
   return expired;
