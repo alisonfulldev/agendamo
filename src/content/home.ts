@@ -62,10 +62,10 @@ export const HOME: HomeContent = {
       "Crie seu link de agendamento em 1 minuto. Seus clientes marcam horário sozinhos pelo Instagram e WhatsApp, 24h. Comece grátis, sem cartão.",
   },
   hero: {
-    eyebrow: "Agendamento online grátis",
+    eyebrow: "Sistema de agendamento com chat de atendimento automático",
     title: "Seus clientes marcam horário sozinhos, 24h",
     subtitle:
-      "Crie seu link de agendamento em 1 minuto e coloque no Instagram e no WhatsApp. Sem app e sem responder mensagem.",
+      "O MeetChat atende seu cliente num chat, mostra os horários livres e marca na sua agenda. Crie seu link em 1 minuto e coloque no Instagram e no WhatsApp. Sem app e sem responder mensagem.",
     primaryCta: "Comece grátis, sem cartão",
     // D1 (2026-10-16): the limit of "grátis" stays next to the promise.
     note: "Grátis no modo WhatsApp. Agenda completa no plano pago; sinal pelo Pix e lembrete para o cliente no Premium.",
