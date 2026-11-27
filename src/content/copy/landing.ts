@@ -20,10 +20,10 @@ export type { LandingCopy, MockVisual, PhoneMock } from "./types";
  */
 export const HOME_LANDING: LandingCopy = {
   hero: {
-    eyebrow: "Sistema de agendamento com chat de atendimento automático",
-    title: "Um chat que atende seus clientes e marca o horário na sua agenda, 24h.",
-    subtitle:
-      "Você coloca um link no Instagram e no WhatsApp. O cliente toca, escolhe o serviço, o dia e um horário livre numa conversa, e o horário entra sozinho na sua agenda. Sem você responder mensagem e sem ele baixar aplicativo.",
+    // No tag above the title: the title itself says what the system is.
+    eyebrow: "",
+    title: "Sistema de agendamento com chat de atendimento automático",
+    subtitle: "Um chat que atende seus clientes e marca o horário na sua agenda, 24h.",
     cta: "Criar meu link de agendamento",
     note: NOTE,
     trust: TRUST,

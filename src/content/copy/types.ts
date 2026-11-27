@@ -19,6 +19,7 @@ export interface PhoneMock {
 
 export interface LandingCopy {
   hero: {
+    /** Small tag above the title; empty = no tag. */
     eyebrow: string;
     title: string;
     subtitle: string;

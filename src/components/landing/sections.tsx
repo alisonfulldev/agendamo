@@ -70,12 +70,14 @@ export function Hero({
         className={`${container} grid items-center gap-12 pt-8 pb-16 sm:pt-12 lg:grid-cols-[1.1fr_0.9fr] lg:gap-14 lg:pb-24`}
       >
         <div className="flex flex-col items-center text-center lg:items-start lg:text-left">
-          <p className="inline-flex items-center gap-2 rounded-full border bg-card/70 px-3 py-1 text-sm font-semibold">
-            <span className="size-1.5 rounded-full bg-[color:var(--lp-deep)]" aria-hidden />
-            {hero.eyebrow}
-          </p>
+          {hero.eyebrow ? (
+            <p className="mb-5 inline-flex items-center gap-2 rounded-full border bg-card/70 px-3 py-1 text-sm font-semibold">
+              <span className="size-1.5 rounded-full bg-[color:var(--lp-deep)]" aria-hidden />
+              {hero.eyebrow}
+            </p>
+          ) : null}
           <h1
-            className={`lp-title mt-5 leading-[0.98] text-balance ${
+            className={`lp-title leading-[0.98] text-balance ${
               long
                 ? "text-[2.75rem] sm:text-6xl lg:text-[4.25rem]"
                 : "text-[3.1rem] sm:text-7xl lg:text-[5.25rem]"
