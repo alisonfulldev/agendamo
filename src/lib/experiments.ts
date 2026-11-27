@@ -32,7 +32,8 @@ export const EXPERIMENTS: readonly Experiment[] = [
     id: "home-hero",
     template: "home",
     path: "/",
-    active: true,
+    // Ended 2026-11-27: the hero now says what the system is (both variants were pain lines).
+    active: false,
     variants: [
       { id: "a" },
       {

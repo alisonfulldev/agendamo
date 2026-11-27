@@ -14,14 +14,16 @@ export type { LandingCopy, MockVisual, PhoneMock } from "./types";
 /**
  * Copy of the redesigned landing pages (docs/design/direction.md): the home and each niche hub
  * that has its own copy here. One main pain per page, in the words of who feels it. Facts only:
- * reminders go by e-mail, nothing is sent through WhatsApp, "grátis" always with its limit (D1).
+ * reminders go by notification (Premium), nothing is sent through WhatsApp, "grátis" always with
+ * its limit (D1). The home's hero says what the system is before the pains (2026-11-27): visitors
+ * who arrive without context did not understand the product from a pain line.
  */
 export const HOME_LANDING: LandingCopy = {
   hero: {
-    eyebrow: "Agenda online pelo link da bio",
-    title: "Seu cliente marca sozinho. Você para de responder mensagem.",
+    eyebrow: "Sistema de agendamento com chat de atendimento automático",
+    title: "Um chat que atende seus clientes e marca o horário na sua agenda, 24h.",
     subtitle:
-      "Um link no Instagram e no WhatsApp abre uma conversa: o cliente escolhe o serviço, o dia e um horário livre, e o horário já entra na sua agenda. A qualquer hora, sem ele baixar nada.",
+      "Você coloca um link no Instagram e no WhatsApp. O cliente toca, escolhe o serviço, o dia e um horário livre numa conversa, e o horário entra sozinho na sua agenda. Sem você responder mensagem e sem ele baixar aplicativo.",
     cta: "Criar meu link de agendamento",
     note: NOTE,
     trust: TRUST,
