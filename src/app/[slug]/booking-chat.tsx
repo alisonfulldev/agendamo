@@ -19,6 +19,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { formatAmount, formatDuration } from "@/lib/money";
 import { CalendarSave } from "@/components/booking/calendar-save";
+import { ReminderOptIn } from "@/components/booking/reminder-opt-in";
 import { DepositPayment } from "@/components/deposits/deposit-payment";
 import { EMAIL_PATTERN, suggestEmailFix } from "@/lib/email-typos";
 import { maskBrPhone, normalizeBrPhone, whatsappLink } from "@/lib/phone";
@@ -942,10 +943,15 @@ export function BookingChat({
               businessName={catalog.businessName}
               whatsapp={catalog.whatsapp}
               afterDeclared={
-                <CalendarSave
-                  googleCalendarUrl={state.result.googleCalendarUrl}
-                  cancelToken={state.result.cancelToken}
-                  linkClass={linkClass}
+                <ReminderOptIn
+                  token={state.result.cancelToken}
+                  fallback={
+                    <CalendarSave
+                      googleCalendarUrl={state.result.googleCalendarUrl}
+                      cancelToken={state.result.cancelToken}
+                      linkClass={linkClass}
+                    />
+                  }
                 />
               }
               onExpired={() =>
@@ -962,10 +968,15 @@ export function BookingChat({
           ) : null}
           <ChatOptions>
             {state.result.status !== "awaiting_deposit" ? (
-              <CalendarSave
-                googleCalendarUrl={state.result.googleCalendarUrl}
-                cancelToken={state.result.cancelToken}
-                linkClass={linkClass}
+              <ReminderOptIn
+                token={state.result.cancelToken}
+                fallback={
+                  <CalendarSave
+                    googleCalendarUrl={state.result.googleCalendarUrl}
+                    cancelToken={state.result.cancelToken}
+                    linkClass={linkClass}
+                  />
+                }
               />
             ) : null}
             {state.result.whatsappSummary && catalog.whatsapp ? (

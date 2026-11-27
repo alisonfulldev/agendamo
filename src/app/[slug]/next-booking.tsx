@@ -1,6 +1,7 @@
 "use client";
 
 import { CalendarSave } from "@/components/booking/calendar-save";
+import { ReminderOptIn } from "@/components/booking/reminder-opt-in";
 import { useState, useTransition } from "react";
 
 import {
@@ -220,10 +221,15 @@ export function NextBooking({
                 Ver o Pix do sinal
               </a>
             ) : null}
-            <CalendarSave
-              googleCalendarUrl={result.googleCalendarUrl}
-              cancelToken={result.cancelToken}
-              linkClass={linkClass}
+            <ReminderOptIn
+              token={result.cancelToken}
+              fallback={
+                <CalendarSave
+                  googleCalendarUrl={result.googleCalendarUrl}
+                  cancelToken={result.cancelToken}
+                  linkClass={linkClass}
+                />
+              }
             />
           </ChatOptions>
         </>

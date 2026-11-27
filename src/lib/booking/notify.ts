@@ -343,6 +343,27 @@ export async function notifyBookingRescheduled(
   );
 }
 
+/**
+ * Fallback only (2026-11-27): the 1-day reminder by e-mail when no notification reached any device
+ * of the customer. Reminders are by notification; this keeps them from being missed.
+ */
+export async function sendReminderFallbackEmail(appointmentId: string): Promise<boolean> {
+  const d = await loadAppointmentDetails(appointmentId);
+  if (!d || !d.customer.email || !["confirmed", "pending"].includes(d.appointment.status))
+    return false;
+  await sendToCustomer(d, `Lembrete: ${serviceNames(d)} amanhã · ${d.business.name}`, {
+    heading: `Até amanhã, ${d.customer.name.split(" ")[0]}!`,
+    paragraphs: [
+      "Passando para lembrar do seu horário.",
+      "Se não puder vir, remarque em poucos toques: o horário fica livre para outra pessoa.",
+    ],
+    details: detailLines(d),
+    cta: { label: "Preciso remarcar", url: manageUrl(d, { reschedule: true }) },
+    secondaryLinks: [{ label: "Cancelar horário", url: manageUrl(d) }],
+  });
+  return true;
+}
+
 /** "{cliente} enviou comprovante de R$ {valor} para {serviço} em {data} às {hora}. Confira no seu banco." */
 function receiptLine(d: AppointmentDetails): string {
   return `${d.customer.name.split(" ")[0]} enviou comprovante de R$ ${priceText(d.appointment.deposit_cents)} para ${serviceNames(d)} em ${formatDateLong(d.appointment.starts_at, d.business.timezone)} às ${formatTime(d.appointment.starts_at, d.business.timezone)}. Confira no seu banco.`;

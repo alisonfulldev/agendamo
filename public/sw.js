@@ -1,4 +1,4 @@
-/* Service worker: web push notifications for the panel (owners and staff). */
+/* Service worker: web push notifications for the panel (owners and staff) and the customer reminders. */
 
 self.addEventListener("install", () => self.skipWaiting());
 self.addEventListener("activate", (event) => event.waitUntil(self.clients.claim()));

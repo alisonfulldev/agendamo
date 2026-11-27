@@ -4,6 +4,7 @@ import QRCode from "qrcode";
 
 import { getCurrentBrand } from "@/brands/server";
 import { CalendarSave } from "@/components/booking/calendar-save";
+import { ReminderOptIn } from "@/components/booking/reminder-opt-in";
 import { googleCalendarUrl } from "@/lib/ics";
 import { brandUrl } from "@/brands/urls";
 import {
@@ -22,7 +23,26 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { canChange } from "./actions";
 import { ManagePanel } from "./manage-panel";
 
-export const metadata: Metadata = { title: "Seu agendamento", robots: { index: false } };
+/**
+ * Its own app manifest (2026-11-27): on the iPhone the reminder needs the page installed on the
+ * home screen, and the installed app must open this same appointment.
+ */
+export async function generateMetadata({
+  params,
+}: PageProps<"/cancelar/[token]">): Promise<Metadata> {
+  const { token } = await params;
+  const valid = /^[0-9a-f]{32}$/.test(token);
+  return {
+    title: "Seu agendamento",
+    robots: { index: false },
+    ...(valid
+      ? {
+          manifest: `/cancelar/${token}/manifest.webmanifest`,
+          appleWebApp: { capable: true, title: "Meu horário", statusBarStyle: "default" },
+        }
+      : {}),
+  };
+}
 
 const STATUS_TEXT = {
   confirmed: "Confirmado",
@@ -76,6 +96,18 @@ export default async function ManageAppointmentPage({
     canAttachReceipt = (count ?? 0) === 0;
   }
 
+  const calendar = (
+    <CalendarSave
+      googleCalendarUrl={googleCalendarUrl({
+        start: new Date(appointment.starts_at),
+        end: serviceEnd(details),
+        title: `${serviceNames(details)} · ${business.name}`,
+      })}
+      cancelToken={token}
+      linkClass="flex h-11 items-center justify-center gap-2 rounded-xl border bg-card text-sm font-medium text-primary"
+    />
+  );
+
   return (
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-5 px-5 py-10">
       <div>
@@ -126,19 +158,12 @@ export default async function ManageAppointmentPage({
             : null
         }
         attachReceipt={canAttachReceipt ? { businessName: business.name } : null}
+        reminder={<ReminderOptIn token={token} onAppointmentPage fallback={calendar} />}
       />
 
       {["confirmed", "pending"].includes(appointment.status) &&
       new Date(appointment.starts_at) > new Date() ? (
-        <CalendarSave
-          googleCalendarUrl={googleCalendarUrl({
-            start: new Date(appointment.starts_at),
-            end: serviceEnd(details),
-            title: `${serviceNames(details)} · ${business.name}`,
-          })}
-          cancelToken={token}
-          linkClass="flex h-11 items-center justify-center gap-2 rounded-xl border bg-card text-sm font-medium text-primary"
-        />
+        <ReminderOptIn token={token} onAppointmentPage fallback={calendar} />
       ) : null}
 
       {!changeable && ["confirmed", "pending", "awaiting_deposit"].includes(appointment.status) ? (

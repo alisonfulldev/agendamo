@@ -19,7 +19,10 @@ export function ManagePanel({
   deposit,
   attachReceipt,
   startRescheduling = false,
+  reminder,
 }: {
+  /** "Ative o lembrete", shown right after the Pix is sent. */
+  reminder?: React.ReactNode;
   token: string;
   canChange: boolean;
   /** Opened from the reminder's "Preciso remarcar": go straight to the new times. */
@@ -63,7 +66,7 @@ export function ManagePanel({
 
   return (
     <div className="flex flex-col gap-4">
-      {deposit ? <DepositPayment token={token} {...deposit} /> : null}
+      {deposit ? <DepositPayment token={token} {...deposit} afterDeclared={reminder} /> : null}
       {attachReceipt ? (
         receiptSent ? (
           <p

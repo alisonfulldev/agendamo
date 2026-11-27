@@ -5,13 +5,15 @@ import path from "node:path";
 
 import sharp from "sharp";
 import { createWorker, type Worker } from "tesseract.js";
+import { extractText } from "unpdf";
 
 import type { ReceiptContentType } from "./receipt-file";
 
 /**
- * Reads the text of a receipt screenshot with Tesseract (OCR, no AI; 2026-11-26). Runs on our
- * server, in memory: nothing of the receipt is written or logged. The Portuguese data ships with
- * the app (assets/tessdata), so nothing is downloaded at runtime.
+ * Reads the text of a receipt (no AI): a screenshot with Tesseract (OCR, 2026-11-26), a PDF by
+ * the text inside it with unpdf (2026-11-27). Runs on our server, in memory: nothing of the
+ * receipt is written or logged. The Portuguese data ships with the app (assets/tessdata), so
+ * nothing is downloaded at runtime.
  */
 
 /** A slow or stuck reading never blocks the customer: the receipt goes to the owner instead. */
@@ -42,17 +44,27 @@ async function prepare(bytes: Uint8Array): Promise<Buffer> {
 }
 
 /**
- * The receipt's text, or null when it cannot be read (PDF for now, a failure or the time limit):
- * then the receipt goes to the owner, as before.
+ * Bank PDFs carry the text itself (no OCR). A scanned PDF has no text: null, and the owner
+ * checks it.
+ */
+async function pdfText(bytes: Uint8Array): Promise<string | null> {
+  // unpdf may take over the buffer: it gets a copy.
+  const { text } = await extractText(new Uint8Array(bytes), { mergePages: true });
+  return text.trim() ? text : null;
+}
+
+/**
+ * The receipt's text, or null when it cannot be read (a failure, a scanned PDF or the time
+ * limit): then the receipt goes to the owner, as before.
  */
 export async function readReceiptText(
   bytes: Uint8Array,
   type: ReceiptContentType,
 ): Promise<string | null> {
-  if (type === "application/pdf") return null;
   let timer: NodeJS.Timeout | undefined;
   try {
     const reading = (async () => {
+      if (type === "application/pdf") return pdfText(bytes);
       const [worker, image] = await Promise.all([getWorker(), prepare(bytes)]);
       const { data } = await worker.recognize(image);
       return data.text;

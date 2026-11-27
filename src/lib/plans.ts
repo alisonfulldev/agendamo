@@ -149,6 +149,11 @@ export interface PlanFeatures {
   // Server checks of each feature (rule 6): all of them follow `active` (one plan).
   agenda: boolean;
   reminders: boolean;
+  /**
+   * Reminders to the customer by notification, 1 day and 2 hours before (2026-11-27). Goes to the
+   * Premium plan when it launches; until then it follows the other booking features.
+   */
+  pushReminders: boolean;
   customers: boolean;
   finance: boolean;
   salesTools: boolean;
@@ -205,6 +210,7 @@ export function getPlanFeatures(business: PlanFields, now: Date = new Date()): P
     web,
     agenda: booking,
     reminders: booking,
+    pushReminders: booking,
     customers: booking,
     finance: booking,
     salesTools: booking,

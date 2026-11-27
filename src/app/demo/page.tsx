@@ -34,6 +34,7 @@ export const dynamic = "force-dynamic";
 
 const CRON_LABELS: Record<(typeof CRON_JOBS)[number], string> = {
   deposits: "Sinais Pix vencidos",
+  "customer-reminders": "Lembretes por notificação",
   trial: "Fim do teste grátis",
   "daily-alert": "Alerta diário da dona",
   "weekly-summary": "Resumo semanal",
