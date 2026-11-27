@@ -53,7 +53,7 @@ export const nutritionLanding: LandingCopy = {
       {
         kicker: "Antes da consulta",
         title: "O retorno lembrado na véspera, com opção de remarcar",
-        text: "Quem deixou o e-mail recebe o lembrete um dia antes e pode remarcar sozinho, sem mensagem.",
+        text: "No Premium, quem ativou o lembrete recebe o aviso no celular 1 dia e 2 horas antes e pode remarcar sozinho, sem mensagem.",
         visual: "reminder",
       },
       {
@@ -87,7 +87,7 @@ export const nutritionLanding: LandingCopy = {
       {
         label: "Paciente que esquece",
         before: "Horário vazio",
-        after: "Lembrete por e-mail com botão de remarcar",
+        after: "Lembrete no celular (Premium) com botão de remarcar",
       },
     ],
   },

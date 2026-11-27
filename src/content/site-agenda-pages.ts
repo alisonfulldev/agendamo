@@ -128,7 +128,7 @@ export const SITE_AGENDA_PAGES: readonly SiteAgendaPage[] = [
       {
         title: "Discrição para o paciente",
         paragraphs: [
-          "O agendamento pede só o nome e o contato do paciente; não há perguntas sobre o motivo da consulta. A confirmação e o lembrete chegam por e-mail, sem expor o assunto da sessão.",
+          "O agendamento pede só o nome e o contato do paciente; não há perguntas sobre o motivo da consulta. A confirmação chega por e-mail e o lembrete (no Premium) como notificação no celular, sem expor o assunto da sessão.",
           "Você controla quais horários aparecem, a antecedência mínima e até quantos dias à frente o paciente pode marcar.",
         ],
       },

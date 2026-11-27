@@ -9,6 +9,8 @@ import { claimNotification, notifyTeam } from "@/lib/notifications/owner";
 import {
   getPlanFeatures,
   PLAN_NAME,
+  PREMIUM_PLAN_NAME,
+  PREMIUM_PRICE_TEXT,
   PRICE_TEXT,
   SITE_PLAN_NAME,
   SITE_PRICE_TEXT,
@@ -18,12 +20,13 @@ import { createAdminClient } from "@/lib/supabase/admin";
 
 const DAY = 86_400_000;
 
-/** The two plans (2026-11-05), shown in the trial notices. */
+/** The booking plans (2026-11-27), shown in the trial notices (the trial is the Premium). */
 const TWO_PLANS = [
   "Escolha o seu plano:",
-  `${SITE_PLAN_NAME}: o chat de agendamento + o seu site pronto para o Google, por ${SITE_PRICE_TEXT.summary}.`,
-  `${PLAN_NAME}: só o chat de agendamento, por ${PRICE_TEXT.summary}.`,
-  "Os dois liberam na hora pelo Pix, e o teste continua valendo até o fim.",
+  `${PREMIUM_PLAN_NAME}: tudo o que você testou, com o site, o sinal pelo Pix com o comprovante conferido na hora e o lembrete no celular do cliente, por ${PREMIUM_PRICE_TEXT.summary}.`,
+  `${SITE_PLAN_NAME}: o chat de agendamento + o seu site pronto para o Google, sem sinal e sem lembrete, por ${SITE_PRICE_TEXT.summary}.`,
+  `${PLAN_NAME}: só o chat de agendamento, sem sinal e sem lembrete, por ${PRICE_TEXT.summary}.`,
+  "Todos liberam na hora pelo Pix, e o teste continua valendo até o fim.",
 ];
 
 /** What happens when the trial ends without a subscription (waiting mode). */

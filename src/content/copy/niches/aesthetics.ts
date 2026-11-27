@@ -51,7 +51,7 @@ export const aestheticsLanding: LandingCopy = {
       {
         kicker: "Antes do procedimento",
         title: "Lembrete na véspera com botão de remarcar",
-        text: "Quem deixou o e-mail recebe o lembrete. Se não puder vir, remarca sozinha e libera sala e aparelho a tempo.",
+        text: "No Premium, quem ativou o lembrete recebe o aviso no celular. Se não puder vir, remarca sozinha e libera sala e aparelho a tempo.",
         visual: "reminder",
       },
       {
@@ -85,7 +85,7 @@ export const aestheticsLanding: LandingCopy = {
       {
         label: "Procedimento longo",
         before: "Falta sem aviso",
-        after: "Lembrete por e-mail e sinal pelo Pix",
+        after: "Lembrete no celular e sinal pelo Pix (Premium)",
       },
     ],
   },

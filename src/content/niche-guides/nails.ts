@@ -26,7 +26,7 @@ export const nailsGuide: NicheGuide = {
         "Duas horas de alongamento perdidas por uma falta pesam no mês. Veja como lembrete, sinal pelo Pix e lista de espera ajudam manicure e nail designer.",
       h1: "Como reduzir faltas na manicure e na esmalteria",
       answer:
-        "Manicure e nail designer reduzem faltas com três coisas: lembrete antes do horário, um jeito fácil de remarcar e sinal nos serviços longos, como alongamento. O MeetChat faz as três: lembrete por e-mail um dia antes, remarcação pela própria cliente e sinal pelo Pix por serviço.",
+        "Manicure e nail designer reduzem faltas com três coisas: lembrete antes do horário, um jeito fácil de remarcar e sinal nos serviços longos, como alongamento. O MeetChat faz as três: lembrete no celular um dia antes, remarcação pela própria cliente e sinal pelo Pix por serviço.",
       linkLabel: "faltas na esmalteria",
       sections: [
         {

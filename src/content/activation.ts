@@ -53,8 +53,8 @@ export const ACTIVATION = {
         text: "O dia organizado, com cada horário, serviço e cliente.",
       },
       {
-        title: "Lembrete automático no dia anterior",
-        text: "O cliente recebe o lembrete sozinho, e falta menos.",
+        title: "Lembrete no celular do cliente (Premium)",
+        text: "No Premium, o cliente recebe o lembrete 1 dia e 2 horas antes, e falta menos.",
       },
       {
         title: "Clientes e faturamento num lugar só",

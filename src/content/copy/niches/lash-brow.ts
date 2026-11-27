@@ -50,7 +50,7 @@ export const lashBrowLanding: LandingCopy = {
       {
         kicker: "Manutenção no prazo",
         title: "A manutenção lembrada na véspera",
-        text: "Quem deixou o e-mail recebe o lembrete um dia antes. Se não puder vir, remarca sozinha, sem mensagem.",
+        text: "No Premium, quem ativou o lembrete recebe o aviso no celular 1 dia e 2 horas antes. Se não puder vir, remarca sozinha, sem mensagem.",
         visual: "reminder",
       },
       {

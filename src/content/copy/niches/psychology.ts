@@ -10,7 +10,7 @@ export const psychologyLanding: LandingCopy = {
     eyebrow: "Agenda online para psicólogos",
     title: "Remarcar sessão sem constrangimento e sem troca de mensagens.",
     subtitle:
-      "O paciente marca a primeira conversa pelo link no seu Instagram ou WhatsApp, informando só nome e WhatsApp. Na véspera, quem deixou o e-mail recebe o lembrete com o botão de remarcar.",
+      "O paciente marca a primeira conversa pelo link no seu Instagram ou WhatsApp, informando só nome e WhatsApp. No Premium, na véspera, quem ativou o lembrete recebe o aviso no celular com o botão de remarcar.",
     cta: "Criar meu link de psicologia",
     note: NOTE,
     trust: HEALTH_TRUST,

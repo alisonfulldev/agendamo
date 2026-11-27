@@ -68,7 +68,7 @@ const checkoutSchema = z.object({
   cpfCnpj: z.string().max(30).default(""),
   cycle: z.enum(["monthly", "yearly"]),
   extraProfessionals: z.number().int().min(0).max(49),
-  tier: z.enum(["complete", "site"]).default("complete"),
+  tier: z.enum(["complete", "site", "premium"]).default("complete"),
   coupon: z.string().trim().max(30).optional(),
 });
 

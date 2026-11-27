@@ -2,9 +2,10 @@ import type { Business } from "@/lib/db/types";
 import { formatBRL } from "@/lib/money";
 
 /**
- * One plan, Completo (2026-10-12): unlimited bookings, reminders, a discreet brand line, chat on
- * external sites, team, finance, deposit / full payment by Pix with a receipt and everything else. Every sign-up starts with a TRIAL_DAYS trial of
- * it (no card, once per person). Without a trial or an active subscription the account is in
+ * Booking plans (2026-11-27): Completo (chat + agenda), Site + Agenda (+ the site) and Premium
+ * (+ the deposit by Pix with the receipt read automatically and the customer reminders by
+ * notification). Every sign-up starts with a TRIAL_DAYS trial of the Premium
+ * (no card, once per person). Without a trial or an active subscription the account is in
  * "waiting mode": the public chat keeps working but ends on WhatsApp (nothing is booked), with
  * "Agende também com o MeetChat" in the footer, and the panel opens only the subscription screen.
  * Nothing is deleted; subscribing brings everything back at once.
@@ -48,6 +49,11 @@ export const PLAN_PRICES = {
   site: { monthly: testPrice || 3900, yearly: testPrice || 39000 },
   /** "Site ou Loja" (2026-11-07): only a site or a store, no booking. */
   web: { monthly: testPrice || 2900, yearly: testPrice || 29000 },
+  /**
+   * Premium (2026-11-27): Site + Agenda + the deposit by Pix with the receipt read automatically
+   * and the reminders by notification (Completo and Site + Agenda have neither).
+   */
+  premium: { monthly: testPrice || 6490, yearly: testPrice || 64900 },
   /** Custom site made by a person for "Site ou Loja": R$ 197 once, plus the R$ 29 month. */
   webCustomSite: 19700,
   extraProfessional: { monthly: 900, yearly: 9000 },
@@ -59,18 +65,28 @@ export const PLAN_PRICES = {
 export const PLAN_NAME = "Completo";
 export const SITE_PLAN_NAME = "Site + Agenda";
 export const WEB_PLAN_NAME = "Site ou Loja";
+export const PREMIUM_PLAN_NAME = "Premium";
 
 export type Cycle = "monthly" | "yearly";
 /**
  * Which plan: "complete" (chat + agenda), "site" (the same + the landing page) or "web" (only a
  * site or a store, no booking: the "Site ou Loja" product).
  */
-export type Tier = "complete" | "site" | "web";
+export type Tier = "complete" | "site" | "web" | "premium";
+
+/** Booking plans from the simplest: moving up applies now, moving down at the next charge. */
+export const BOOKING_TIERS = ["complete", "site", "premium"] as const;
+export type BookingTier = (typeof BOOKING_TIERS)[number];
+
+export function tierRank(tier: Tier): number {
+  return BOOKING_TIERS.indexOf(tier as BookingTier);
+}
 
 export const TIER_NAME: Record<Tier, string> = {
   complete: PLAN_NAME,
   site: SITE_PLAN_NAME,
   web: WEB_PLAN_NAME,
+  premium: PREMIUM_PLAN_NAME,
 };
 
 /** Subscription value in cents for the plan and cycle, with extra professionals and a coupon. */
@@ -120,6 +136,16 @@ export const SITE_PRICE_TEXT = {
   yearlySavings: `economize ${reais(yearlySavings(0, "site"))} por ano`,
 };
 
+const premium = PLAN_PRICES.premium;
+/** Prices of Premium (same rules as PRICE_TEXT). */
+export const PREMIUM_PRICE_TEXT = {
+  monthly: `${reais(premium.monthly)}/mês`,
+  yearly: `${reais(premium.yearly)}/ano`,
+  yearlyPerMonth: `${reais(Math.round(premium.yearly / 12))}/mês`,
+  summary: `${reais(premium.monthly)}/mês ou ${reais(premium.yearly)}/ano`,
+  yearlySavings: `economize ${reais(yearlySavings(0, "premium"))} por ano`,
+};
+
 /** trial: the test days; subscribed: paying; waiting: neither (chat ends on WhatsApp). */
 export type PlanStatus = "trial" | "subscribed" | "waiting";
 
@@ -149,10 +175,7 @@ export interface PlanFeatures {
   // Server checks of each feature (rule 6): all of them follow `active` (one plan).
   agenda: boolean;
   reminders: boolean;
-  /**
-   * Reminders to the customer by notification, 1 day and 2 hours before (2026-11-27). Goes to the
-   * Premium plan when it launches; until then it follows the other booking features.
-   */
+  /** Reminders to the customer by notification, 1 day and 2 hours before: Premium and trial. */
   pushReminders: boolean;
   customers: boolean;
   finance: boolean;
@@ -194,6 +217,10 @@ export function getPlanFeatures(business: PlanFields, now: Date = new Date()): P
   // "Site ou Loja" (2026-11-07): only the site; nothing of the booking product.
   const web = (business.product ?? "booking") !== "booking";
   const booking = active && !web;
+  const tier = business.plan_tier ?? "complete";
+  // Premium only (2026-11-27): the deposit with the receipt read and the reminders. The trial is
+  // the Premium, so everyone tries them.
+  const premiumFeatures = booking && (trialActive || (subscribed && tier === "premium"));
 
   return {
     status: subscribed ? "subscribed" : trialActive ? "trial" : "waiting",
@@ -205,12 +232,12 @@ export function getPlanFeatures(business: PlanFields, now: Date = new Date()): P
       ? Math.max(1, Math.ceil((trialEndsAt!.getTime() - now.getTime()) / 86_400_000))
       : null,
     discreetBadge: active,
-    tier: business.plan_tier ?? "complete",
-    site: web ? active : trialActive || (subscribed && business.plan_tier === "site"),
+    tier,
+    site: web ? active : trialActive || (subscribed && (tier === "site" || tier === "premium")),
     web,
     agenda: booking,
-    reminders: booking,
-    pushReminders: booking,
+    reminders: premiumFeatures,
+    pushReminders: premiumFeatures,
     customers: booking,
     finance: booking,
     salesTools: booking,
@@ -223,7 +250,7 @@ export function getPlanFeatures(business: PlanFields, now: Date = new Date()): P
     resources: booking,
     teamPermissions: booking,
     reportsByProfessional: booking,
-    deposits: DEPOSITS_ENABLED && booking,
+    deposits: DEPOSITS_ENABLED && premiumFeatures,
     photoLimit: PHOTO_LIMIT,
     professionalLimit: !booking ? 1 : trialActive ? TRIAL_PROFESSIONALS : seats,
   };

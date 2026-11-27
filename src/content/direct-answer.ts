@@ -1,5 +1,5 @@
 import type { BrandConfig } from "@/brands";
-import { PRICE_TEXT, SITE_PRICE_TEXT, TRIAL_DAYS } from "@/lib/plans";
+import { PRICE_TEXT, SITE_PRICE_TEXT, TRIAL_DAYS, PREMIUM_PRICE_TEXT } from "@/lib/plans";
 
 /**
  * "Resposta direta" near the top of the home, the niche pages and /precos (2026-11-13): what
@@ -17,7 +17,7 @@ export const HOME_ANSWER: DirectAnswer = {
   question: "O que é o MeetChat?",
   sentences: [
     "O MeetChat é um chat de agendamento online para quem trabalha com hora marcada no Brasil: salões, barbearias, clínicas, consultórios, estúdios, pet shops, professores e outros serviços.",
-    "O cliente toca no seu link no Instagram, no WhatsApp ou no Google, escolhe o serviço e um horário livre numa conversa e confirma sem baixar aplicativo, com lembrete por e-mail e sinal pelo Pix pago direto a você.",
+    "O cliente toca no seu link no Instagram, no WhatsApp ou no Google, escolhe o serviço e um horário livre numa conversa e confirma sem baixar aplicativo; no Premium, com sinal pelo Pix pago direto a você e lembrete no celular do cliente.",
     PRICE_SENTENCE,
   ],
 };
@@ -37,8 +37,8 @@ export function nicheAnswer(brand: BrandConfig): DirectAnswer {
 export const PRICING_ANSWER: DirectAnswer = {
   question: "Quanto custa o MeetChat?",
   sentences: [
-    `O plano Completo, com agenda online, lembretes e sinal pelo Pix, custa ${PRICE_TEXT.monthly} ou ${PRICE_TEXT.yearlyPerMonth} no anual; o Site + Agenda, com um site profissional junto, custa ${SITE_PRICE_TEXT.monthly}.`,
-    `Todo cadastro começa com ${TRIAL_DAYS} dias grátis do plano pago, sem cartão, e o modo WhatsApp (o cliente escolhe o horário e chama você com a mensagem pronta) continua grátis depois do teste.`,
+    `O plano Completo, com a agenda online, custa ${PRICE_TEXT.monthly} ou ${PRICE_TEXT.yearlyPerMonth} no anual; o Site + Agenda, com um site profissional junto, custa ${SITE_PRICE_TEXT.monthly}; e o Premium, com site, sinal pelo Pix e lembrete para o cliente, custa ${PREMIUM_PRICE_TEXT.monthly}.`,
+    `Todo cadastro começa com ${TRIAL_DAYS} dias grátis do Premium, sem cartão, e o modo WhatsApp (o cliente escolhe o horário e chama você com a mensagem pronta) continua grátis depois do teste.`,
     "Sem multa e sem fidelidade: ao cancelar, o plano continua até o fim do período já pago.",
   ],
 };

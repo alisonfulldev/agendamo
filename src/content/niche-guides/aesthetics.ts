@@ -26,7 +26,7 @@ export const aestheticsGuide: NicheGuide = {
         "Falta em procedimento com sala e aparelho reservados bagunça o dia da clínica. Veja como lembrete, sinal pelo Pix e lista de espera ajudam a estética.",
       h1: "Como reduzir faltas na clínica de estética",
       answer:
-        "A clínica de estética reduz faltas lembrando a cliente antes do procedimento, facilitando a remarcação e pedindo sinal nos procedimentos que bloqueiam sala e aparelho por mais tempo. O MeetChat envia lembrete por e-mail um dia antes, com botão para remarcar, e permite sinal pelo Pix por procedimento.",
+        "A clínica de estética reduz faltas lembrando a cliente antes do procedimento, facilitando a remarcação e pedindo sinal nos procedimentos que bloqueiam sala e aparelho por mais tempo. O MeetChat envia lembrete no celular um dia antes, com botão para remarcar, e permite sinal pelo Pix por procedimento.",
       linkLabel: "faltas na clínica de estética",
       sections: [
         {
@@ -38,7 +38,7 @@ export const aestheticsGuide: NicheGuide = {
         {
           title: "Lembrete com o caminho para remarcar",
           paragraphs: [
-            "A cliente que informa o e-mail recebe a confirmação na hora e um lembrete um dia antes. No lembrete estão os botões “Preciso remarcar” e “Cancelar horário”.",
+            "A cliente recebe a confirmação na hora e, no Premium, um lembrete no celular 1 dia e 2 horas antes. Pelo lembrete ela abre o horário e pode remarcar ou cancelar.",
             "Ao remarcar, ela só vê horários em que a profissional e o recurso do procedimento estão livres juntos, sem você precisar reorganizar a agenda.",
           ],
         },
@@ -66,7 +66,7 @@ export const aestheticsGuide: NicheGuide = {
         {
           question: "O lembrete vai por WhatsApp?",
           answer:
-            "Não. O lembrete automático vai por e-mail para quem informou o e-mail ao agendar.",
+            "Não. O lembrete automático (no Premium) chega como notificação no celular de quem ativou o lembrete ao agendar.",
         },
       ],
       updatedAt: "2026-10-16",

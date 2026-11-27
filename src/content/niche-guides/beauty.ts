@@ -26,7 +26,7 @@ export const beautyGuide: NicheGuide = {
         "Uma falta em mechas ou progressiva derruba a tarde do salão. Veja como lembrete, remarcação pela própria cliente, sinal pelo Pix e lista de espera ajudam.",
       h1: "Como reduzir faltas no salão de beleza",
       answer:
-        "O salão reduz faltas quando a cliente lembra do horário, consegue remarcar sem constrangimento e, nos serviços longos, assume um compromisso com um sinal. O MeetChat envia confirmação e lembrete por e-mail um dia antes, com botão para remarcar, e permite pedir sinal pelo Pix por serviço.",
+        "O salão reduz faltas quando a cliente lembra do horário, consegue remarcar sem constrangimento e, nos serviços longos, assume um compromisso com um sinal. O MeetChat envia confirmação e lembrete no celular um dia antes, com botão para remarcar, e permite pedir sinal pelo Pix por serviço.",
       linkLabel: "como diminuir faltas no salão",
       sections: [
         {
@@ -108,7 +108,7 @@ export const beautyGuide: NicheGuide = {
         {
           question: "O MeetChat manda mensagem pelo meu WhatsApp?",
           answer:
-            "Não. O MeetChat não usa o seu WhatsApp. Você divulga o link, e a confirmação e o lembrete da cliente vão por e-mail.",
+            "Não. O MeetChat não usa o seu WhatsApp. Você divulga o link, e a confirmação vai por e-mail e o lembrete (no Premium) chega no celular da cliente.",
         },
         {
           question: "E se a cliente preferir falar comigo?",

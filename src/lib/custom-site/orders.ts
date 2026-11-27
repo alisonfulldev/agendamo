@@ -29,7 +29,7 @@ export function customSiteOffer(business: Business): {
       ? { kind: "single", priceCents: PLAN_PRICES.webCustomSite }
       : { kind: "with_plan", priceCents: PLAN_PRICES.web.monthly + PLAN_PRICES.webCustomSite };
   }
-  if (features.subscribed && features.tier === "site") {
+  if (features.subscribed && (features.tier === "site" || features.tier === "premium")) {
     return { kind: "single", priceCents: PLAN_PRICES.customSite };
   }
   // A "Completo" subscriber first moves to "Site + Agenda" (the custom site is a site).

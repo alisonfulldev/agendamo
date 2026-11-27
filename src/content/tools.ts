@@ -75,7 +75,7 @@ export const TOOLS: readonly ToolPage[] = [
       {
         title: "Para não precisar mandar uma por uma",
         paragraphs: [
-          "Com o MeetChat, a confirmação e o lembrete vão automaticamente por e-mail para quem agendou pelo seu link e informou o e-mail, com botões para remarcar ou cancelar. As mensagens daqui servem para quem marca por outros caminhos.",
+          "Com o MeetChat, a confirmação vai por e-mail e, no Premium, o lembrete chega no celular de quem agendou pelo seu link, com a opção de remarcar ou cancelar. As mensagens daqui servem para quem marca por outros caminhos.",
         ],
       },
     ],

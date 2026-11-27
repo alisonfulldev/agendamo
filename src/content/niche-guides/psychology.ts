@@ -28,10 +28,10 @@ export const psychologyGuide: NicheGuide = {
     "reduzir-faltas": {
       title: "Como reduzir faltas em sessões de psicologia | MeetChat",
       description:
-        "Sessões perdidas atrapalham o paciente e a agenda. Veja como confirmação, lembrete por e-mail e remarcação pelo próprio paciente ajudam no consultório.",
+        "Sessões perdidas atrapalham o paciente e a agenda. Veja como confirmação, lembrete no celular e remarcação pelo próprio paciente ajudam no consultório.",
       h1: "Como reduzir faltas nas sessões de psicologia",
       answer:
-        "No consultório de psicologia, as faltas diminuem quando o paciente é lembrado da sessão e consegue remarcar com facilidade, sem precisar se justificar. O MeetChat envia confirmação e lembrete por e-mail um dia antes, com um botão para remarcar ou cancelar, e libera o horário para quem está na lista de espera.",
+        "No consultório de psicologia, as faltas diminuem quando o paciente é lembrado da sessão e consegue remarcar com facilidade, sem precisar se justificar. O MeetChat envia confirmação e lembrete no celular um dia antes, com um botão para remarcar ou cancelar, e libera o horário para quem está na lista de espera.",
       linkLabel: "faltas em sessões de psicologia",
       sections: [
         {
@@ -44,7 +44,7 @@ export const psychologyGuide: NicheGuide = {
         {
           title: "Lembrete discreto, sem expor o paciente",
           paragraphs: [
-            "O paciente que informa o e-mail ao agendar recebe a confirmação e um lembrete um dia antes, com o nome do atendimento que você definiu, o dia e o horário. Não há nada sobre o motivo da consulta.",
+            "O paciente recebe a confirmação e, no Premium, um lembrete no celular 1 dia e 2 horas antes, com o nome do atendimento que você definiu, o dia e o horário. Não há nada sobre o motivo da consulta.",
             "No lembrete, o botão “Preciso remarcar” leva aos horários livres. O paciente escolhe outro sozinho, sem precisar escrever uma justificativa.",
           ],
         },
@@ -109,7 +109,8 @@ export const psychologyGuide: NicheGuide = {
       faq: [
         {
           question: "O paciente precisa criar conta?",
-          answer: "Não. Ele informa nome e WhatsApp; o e-mail é opcional, para receber o lembrete.",
+          answer:
+            "Não. Ele informa nome e WhatsApp; o e-mail é opcional, para receber a confirmação.",
         },
         {
           question: "Posso aprovar antes de confirmar a sessão?",

@@ -24,10 +24,11 @@ export const MEETCHAT_FACTS: Record<CriterionKey, string> = {
   booking:
     "Conversa pelo link, no navegador do celular, sem app nem conta; informa nome e WhatsApp.",
   reminders:
-    "Confirmação e lembrete por e-mail um dia antes, com botão para remarcar ou cancelar (plano pago; para quem informa o e-mail).",
+    "Confirmação automática; no Premium, lembrete no celular do cliente 1 dia e 2 horas antes, com botão para remarcar ou cancelar.",
   team: "Sim: cada profissional com horários e serviços próprios.",
   resources: "Sim: o horário só é oferecido com a profissional e o recurso livres.",
-  payment: "Sinal ou pagamento total pelo Pix, direto na chave do profissional.",
+  payment:
+    "No Premium: sinal ou pagamento total pelo Pix, direto na chave do profissional, com o comprovante conferido na hora.",
   setup: "Painel pelo celular ou pelo computador.",
   waitlist: "Sim: quem está na lista recebe e-mail quando um horário é liberado.",
   price: `Grátis no modo WhatsApp; plano ${PLAN_NAME} por ${PRICE_TEXT.monthly}.`,

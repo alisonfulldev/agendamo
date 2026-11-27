@@ -50,7 +50,7 @@ function findTarget(id: string): HTMLElement | null {
 
 /** A plan offered on the last step of the ad page's tutorial. */
 export interface TourPlan {
-  tier: "complete" | "site";
+  tier: "complete" | "site" | "premium";
   name: string;
   price: string;
 }

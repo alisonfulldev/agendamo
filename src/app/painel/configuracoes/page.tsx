@@ -10,7 +10,7 @@ import { PageHeader, Section } from "@/components/panel/page-header";
 import { requireOwner } from "@/lib/business/context";
 import type { PageSettings, Professional, Service, TimeOff, WorkingHours } from "@/lib/db/types";
 import { depositReadyText, depositSetup } from "@/lib/deposits/setup";
-import { getPlanFeatures } from "@/lib/plans";
+import { getPlanFeatures, PREMIUM_PLAN_NAME } from "@/lib/plans";
 import { createClient } from "@/lib/supabase/server";
 
 import { DepositServicesForm } from "./deposit-services";
@@ -155,13 +155,14 @@ export default async function SettingsPage() {
         </Section>
       ) : (
         <Section
+          id="sinal"
           title="Sinal pelo Pix"
           description={t(
-            "Disponível no plano Completo: o cliente paga o sinal ou o valor total pelo Pix ao agendar e avisa no chat.",
+            `Disponível no ${PREMIUM_PLAN_NAME}: o cliente paga o sinal pelo Pix direto para você e envia o comprovante; se o valor, o recebedor e a data baterem, o horário é confirmado na hora. Inclui o lembrete no celular do cliente, 1 dia e 2 horas antes.`,
           )}
         >
-          <Link href="/painel/plano" className="text-sm font-medium text-primary underline">
-            Assinar o Completo
+          <Link href="/painel/plano#assinar" className="text-sm font-medium text-primary underline">
+            Conhecer o {PREMIUM_PLAN_NAME}
           </Link>
         </Section>
       )}

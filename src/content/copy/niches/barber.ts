@@ -32,7 +32,7 @@ export const BARBER_LANDING: LandingCopy = {
       {
         scene: "Sábado cheio no papel e cadeira vazia na hora, porque o cliente esqueceu.",
         relief:
-          "Lembrete por e-mail no dia anterior, com botão para remarcar, e a vaga vai para quem está na lista de espera.",
+          "Lembrete no celular do cliente 1 dia e 2 horas antes (Premium), com botão para remarcar, e a vaga vai para quem está na lista de espera.",
       },
     ],
   },
@@ -54,7 +54,7 @@ export const BARBER_LANDING: LandingCopy = {
       {
         kicker: "Para a cadeira não ficar vazia",
         title: "O lembrete chega na véspera, com “Preciso remarcar”",
-        text: "Quem deixou o e-mail recebe o lembrete um dia antes. Quem não pode vir libera o horário a tempo de outro cliente marcar.",
+        text: "No Premium, quem ativou o lembrete recebe o aviso no celular 1 dia e 2 horas antes. Quem não pode vir libera o horário a tempo de outro cliente marcar.",
         visual: "reminder",
       },
       {
@@ -88,7 +88,7 @@ export const BARBER_LANDING: LandingCopy = {
       {
         label: "Cliente que esqueceu",
         before: "Cadeira vazia no sábado",
-        after: "Lembrete por e-mail com botão de remarcar",
+        after: "Lembrete no celular (Premium) com botão de remarcar",
       },
     ],
   },

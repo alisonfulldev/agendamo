@@ -85,7 +85,7 @@ export default async function ActivatePage({
         (subscription?.billing_cycle as "monthly" | "yearly" | undefined) ?? "monthly",
         0,
         0,
-        (subscription?.tier as "complete" | "site" | undefined) ?? "complete",
+        (subscription?.tier as "complete" | "site" | "premium" | undefined) ?? "complete",
       );
     return (
       <Shell>
@@ -104,7 +104,13 @@ export default async function ActivatePage({
         <ActivationFlow
           businessId={business.id}
           pageUrl={pageUrl}
-          initialTier={params.plano === "site" ? "site" : "complete"}
+          initialTier={
+            params.plano === "site"
+              ? "site"
+              : params.plano === "complete" || params.plano === "completo"
+                ? "complete"
+                : "premium"
+          }
         />
       )}
     </Shell>

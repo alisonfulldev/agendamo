@@ -23,10 +23,10 @@ export const barberGuide: NicheGuide = {
     "reduzir-faltas": {
       title: "Como reduzir faltas na barbearia | MeetChat",
       description:
-        "Cadeira vazia em horário marcado custa caro. Veja como lembrete por e-mail, remarcação em um toque e lista de espera ajudam a barbearia a perder menos cortes.",
+        "Cadeira vazia em horário marcado custa caro. Veja como lembrete no celular, remarcação em um toque e lista de espera ajudam a barbearia a perder menos cortes.",
       h1: "Como reduzir faltas na barbearia",
       answer:
-        "Para a barbearia perder menos cortes por falta, o cliente precisa lembrar do horário e ter um jeito fácil de avisar quando não vai. Com o MeetChat, ele recebe a confirmação e um lembrete por e-mail um dia antes, com um botão para remarcar ou cancelar, e o horário liberado pode ir para quem está na lista de espera.",
+        "Para a barbearia perder menos cortes por falta, o cliente precisa lembrar do horário e ter um jeito fácil de avisar quando não vai. Com o MeetChat, ele recebe a confirmação e um lembrete no celular um dia antes, com um botão para remarcar ou cancelar, e o horário liberado pode ir para quem está na lista de espera.",
       linkLabel: "reduzir faltas na barbearia",
       sections: [
         {
@@ -40,7 +40,7 @@ export const barberGuide: NicheGuide = {
           title: "O que o MeetChat faz para o horário não ficar vazio?",
           list: [
             "Confirmação na hora: o cliente que informa o e-mail ao agendar recebe os detalhes do horário, do serviço e do barbeiro.",
-            "Lembrete automático um dia antes, por e-mail, com os botões “Preciso remarcar” e “Cancelar horário”.",
+            "Lembrete automático no celular do cliente, 1 dia e 2 horas antes (Premium), com a opção de remarcar ou cancelar.",
             "Remarcar é o próprio cliente escolhendo outro horário livre, sem precisar chamar você no WhatsApp.",
             "Lista de espera: quando alguém cancela, quem pediu aquele dia e serviço recebe um e-mail, e o primeiro que confirmar fica com o horário.",
           ],
@@ -62,7 +62,7 @@ export const barberGuide: NicheGuide = {
         {
           question: "O lembrete vai pelo WhatsApp?",
           answer:
-            "Não. O lembrete automático vai por e-mail, para quem informou o e-mail ao agendar. O WhatsApp do cliente fica salvo no agendamento, e você pode chamá-lo pelo seu próprio WhatsApp quando quiser.",
+            "Não. O lembrete automático (no Premium) chega como notificação no celular de quem ativou o lembrete ao agendar. O WhatsApp do cliente fica salvo no agendamento, e você pode chamá-lo pelo seu próprio WhatsApp quando quiser.",
         },
         {
           question: "Posso cobrar sinal só no corte + barba?",

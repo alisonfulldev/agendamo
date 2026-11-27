@@ -320,7 +320,7 @@ export const ARTICLES: readonly Article[] = [
       "Como o cliente remarca ou cancela um horário marcado pelo seu link do MeetChat, e o que acontece quando ele não informou o e-mail.",
     h1: "Como o cliente remarca ou cancela um horário",
     summary:
-      "O cliente que informou o e-mail ao agendar remarca ou cancela pelos botões do e-mail de confirmação e do lembrete. Ao remarcar, ele escolhe outro horário livre. Quem não informou e-mail fala com você, e você ajusta o horário no painel.",
+      "O cliente remarca ou cancela pela página do agendamento, que abre pelo e-mail de confirmação e, no Premium, pelo lembrete no celular. Ao remarcar, ele escolhe outro horário livre. Quem não informou e-mail fala com você, e você ajusta o horário no painel.",
     author: TEAM,
     datePublished: "2026-10-16",
     dateModified: "2026-11-13",
@@ -331,7 +331,7 @@ export const ARTICLES: readonly Article[] = [
         title: "Como o cliente remarca pelo e-mail?",
         ordered: true,
         list: [
-          "O cliente abre o e-mail de confirmação ou o lembrete enviado um dia antes.",
+          "O cliente abre o e-mail de confirmação ou, no Premium, o lembrete no celular (1 dia e 2 horas antes).",
           "Toca em “Preciso remarcar” e escolhe outro horário livre, ou em “Cancelar horário”.",
           "A agenda se ajusta, e você recebe o aviso.",
         ],

@@ -29,7 +29,7 @@ export const beautyLanding: LandingCopy = {
       {
         scene: "A cliente das mechas não aparece, e a profissional fica com a tarde vazia.",
         relief:
-          "Lembrete por e-mail na véspera com botão de remarcar, e sinal pelo Pix nos serviços longos, pago direto na sua chave.",
+          "Lembrete no celular na véspera e 2 horas antes (Premium), com botão de remarcar, e sinal pelo Pix nos serviços longos, pago direto na sua chave.",
       },
     ],
   },
@@ -51,7 +51,7 @@ export const beautyLanding: LandingCopy = {
       {
         kicker: "Antes do horário",
         title: "Remarcar sem constrangimento",
-        text: "Na véspera, quem deixou o e-mail recebe o lembrete com “Preciso remarcar”. Ela escolhe outro horário sozinha, sem ter de se explicar por mensagem.",
+        text: "No Premium, na véspera, quem ativou o lembrete recebe o aviso no celular com “Preciso remarcar”. Ela escolhe outro horário sozinha, sem ter de se explicar por mensagem.",
         visual: "reminder",
       },
       {
@@ -85,7 +85,7 @@ export const beautyLanding: LandingCopy = {
       {
         label: "Cliente que falta",
         before: "Tarde vazia e nada a fazer",
-        after: "Lembrete por e-mail e sinal pelo Pix nos serviços longos",
+        after: "Lembrete no celular e sinal pelo Pix nos serviços longos (Premium)",
       },
     ],
   },

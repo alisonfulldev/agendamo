@@ -37,4 +37,4 @@ export const COMPANY_PLACE = `${COMPANY.city}/${COMPANY.state}`;
  * no prices: those come from src/lib/plans.ts where they appear.
  */
 export const MEETCHAT_SUMMARY =
-  "O MeetChat é um chat de agendamento online para negócios que trabalham com hora marcada no Brasil: o cliente toca no link (Instagram, WhatsApp, Google ou site), escolhe o serviço, o profissional e um horário livre e confirma, sem baixar aplicativo. Inclui agenda por profissional, confirmação e lembrete por e-mail, sinal pelo Pix pago direto ao profissional e financeiro simples.";
+  "O MeetChat é um chat de agendamento online para negócios que trabalham com hora marcada no Brasil: o cliente toca no link (Instagram, WhatsApp, Google ou site), escolhe o serviço, o profissional e um horário livre e confirma, sem baixar aplicativo. Inclui agenda por profissional, confirmação automática e financeiro simples; no Premium, também sinal pelo Pix pago direto ao profissional e lembrete no celular do cliente.";

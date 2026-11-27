@@ -6,7 +6,15 @@ import { invalidatePublicPage } from "@/lib/cache";
 import type { Business, Subscription } from "@/lib/db/types";
 import { isDemoMode } from "@/lib/demo/mode";
 import { claimNotification, notifyTeam } from "@/lib/notifications/owner";
-import { PLAN_PRICES, subscriptionPrice, TIER_NAME, type Cycle, type Tier } from "@/lib/plans";
+import {
+  PLAN_PRICES,
+  reais,
+  subscriptionPrice,
+  TIER_NAME,
+  tierRank,
+  type Cycle,
+  type Tier,
+} from "@/lib/plans";
 import { cancelPartnerCommission, recordPartnerCommission } from "@/lib/partners/service";
 import { recordTrialClaims } from "@/lib/trial";
 import { markPlanOrderPaid, markSingleOrderPaid } from "@/lib/custom-site/paid";
@@ -196,7 +204,7 @@ export async function subscribePlan(input: {
   userId: string;
   cycle: Cycle;
   extraProfessionals: number;
-  /** "complete" (chat + agenda) or "site" (+ the landing page). */
+  /** "complete" (chat + agenda), "site" (+ the landing page) or "premium" (+ deposit and reminders). */
   tier?: Tier;
   payer: { name: string; cpfCnpj: string; email: string };
   couponCode?: string | null;
@@ -252,11 +260,11 @@ export async function subscribePlan(input: {
         description,
       });
     }
-    // Moving up to "Site + Agenda": the site turns on now (new value from the next charge).
-    // Moving down: the site stays until the paid period ends (applied at the next payment).
+    // Moving up (Completo → Site + Agenda → Premium): the new features turn on now (new value
+    // from the next charge). Moving down: they stay until the paid period ends.
     const current: Tier = existing.tier ?? "complete";
-    const upgrade = current === "complete" && tier === "site";
-    const downgrade = current === "site" && tier === "complete";
+    const upgrade = tierRank(tier) > tierRank(current);
+    const downgrade = tierRank(tier) < tierRank(current);
     await admin
       .from("subscriptions")
       .update({
@@ -265,12 +273,12 @@ export async function subscribePlan(input: {
         value_cents: value,
         needs_reprice: false,
         tier: downgrade ? current : tier,
-        next_tier: downgrade ? "complete" : null,
+        next_tier: downgrade ? tier : null,
         updated_at: new Date().toISOString(),
       })
       .eq("id", existing.id);
     if (upgrade) {
-      await admin.from("businesses").update({ plan_tier: "site" }).eq("id", input.business.id);
+      await admin.from("businesses").update({ plan_tier: tier }).eq("id", input.business.id);
     }
     await admin.rpc("apply_professional_seats", {
       p_business_id: input.business.id,
@@ -350,6 +358,10 @@ export async function subscribePlan(input: {
       pix_automatic_first_payment_id: null,
       addons: existing?.addons ?? {},
       status: "pending",
+      // A plan cancelled but still paid keeps its end: if this new choice is never paid, the
+      // billing job still downgrades the account when that period ends.
+      current_period_end: carriedPeriodEnd(existing),
+      sunset_at: null,
       updated_at: new Date().toISOString(),
     },
     { onConflict: "business_id" },
@@ -373,6 +385,12 @@ export async function subscribePlan(input: {
   const pix = await pixOfPendingPayment(regular!.id);
   if (!pix) throw new Error("pix_unavailable");
   return { kind: "pix", pix };
+}
+
+/** End of a cancelled plan that is still paid (kept while a new subscription waits for payment). */
+function carriedPeriodEnd(existing: Subscription | null): string | null {
+  if (existing?.status !== "cancelled" || !existing.current_period_end) return null;
+  return new Date(existing.current_period_end) > new Date() ? existing.current_period_end : null;
 }
 
 /**
@@ -559,6 +577,98 @@ export async function cancelPlan(business: Business, userId: string): Promise<vo
     action: "subscription.cancelled",
     details: { plan: existing.plan, until: existing.current_period_end },
   });
+}
+
+/**
+ * Plans from before the Premium (2026-11-27): the subscription does not renew. It runs until the
+ * paid period ends (cancelPlan: the Asaas subscription and the Pix Automático authorization,
+ * which is for a fixed value, are cancelled) and then the owner chooses a plan again. Started by
+ * the admin (Admin › Assinaturas antigas), with an e-mail and a push to the owner.
+ */
+export async function sunsetLegacySubscription(
+  businessId: string,
+  adminUserId: string,
+): Promise<boolean> {
+  const business = await businessOf(businessId);
+  const existing = await loadSubscription(businessId);
+  if (!business || !existing || existing.sunset_at) return false;
+  if (!["active", "overdue"].includes(existing.status)) return false;
+  if (!["complete", "site"].includes(existing.tier ?? "complete")) return false;
+  await cancelPlan(business, adminUserId);
+  await createAdminClient()
+    .from("subscriptions")
+    .update({ sunset_at: new Date().toISOString() })
+    .eq("id", existing.id);
+  await notifySunset(business, existing.current_period_end, "start");
+  await audit({
+    businessId,
+    userId: adminUserId,
+    action: "subscription.sunset",
+    details: { tier: existing.tier, until: existing.current_period_end },
+  });
+  return true;
+}
+
+/** E-mail and push about the plan change: when it starts, and 7, 3 and 1 day before the end. */
+async function notifySunset(
+  business: Business,
+  periodEnd: string | null,
+  moment: "start" | 7 | 3 | 1,
+): Promise<void> {
+  const until = periodEnd
+    ? new Date(periodEnd).toLocaleDateString("pt-BR", { timeZone: business.timezone })
+    : "o fim do período pago";
+  const subject =
+    moment === "start"
+      ? "Seu plano do MeetChat mudou: escolha o novo plano até o vencimento"
+      : `Faltam ${moment} ${moment === 1 ? "dia" : "dias"} para escolher seu plano no MeetChat`;
+  await notifyTeam({
+    businessId: business.id,
+    type: "account",
+    subject,
+    content: {
+      heading: moment === "start" ? "Novos planos do MeetChat" : "Escolha seu plano para continuar",
+      paragraphs: [
+        `Sua assinatura atual continua funcionando normalmente até ${until}. Ela não será renovada: os planos mudaram.`,
+        `Até lá, escolha seu plano no painel: ${TIER_NAME.complete} (${reais(PLAN_PRICES.complete.monthly)}/mês), ${TIER_NAME.site} (${reais(PLAN_PRICES.site.monthly)}/mês) ou ${TIER_NAME.premium} (${reais(PLAN_PRICES.premium.monthly)}/mês). O sinal pelo Pix com o comprovante lido na hora e o lembrete automático para o cliente agora fazem parte do ${TIER_NAME.premium}.`,
+        "Ao assinar, você paga a primeira mensalidade pelo QR do Pix, que já autoriza o débito automático das próximas.",
+      ],
+      cta: { label: "Escolher meu plano", url: "/painel/plano" },
+    },
+    push: {
+      title: moment === "start" ? "Os planos do MeetChat mudaram" : "Escolha seu plano",
+      body: `Sua assinatura vale até ${until}. Escolha o novo plano no painel.`,
+      url: "/painel/plano",
+    },
+  });
+}
+
+/** Daily: the notices 7, 3 and 1 day before a plan from before the Premium ends (once each). */
+async function remindSunsets(now: Date): Promise<number> {
+  const admin = createAdminClient();
+  const { data } = await admin
+    .from("subscriptions")
+    .select("business_id, current_period_end, status")
+    .not("sunset_at", "is", null)
+    .eq("status", "cancelled")
+    .gt("current_period_end", now.toISOString());
+  let sent = 0;
+  for (const row of data ?? []) {
+    const days = Math.ceil(
+      (new Date(row.current_period_end as string).getTime() - now.getTime()) / 86_400_000,
+    );
+    const moment = ([7, 3, 1] as const).find((d) => d === days);
+    if (!moment) continue;
+    const business = await businessOf(row.business_id as string);
+    if (!business || business.plan === "free") continue;
+    if (
+      !(await claimNotification(business.id, `sunset_${moment}d`, row.current_period_end as string))
+    )
+      continue;
+    await notifySunset(business, row.current_period_end as string, moment);
+    sent++;
+  }
+  return sent;
 }
 
 // ---------------------------------------------------------------------------
@@ -1117,7 +1227,9 @@ export async function downgradeToFree(businessId: string, reason: string): Promi
 export async function processBillingExpirations(): Promise<{
   downgraded: number;
   repriced: number;
+  sunsetNotices: number;
 }> {
+  const sunsetNotices = await remindSunsets(new Date());
   const downgraded = await expireSubscriptions();
   const admin = createAdminClient();
   const now = new Date().toISOString();
@@ -1160,7 +1272,7 @@ export async function processBillingExpirations(): Promise<{
       .eq("id", row.id);
     repriced++;
   }
-  return { downgraded, repriced };
+  return { downgraded, repriced, sunsetNotices };
 }
 
 async function expireSubscriptions(): Promise<number> {
@@ -1169,11 +1281,14 @@ async function expireSubscriptions(): Promise<number> {
   const { data } = await admin
     .from("subscriptions")
     .select("*")
-    .in("status", ["cancelled", "overdue"]);
+    .in("status", ["cancelled", "overdue", "pending"]);
   let downgraded = 0;
   for (const row of (data ?? []) as Subscription[]) {
+    // Pending with an end: a new plan chosen after a cancellation and never paid (the old plan's
+    // period still decides). Pending without an end: a first subscription, nothing to expire.
+    if (row.status === "pending" && !row.current_period_end) continue;
     const end = row.current_period_end ? new Date(row.current_period_end).getTime() : 0;
-    const expired = row.status === "cancelled" ? end < now : end + 5 * 86_400_000 < now;
+    const expired = row.status === "overdue" ? end + 5 * 86_400_000 < now : end < now;
     if (expired) {
       await downgradeToFree(
         row.business_id,

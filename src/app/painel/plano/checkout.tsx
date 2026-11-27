@@ -9,7 +9,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PLAN_CARDS } from "@/content/plans";
 import { formatBRL } from "@/lib/money";
-import { subscriptionPrice, TIER_NAME, yearlySavings, type Cycle, type Tier } from "@/lib/plans";
+import {
+  subscriptionPrice,
+  TIER_NAME,
+  tierRank,
+  yearlySavings,
+  type Cycle,
+  type Tier,
+} from "@/lib/plans";
 
 import type { PixCharge } from "@/lib/billing/service";
 
@@ -130,8 +137,8 @@ export function PlanCheckout({
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="grid gap-3 md:grid-cols-2" role="group" aria-label="Plano">
-        {(["site", "complete"] as const).map((t) => {
+      <div className="grid gap-3 md:grid-cols-3" role="group" aria-label="Plano">
+        {(["premium", "site", "complete"] as const).map((t) => {
           const card = PLAN_CARDS[t];
           return (
             <button
@@ -141,9 +148,9 @@ export function PlanCheckout({
               onClick={() => setTier(t)}
               className={`relative flex flex-col gap-1 rounded-2xl border bg-card p-5 text-left ${tier === t ? "ring-2 ring-primary" : ""}`}
             >
-              {t === "site" ? (
+              {t === "premium" ? (
                 <span className="absolute -top-2.5 right-4 rounded-full bg-primary px-2.5 py-0.5 text-xs font-medium text-primary-foreground">
-                  Com seu site
+                  Sinal e lembrete
                 </span>
               ) : null}
               <span className="font-semibold">{card.name}</span>
@@ -242,9 +249,9 @@ export function PlanCheckout({
         </p>
         {hasActiveSubscription && tier !== initialTier ? (
           <p className="rounded-xl bg-accent px-3 py-2 text-sm text-accent-foreground">
-            {tier === "site"
-              ? "Seu site é liberado assim que você salvar. O novo valor vale a partir da próxima cobrança."
-              : "Seu site continua no ar até o fim do período já pago e sai na próxima cobrança, que já vem no valor do Completo."}
+            {tierRank(tier) > tierRank(initialTier)
+              ? "Os recursos do novo plano são liberados assim que você salvar. O novo valor vale a partir da próxima cobrança."
+              : `Os recursos do plano atual continuam até o fim do período já pago. A próxima cobrança já vem no valor do ${TIER_NAME[tier]}.`}
           </p>
         ) : null}
         {hasActiveSubscription && professionals < activeProfessionals ? (

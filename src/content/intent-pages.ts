@@ -120,29 +120,29 @@ export const INTENT_PAGES: readonly IntentPage[] = [
       {
         question: "O cliente recebe confirmação pelo WhatsApp?",
         answer:
-          "A confirmação e o lembrete automáticos vão por e-mail, para quem informar o e-mail ao agendar.",
+          "Não. A confirmação vai por e-mail e, no Premium, o lembrete chega como notificação no celular do cliente, 1 dia e 2 horas antes.",
       },
     ],
     related: ["link-na-bio", "lembrete-automatico", "sem-app"],
     nicheTopic: "agendar-pelo-whatsapp",
-    updatedAt: "2026-10-16",
+    updatedAt: "2026-11-27",
   },
   {
     slug: "lembrete-automatico",
     label: "Lembrete automático",
     title: "Lembrete automático de agendamento para clientes | MeetChat",
     description:
-      "Como funciona o lembrete automático do MeetChat: e-mail um dia antes, com botões para remarcar ou cancelar, para o cliente não esquecer o horário.",
+      "Como funciona o lembrete automático do MeetChat: notificação no celular do cliente 1 dia e 2 horas antes, com botão para remarcar ou cancelar, para ele não esquecer o horário.",
     h1: "Lembrete automático de agendamento: como funciona",
     answer:
-      "No MeetChat, o lembrete automático é um e-mail enviado um dia antes do horário para o cliente que informou o e-mail ao agendar. Ele traz o serviço, o dia e a hora e dois botões: “Preciso remarcar” e “Cancelar horário”. O lembrete faz parte do plano pago.",
+      "No MeetChat, o lembrete automático é uma notificação no celular do cliente, enviada 1 dia e 2 horas antes do horário. Ao agendar, o cliente toca em “Ativar lembrete” (no iPhone, adiciona a página do agendamento à tela de início). Tocando no lembrete, ele vê o horário e pode remarcar ou cancelar. O lembrete faz parte do plano Premium.",
     sections: [
       {
         title: "O que o cliente recebe?",
         ordered: true,
         list: [
-          "Na hora do agendamento: a confirmação por e-mail, com os detalhes do horário.",
-          "Um dia antes: o lembrete, com os botões para remarcar ou cancelar.",
+          "Na hora do agendamento: a confirmação e o convite para ativar o lembrete no celular.",
+          "1 dia antes e 2 horas antes: o lembrete, que abre o horário com as opções de remarcar ou cancelar.",
           "Se remarcar: escolhe outro horário livre, e a agenda se ajusta sozinha.",
         ],
       },
@@ -157,8 +157,8 @@ export const INTENT_PAGES: readonly IntentPage[] = [
         title: "O que o lembrete não faz?",
         list: [
           "Não vai por WhatsApp nem por SMS.",
-          "Não chega para quem não informou o e-mail (o e-mail é opcional no agendamento).",
-          "Não funciona no modo grátis (modo WhatsApp), em que nenhum horário é reservado automaticamente.",
+          "Não chega para quem não ativou o lembrete (essa pessoa pode salvar o horário na agenda do celular, com alarme 1 dia e 2 horas antes).",
+          "Não está nos planos Completo e Site + Agenda nem no modo grátis (modo WhatsApp).",
         ],
       },
     ],
@@ -175,7 +175,7 @@ export const INTENT_PAGES: readonly IntentPage[] = [
       },
     ],
     related: ["reduzir-faltas", "pelo-whatsapp", "agenda-gratis"],
-    updatedAt: "2026-10-16",
+    updatedAt: "2026-11-27",
   },
   {
     slug: "reduzir-faltas",
@@ -190,7 +190,7 @@ export const INTENT_PAGES: readonly IntentPage[] = [
       {
         title: "1. Lembrar o cliente antes do horário",
         paragraphs: [
-          "O esquecimento é a causa mais simples de falta. No MeetChat, quem informa o e-mail recebe um lembrete um dia antes, com os detalhes do horário.",
+          "O esquecimento é a causa mais simples de falta. No Premium do MeetChat, o cliente recebe um lembrete no celular 1 dia e 2 horas antes, com os detalhes do horário.",
         ],
       },
       {
@@ -202,7 +202,7 @@ export const INTENT_PAGES: readonly IntentPage[] = [
       {
         title: "3. Pedir sinal onde a falta pesa mais",
         paragraphs: [
-          "Em serviços longos ou disputados, um sinal pelo Pix aumenta o compromisso. No MeetChat, o cliente paga direto na sua chave, você confere e confirma. O MeetChat não recebe esse dinheiro.",
+          "Em serviços longos ou disputados, um sinal pelo Pix aumenta o compromisso. No Premium, o cliente paga direto na sua chave e envia o comprovante, que é conferido na hora. O MeetChat não recebe esse dinheiro.",
         ],
       },
       {
@@ -227,16 +227,16 @@ export const INTENT_PAGES: readonly IntentPage[] = [
     ],
     related: ["lembrete-automatico", "multiagenda", "agenda-gratis"],
     nicheTopic: "reduzir-faltas",
-    updatedAt: "2026-10-16",
+    updatedAt: "2026-11-27",
   },
   {
     slug: "agenda-gratis",
     label: "Agenda online grátis",
     title: "Agenda online grátis: o que dá para fazer sem pagar | MeetChat",
     description:
-      "O que a agenda online grátis do MeetChat faz e o que fica no plano pago: link no ar com pedidos pelo WhatsApp de graça; lembretes e agenda completa no pago.",
+      "O que a agenda online grátis do MeetChat faz e o que fica nos planos pagos: link no ar com pedidos pelo WhatsApp de graça; agenda completa no pago, e sinal e lembrete no Premium.",
     h1: "Agenda online grátis: o que está incluso",
-    answer: `No MeetChat, o grátis é o modo WhatsApp: seu link e o chat ficam no ar, e o cliente escolhe serviço, dia e turno e chama você no WhatsApp com a mensagem pronta. Horário reservado automaticamente, lembretes e a agenda completa no painel são do plano pago (${PRICE_TEXT.monthly}). Todo cadastro começa com ${TRIAL_DAYS} dias do plano pago, sem cartão.`,
+    answer: `No MeetChat, o grátis é o modo WhatsApp: seu link e o chat ficam no ar, e o cliente escolhe serviço, dia e turno e chama você no WhatsApp com a mensagem pronta. Horário reservado automaticamente e a agenda completa no painel são do plano pago (a partir de ${PRICE_TEXT.monthly}); o sinal pelo Pix e o lembrete para o cliente são do Premium. Todo cadastro começa com ${TRIAL_DAYS} dias do Premium, sem cartão.`,
     sections: [
       {
         title: "O que funciona de graça?",
@@ -251,9 +251,10 @@ export const INTENT_PAGES: readonly IntentPage[] = [
         title: "O que é do plano pago?",
         list: [
           "Horário reservado na hora, sem conflito entre clientes.",
-          "Confirmação e lembrete automáticos por e-mail.",
+          "Confirmação automática para o cliente.",
           "Agenda, clientes e financeiro no painel; equipe e salas.",
-          "Sinal pelo Pix, pacotes, combos, cupons e lista de espera.",
+          "Pacotes, combos, cupons e lista de espera.",
+          "No Premium: sinal pelo Pix com o comprovante conferido na hora e lembrete no celular do cliente.",
         ],
       },
       {
@@ -275,7 +276,7 @@ export const INTENT_PAGES: readonly IntentPage[] = [
       },
     ],
     related: ["autonomo", "lembrete-automatico", "link-na-bio"],
-    updatedAt: "2026-10-16",
+    updatedAt: "2026-11-27",
   },
   {
     slug: "autonomo",
@@ -420,7 +421,7 @@ export const INTENT_PAGES: readonly IntentPage[] = [
       {
         question: "O cliente precisa informar e-mail para agendar?",
         answer:
-          "Não. O e-mail é opcional: o cliente marca com o nome e o WhatsApp. Quem informa o e-mail recebe a confirmação e o lembrete, com os botões para remarcar ou cancelar sozinho.",
+          "Não. O e-mail é opcional: o cliente marca com o nome e o WhatsApp. Quem informa o e-mail recebe a confirmação, com o botão para remarcar ou cancelar sozinho; no Premium, o lembrete chega no celular.",
       },
       {
         question: "Funciona em qualquer celular?",
@@ -429,7 +430,7 @@ export const INTENT_PAGES: readonly IntentPage[] = [
       {
         question: "O cliente consegue remarcar depois?",
         answer:
-          "Consegue, pelo link que vem no e-mail de confirmação e no lembrete (para quem informou o e-mail).",
+          "Consegue, pelo link que vem no e-mail de confirmação e, no Premium, no lembrete do celular.",
       },
     ],
     related: ["link-na-bio", "pelo-whatsapp", "autonomo"],
@@ -474,7 +475,7 @@ export const INTENT_PAGES: readonly IntentPage[] = [
         list: [
           "Mostra só horários em que o serviço cabe inteiro, fora das pausas e de outros agendamentos.",
           "Avisa você no celular a cada agendamento, cancelamento ou remarcação.",
-          "Manda confirmação e lembrete ao cliente que informou o e-mail.",
+          "Manda a confirmação por e-mail e, no Premium, o lembrete no celular do cliente.",
         ],
       },
     ],

@@ -53,7 +53,7 @@ export const physioLanding: LandingCopy = {
       {
         kicker: "Antes da sessão",
         title: "O paciente lembrado da sessão um dia antes",
-        text: "Quem deixou o e-mail recebe o lembrete um dia antes. Se não puder vir, remarca sozinho e o horário volta para a agenda.",
+        text: "No Premium, quem ativou o lembrete recebe o aviso no celular 1 dia e 2 horas antes. Se não puder vir, remarca sozinho e o horário volta para a agenda.",
         visual: "reminder",
       },
       {
@@ -87,7 +87,7 @@ export const physioLanding: LandingCopy = {
       {
         label: "Paciente que esquece",
         before: "Horário vazio",
-        after: "Lembrete por e-mail com botão de remarcar",
+        after: "Lembrete no celular (Premium) com botão de remarcar",
       },
     ],
   },

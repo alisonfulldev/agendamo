@@ -22,8 +22,8 @@ export const ABOUT = {
     {
       title: "Como funciona?",
       paragraphs: [
-        "O link abre um chat de agendamento no navegador do celular, sem baixar aplicativo: o cliente escolhe o serviço, o profissional e um horário livre e confirma. O horário entra na sua agenda, e o cliente recebe a confirmação e o lembrete por e-mail.",
-        "No painel ficam a agenda por profissional, os clientes e um financeiro simples. Se quiser, o chat pede um sinal pelo Pix, pago direto na sua chave: o MeetChat nunca recebe o dinheiro dos seus clientes.",
+        "O link abre um chat de agendamento no navegador do celular, sem baixar aplicativo: o cliente escolhe o serviço, o profissional e um horário livre e confirma. O horário entra na sua agenda, e o cliente recebe a confirmação e o lembrete no celular.",
+        "No painel ficam a agenda por profissional, os clientes e um financeiro simples. No Premium, o chat pede um sinal pelo Pix, pago direto na sua chave e conferido pelo comprovante na hora: o MeetChat nunca recebe o dinheiro dos seus clientes.",
       ],
     },
     {

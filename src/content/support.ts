@@ -496,7 +496,7 @@ export const SUPPORT_ITEMS: SupportItem[] = [
     id: "notify-customer",
     question: "O cliente recebe confirmação e lembrete?",
     answer:
-      "Sim, por e-mail: confirmação ao marcar e lembrete antes do horário, com botão para remarcar ou cancelar. O MeetChat não manda WhatsApp pelo sistema.",
+      "Sim: a confirmação vai por e-mail ao marcar e, no Premium, o lembrete chega no celular do cliente 1 dia e 2 horas antes, com a opção de remarcar ou cancelar. O MeetChat não manda WhatsApp pelo sistema.",
     keywords: [
       "lembrete",
       "confirmacao",

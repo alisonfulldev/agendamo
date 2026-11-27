@@ -17,17 +17,23 @@ export const metadata: Metadata = { title: "Pagamento", robots: { index: false }
 
 /** What the customer gets, in a few words, for each plan. */
 const INCLUDES = {
+  premium: [
+    "Seu site pronto, na sua cor, feito para o Google",
+    "Agenda online: os clientes marcam sozinhos, 24h",
+    "Sinal pelo Pix com o comprovante conferido na hora",
+    "Lembrete no celular do cliente, 1 dia e 2 horas antes",
+  ],
   site: [
     "Seu site pronto, na sua cor, feito para o Google",
     "Agenda online: os clientes marcam sozinhos, 24h",
-    "Confirmação e lembrete automáticos",
+    "Confirmação automática para o cliente",
     "Avisos no seu celular a cada agendamento",
   ],
   complete: [
     "Agenda online: os clientes marcam sozinhos, 24h",
-    "Confirmação e lembrete automáticos",
+    "Confirmação automática para o cliente",
     "Avisos no seu celular a cada agendamento",
-    "Clientes, financeiro e sinal pelo Pix",
+    "Clientes e financeiro",
   ],
   web: [
     "Seu site pronto, na sua cor, feito para o Google",

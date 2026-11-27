@@ -25,6 +25,7 @@ export type AuditAction =
   | "plan.downgrade_scheduled"
   | "subscription.created"
   | "subscription.cancelled"
+  | "subscription.sunset"
   | "member.invited"
   | "member.removed"
   | "professional.deleted"

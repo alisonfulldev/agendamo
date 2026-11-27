@@ -68,7 +68,7 @@ export const HOME: HomeContent = {
       "Crie seu link de agendamento em 1 minuto e coloque no Instagram e no WhatsApp. Sem app e sem responder mensagem.",
     primaryCta: "Comece grátis, sem cartão",
     // D1 (2026-10-16): the limit of "grátis" stays next to the promise.
-    note: "Grátis no modo WhatsApp. Lembretes automáticos e agenda completa no plano pago.",
+    note: "Grátis no modo WhatsApp. Agenda completa no plano pago; sinal pelo Pix e lembrete para o cliente no Premium.",
     points: [
       "Agenda 24h sem responder mensagem",
       "Lembrete para o cliente não faltar",
@@ -100,7 +100,7 @@ export const HOME: HomeContent = {
   },
   reminders: {
     title: "Lembrete automático para o cliente não faltar",
-    text: "Cada cliente recebe a confirmação na hora e um lembrete antes do horário, com o link para remarcar ou cancelar. Assim o horário vago volta para a agenda, em vez de virar falta.",
+    text: "No Premium, cada cliente recebe a confirmação na hora e um lembrete no celular 1 dia e 2 horas antes do horário, com o link para remarcar ou cancelar. Assim o horário vago volta para a agenda, em vez de virar falta.",
   },
   audience: {
     title: "Para salões, barbearias, estética, psicólogos e mais de 30 profissões",

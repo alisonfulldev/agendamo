@@ -16,7 +16,7 @@ import { PixPanel } from "../painel/plano/payment";
 
 const T = ACTIVATION;
 
-type PaidTier = "complete" | "site";
+type PaidTier = "complete" | "site" | "premium";
 
 const cents = (value: number) => Math.round(value) / 100;
 
@@ -161,7 +161,7 @@ function Checkout({ businessId, initialTier }: { businessId: string; initialTier
       </div>
 
       <div className="flex flex-col gap-3" role="group" aria-label={T.checkout.choosePlan}>
-        {(["complete", "site"] as const).map((t) => {
+        {(["premium", "site", "complete"] as const).map((t) => {
           const card = PLAN_CARDS[t];
           const price = subscriptionPrice(cycle, 0, 0, t);
           return (

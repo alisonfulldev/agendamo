@@ -16,6 +16,8 @@ import { trialCounter } from "@/lib/plan-text";
 import {
   getPlanFeatures,
   PLAN_NAME,
+  PREMIUM_PLAN_NAME,
+  PREMIUM_PRICE_TEXT,
   PLAN_PRICES,
   planLabel,
   PRICE_TEXT,
@@ -138,7 +140,8 @@ export default async function PlanPage() {
           <p className="mt-2 text-sm text-muted-foreground">
             {t("Agenda, clientes")} e configurações estão guardados, e os horários já marcados
             continuam valendo. Assinando, tudo volta na hora: {PLAN_NAME} por {PRICE_TEXT.summary},
-            ou com o seu site por {SITE_PRICE_TEXT.summary}.
+            com o seu site por {SITE_PRICE_TEXT.summary}, ou {PREMIUM_PLAN_NAME} (site, sinal pelo
+            Pix e lembrete para o cliente) por {PREMIUM_PRICE_TEXT.summary}.
           </p>
           <a
             href="#assinar"
@@ -252,10 +255,20 @@ export default async function PlanPage() {
         </Section>
       ) : null}
 
-      {active && subscription?.next_tier === "complete" ? (
+      {active && subscription?.next_tier ? (
         <p role="status" className="rounded-lg bg-accent px-3 py-2 text-sm text-accent-foreground">
-          Você escolheu o {PLAN_NAME}: seu site fica no ar até o fim do período pago e sai na
-          próxima cobrança.
+          Você escolheu o {TIER_NAME[subscription.next_tier]}: os recursos do plano atual continuam
+          até o fim do período pago e saem na próxima cobrança.
+        </p>
+      ) : null}
+
+      {subscription?.sunset_at && subscription.status === "cancelled" ? (
+        <p role="status" className="rounded-lg bg-accent px-3 py-2 text-sm text-accent-foreground">
+          Os planos do MeetChat mudaram. Sua assinatura atual continua até{" "}
+          {subscription.current_period_end ? date(subscription.current_period_end) : "o vencimento"}{" "}
+          e não será renovada: escolha seu plano abaixo. O sinal pelo Pix e o lembrete para o
+          cliente agora fazem parte do {PREMIUM_PLAN_NAME}. O novo plano começa no dia em que você
+          pagar a primeira mensalidade (os dias que faltam do plano atual não são descontados).
         </p>
       ) : null}
 
@@ -264,7 +277,7 @@ export default async function PlanPage() {
           initialCycle={subscription?.billing_cycle ?? "monthly"}
           initialExtras={active ? (subscription?.extra_professionals ?? 0) : 0}
           initialTier={
-            active ? (subscription?.next_tier ?? subscription?.tier ?? "complete") : "site"
+            active ? (subscription?.next_tier ?? subscription?.tier ?? "complete") : "premium"
           }
           activeProfessionals={activeProfessionals ?? 1}
           hasActiveSubscription={active}

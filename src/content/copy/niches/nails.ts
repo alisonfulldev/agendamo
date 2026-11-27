@@ -28,7 +28,7 @@ export const nailsLanding: LandingCopy = {
       {
         scene: "A cliente da manutenção marca, esquece e some.",
         relief:
-          "Lembrete por e-mail na véspera com botão de remarcar; com pacote de manutenção, ela vê quantas sessões ainda tem.",
+          "Lembrete no celular na véspera e 2 horas antes (Premium), com botão de remarcar; com pacote de manutenção, ela vê quantas sessões ainda tem.",
       },
     ],
   },
@@ -50,7 +50,7 @@ export const nailsLanding: LandingCopy = {
       {
         kicker: "Manutenção em dia",
         title: "O lembrete chega antes, com botão de remarcar",
-        text: "Um dia antes, quem deixou o e-mail recebe o lembrete. Quem não pode vir remarca sozinha, e o horário volta para a agenda.",
+        text: "No Premium, 1 dia e 2 horas antes, quem ativou o lembrete recebe o aviso no celular. Quem não pode vir remarca sozinha, e o horário volta para a agenda.",
         visual: "reminder",
       },
       {
@@ -79,7 +79,7 @@ export const nailsLanding: LandingCopy = {
       {
         label: "Manutenção esquecida",
         before: "Horário vazio",
-        after: "Lembrete por e-mail com botão de remarcar",
+        after: "Lembrete no celular (Premium) com botão de remarcar",
       },
       {
         label: "Sinal do alongamento",

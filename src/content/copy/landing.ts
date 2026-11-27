@@ -38,7 +38,7 @@ export const HOME_LANDING: LandingCopy = {
       {
         pain: "“O cliente marca e não aparece.”",
         answer:
-          "Um lembrete por e-mail no dia anterior, com botão para remarcar, devolve o horário a tempo.",
+          "No Premium, um lembrete no celular do cliente 1 dia e 2 horas antes, com botão para remarcar, devolve o horário a tempo.",
         href: "/agendamento/reduzir-faltas",
         label: "Como reduzir faltas",
       },
@@ -68,7 +68,7 @@ export const HOME_LANDING: LandingCopy = {
       {
         kicker: "Antes do horário",
         title: "O lembrete chega com o botão de remarcar",
-        text: "Um dia antes, quem deixou o e-mail recebe um lembrete com “Preciso remarcar”. Quem não pode ir avisa com um toque, em vez de simplesmente não aparecer.",
+        text: "No Premium, o cliente recebe o lembrete no celular 1 dia e 2 horas antes, com “Preciso remarcar”. Quem não pode ir avisa com um toque, em vez de simplesmente não aparecer.",
         visual: "reminder",
       },
       {
@@ -97,7 +97,7 @@ export const HOME_LANDING: LandingCopy = {
       {
         label: "Esquecimento",
         before: "Você lembra um por um",
-        after: "Lembrete automático por e-mail, com botão de remarcar",
+        after: "Lembrete no celular do cliente (Premium), com botão de remarcar",
       },
       {
         label: "Desmarcação",

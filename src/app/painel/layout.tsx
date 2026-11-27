@@ -21,6 +21,8 @@ import {
   PRICE_TEXT,
   SITE_PLAN_NAME,
   SITE_PRICE_TEXT,
+  PREMIUM_PLAN_NAME,
+  PREMIUM_PRICE_TEXT,
 } from "@/lib/plans";
 import { panelWords } from "@/lib/panel-words";
 import { trialCounter } from "@/lib/plan-text";
@@ -75,8 +77,9 @@ export default async function PanelLayout({ children }: LayoutProps<"/painel">) 
   const activation = Boolean(context.business.activation_demo) && !features.subscribed;
   const tourPlans: TourPlan[] | null = activation
     ? [
-        { tier: "complete", name: PLAN_NAME, price: PRICE_TEXT.monthly },
+        { tier: "premium", name: PREMIUM_PLAN_NAME, price: PREMIUM_PRICE_TEXT.monthly },
         { tier: "site", name: SITE_PLAN_NAME, price: SITE_PRICE_TEXT.monthly },
+        { tier: "complete", name: PLAN_NAME, price: PRICE_TEXT.monthly },
       ]
     : null;
   const customers = context.brand.terms.customer.plural;

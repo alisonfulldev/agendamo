@@ -126,7 +126,9 @@ export async function recordPartnerCommission(input: {
     .neq("status", "cancelled");
   const first = (count ?? 0) === 0;
   const tier = (business.plan_tier as keyof typeof PLAN_PRICES | null) ?? "complete";
-  const monthly = PLAN_PRICES[tier === "site" || tier === "web" ? tier : "complete"].monthly;
+  const monthly =
+    PLAN_PRICES[tier === "site" || tier === "web" || tier === "premium" ? tier : "complete"]
+      .monthly;
   const amount = commissionFor({
     paymentCents: input.paymentCents,
     monthlyPriceCents: monthly,

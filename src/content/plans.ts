@@ -1,6 +1,8 @@
 import {
   PLAN_NAME,
   PLAN_PRICES,
+  PREMIUM_PLAN_NAME,
+  PREMIUM_PRICE_TEXT,
   PRICE_TEXT,
   reais,
   SITE_PLAN_NAME,
@@ -26,11 +28,9 @@ export const PLAN_CARD: PlanCard = {
   price: reais(PLAN_PRICES.complete.monthly),
   period: "/mês",
   note: `ou ${PRICE_TEXT.yearlyPerMonth} no anual (${PRICE_TEXT.yearly}, ${PRICE_TEXT.yearlySavings})`,
-  tagline: "Tudo incluído, sem limite de agendamentos.",
+  tagline: "A agenda online, sem limite de agendamentos.",
   includes: [
     "Agendamentos ilimitados pelo chat, 24h",
-    "Lembretes automáticos para o cliente não faltar",
-    "Sinal ou valor total pelo Pix, direto na sua conta",
     "Chat de agendamento no seu site e no Instagram",
     "Clientes, financeiro, vendas e estatísticas",
     "Equipe e Google Agenda",
@@ -55,5 +55,28 @@ export const SITE_PLAN_CARD: PlanCard = {
   cta: `Testar ${TRIAL_DAYS} dias grátis`,
 };
 
-/** Both plans, for the subscription screen. */
-export const PLAN_CARDS = { complete: PLAN_CARD, site: SITE_PLAN_CARD } as const;
+/**
+ * Premium (2026-11-27): Site + Agenda + the deposit by Pix with the receipt read on the spot and
+ * the reminder to the customer by notification.
+ */
+export const PREMIUM_PLAN_CARD: PlanCard = {
+  name: PREMIUM_PLAN_NAME,
+  price: reais(PLAN_PRICES.premium.monthly),
+  period: "/mês",
+  note: `ou ${PREMIUM_PRICE_TEXT.yearlyPerMonth} no anual (${PREMIUM_PRICE_TEXT.yearly}, ${PREMIUM_PRICE_TEXT.yearlySavings})`,
+  tagline: "Tudo do Site + Agenda, com sinal pelo Pix e lembrete para o cliente não faltar.",
+  includes: [
+    "Sinal pelo Pix, direto na sua conta",
+    "Comprovante conferido na hora: o horário é confirmado sozinho",
+    "Lembrete no celular do cliente, 1 dia e 2 horas antes",
+    "Tudo do Site + Agenda",
+  ],
+  cta: `Testar ${TRIAL_DAYS} dias grátis`,
+};
+
+/** The booking plans, for the subscription screen. */
+export const PLAN_CARDS = {
+  complete: PLAN_CARD,
+  site: SITE_PLAN_CARD,
+  premium: PREMIUM_PLAN_CARD,
+} as const;

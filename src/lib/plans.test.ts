@@ -5,6 +5,7 @@ import {
   planLabel,
   PRICE_TEXT,
   subscriptionPrice,
+  tierRank,
   TRIAL_DAYS,
   yearlySavings,
 } from "@/lib/plans";
@@ -156,5 +157,40 @@ describe("Site + Agenda (2026-11-05)", () => {
     expect(
       planLabel(getPlanFeatures({ plan: "complete", trial_ends_at: null, plan_tier: "site" }, now)),
     ).toBe("Site + Agenda");
+  });
+});
+
+describe("Premium (2026-11-27)", () => {
+  const now = new Date("2026-12-01T12:00:00Z");
+  const subscribed = (plan_tier: "complete" | "site" | "premium") =>
+    getPlanFeatures({ plan: "complete", trial_ends_at: null, plan_tier }, now);
+
+  it("only Premium has the deposit and the reminders", () => {
+    expect(subscribed("complete")).toMatchObject({ deposits: false, pushReminders: false });
+    expect(subscribed("site")).toMatchObject({ deposits: false, pushReminders: false });
+    expect(subscribed("premium")).toMatchObject({ deposits: true, pushReminders: true });
+  });
+
+  it("Premium includes the site", () => {
+    expect(subscribed("premium").site).toBe(true);
+    expect(planLabel(subscribed("premium"))).toBe("Premium");
+  });
+
+  it("the trial is the Premium", () => {
+    const trial = getPlanFeatures(
+      { plan: "free", trial_ends_at: "2026-12-03T00:00:00Z", plan_tier: "complete" },
+      now,
+    );
+    expect(trial).toMatchObject({ deposits: true, pushReminders: true, site: true });
+  });
+
+  it("costs R$ 64,90 a month or R$ 649 a year", () => {
+    expect(subscriptionPrice("monthly", 0, 0, "premium")).toBe(6490);
+    expect(subscriptionPrice("yearly", 0, 0, "premium")).toBe(64900);
+  });
+
+  it("moving up or down follows the plan order", () => {
+    expect(tierRank("premium")).toBeGreaterThan(tierRank("site"));
+    expect(tierRank("site")).toBeGreaterThan(tierRank("complete"));
   });
 });

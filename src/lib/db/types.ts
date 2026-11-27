@@ -33,7 +33,7 @@ export interface Business {
   trial_started_at: string | null;
   trial_ends_at: string | null;
   /** Which plan (when paying, or tried): "complete", "site" (with the landing page) or "web". */
-  plan_tier?: "complete" | "site" | "web";
+  plan_tier?: "complete" | "site" | "web" | "premium";
   /** "booking" (agenda and chat), or the "Site ou Loja" product: "site" or "store". */
   product?: BusinessProduct;
   /**
@@ -327,12 +327,17 @@ export interface Subscription {
   provider_customer_id: string | null;
   provider_subscription_id: string | null;
   plan: "complete";
-  /** Plan paid: "complete" or "site". */
-  tier: "complete" | "site";
-  /** Moving down to "complete" at the end of the paid period. */
-  next_tier: "complete" | "site" | null;
+  /** Plan paid. */
+  tier: "complete" | "site" | "web" | "premium";
+  /** Moving down (to a simpler plan) at the end of the paid period. */
+  next_tier: "complete" | "site" | "web" | "premium" | null;
   /** Price changed on our side: the next billing run updates the Asaas subscription value. */
   needs_reprice: boolean;
+  /**
+   * Subscription from before the Premium (2026-11-27): does not renew; at the end of the paid
+   * period the owner chooses a plan again.
+   */
+  sunset_at: string | null;
   billing_cycle: "monthly" | "yearly";
   /** Professionals paid beyond the one included. */
   extra_professionals: number;

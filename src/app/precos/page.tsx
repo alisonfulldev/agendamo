@@ -50,7 +50,7 @@ export default function PricingPage() {
           className="mt-8 max-w-3xl"
         />
 
-        <div className="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-10 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
           {PRICING.tiers.map((tier) => (
             <section
               key={tier.name}

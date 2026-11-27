@@ -18,7 +18,8 @@ import { claimNotification, notifyTeam } from "./owner";
 export function announcementGroup(business: Business): AnnouncementGroup | null {
   const features = getPlanFeatures(business);
   if (features.trialActive) return "trial";
-  if (features.subscribed) return features.tier === "site" ? null : "complete";
+  if (features.subscribed)
+    return features.tier === "site" || features.tier === "premium" ? null : "complete";
   return "waiting";
 }
 
