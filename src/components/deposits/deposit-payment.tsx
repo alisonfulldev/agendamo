@@ -35,7 +35,8 @@ function errorText(failure: unknown, businessName: string): string {
 }
 
 /** Uploads a receipt: compressed in the browser, sent straight to storage, checked on the server. */
-async function uploadReceipt(token: string, file: File): Promise<void> {
+/** Resolves true when the reading engine confirmed the deposit by itself. */
+async function uploadReceipt(token: string, file: File): Promise<boolean> {
   const prepared = await prepareReceipt(file);
   const signed = await signReceiptAction({
     token,
@@ -51,6 +52,7 @@ async function uploadReceipt(token: string, file: File): Promise<void> {
   if (!put.ok) throw new Error("missing");
   const confirmed = await confirmReceiptAction({ token, receiptId: signed.receiptId });
   if (!confirmed.ok) throw new Error(confirmed.error);
+  return confirmed.autoConfirmed;
 }
 
 /**
@@ -68,7 +70,8 @@ export function ReceiptAttach({
   businessName: string;
   primary: boolean;
   label: string;
-  onSent: () => void;
+  /** autoConfirmed: the receipt matched and the deposit is confirmed. */
+  onSent: (autoConfirmed: boolean) => void;
 }) {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -79,8 +82,7 @@ export function ReceiptAttach({
     setError(null);
     setSending(true);
     try {
-      await uploadReceipt(token, file);
-      onSent();
+      onSent(await uploadReceipt(token, file));
     } catch (failure) {
       setError(errorText(failure, businessName));
     } finally {
@@ -177,12 +179,14 @@ export function DepositPayment({
   onExpired?: () => void;
 }) {
   const [now, setNow] = useState(() => Date.now());
-  const [state, setState] = useState<"waiting" | "declaring" | "declared" | "sent">("waiting");
+  const [state, setState] = useState<"waiting" | "declaring" | "declared" | "sent" | "confirmed">(
+    "waiting",
+  );
   const [receiptRequired, setReceiptRequired] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const left = new Date(expiresAt).getTime() - now;
-  const done = state === "declared" || state === "sent";
+  const done = state === "declared" || state === "sent" || state === "confirmed";
   const expired = !done && left <= 0;
 
   useEffect(() => {
@@ -206,6 +210,18 @@ export function DepositPayment({
     if (result.error === "receipt_required") setReceiptRequired(true);
     if (result.error === "expired") setNow(Date.now() + left);
     setError(errorText(new Error(result.error), businessName));
+  }
+
+  if (state === "confirmed") {
+    return (
+      <div className="flex flex-col gap-2">
+        <p role="status" className="rounded-2xl bg-card px-4 py-3 text-card-foreground shadow-sm">
+          <CircleCheck className="mr-1.5 inline size-4 text-primary" aria-hidden />
+          Pix confirmado! Seu horário está garantido.
+        </p>
+        {afterDeclared}
+      </div>
+    );
   }
 
   if (state === "sent") {
@@ -232,7 +248,7 @@ export function DepositPayment({
           businessName={businessName}
           primary={false}
           label="Quer agilizar? Anexar comprovante (opcional)"
-          onSent={() => setState("sent")}
+          onSent={(auto) => setState(auto ? "confirmed" : "sent")}
         />
         {afterDeclared}
       </div>
@@ -320,26 +336,30 @@ export function DepositPayment({
           businessName={businessName}
           primary
           label="Enviar comprovante"
-          onSent={() => setState("sent")}
+          onSent={(auto) => setState(auto ? "confirmed" : "sent")}
         />
       ) : (
         <>
+          {/* The receipt confirms on the spot when it matches (reading engine, 2026-11-26). */}
+          <ReceiptAttach
+            token={token}
+            businessName={businessName}
+            primary
+            label="Já paguei: enviar comprovante"
+            onSent={(auto) => setState(auto ? "confirmed" : "sent")}
+          />
+          <p className="px-1 text-center text-xs text-muted-foreground">
+            Envie o print do comprovante: se tudo bater, seu horário é confirmado na hora.
+          </p>
           <button
             type="button"
             disabled={state === "declaring"}
             onClick={() => void declare()}
-            className="flex h-12 items-center justify-center gap-2 rounded-xl bg-primary font-semibold text-primary-foreground disabled:opacity-60"
+            className="flex h-12 items-center justify-center gap-2 rounded-xl border bg-card font-medium disabled:opacity-60"
           >
             <CircleCheck className="size-4" aria-hidden />
-            {state === "declaring" ? "Avisando…" : "Já fiz o Pix"}
+            {state === "declaring" ? "Avisando…" : "Já fiz o Pix (sem comprovante)"}
           </button>
-          <ReceiptAttach
-            token={token}
-            businessName={businessName}
-            primary={false}
-            label="Anexar comprovante (opcional)"
-            onSent={() => setState("sent")}
-          />
         </>
       )}
       {whatsapp ? (

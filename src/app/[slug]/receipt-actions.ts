@@ -47,10 +47,13 @@ export async function signReceiptAction(
   return signReceiptUpload({ ...parsed.data, ipKey: `ip:${await hashedClientIp()}` });
 }
 
-/** After the upload: checked on the server (type, hash); only then the time is pre-confirmed. */
+/**
+ * After the upload: checked on the server (type, hash) and read by the engine. autoConfirmed:
+ * every rule matched and the deposit is confirmed; otherwise the time is pre-confirmed.
+ */
 export async function confirmReceiptAction(
   input: unknown,
-): Promise<{ ok: true } | { ok: false; error: ReceiptActionError }> {
+): Promise<{ ok: true; autoConfirmed: boolean } | { ok: false; error: ReceiptActionError }> {
   const parsed = z.object({ token, receiptId: z.uuid() }).safeParse(input);
   if (!parsed.success) return { ok: false, error: "invalid" };
   if (!(await rateLimitRequest("receipt"))) return { ok: false, error: "rate_limited" };

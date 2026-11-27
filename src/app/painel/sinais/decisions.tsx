@@ -8,8 +8,17 @@ import { Input } from "@/components/ui/input";
 
 import { decideDepositAction, registerRefundAction } from "./actions";
 
-/** [Confirmar recebimento] / [Não recebi] (with the reason). Never automatic. */
-export function DepositDecision({ appointmentId }: { appointmentId: string }) {
+/**
+ * [Confirmar recebimento] / [Não recebi] (with the reason). refuseOnly: a deposit already
+ * confirmed by the receipt reading engine, which the owner can still refuse.
+ */
+export function DepositDecision({
+  appointmentId,
+  refuseOnly = false,
+}: {
+  appointmentId: string;
+  refuseOnly?: boolean;
+}) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [refusing, setRefusing] = useState(false);
@@ -69,9 +78,11 @@ export function DepositDecision({ appointmentId }: { appointmentId: string }) {
   }
   return (
     <div className="flex flex-wrap gap-2">
-      <Button type="button" disabled={pending} onClick={() => decide("confirm")}>
-        Confirmar recebimento
-      </Button>
+      {refuseOnly ? null : (
+        <Button type="button" disabled={pending} onClick={() => decide("confirm")}>
+          Confirmar recebimento
+        </Button>
+      )}
       <Button type="button" variant="outline" disabled={pending} onClick={() => setRefusing(true)}>
         Não recebi
       </Button>

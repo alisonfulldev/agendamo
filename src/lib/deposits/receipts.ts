@@ -2,8 +2,11 @@ import "server-only";
 
 import { createHash, randomBytes } from "node:crypto";
 
+import { loadAppointmentDetails } from "@/lib/booking/details";
 import { cancelAppointment, confirmDeposit } from "@/lib/booking/manage";
 import {
+  depositTxid,
+  notifyDepositAutoConfirmed,
   notifyPixAfterSlotTaken,
   notifyPixDeclared,
   notifyPixDueSoon,
@@ -23,6 +26,8 @@ import {
   sniffReceiptType,
   type ReceiptContentType,
 } from "./receipt-file";
+import { checkReceiptText, type ReceiptCheck } from "./receipt-check";
+import { readReceiptText } from "./receipt-ocr";
 
 /** Upload attempts allowed per appointment (each one signs a new URL). */
 export const RECEIPT_MAX_ATTEMPTS = 5;
@@ -220,7 +225,7 @@ export async function confirmReceipt(input: {
   token: string;
   receiptId: string;
   now?: Date;
-}): Promise<{ ok: true } | { ok: false; error: ReceiptError }> {
+}): Promise<{ ok: true; autoConfirmed: boolean } | { ok: false; error: ReceiptError }> {
   const now = input.now ?? new Date();
   const appointment = await appointmentByToken(input.token);
   if (!appointment) return { ok: false, error: "invalid" };
@@ -274,13 +279,44 @@ export async function confirmReceipt(input: {
     throw new Error("receipt update failed");
   }
 
-  // Attached after "Já fiz o Pix": the time is already reserved; the owner gets the file.
-  if (appointment.deposit_status === "sent") {
-    await notifyReceiptReceived(appointment.id);
-    return { ok: true };
+  // Reading engine (OCR + rules): only the result of the checks is stored, never the text.
+  const verdict = await readAndCheck(appointment, bytes, type, now);
+  const { error: e2eError } = await admin
+    .from("deposit_receipts")
+    .update(
+      verdict
+        ? {
+            extraction_status: "done",
+            extracted: { checks: verdict.checks, reasons: verdict.reasons },
+            e2e_id: verdict.e2eId,
+          }
+        : { extraction_status: "failed" },
+    )
+    .eq("id", receipt.id);
+  if (e2eError?.code === "23505") {
+    // The same Pix (end-to-end id) already paid another appointment.
+    await discard("duplicate");
+    return { ok: false, error: "duplicate" };
   }
 
-  // Pre-confirmed: the time stays blocked until the professional decides (never automatic).
+  // Every rule matched: confirmed by itself (the owner can still mark "Não recebi").
+  if (verdict?.autoConfirm && (await confirmDeposit(appointment.id))) {
+    await admin
+      .from("deposit_receipts")
+      .update({ status: "accepted", auto_confirmed: true, decided_at: now.toISOString() })
+      .eq("id", receipt.id);
+    await notifyDepositAutoConfirmed(appointment.id);
+    return { ok: true, autoConfirmed: true };
+  }
+  const reasons = verdict?.reasons ?? [];
+
+  // Attached after "Já fiz o Pix": the time is already reserved; the owner gets the file.
+  if (appointment.deposit_status === "sent") {
+    await notifyReceiptReceived(appointment.id, reasons);
+    return { ok: true, autoConfirmed: false };
+  }
+
+  // Pre-confirmed: the time stays blocked until the professional decides.
   const { data: moved } = await admin
     .from("appointments")
     .update({ status: "pending", deposit_status: "sent", deposit_sent_at: now.toISOString() })
@@ -289,8 +325,29 @@ export async function confirmReceipt(input: {
     .eq("deposit_status", "waiting")
     .select("id");
   if (!moved?.length) return { ok: false, error: "not_waiting" };
-  await notifyReceiptReceived(appointment.id);
-  return { ok: true };
+  await notifyReceiptReceived(appointment.id, reasons);
+  return { ok: true, autoConfirmed: false };
+}
+
+/** OCR of the receipt checked against the appointment; null when it could not be read. */
+async function readAndCheck(
+  appointment: Appointment,
+  bytes: Uint8Array,
+  type: ReceiptContentType,
+  now: Date,
+): Promise<ReceiptCheck | null> {
+  const text = await readReceiptText(bytes, type);
+  if (!text) return null;
+  const details = await loadAppointmentDetails(appointment.id);
+  if (!details) return null;
+  return checkReceiptText(text, {
+    amountCents: appointment.deposit_cents,
+    createdAt: new Date(appointment.created_at),
+    now,
+    pixKey: details.page?.pix_key ?? null,
+    receiverNames: [details.page?.pix_receiver_name ?? null, details.business.name],
+    txid: depositTxid(appointment),
+  });
 }
 
 /** "Confirmar recebimento" / "Não recebi": only the professional decides (never automatic). */
@@ -309,7 +366,18 @@ export async function decideDeposit(input: {
     .eq("id", input.appointmentId)
     .eq("business_id", input.businessId)
     .maybeSingle();
-  if (!data || !["waiting", "sent"].includes(data.deposit_status as string)) return false;
+  if (!data) return false;
+  // A deposit confirmed by the reading engine can still be refused ("Não recebi").
+  let autoConfirmed = false;
+  if (data.deposit_status === "confirmed" && input.decision === "refuse") {
+    const { count } = await admin
+      .from("deposit_receipts")
+      .select("id", { count: "exact", head: true })
+      .eq("appointment_id", input.appointmentId)
+      .eq("auto_confirmed", true);
+    autoConfirmed = (count ?? 0) > 0;
+  }
+  if (!autoConfirmed && !["waiting", "sent"].includes(data.deposit_status as string)) return false;
 
   if (input.decision === "confirm") {
     if (!(await confirmDeposit(input.appointmentId))) return false;
@@ -338,7 +406,7 @@ export async function decideDeposit(input: {
     .from("deposit_receipts")
     .update({ status: "rejected", decided_at: now })
     .eq("appointment_id", input.appointmentId)
-    .eq("status", "received");
+    .in("status", ["received", "accepted"]);
   // Frees the time and tells the customer, kindly.
   await cancelAppointment(
     input.appointmentId,

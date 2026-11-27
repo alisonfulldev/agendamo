@@ -19,7 +19,7 @@ type Row = Appointment & {
   appointment_services: { name: string }[];
   deposit_receipts: Pick<
     DepositReceipt,
-    "id" | "status" | "content_type" | "uploaded_at" | "object_key"
+    "id" | "status" | "content_type" | "uploaded_at" | "object_key" | "auto_confirmed" | "extracted"
   >[];
 };
 
@@ -46,7 +46,7 @@ export default async function DepositsPage() {
   const { data } = await createAdminClient()
     .from("appointments")
     .select(
-      "*, customer:customers(name), appointment_services(name), deposit_receipts(id, status, content_type, uploaded_at, object_key)",
+      "*, customer:customers(name), appointment_services(name), deposit_receipts(id, status, content_type, uploaded_at, object_key, auto_confirmed, extracted)",
     )
     .eq("business_id", business.id)
     .neq("deposit_status", "none")
@@ -58,6 +58,14 @@ export default async function DepositsPage() {
   }
 
   const toCheck = rows.filter((r) => r.deposit_status === "sent");
+  // Confirmed by the reading engine, still to happen: the owner can still say "Não recebi".
+  const autoConfirmed = (r: Row) => r.deposit_receipts.some((d) => d.auto_confirmed);
+  const autoUpcoming = rows.filter(
+    (r) =>
+      r.deposit_status === "confirmed" &&
+      autoConfirmed(r) &&
+      new Date(r.starts_at).getTime() > new Date().getTime(),
+  );
   const waiting = rows.filter((r) => r.deposit_status === "waiting");
   const nowMs = new Date().getTime();
   // Same amount pending more than once: told apart by the payer's name in the bank statement.
@@ -152,6 +160,16 @@ export default async function DepositsPage() {
                         Sem comprovante: a pessoa tocou em “Já fiz o Pix”.
                       </p>
                     ) : null}
+                    {receipt?.extracted?.reasons?.length ? (
+                      <div className="rounded-lg bg-muted px-3 py-2 text-sm">
+                        <p className="font-medium">Por que não foi confirmado sozinho:</p>
+                        <ul className="list-disc pl-5">
+                          {receipt.extracted.reasons.map((reason) => (
+                            <li key={reason}>{reason}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    ) : null}
                     <DepositDecision appointmentId={r.id} />
                   </div>
                   {url ? (
@@ -181,6 +199,27 @@ export default async function DepositsPage() {
           </ul>
         )}
       </Section>
+
+      {autoUpcoming.length ? (
+        <Section
+          title="Confirmados pelo comprovante"
+          description="O valor, o recebedor e a data do comprovante bateram. Se algum Pix não aparecer no seu extrato, marque “Não recebi”."
+        >
+          <ul className="divide-y text-sm">
+            {autoUpcoming.map((r) => (
+              <li key={r.id} className="flex flex-col gap-2 py-3">
+                <span className="flex flex-wrap justify-between gap-2">
+                  <span>
+                    {r.customer?.name} · {services(r)} · {when(r.starts_at)}
+                  </span>
+                  <span className="font-medium">R$ {formatAmount(r.deposit_cents)}</span>
+                </span>
+                <DepositDecision appointmentId={r.id} refuseOnly />
+              </li>
+            ))}
+          </ul>
+        </Section>
+      ) : null}
 
       {waiting.length ? (
         <Section
@@ -215,7 +254,10 @@ export default async function DepositsPage() {
                     {r.customer?.name} · {services(r)} · {when(r.starts_at)}
                   </span>
                   <span className="font-medium">
-                    R$ {formatAmount(r.deposit_cents)} · {STATUS[r.deposit_status]}
+                    R$ {formatAmount(r.deposit_cents)} ·{" "}
+                    {r.deposit_status === "confirmed" && autoConfirmed(r)
+                      ? "Confirmado pelo comprovante"
+                      : STATUS[r.deposit_status]}
                   </span>
                 </span>
                 {r.deposit_status === "refused" && r.deposit_refused_reason ? (

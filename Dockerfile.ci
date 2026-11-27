@@ -19,6 +19,8 @@ COPY --chown=nextjs:nodejs .next/standalone ./
 COPY --chown=nextjs:nodejs .next/static ./.next/static
 # Fontes lidas em tempo de execução (/og e artes de venda); garante mesmo se o tracing falhar
 COPY assets/fonts ./assets/fonts
+# Dados de português do OCR dos comprovantes de Pix (tesseract.js)
+COPY assets/tessdata ./assets/tessdata
 
 USER nextjs
 EXPOSE 3000

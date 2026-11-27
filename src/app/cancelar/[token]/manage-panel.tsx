@@ -47,7 +47,7 @@ export function ManagePanel({
   } | null>(null);
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
   const [pending, startTransition] = useTransition();
-  const [receiptSent, setReceiptSent] = useState(false);
+  const [receiptSent, setReceiptSent] = useState<null | "sent" | "confirmed">(null);
 
   useEffect(() => {
     if (mode !== "reschedule" || days !== null) return;
@@ -70,20 +70,27 @@ export function ManagePanel({
             role="status"
             className="rounded-xl bg-accent px-3 py-2 text-sm text-accent-foreground"
           >
-            Recebemos seu comprovante! Você recebe a confirmação assim que{" "}
-            {attachReceipt.businessName} conferir.
+            {receiptSent === "confirmed" ? (
+              "Pix confirmado! Seu horário está garantido."
+            ) : (
+              <>
+                Recebemos seu comprovante! Você recebe a confirmação assim que{" "}
+                {attachReceipt.businessName} conferir.
+              </>
+            )}
           </p>
         ) : (
           <div className="rounded-xl border p-3">
             <p className="text-sm text-muted-foreground">
-              Você avisou que fez o Pix. Quer agilizar a confirmação?
+              Você avisou que fez o Pix. Envie o comprovante: se tudo bater, seu horário é
+              confirmado na hora.
             </p>
             <ReceiptAttach
               token={token}
               businessName={attachReceipt.businessName}
               primary={false}
-              label="Anexar comprovante (opcional)"
-              onSent={() => setReceiptSent(true)}
+              label="Enviar comprovante"
+              onSent={(auto) => setReceiptSent(auto ? "confirmed" : "sent")}
             />
           </div>
         )

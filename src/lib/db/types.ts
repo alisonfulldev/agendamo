@@ -413,9 +413,13 @@ export interface DepositReceipt {
   uploaded_at: string | null;
   decided_at: string | null;
   deleted_at: string | null;
-  /** Prepared for a future reading engine (nothing is read in this version). */
+  /** Reading engine (OCR + rules, 2026-11-26): only the result of the checks, never the text. */
   extraction_status: "not_requested" | "pending" | "done" | "failed";
-  extracted: Record<string, unknown> | null;
+  extracted: { checks?: Record<string, boolean>; reasons?: string[] } | null;
+  /** Pix end-to-end id read from the receipt (unique: one Pix never pays two appointments). */
+  e2e_id: string | null;
+  /** Every rule matched: confirmed without the owner. */
+  auto_confirmed: boolean;
 }
 
 /** Site templates (2026-11-06). */

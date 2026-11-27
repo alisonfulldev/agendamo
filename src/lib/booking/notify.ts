@@ -2,7 +2,7 @@ import "server-only";
 
 import QRCode from "qrcode";
 
-import type { CancelledBy } from "@/lib/db/types";
+import type { Appointment, CancelledBy } from "@/lib/db/types";
 import type { EmailAttachment } from "@/lib/email/send";
 import { sendEmail } from "@/lib/email/send";
 import type { EmailContent } from "@/lib/email/layout";
@@ -69,6 +69,11 @@ function icsAttachment(
   };
 }
 
+/** Our identifier in the deposit's Pix code (some banks print it on the receipt). */
+export function depositTxid(appointment: Pick<Appointment, "id" | "deposit_reference">): string {
+  return appointment.deposit_reference ?? `MC${appointment.id.replace(/-/g, "").slice(0, 20)}`;
+}
+
 /** Pix BR Code for the deposit (paid straight to the professional, rule 11). */
 export function depositBrCode(d: AppointmentDetails): string | null {
   if (!d.page?.pix_key || d.appointment.deposit_cents <= 0) return null;
@@ -77,7 +82,7 @@ export function depositBrCode(d: AppointmentDetails): string | null {
     receiverName: d.page.pix_receiver_name ?? d.business.name,
     city: d.page.pix_city ?? d.page.city ?? "Brasil",
     amountCents: d.appointment.deposit_cents,
-    txid: d.appointment.deposit_reference ?? `MC${d.appointment.id.replace(/-/g, "").slice(0, 20)}`,
+    txid: depositTxid(d.appointment),
     description: `Sinal ${d.business.name}`,
   });
 }
@@ -434,7 +439,11 @@ export async function notifyPixDueSoon(appointmentId: string): Promise<boolean> 
 }
 
 /** A valid receipt arrived: e-mail and push to the team (the time stays pre-confirmed). */
-export async function notifyReceiptReceived(appointmentId: string): Promise<void> {
+export async function notifyReceiptReceived(
+  appointmentId: string,
+  /** Why the reading engine did not confirm it by itself. */
+  reasons: string[] = [],
+): Promise<void> {
   const d = await loadAppointmentDetails(appointmentId);
   if (!d) return;
   await notifyTeam({
@@ -446,12 +455,39 @@ export async function notifyReceiptReceived(appointmentId: string): Promise<void
       heading: "Chegou um comprovante",
       paragraphs: [
         receiptLine(d),
+        ...(reasons.length ? [`Não deu para confirmar sozinho: ${reasons.join(" ")}`] : []),
         "O horário fica pré-confirmado até você conferir. Confirme o recebimento ou marque “Não recebi” no painel.",
       ],
       details: detailLines(d),
       cta: { label: "Conferir comprovante", url: "/painel/sinais" },
     },
     push: { title: "Comprovante para conferir", body: receiptLine(d), url: "/painel/sinais" },
+  });
+}
+
+/**
+ * The reading engine confirmed the deposit (value, receiver and date matched): the team only
+ * hears about it, and can still mark "Não recebi" if the money is not in the bank.
+ */
+export async function notifyDepositAutoConfirmed(appointmentId: string): Promise<void> {
+  const d = await loadAppointmentDetails(appointmentId);
+  if (!d) return;
+  const line = `Sinal de R$ ${priceText(d.appointment.deposit_cents)} de ${d.customer.name.split(" ")[0]} confirmado pelo comprovante: ${serviceNames(d)} em ${when(d)}.`;
+  await notifyTeam({
+    businessId: d.business.id,
+    type: "deposit_informed",
+    professionalId: d.professional.id,
+    subject: `Sinal confirmado: ${d.customer.name}, ${when(d)}`,
+    content: {
+      heading: "Sinal confirmado automaticamente",
+      paragraphs: [
+        line,
+        "O valor, o recebedor e a data do comprovante bateram com o agendamento. Se o Pix não aparecer no seu extrato, marque “Não recebi” na tela de Sinais.",
+      ],
+      details: detailLines(d),
+      cta: { label: "Ver sinais", url: "/painel/sinais" },
+    },
+    push: { title: "Sinal confirmado", body: line, url: "/painel/sinais" },
   });
 }
 
