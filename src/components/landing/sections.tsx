@@ -77,10 +77,12 @@ export function Hero({
             </p>
           ) : null}
           <h1
-            className={`lp-title leading-[0.98] text-balance ${
+            // Phones (2026-11-28): looser lines and letters, the 800 weight at 0.98 line height
+            // made the lines run into each other; from sm up it stays the tight display look.
+            className={`lp-title leading-[1.1] tracking-[-0.015em] text-balance sm:leading-[0.98] sm:tracking-[-0.035em] ${
               long
-                ? "text-[2.75rem] sm:text-6xl lg:text-[4.25rem]"
-                : "text-[3.1rem] sm:text-7xl lg:text-[5.25rem]"
+                ? "text-[2.15rem] sm:text-6xl lg:text-[4.25rem]"
+                : "text-[2.6rem] sm:text-7xl lg:text-[5.25rem]"
             }`}
           >
             {hero.title}
